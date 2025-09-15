@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class Tetrazolio extends Analisis {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tetrazGeneralID;
 
     private Integer numSemillasPorRep;
