@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class LoteDTO {
-    private Integer loteID;
+    private Long loteID;
     private Integer numeroFicha;
     private String ficha;
 

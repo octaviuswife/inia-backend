@@ -47,7 +47,7 @@ public class LoteService {
     }
 
     // Editar Lote
-    public LoteDTO actualizarLote(Integer id, LoteRequestDTO solicitud) {
+    public LoteDTO actualizarLote(Long id, LoteRequestDTO solicitud) {
         Optional<Lote> loteExistente = loteRepository.findById(id);
         if (loteExistente.isPresent()) {
             Lote lote = loteExistente.get();
@@ -59,7 +59,7 @@ public class LoteService {
     }
 
     // Eliminar Lote (cambiar activo a false)
-    public void eliminarLote(Integer id) {
+    public void eliminarLote(Long id) {
         Optional<Lote> loteExistente = loteRepository.findById(id);
         if (loteExistente.isPresent()) {
             Lote lote = loteExistente.get();
@@ -95,7 +95,7 @@ public class LoteService {
     }
 
     // Obtener Lote por ID (completo)
-    public LoteDTO obtenerLotePorId(Integer id) {
+    public LoteDTO obtenerLotePorId(Long id) {
         Optional<Lote> lote = loteRepository.findById(id);
         if (lote.isPresent()) {
             return mapearEntidadADTO(lote.get());

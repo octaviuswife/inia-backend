@@ -12,7 +12,7 @@ public class Lote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer loteID;
+    private Long loteID;
 
     private Integer numeroFicha;
     private String ficha;

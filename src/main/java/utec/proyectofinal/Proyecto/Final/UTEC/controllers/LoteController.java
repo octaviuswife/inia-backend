@@ -67,7 +67,7 @@ public class LoteController {
 
     // Obtener Lote por ID (completo)
     @GetMapping("/{id}")
-    public ResponseEntity<LoteDTO> obtenerLotePorId(@PathVariable Integer id) {
+    public ResponseEntity<LoteDTO> obtenerLotePorId(@PathVariable Long id) {
         try {
             LoteDTO lote = loteService.obtenerLotePorId(id);
             return new ResponseEntity<>(lote, HttpStatus.OK);
@@ -80,7 +80,7 @@ public class LoteController {
 
     // Actualizar Lote
     @PutMapping("/{id}")
-    public ResponseEntity<LoteDTO> actualizarLote(@PathVariable Integer id, @RequestBody LoteRequestDTO solicitud) {
+    public ResponseEntity<LoteDTO> actualizarLote(@PathVariable Long id, @RequestBody LoteRequestDTO solicitud) {
         try {
             LoteDTO loteActualizado = loteService.actualizarLote(id, solicitud);
             return new ResponseEntity<>(loteActualizado, HttpStatus.OK);
@@ -93,7 +93,7 @@ public class LoteController {
 
     // Eliminar Lote (cambiar activo a false)
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> eliminarLote(@PathVariable Integer id) {
+    public ResponseEntity<HttpStatus> eliminarLote(@PathVariable Long id) {
         try {
             loteService.eliminarLote(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

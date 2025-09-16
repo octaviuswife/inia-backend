@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class LoteSimpleDTO {
-    private Integer loteID;
+    private Long loteID;
     private Integer numeroFicha;
     private String ficha;
     private Boolean activo;

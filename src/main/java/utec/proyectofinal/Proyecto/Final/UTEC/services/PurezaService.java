@@ -104,7 +104,7 @@ public class PurezaService {
     }
 
     // Obtener Purezas por Lote
-    public List<PurezaDTO> obtenerPurezasPorIdLote(Integer idLote) {
+    public List<PurezaDTO> obtenerPurezasPorIdLote(Long idLote) {
         List<Pureza> purezas = purezaRepository.findByIdLote(idLote);
         return purezas.stream()
                 .map(this::mapearEntidadADTO)

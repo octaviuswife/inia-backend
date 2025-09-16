@@ -8,15 +8,15 @@ import java.time.LocalDate;
 public class LoteRequestDTO {
     private Integer numeroFicha;
     private String ficha;
-    private Integer cultivarID;
+    private Long cultivarID;
     private String tipo;
     private String empresa;
-    private Integer clienteID;
+    private Long clienteID;
     private String codigoCC;
     private String codigoFF;
     private LocalDate fechaEntrega;
     private LocalDate fechaRecibo;
-    private Integer depositoID;
+    private Long depositoID;
     private String unidadEmbolsado;
     private String remitente;
     private String observaciones;

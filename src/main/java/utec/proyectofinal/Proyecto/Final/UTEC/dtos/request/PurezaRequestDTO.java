@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 public class PurezaRequestDTO {
-    private Integer idLote;
+    private Long idLote;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private Boolean publicadoParcial;

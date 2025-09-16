@@ -12,7 +12,7 @@ public class Especie {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer especieID;
+    private Long especieID;
 
     private String nombreCientifico;
     private String nombreComun;

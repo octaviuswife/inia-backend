@@ -100,7 +100,7 @@ public class PurezaController {
 
     // Obtener Purezas por Lote
     @GetMapping("/lote/{idLote}")
-    public ResponseEntity<List<PurezaDTO>> obtenerPurezasPorIdLote(@PathVariable Integer idLote) {
+    public ResponseEntity<List<PurezaDTO>> obtenerPurezasPorIdLote(@PathVariable Long idLote) {
         try {
             List<PurezaDTO> purezas = purezaService.obtenerPurezasPorIdLote(idLote);
             return new ResponseEntity<>(purezas, HttpStatus.OK);

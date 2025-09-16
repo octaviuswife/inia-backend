@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 
-public interface LoteRepository extends JpaRepository<Lote, Integer> {
+public interface LoteRepository extends JpaRepository<Lote, Long> {
     
     List<Lote> findByActivoTrue();
     

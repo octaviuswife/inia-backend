@@ -10,7 +10,7 @@ public class Cultivar {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer cultivarID;
+    private Long cultivarID;
 
     @ManyToOne
     @JoinColumn(name = "especieID")
