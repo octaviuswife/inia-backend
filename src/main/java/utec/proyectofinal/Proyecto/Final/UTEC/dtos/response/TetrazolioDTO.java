@@ -1,15 +1,14 @@
-package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
+package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
-import jakarta.persistence.*;
+
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepTetrazolioViabilidad;
+
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity
-@Table(name = "Tetrazolio")
 @Data
-public class Tetrazolio extends Analisis {
-
+public class TetrazolioDTO extends AnalisisDTO {
     private Integer numSemillasPorRep;
     private String pretratamiento;
     private String concentracion;
@@ -17,6 +16,5 @@ public class Tetrazolio extends Analisis {
     private Integer tincionTemp;
     private LocalDate fecha;
 
-    @OneToMany(mappedBy = "tetrazolio", cascade = CascadeType.ALL)
     private List<RepTetrazolioViabilidad> repeticiones;
 }

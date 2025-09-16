@@ -2,6 +2,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoListado;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public class Listado {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long listadoID;
 
-    private String listadoTipo;
+    private TipoListado listadoTipo;
     private String listadoInsti;
     private Integer listadoNum;
 
@@ -23,5 +24,9 @@ public class Listado {
 
     @ManyToMany(mappedBy = "otrasSemillas")
     private List<Pureza> purezas;
+
+    @OneToOne
+    @JoinColumn(name = "listado_id", referencedColumnName = "listadoID")
+    private Listado listado;
 }
 

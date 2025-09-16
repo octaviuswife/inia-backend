@@ -3,6 +3,8 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity
 @Table(name = "RepGerm")
 @Data
@@ -12,8 +14,10 @@ public class RepGerm {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long repGermID;
 
+    private Integer numRep;
+
     @ElementCollection
-    private java.util.List<Integer> normales;
+    private List<Integer> normales;
 
     private Integer anormales;
     private Integer duras;

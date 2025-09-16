@@ -1,15 +1,10 @@
-package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
-import jakarta.persistence.*;
+package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
+
 import lombok.Data;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 
-@Entity
-@Table(name = "Usuario")
 @Data
-public class Usuario {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class UsuarioDTO {
     private Integer usuarioID;
 
     private String nombre;
@@ -17,5 +12,4 @@ public class Usuario {
 
     private String contrasenia;
     private Rol rol;
-
 }
