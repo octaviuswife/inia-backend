@@ -15,7 +15,7 @@ public abstract class Analisis {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer analisisID;
+    private Long analisisID;
 
     @ManyToOne
     @JoinColumn(name = "loteID")

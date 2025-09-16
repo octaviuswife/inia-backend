@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public abstract class AnalisisDTO {
 
-    private Integer analisisID;
+    private Long analisisID;
 
     private String lote;
 

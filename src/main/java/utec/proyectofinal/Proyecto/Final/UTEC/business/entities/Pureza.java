@@ -30,11 +30,6 @@ public class Pureza extends Analisis {
     private BigDecimal inaseValor;
     private LocalDate inaseFecha;
 
-    @ManyToMany
-    @JoinTable(
-            name = "Pureza_Listado",
-            joinColumns = @JoinColumn(name = "purezaID"),
-            inverseJoinColumns = @JoinColumn(name = "listadoID")
-    )
-    private List<Listado> otrasSemillas;
+    @OneToMany(mappedBy = "pureza", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Listado> listados;
 }

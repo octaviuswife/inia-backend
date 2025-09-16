@@ -10,7 +10,6 @@ public class ListadoDTO {
     private TipoListado listadoTipo;
     private String listadoInsti;
     private Integer listadoNum;
-
     private ListadoDTO listado;
-
+    private CatalogoDTO catalogo;
 }

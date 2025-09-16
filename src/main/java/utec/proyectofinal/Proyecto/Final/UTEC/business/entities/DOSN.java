@@ -27,12 +27,7 @@ public class DOSN extends Analisis {
     private Integer cuscutaNum;
     private LocalDate fechaCuscuta;
 
-    @ManyToMany
-    @JoinTable(
-            name = "DOSN_Listado",
-            joinColumns = @JoinColumn(name = "dosnID"),
-            inverseJoinColumns = @JoinColumn(name = "listadoID")
-    )
+    @OneToMany(mappedBy = "dosn", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Listado> listados;
 
 }

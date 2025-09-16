@@ -19,14 +19,16 @@ public class Listado {
     private String listadoInsti;
     private Integer listadoNum;
 
-    @ManyToMany(mappedBy = "listados")
-    private List<DOSN> dosns;
+    @ManyToOne
+    @JoinColumn(name = "pureza_id", referencedColumnName = "analisisID")
+    private Pureza pureza;
 
-    @ManyToMany(mappedBy = "otrasSemillas")
-    private List<Pureza> purezas;
+    @ManyToOne
+    @JoinColumn(name = "dosn_id", referencedColumnName = "analisisID")
+    private DOSN dosn;
 
-    @OneToOne
-    @JoinColumn(name = "listado_id", referencedColumnName = "listadoID")
-    private Listado listado;
+    @ManyToOne
+    @JoinColumn(name = "catalogo_id", referencedColumnName = "catalogoID")
+    private Catalogo catalogo;
 }
 
