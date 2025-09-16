@@ -3,12 +3,14 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "PMS")
+@PrimaryKeyJoinColumn(name = "analisisid")
 @Data
-public class PMS extends Analisis {
+public class Pms extends Analisis {
 
     private BigDecimal promedio100g;
     private BigDecimal desvioStd;
@@ -17,5 +19,9 @@ public class PMS extends Analisis {
     private BigDecimal pmsconRedon;
 
     @OneToMany(mappedBy = "pms", cascade = CascadeType.ALL)
-    private List<RepPMS> repPMS;
+    private List<RepPms> repPms;
+
+    //@OneToMany(mappedBy = "pms", cascade = CascadeType.ALL, orphanRemoval = true)
+    //private List<RepPms> repPms = new ArrayList<>();
+
 }

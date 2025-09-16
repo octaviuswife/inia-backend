@@ -14,5 +14,5 @@ public class PmsDTO extends AnalisisDTO{
     private BigDecimal pmssinRedon;
     private BigDecimal pmsconRedon;
 
-    private List<RepPmsDTO> repPMS;
+    private List<RepPmsDTO> repPms;
 }
