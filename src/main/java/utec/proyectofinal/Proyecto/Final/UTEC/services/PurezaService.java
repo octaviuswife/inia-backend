@@ -41,11 +41,20 @@ public class PurezaService {
 
     // Crear Pureza con estado REGISTRADO
     public PurezaDTO crearPureza(PurezaRequestDTO solicitud) {
-        Pureza pureza = mapearSolicitudAEntidad(solicitud);
-        pureza.setEstado(Estado.REGISTRADO);
-        
-        Pureza purezaGuardada = purezaRepository.save(pureza);
-        return mapearEntidadADTO(purezaGuardada);
+        try {
+            System.out.println("Creando pureza con solicitud: " + solicitud);
+            Pureza pureza = mapearSolicitudAEntidad(solicitud);
+            pureza.setEstado(Estado.REGISTRADO);
+            
+            System.out.println("Pureza mapeada, guardando...");
+            Pureza purezaGuardada = purezaRepository.save(pureza);
+            System.out.println("Pureza guardada con ID: " + purezaGuardada.getAnalisisID());
+            return mapearEntidadADTO(purezaGuardada);
+        } catch (Exception e) {
+            System.err.println("Error al crear pureza: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al crear pureza: " + e.getMessage(), e);
+        }
     }
 
     // Editar Pureza
@@ -112,13 +121,25 @@ public class PurezaService {
 
     // Mapear de RequestDTO a Entity para creación
     private Pureza mapearSolicitudAEntidad(PurezaRequestDTO solicitud) {
-        Pureza pureza = new Pureza();
-        
-        // Mapear campos de Analisis
-        if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.getReference(Lote.class, solicitud.getIdLote());
-            pureza.setLote(lote);
-        }
+        try {
+            System.out.println("Iniciando mapeo de solicitud de pureza a entidad");
+            Pureza pureza = new Pureza();
+            
+            System.out.println("Mapeando campos de Analisis...");
+            // Mapear campos de Analisis
+            if (solicitud.getIdLote() != null) {
+                try {
+                    System.out.println("Buscando lote con ID: " + solicitud.getIdLote());
+                    Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
+                    if (lote == null) {
+                        throw new RuntimeException("Lote no encontrado con id: " + solicitud.getIdLote());
+                    }
+                    pureza.setLote(lote);
+                    System.out.println("Lote encontrado y asignado");
+                } catch (Exception e) {
+                    throw new RuntimeException("Error al buscar el lote con id: " + solicitud.getIdLote(), e);
+                }
+            }
         pureza.setFechaInicio(solicitud.getFechaInicio());
         pureza.setFechaFin(solicitud.getFechaFin());
         pureza.setPublicadoParcial(solicitud.getPublicadoParcial());
@@ -153,15 +174,28 @@ public class PurezaService {
             pureza.setListados(otrasSemillas);
         }
 
+        System.out.println("Mapeo de pureza completado exitosamente");
         return pureza;
+        } catch (Exception e) {
+            System.err.println("Error durante el mapeo de pureza: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error durante el mapeo de la solicitud de pureza", e);
+        }
     }
 
     // Actualizar Entity desde RequestDTO para edición
     private void actualizarEntidadDesdeSolicitud(Pureza pureza, PurezaRequestDTO solicitud) {
         // Actualizar campos de Analisis
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.getReference(Lote.class, solicitud.getIdLote());
-            pureza.setLote(lote);
+            try {
+                Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
+                if (lote == null) {
+                    throw new RuntimeException("Lote no encontrado con id: " + solicitud.getIdLote());
+                }
+                pureza.setLote(lote);
+            } catch (Exception e) {
+                throw new RuntimeException("Error al buscar el lote con id: " + solicitud.getIdLote(), e);
+            }
         }
         if (solicitud.getFechaInicio() != null) pureza.setFechaInicio(solicitud.getFechaInicio());
         if (solicitud.getFechaFin() != null) pureza.setFechaFin(solicitud.getFechaFin());
@@ -272,8 +306,15 @@ public class PurezaService {
         listado.setPureza(pureza);
         
         if (solicitud.getIdCatalogo() != null) {
-            Catalogo catalogo = entityManager.getReference(Catalogo.class, solicitud.getIdCatalogo());
-            listado.setCatalogo(catalogo);
+            try {
+                Catalogo catalogo = entityManager.find(Catalogo.class, solicitud.getIdCatalogo());
+                if (catalogo == null) {
+                    throw new RuntimeException("Catálogo no encontrado con id: " + solicitud.getIdCatalogo());
+                }
+                listado.setCatalogo(catalogo);
+            } catch (Exception e) {
+                throw new RuntimeException("Error al buscar el catálogo con id: " + solicitud.getIdCatalogo(), e);
+            }
         }
         
         return listado;
