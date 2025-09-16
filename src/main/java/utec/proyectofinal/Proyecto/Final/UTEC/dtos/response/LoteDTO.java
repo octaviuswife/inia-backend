@@ -37,4 +37,6 @@ public class LoteDTO {
     private String origen;
     private String estado;
     private LocalDate fechaCosecha;
+
+    private Boolean activo;
 }

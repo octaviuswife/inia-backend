@@ -48,5 +48,6 @@ public class Lote {
     private String origen;
     private String estado;
     private LocalDate fechaCosecha;
+    private Boolean activo;
 }
 

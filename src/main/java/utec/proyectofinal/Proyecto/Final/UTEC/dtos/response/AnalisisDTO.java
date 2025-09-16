@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,8 +13,7 @@ public abstract class AnalisisDTO {
 
     private String lote;
 
-    private String tipo;
-    private String estado;
+    private Estado estado;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
 

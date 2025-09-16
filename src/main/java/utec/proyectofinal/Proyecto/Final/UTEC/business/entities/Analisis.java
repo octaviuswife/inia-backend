@@ -2,6 +2,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,8 +21,7 @@ public abstract class Analisis {
     @JoinColumn(name = "loteID")
     private Lote lote;
 
-    private String tipo;
-    private String estado;
+    private Estado estado;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
 
