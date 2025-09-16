@@ -17,7 +17,6 @@ public abstract class AnalisisDTO {
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
 
-    private Boolean publicadoParcial;
     private Boolean cumpleEstandar;
 
     private String comentarios;

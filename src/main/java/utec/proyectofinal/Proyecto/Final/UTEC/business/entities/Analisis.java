@@ -25,8 +25,6 @@ public abstract class Analisis {
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
 
-
-    private Boolean publicadoParcial;
     private Boolean cumpleEstandar;
 
     @Column(columnDefinition = "TEXT")

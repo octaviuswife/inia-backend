@@ -142,7 +142,6 @@ public class PurezaService {
             }
         pureza.setFechaInicio(solicitud.getFechaInicio());
         pureza.setFechaFin(solicitud.getFechaFin());
-        pureza.setPublicadoParcial(solicitud.getPublicadoParcial());
         pureza.setCumpleEstandar(solicitud.getCumpleEstandar());
         pureza.setComentarios(solicitud.getComentarios());
 
@@ -199,7 +198,6 @@ public class PurezaService {
         }
         if (solicitud.getFechaInicio() != null) pureza.setFechaInicio(solicitud.getFechaInicio());
         if (solicitud.getFechaFin() != null) pureza.setFechaFin(solicitud.getFechaFin());
-        if (solicitud.getPublicadoParcial() != null) pureza.setPublicadoParcial(solicitud.getPublicadoParcial());
         if (solicitud.getCumpleEstandar() != null) pureza.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) pureza.setComentarios(solicitud.getComentarios());
 
@@ -247,7 +245,6 @@ public class PurezaService {
         dto.setEstado(pureza.getEstado());
         dto.setFechaInicio(pureza.getFechaInicio());
         dto.setFechaFin(pureza.getFechaFin());
-        dto.setPublicadoParcial(pureza.getPublicadoParcial());
         dto.setCumpleEstandar(pureza.getCumpleEstandar());
         dto.setComentarios(pureza.getComentarios());
 
