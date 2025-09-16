@@ -30,6 +30,7 @@ public class PurezaController {
     private PurezaService purezaService;
 
     // Crear nueva Pureza
+
     @PostMapping
     public ResponseEntity<PurezaDTO> crearPureza(@RequestBody PurezaRequestDTO solicitud) {
         try {

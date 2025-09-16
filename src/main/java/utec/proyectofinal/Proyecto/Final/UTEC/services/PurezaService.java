@@ -75,7 +75,7 @@ public class PurezaService {
 
     // Listar todas las Purezas activas usando ResponseListadoPureza
     public ResponseListadoPureza obtenerTodasPurezasActivas() {
-        List<Pureza> purezas = purezaRepository.encontrarTodosActivos();
+        List<Pureza> purezas = purezaRepository.findByEstadoNot(Estado.INACTIVO);
         List<PurezaDTO> purezaDTOs = purezas.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
