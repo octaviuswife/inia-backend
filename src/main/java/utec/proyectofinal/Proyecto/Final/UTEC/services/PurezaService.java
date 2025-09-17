@@ -64,7 +64,7 @@ public class PurezaService {
         purezaRepository.save(pureza);
     }
 
-    // Listar todas las Purezas activas usando ResponseListadoPureza
+    // Listar todas las Purezas activas
     public ResponseListadoPureza obtenerTodasPurezasActivas() {
         List<PurezaDTO> purezaDTOs = purezaRepository.findByEstadoNot(Estado.INACTIVO)
                 .stream()
@@ -85,13 +85,13 @@ public class PurezaService {
 
     // Obtener Purezas por Lote
     public List<PurezaDTO> obtenerPurezasPorIdLote(Long idLote) {
-        List<Pureza> purezas = purezaRepository.findByIdLote(idLote);
-        return purezas.stream()
+        return purezaRepository.findByIdLote(idLote)
+                .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
 
-    // Obtener todos los catálogos para el select
+    // Obtener todos los catálogos
     public List<CatalogoDTO> obtenerTodosCatalogos() {
         return catalogoRepository.findAll()
                 .stream()
@@ -99,7 +99,7 @@ public class PurezaService {
                 .collect(Collectors.toList());
     }
 
-    // === Mappers ===
+    // === Mappers internos ===
 
     private Pureza mapearSolicitudAEntidad(PurezaRequestDTO solicitud) {
         Pureza pureza = new Pureza();
@@ -141,26 +141,16 @@ public class PurezaService {
             pureza.setListados(otrasSemillas);
         }
 
-        System.out.println("Mapeo de pureza completado exitosamente");
         return pureza;
-        } catch (Exception e) {
-            System.err.println("Error durante el mapeo de pureza: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error durante el mapeo de la solicitud de pureza", e);
-        }
     }
 
     private void actualizarEntidadDesdeSolicitud(Pureza pureza, PurezaRequestDTO solicitud) {
         if (solicitud.getIdLote() != null) {
-            try {
-                Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
-                if (lote == null) {
-                    throw new RuntimeException("Lote no encontrado con id: " + solicitud.getIdLote());
-                }
-                pureza.setLote(lote);
-            } catch (Exception e) {
-                throw new RuntimeException("Error al buscar el lote con id: " + solicitud.getIdLote(), e);
+            Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
+            if (lote == null) {
+                throw new RuntimeException("Lote no encontrado con id: " + solicitud.getIdLote());
             }
+            pureza.setLote(lote);
         }
 
         if (solicitud.getFechaInicio() != null) pureza.setFechaInicio(solicitud.getFechaInicio());
@@ -188,8 +178,7 @@ public class PurezaService {
         if (solicitud.getInaseFecha() != null) pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null) {
-            List<Listado> listadosExistentes = listadoRepository.findByPurezaAnalisisID(pureza.getAnalisisID());
-            listadoRepository.deleteAll(listadosExistentes);
+            listadoRepository.deleteAll(pureza.getListados());
 
             List<Listado> nuevosListados = solicitud.getOtrasSemillas().stream()
                     .map(req -> crearListadoDesdeSolicitud(req, pureza))
@@ -240,7 +229,7 @@ public class PurezaService {
 
     private Listado crearListadoDesdeSolicitud(ListadoRequestDTO solicitud, Pureza pureza) {
         Listado listado = MappingUtils.fromListadoRequest(solicitud, entityManager);
-        listado.setPureza(pureza); // específico de Pureza
+        listado.setPureza(pureza);
         return listado;
     }
 }

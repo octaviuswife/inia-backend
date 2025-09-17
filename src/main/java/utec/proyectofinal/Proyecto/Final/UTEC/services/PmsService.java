@@ -101,7 +101,7 @@ public class PmsService {
         // Campos de Analisis
         pms.setFechaInicio(solicitud.getFechaInicio());
         pms.setFechaFin(solicitud.getFechaFin());
-        pms.setPublicadoParcial(solicitud.getPublicadoParcial());
+        //pms.setPublicadoParcial(solicitud.getPublicadoParcial());
         pms.setCumpleEstandar(solicitud.getCumpleEstandar());
         pms.setComentarios(solicitud.getComentarios());
 
@@ -133,7 +133,7 @@ public class PmsService {
         // Campos de Analisis
         if (solicitud.getFechaInicio() != null) pms.setFechaInicio(solicitud.getFechaInicio());
         if (solicitud.getFechaFin() != null) pms.setFechaFin(solicitud.getFechaFin());
-        if (solicitud.getPublicadoParcial() != null) pms.setPublicadoParcial(solicitud.getPublicadoParcial());
+        //if (solicitud.getPublicadoParcial() != null) pms.setPublicadoParcial(solicitud.getPublicadoParcial());
         if (solicitud.getCumpleEstandar() != null) pms.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) pms.setComentarios(solicitud.getComentarios());
 
@@ -163,7 +163,7 @@ public class PmsService {
         dto.setEstado(pms.getEstado());
         dto.setFechaInicio(pms.getFechaInicio());
         dto.setFechaFin(pms.getFechaFin());
-        dto.setPublicadoParcial(pms.getPublicadoParcial());
+        //dto.setPublicadoParcial(pms.getPublicadoParcial());
         dto.setCumpleEstandar(pms.getCumpleEstandar());
         dto.setComentarios(pms.getComentarios());
 

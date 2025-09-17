@@ -102,7 +102,7 @@ public class DosnService {
 
         dosn.setFechaInicio(solicitud.getFechaInicio());
         dosn.setFechaFin(solicitud.getFechaFin());
-        dosn.setPublicadoParcial(solicitud.getPublicadoParcial());
+        //dosn.setPublicadoParcial(solicitud.getPublicadoParcial());
         dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
         dosn.setComentarios(solicitud.getComentarios());
 
@@ -136,7 +136,7 @@ public class DosnService {
 
         if (solicitud.getFechaInicio() != null) dosn.setFechaInicio(solicitud.getFechaInicio());
         if (solicitud.getFechaFin() != null) dosn.setFechaFin(solicitud.getFechaFin());
-        if (solicitud.getPublicadoParcial() != null) dosn.setPublicadoParcial(solicitud.getPublicadoParcial());
+        //if (solicitud.getPublicadoParcial() != null) dosn.setPublicadoParcial(solicitud.getPublicadoParcial());
         if (solicitud.getCumpleEstandar() != null) dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) dosn.setComentarios(solicitud.getComentarios());
 
@@ -168,7 +168,7 @@ public class DosnService {
         dto.setEstado(dosn.getEstado());
         dto.setFechaInicio(dosn.getFechaInicio());
         dto.setFechaFin(dosn.getFechaFin());
-        dto.setPublicadoParcial(dosn.getPublicadoParcial());
+        //dto.setPublicadoParcial(dosn.getPublicadoParcial());
         dto.setCumpleEstandar(dosn.getCumpleEstandar());
         dto.setComentarios(dosn.getComentarios());
         dto.setLote(dosn.getLote() != null ? dosn.getLote().getFicha() : null);
