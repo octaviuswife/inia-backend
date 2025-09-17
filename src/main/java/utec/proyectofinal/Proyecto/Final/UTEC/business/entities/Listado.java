@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoListado;
 
-import java.util.List;
-
 @Entity
 @Table(name = "Listado")
 @Data
@@ -25,7 +23,7 @@ public class Listado {
 
     @ManyToOne
     @JoinColumn(name = "dosn_id", referencedColumnName = "analisisID")
-    private DOSN dosn;
+    private Dosn dosn;
 
     @ManyToOne
     @JoinColumn(name = "catalogo_id", referencedColumnName = "catalogoID")

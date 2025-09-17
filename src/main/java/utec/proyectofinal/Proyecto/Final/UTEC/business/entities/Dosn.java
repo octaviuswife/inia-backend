@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "DOSN")
 @Data
-public class DOSN extends Analisis {
+public class Dosn extends Analisis {
 
     private LocalDate fechaINIA;
     private BigDecimal gramosAnalizadosINIA;
