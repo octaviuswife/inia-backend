@@ -34,9 +34,16 @@ public class PurezaController {
     @PostMapping
     public ResponseEntity<PurezaDTO> crearPureza(@RequestBody PurezaRequestDTO solicitud) {
         try {
+            System.out.println("Creando pureza con solicitud: " + solicitud);
             PurezaDTO purezaCreada = purezaService.crearPureza(solicitud);
             return new ResponseEntity<>(purezaCreada, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            System.err.println("Error al crear pureza: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            System.err.println("Error interno al crear pureza: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -93,7 +100,7 @@ public class PurezaController {
 
     // Obtener Purezas por Lote
     @GetMapping("/lote/{idLote}")
-    public ResponseEntity<List<PurezaDTO>> obtenerPurezasPorIdLote(@PathVariable Integer idLote) {
+    public ResponseEntity<List<PurezaDTO>> obtenerPurezasPorIdLote(@PathVariable Long idLote) {
         try {
             List<PurezaDTO> purezas = purezaService.obtenerPurezasPorIdLote(idLote);
             return new ResponseEntity<>(purezas, HttpStatus.OK);

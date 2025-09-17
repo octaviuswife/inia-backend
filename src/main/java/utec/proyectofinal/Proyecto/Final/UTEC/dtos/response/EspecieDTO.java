@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class EspecieDTO {
-    private Integer especieID;
+    private Long especieID;
 
     private String nombreCientifico;
     private String nombreComun;

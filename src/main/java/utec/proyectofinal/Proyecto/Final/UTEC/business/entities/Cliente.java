@@ -10,7 +10,7 @@ public class Cliente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer clienteID;
+    private Long clienteID;
     private String nombre;
     private String contacto;
     private String email;

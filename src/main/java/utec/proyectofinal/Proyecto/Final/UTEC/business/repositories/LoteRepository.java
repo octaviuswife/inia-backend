@@ -1,0 +1,20 @@
+package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+
+public interface LoteRepository extends JpaRepository<Lote, Long> {
+    
+    List<Lote> findByActivoTrue();
+    
+    List<Lote> findByActivoFalse();
+    
+    List<Lote> findByActivo(Boolean activo);
+    
+    @Query("SELECT l FROM Lote l WHERE l.activo = :activo")
+    List<Lote> findLotesByActivo(Boolean activo);
+}

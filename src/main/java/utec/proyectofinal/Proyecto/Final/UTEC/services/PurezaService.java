@@ -84,9 +84,9 @@ public class PurezaService {
     }
 
     // Obtener Purezas por Lote
-    public List<PurezaDTO> obtenerPurezasPorIdLote(Integer idLote) {
-        return purezaRepository.findByIdLote(idLote)
-                .stream()
+    public List<PurezaDTO> obtenerPurezasPorIdLote(Long idLote) {
+        List<Pureza> purezas = purezaRepository.findByIdLote(idLote);
+        return purezas.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
@@ -111,7 +111,6 @@ public class PurezaService {
 
         pureza.setFechaInicio(solicitud.getFechaInicio());
         pureza.setFechaFin(solicitud.getFechaFin());
-        pureza.setPublicadoParcial(solicitud.getPublicadoParcial());
         pureza.setCumpleEstandar(solicitud.getCumpleEstandar());
         pureza.setComentarios(solicitud.getComentarios());
 
@@ -142,18 +141,30 @@ public class PurezaService {
             pureza.setListados(otrasSemillas);
         }
 
+        System.out.println("Mapeo de pureza completado exitosamente");
         return pureza;
+        } catch (Exception e) {
+            System.err.println("Error durante el mapeo de pureza: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error durante el mapeo de la solicitud de pureza", e);
+        }
     }
 
     private void actualizarEntidadDesdeSolicitud(Pureza pureza, PurezaRequestDTO solicitud) {
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.getReference(Lote.class, solicitud.getIdLote());
-            pureza.setLote(lote);
+            try {
+                Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
+                if (lote == null) {
+                    throw new RuntimeException("Lote no encontrado con id: " + solicitud.getIdLote());
+                }
+                pureza.setLote(lote);
+            } catch (Exception e) {
+                throw new RuntimeException("Error al buscar el lote con id: " + solicitud.getIdLote(), e);
+            }
         }
 
         if (solicitud.getFechaInicio() != null) pureza.setFechaInicio(solicitud.getFechaInicio());
         if (solicitud.getFechaFin() != null) pureza.setFechaFin(solicitud.getFechaFin());
-        if (solicitud.getPublicadoParcial() != null) pureza.setPublicadoParcial(solicitud.getPublicadoParcial());
         if (solicitud.getCumpleEstandar() != null) pureza.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) pureza.setComentarios(solicitud.getComentarios());
 
@@ -195,7 +206,6 @@ public class PurezaService {
         dto.setEstado(pureza.getEstado());
         dto.setFechaInicio(pureza.getFechaInicio());
         dto.setFechaFin(pureza.getFechaFin());
-        dto.setPublicadoParcial(pureza.getPublicadoParcial());
         dto.setCumpleEstandar(pureza.getCumpleEstandar());
         dto.setComentarios(pureza.getComentarios());
 
