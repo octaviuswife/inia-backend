@@ -1,13 +1,22 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoPms;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
 
 @RestController
@@ -22,8 +31,10 @@ public class PmsController {
     @PostMapping
     public ResponseEntity<PmsDTO> crearPms(@RequestBody PmsRequestDTO solicitud) {
         try {
-            PmsDTO pmsCreado = pmsService.crearPms(solicitud);
-            return new ResponseEntity<>(pmsCreado, HttpStatus.CREATED);
+            PmsDTO creado = pmsService.crearPms(solicitud);
+            return new ResponseEntity<>(creado, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -31,10 +42,10 @@ public class PmsController {
 
     // Obtener todos los Pms activos
     @GetMapping
-    public ResponseEntity<ResponseListadoPms> obtenerTodosPmsActivos() {
+    public ResponseEntity<List<PmsDTO>> obtenerTodos() {
         try {
-            ResponseListadoPms respuesta = pmsService.obtenerTodosPmsActivos();
-            return new ResponseEntity<>(respuesta, HttpStatus.OK);
+            List<PmsDTO> lista = pmsService.obtenerTodos();
+            return new ResponseEntity<>(lista, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -42,10 +53,10 @@ public class PmsController {
 
     // Obtener Pms por ID
     @GetMapping("/{id}")
-    public ResponseEntity<PmsDTO> obtenerPmsPorId(@PathVariable Long id) {
+    public ResponseEntity<PmsDTO> obtenerPorId(@PathVariable Long id) {
         try {
-            PmsDTO pms = pmsService.obtenerPmsPorId(id);
-            return new ResponseEntity<>(pms, HttpStatus.OK);
+            PmsDTO dto = pmsService.obtenerPorId(id);
+            return new ResponseEntity<>(dto, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
@@ -57,8 +68,8 @@ public class PmsController {
     @PutMapping("/{id}")
     public ResponseEntity<PmsDTO> actualizarPms(@PathVariable Long id, @RequestBody PmsRequestDTO solicitud) {
         try {
-            PmsDTO pmsActualizado = pmsService.actualizarPms(id, solicitud);
-            return new ResponseEntity<>(pmsActualizado, HttpStatus.OK);
+            PmsDTO actualizado = pmsService.actualizarPms(id, solicitud);
+            return new ResponseEntity<>(actualizado, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
@@ -78,4 +89,16 @@ public class PmsController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Obtener Pms por Lote
+    @GetMapping("/lote/{idLote}")
+    public ResponseEntity<List<PmsDTO>> obtenerPmsPorIdLote(@PathVariable Long idLote) {
+        try {
+            List<PmsDTO> lista = pmsService.obtenerPmsPorIdLote(idLote);
+            return new ResponseEntity<>(lista, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

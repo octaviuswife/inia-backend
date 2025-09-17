@@ -13,6 +13,4 @@ public class PmsDTO extends AnalisisDTO{
     private BigDecimal coefVariacion;
     private BigDecimal pmssinRedon;
     private BigDecimal pmsconRedon;
-
-    private List<RepPmsDTO> repPms;
 }

@@ -20,6 +20,5 @@ public class PmsRequestDTO {
     private BigDecimal pmssinRedon;
     private BigDecimal pmsconRedon;
 
-    private List<RepPmsRequestDTO> repPms;
 }
 

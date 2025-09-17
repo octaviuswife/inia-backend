@@ -8,7 +8,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "PMS")
-@PrimaryKeyJoinColumn(name = "analisisid")
 @Data
 public class Pms extends Analisis {
 
