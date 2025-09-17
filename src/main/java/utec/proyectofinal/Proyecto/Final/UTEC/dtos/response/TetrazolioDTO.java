@@ -4,7 +4,6 @@ package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 public class TetrazolioDTO extends AnalisisDTO {
@@ -14,6 +13,4 @@ public class TetrazolioDTO extends AnalisisDTO {
     private Integer tincionHs;
     private Integer tincionTemp;
     private LocalDate fecha;
-
-    private List<RepTetrazolioViabilidadDTO> repeticiones;
 }
