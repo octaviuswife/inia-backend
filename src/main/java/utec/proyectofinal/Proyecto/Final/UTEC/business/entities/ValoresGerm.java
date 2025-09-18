@@ -2,6 +2,8 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -13,7 +15,7 @@ public class ValoresGerm {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long valoresGermID;
 
-    private String tipo;
+    private Instituto instituto;
     private BigDecimal normales;
     private BigDecimal anormales;
     private BigDecimal duras;

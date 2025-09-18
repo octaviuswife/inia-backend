@@ -1,11 +1,10 @@
-package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
+package utec.proyectofinal.Proyecto.Final.UTEC.dtos.request;
 
 import lombok.Data;
 import java.util.List;
 
 @Data
-public class RepGermDTO {
-    private Long repGermID;
+public class RepGermRequestDTO {
     private Integer numRep;
     private List<Integer> normales;
     private Integer anormales;
@@ -13,5 +12,4 @@ public class RepGermDTO {
     private Integer frescas;
     private Integer muertas;
     private Integer total;
-    private Long contGermId; // ID del conteo asociado
 }

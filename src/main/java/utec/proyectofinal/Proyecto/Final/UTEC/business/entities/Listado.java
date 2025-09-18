@@ -2,6 +2,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoListado;
 
 @Entity
@@ -14,7 +15,7 @@ public class Listado {
     private Long listadoID;
 
     private TipoListado listadoTipo;
-    private String listadoInsti;
+    private Instituto listadoInsti;
     private Integer listadoNum;
 
     @ManyToOne

@@ -2,7 +2,6 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.util.List;
 
 @Entity

@@ -1,19 +1,16 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.request;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class PurezaRequestDTO {
-    private Long idLote;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
-    private Boolean cumpleEstandar;
-    private String comentarios;
-
+@EqualsAndHashCode(callSuper = true)
+public class PurezaRequestDTO extends AnalisisRequestDTO {
+    // Campos específicos de Pureza
     private LocalDate fecha;
     private BigDecimal pesoInicial_g;
     private BigDecimal semillaPura_g;

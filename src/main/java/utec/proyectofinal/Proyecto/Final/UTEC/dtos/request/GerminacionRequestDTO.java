@@ -1,18 +1,18 @@
-package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
+package utec.proyectofinal.Proyecto.Final.UTEC.dtos.request;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class GerminacionDTO extends AnalisisDTO{
-    private LocalDate fechaInicio;
-
+@EqualsAndHashCode(callSuper = true)
+public class GerminacionRequestDTO extends AnalisisRequestDTO {
+    // Campos específicos de Germinación
+    private LocalDate fechaInicioGerminacion;
     private List<LocalDate> fechaConteos;
-
-    private LocalDate fechaFin;
-
+    private LocalDate fechaFinGerminacion;
     private String tratamiento;
     private String productoYDosis;
     private Integer numSemillasPRep;

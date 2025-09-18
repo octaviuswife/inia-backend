@@ -1,17 +1,14 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.request;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 
 @Data
-public class TetrazolioRequestDTO {
-    private Long idLote;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
-    private Boolean cumpleEstandar;
-    private String comentarios;
-
+@EqualsAndHashCode(callSuper = true)
+public class TetrazolioRequestDTO extends AnalisisRequestDTO {
+    // Campos específicos de Tetrazolio
     private Integer numSemillasPorRep;
     private String pretratamiento;
     private String concentracion;

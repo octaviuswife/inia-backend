@@ -22,12 +22,11 @@ public class ContGerm {
     @ElementCollection
     private List<BigDecimal> promedioConRedondeo;
 
-    @OneToMany(mappedBy = "contGerm", cascade = CascadeType.ALL) // Cambiado el valor de mappedBy
+    @OneToMany(mappedBy = "contGerm", cascade = CascadeType.ALL)
     private List<ValoresGerm> valoresGerm;
 
     @ManyToOne
     @JoinColumn(name = "germinacionID")
     private Germinacion germinacion;
-
 }
 
