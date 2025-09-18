@@ -1,4 +1,6 @@
+
 package utec.proyectofinal.Proyecto.Final.UTEC.security;
+
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +40,7 @@ public class WebSecurityConfig {
                         /*
                         // LECTURA - Todos los roles autenticados pueden ver
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "ANALISTA", "OBSERVADOR")
-                        
+
                         // CREACIÓN Y EDICIÓN - Solo ADMIN y ANALISTA
                         .requestMatchers(HttpMethod.POST, "/api/germinacion/**").hasAnyRole("ADMIN", "ANALISTA")
                         .requestMatchers(HttpMethod.POST, "/api/tetrazolio/**").hasAnyRole("ADMIN", "ANALISTA")
@@ -46,15 +48,15 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/germinacion/**").hasAnyRole("ADMIN", "ANALISTA")
                         .requestMatchers(HttpMethod.PUT, "/api/tetrazolio/**").hasAnyRole("ADMIN", "ANALISTA")
                         .requestMatchers(HttpMethod.PUT, "/api/pureza/**").hasAnyRole("ADMIN", "ANALISTA")
-                        
+
                         // ELIMINACIÓN - Solo ADMIN
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
-                        
+
                         // GESTIÓN DE USUARIOS - Solo ADMIN
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                         */
-                        // Cualquier otro endpoint requiere autenticación
-                        .anyRequest().authenticated());
+                        // DESARROLLO: Permitir todo temporalmente, despues cambiar por .authenticated()
+                        .anyRequest().permitAll());
 
 
 
@@ -68,10 +70,10 @@ public class WebSecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:4200")
+                        .allowedOrigins("*") // Para desarrollo, despues cambiar a dominios específicos
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowedHeaders("*");
+                        // .allowCredentials(true); // Comentado para desarrollo
             }
         };
     }
