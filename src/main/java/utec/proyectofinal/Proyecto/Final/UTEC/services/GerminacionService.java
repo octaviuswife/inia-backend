@@ -129,13 +129,6 @@ public class GerminacionService {
         germinacion.setFechaInicio(solicitud.getFechaInicioGerminacion());
         germinacion.setFechaConteos(solicitud.getFechaConteos());
         germinacion.setFechaFin(solicitud.getFechaFinGerminacion());
-        germinacion.setTratamiento(solicitud.getTratamiento());
-        germinacion.setProductoYDosis(solicitud.getProductoYDosis());
-        germinacion.setNumSemillasPRep(solicitud.getNumSemillasPRep());
-        germinacion.setMetodo(solicitud.getMetodo());
-        germinacion.setTemperatura(solicitud.getTemperatura());
-        germinacion.setPrefrio(solicitud.getPrefrio());
-        germinacion.setPretratamiento(solicitud.getPretratamiento());
         germinacion.setNumDias(solicitud.getNumDias());
         
         System.out.println("Germinación mapeada exitosamente");
@@ -166,13 +159,6 @@ public class GerminacionService {
         germinacion.setFechaInicio(solicitud.getFechaInicioGerminacion());
         germinacion.setFechaConteos(solicitud.getFechaConteos());
         germinacion.setFechaFin(solicitud.getFechaFinGerminacion());
-        germinacion.setTratamiento(solicitud.getTratamiento());
-        germinacion.setProductoYDosis(solicitud.getProductoYDosis());
-        germinacion.setNumSemillasPRep(solicitud.getNumSemillasPRep());
-        germinacion.setMetodo(solicitud.getMetodo());
-        germinacion.setTemperatura(solicitud.getTemperatura());
-        germinacion.setPrefrio(solicitud.getPrefrio());
-        germinacion.setPretratamiento(solicitud.getPretratamiento());
         germinacion.setNumDias(solicitud.getNumDias());
         
         System.out.println("Germinación actualizada exitosamente");
@@ -199,13 +185,6 @@ public class GerminacionService {
         dto.setFechaInicio(germinacion.getFechaInicio());
         dto.setFechaConteos(germinacion.getFechaConteos());
         dto.setFechaFin(germinacion.getFechaFin());
-        dto.setTratamiento(germinacion.getTratamiento());
-        dto.setProductoYDosis(germinacion.getProductoYDosis());
-        dto.setNumSemillasPRep(germinacion.getNumSemillasPRep());
-        dto.setMetodo(germinacion.getMetodo());
-        dto.setTemperatura(germinacion.getTemperatura());
-        dto.setPrefrio(germinacion.getPrefrio());
-        dto.setPretratamiento(germinacion.getPretratamiento());
         dto.setNumDias(germinacion.getNumDias());
         
         return dto;

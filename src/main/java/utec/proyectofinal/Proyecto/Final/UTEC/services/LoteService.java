@@ -11,10 +11,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cliente;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.DatosHumedad;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Deposito;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DatosHumedadRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosHumedadDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
@@ -122,7 +125,22 @@ public class LoteService {
             lote.setRemitente(solicitud.getRemitente());
             lote.setObservaciones(solicitud.getObservaciones());
             lote.setKilosLimpios(solicitud.getKilosLimpios());
-            lote.setHumedad(solicitud.getHumedad());
+            
+            // Mapear datos de humedad
+            if (solicitud.getDatosHumedad() != null && !solicitud.getDatosHumedad().isEmpty()) {
+                List<DatosHumedad> datosHumedad = solicitud.getDatosHumedad().stream()
+                    .map(dhr -> {
+                        DatosHumedad dh = new DatosHumedad();
+                        dh.setTipoHumedad(dhr.getTipoHumedad());
+                        dh.setValor(dhr.getValor());
+                        dh.setLote(lote);
+                        return dh;
+                    })
+                    .collect(Collectors.toList());
+                lote.setDatosHumedad(datosHumedad);
+            }
+            
+            lote.setNumeroArticulo(solicitud.getNumeroArticulo());
             lote.setCantidad(solicitud.getCantidad());
             lote.setOrigen(solicitud.getOrigen());
             lote.setEstado(solicitud.getEstado());
@@ -199,7 +217,30 @@ public class LoteService {
         lote.setRemitente(solicitud.getRemitente());
         lote.setObservaciones(solicitud.getObservaciones());
         lote.setKilosLimpios(solicitud.getKilosLimpios());
-        lote.setHumedad(solicitud.getHumedad());
+        
+        // Actualizar datos de humedad
+        if (solicitud.getDatosHumedad() != null) {
+            // Limpiar datos existentes
+            if (lote.getDatosHumedad() != null) {
+                lote.getDatosHumedad().clear();
+            }
+            
+            // Agregar nuevos datos
+            if (!solicitud.getDatosHumedad().isEmpty()) {
+                List<DatosHumedad> datosHumedad = solicitud.getDatosHumedad().stream()
+                    .map(dhr -> {
+                        DatosHumedad dh = new DatosHumedad();
+                        dh.setTipoHumedad(dhr.getTipoHumedad());
+                        dh.setValor(dhr.getValor());
+                        dh.setLote(lote);
+                        return dh;
+                    })
+                    .collect(Collectors.toList());
+                lote.setDatosHumedad(datosHumedad);
+            }
+        }
+        
+        lote.setNumeroArticulo(solicitud.getNumeroArticulo());
         lote.setCantidad(solicitud.getCantidad());
         lote.setOrigen(solicitud.getOrigen());
         lote.setEstado(solicitud.getEstado());
@@ -257,7 +298,23 @@ public class LoteService {
         dto.setRemitente(lote.getRemitente());
         dto.setObservaciones(lote.getObservaciones());
         dto.setKilosLimpios(lote.getKilosLimpios());
-        dto.setHumedad(lote.getHumedad());
+        
+        // Mapear datos de humedad
+        if (lote.getDatosHumedad() != null && !lote.getDatosHumedad().isEmpty()) {
+            List<DatosHumedadDTO> datosHumedadDTO = lote.getDatosHumedad().stream()
+                .map(dh -> {
+                    DatosHumedadDTO dhDTO = new DatosHumedadDTO();
+                    dhDTO.setDatosHumedadID(dh.getDatosHumedadID());
+                    dhDTO.setTipoHumedad(dh.getTipoHumedad());
+                    dhDTO.setValor(dh.getValor());
+                    dhDTO.setLoteID(lote.getLoteID());
+                    return dhDTO;
+                })
+                .collect(Collectors.toList());
+            dto.setDatosHumedad(datosHumedadDTO);
+        }
+        
+        dto.setNumeroArticulo(lote.getNumeroArticulo());
         dto.setCantidad(lote.getCantidad());
         dto.setOrigen(lote.getOrigen());
         dto.setEstado(lote.getEstado());

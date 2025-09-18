@@ -3,6 +3,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.dtos.request;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class LoteRequestDTO {
@@ -21,7 +22,13 @@ public class LoteRequestDTO {
     private String remitente;
     private String observaciones;
     private BigDecimal kilosLimpios;
-    private BigDecimal humedad;
+    
+    // Datos de humedad - lista de objetos con tipo y valor
+    private List<DatosHumedadRequestDTO> datosHumedad;
+    
+    // Número de artículo - un solo valor seleccionado del catálogo
+    private String numeroArticulo;
+    
     private Double cantidad;
     private String origen;
     private String estado;

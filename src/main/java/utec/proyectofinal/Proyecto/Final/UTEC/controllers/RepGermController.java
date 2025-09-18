@@ -12,21 +12,21 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.RepGermService;
 
 @RestController
-@RequestMapping("/api/germinacion/{germinacionId}/conteo/{conteoId}/repeticion")
+@RequestMapping("/api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion")
 @CrossOrigin(origins = "*")
 public class RepGermController {
 
     @Autowired
     private RepGermService repGermService;
 
-    // Crear nueva repetición para un conteo
+    // Crear nueva repetición para una tabla
     @PostMapping
     public ResponseEntity<?> crearRepGerm(
             @PathVariable Long germinacionId,
-            @PathVariable Long conteoId,
+            @PathVariable Long tablaId,
             @RequestBody RepGermRequestDTO solicitud) {
         try {
-            RepGermDTO nuevaRepeticion = repGermService.crearRepGerm(conteoId, solicitud);
+            RepGermDTO nuevaRepeticion = repGermService.crearRepGerm(tablaId, solicitud);
             return new ResponseEntity<>(nuevaRepeticion, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -37,7 +37,7 @@ public class RepGermController {
     @GetMapping("/{repeticionId}")
     public ResponseEntity<?> obtenerRepGermPorId(
             @PathVariable Long germinacionId,
-            @PathVariable Long conteoId,
+            @PathVariable Long tablaId,
             @PathVariable Long repeticionId) {
         try {
             RepGermDTO repeticion = repGermService.obtenerRepGermPorId(repeticionId);
@@ -51,7 +51,7 @@ public class RepGermController {
     @PutMapping("/{repeticionId}")
     public ResponseEntity<?> actualizarRepGerm(
             @PathVariable Long germinacionId,
-            @PathVariable Long conteoId,
+            @PathVariable Long tablaId,
             @PathVariable Long repeticionId,
             @RequestBody RepGermRequestDTO solicitud) {
         try {
@@ -66,7 +66,7 @@ public class RepGermController {
     @DeleteMapping("/{repeticionId}")
     public ResponseEntity<?> eliminarRepGerm(
             @PathVariable Long germinacionId,
-            @PathVariable Long conteoId,
+            @PathVariable Long tablaId,
             @PathVariable Long repeticionId) {
         try {
             repGermService.eliminarRepGerm(repeticionId);
@@ -76,26 +76,26 @@ public class RepGermController {
         }
     }
 
-    // Obtener todas las repeticiones de un conteo
+    // Obtener todas las repeticiones de una tabla
     @GetMapping
-    public ResponseEntity<?> obtenerRepeticionesPorConteo(
+    public ResponseEntity<?> obtenerRepeticionesPorTabla(
             @PathVariable Long germinacionId,
-            @PathVariable Long conteoId) {
+            @PathVariable Long tablaId) {
         try {
-            List<RepGermDTO> repeticiones = repGermService.obtenerRepeticionesPorConteo(conteoId);
+            List<RepGermDTO> repeticiones = repGermService.obtenerRepeticionesPorTabla(tablaId);
             return new ResponseEntity<>(repeticiones, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
-    // Contar repeticiones de un conteo
+    // Contar repeticiones de una tabla
     @GetMapping("/contar")
-    public ResponseEntity<?> contarRepeticionesPorConteo(
+    public ResponseEntity<?> contarRepeticionesPorTabla(
             @PathVariable Long germinacionId,
-            @PathVariable Long conteoId) {
+            @PathVariable Long tablaId) {
         try {
-            Long cantidad = repGermService.contarRepeticionesPorConteo(conteoId);
+            Long cantidad = repGermService.contarRepeticionesPorTabla(tablaId);
             return new ResponseEntity<>(cantidad, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

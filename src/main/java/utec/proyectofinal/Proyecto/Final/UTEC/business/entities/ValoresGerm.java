@@ -24,7 +24,7 @@ public class ValoresGerm {
     private BigDecimal germinacion;
 
     @ManyToOne
-    @JoinColumn(name = "contGermID")
-    private ContGerm contGerm;
+    @JoinColumn(name = "tablaGermID")
+    private TablaGerm tablaGerm;
 }
 

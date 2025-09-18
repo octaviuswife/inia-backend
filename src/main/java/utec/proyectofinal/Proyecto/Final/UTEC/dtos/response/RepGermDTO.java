@@ -1,7 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
-import lombok.Data;
 import java.util.List;
+
+import lombok.Data;
 
 @Data
 public class RepGermDTO {
@@ -13,5 +14,5 @@ public class RepGermDTO {
     private Integer frescas;
     private Integer muertas;
     private Integer total;
-    private Long contGermId; // ID del conteo asociado
+    private Long tablaGermId; // ID de la tabla asociada
 }

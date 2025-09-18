@@ -44,32 +44,32 @@ public class ValoresGermService {
         }
     }
 
-    // Obtener valores por conteo e instituto
-    public ValoresGermDTO obtenerValoresPorConteoEInstituto(Long conteoId, Instituto instituto) {
-        Optional<ValoresGerm> valores = valoresGermRepository.findByContGermIdAndInstituto(conteoId, instituto);
+    // Obtener valores por tabla e instituto
+    public ValoresGermDTO obtenerValoresPorTablaEInstituto(Long tablaId, Instituto instituto) {
+        Optional<ValoresGerm> valores = valoresGermRepository.findByTablaGermIdAndInstituto(tablaId, instituto);
         if (valores.isPresent()) {
             return mapearEntidadADTO(valores.get());
         } else {
-            throw new RuntimeException("Valores no encontrados para conteo " + conteoId + " e instituto " + instituto);
+            throw new RuntimeException("Valores no encontrados para tabla " + tablaId + " e instituto " + instituto);
         }
     }
 
-    // Obtener todos los valores de un conteo
-    public List<ValoresGermDTO> obtenerValoresPorConteo(Long conteoId) {
-        List<ValoresGerm> valores = valoresGermRepository.findByContGermId(conteoId);
+    // Obtener todos los valores de una tabla
+    public List<ValoresGermDTO> obtenerValoresPorTabla(Long tablaId) {
+        List<ValoresGerm> valores = valoresGermRepository.findByTablaGermId(tablaId);
         return valores.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
 
-    // Obtener valores de INIA para un conteo
-    public ValoresGermDTO obtenerValoresIniaPorConteo(Long conteoId) {
-        return obtenerValoresPorConteoEInstituto(conteoId, Instituto.INIA);
+    // Obtener valores de INIA para una tabla
+    public ValoresGermDTO obtenerValoresIniaPorTabla(Long tablaId) {
+        return obtenerValoresPorTablaEInstituto(tablaId, Instituto.INIA);
     }
 
-    // Obtener valores de INASE para un conteo
-    public ValoresGermDTO obtenerValoresInasePorConteo(Long conteoId) {
-        return obtenerValoresPorConteoEInstituto(conteoId, Instituto.INASE);
+    // Obtener valores de INASE para una tabla
+    public ValoresGermDTO obtenerValoresInasePorTabla(Long tablaId) {
+        return obtenerValoresPorTablaEInstituto(tablaId, Instituto.INASE);
     }
 
     // Eliminar valores (eliminar realmente)
@@ -93,7 +93,7 @@ public class ValoresGermService {
         valores.setFrescas(solicitud.getFrescas());
         valores.setMuertas(solicitud.getMuertas());
         valores.setGerminacion(solicitud.getGerminacion());
-        // El instituto y el contGerm asociado no se cambian en actualizaciones
+        // El instituto y la tablaGerm asociada no se cambian en actualizaciones
     }
 
     // Mapear de Entity a DTO
@@ -108,9 +108,9 @@ public class ValoresGermService {
         dto.setGerminacion(valores.getGerminacion());
         dto.setInstituto(valores.getInstituto());
         
-        // Incluir ID del conteo asociado
-        if (valores.getContGerm() != null) {
-            dto.setContGermId(valores.getContGerm().getContGermID());
+        // Incluir ID de la tabla asociada
+        if (valores.getTablaGerm() != null) {
+            dto.setTablaGermId(valores.getTablaGerm().getTablaGermID());
         }
         
         return dto;

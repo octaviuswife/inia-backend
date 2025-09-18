@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ContGerm;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepGermRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepGermRequestDTO;
@@ -21,29 +21,23 @@ public class RepGermService {
     @Autowired
     private RepGermRepository repGermRepository;
 
-    @Autowired
-    private ContGermService contGermService;
-
     @PersistenceContext
     private EntityManager entityManager;
 
-    // Crear nueva repetición asociada a un conteo
-    public RepGermDTO crearRepGerm(Long contGermId, RepGermRequestDTO solicitud) {
+    // Crear nueva repetición asociada a una tabla
+    public RepGermDTO crearRepGerm(Long tablaGermId, RepGermRequestDTO solicitud) {
         try {
-            System.out.println("Creando repetición para conteo ID: " + contGermId);
+            System.out.println("Creando repetición para tabla ID: " + tablaGermId);
             
-            // Validar que el conteo existe
-            ContGerm contGerm = entityManager.find(ContGerm.class, contGermId);
-            if (contGerm == null) {
-                throw new RuntimeException("Conteo no encontrado con ID: " + contGermId);
+            // Validar que la tabla existe
+            TablaGerm tablaGerm = entityManager.find(TablaGerm.class, tablaGermId);
+            if (tablaGerm == null) {
+                throw new RuntimeException("Tabla no encontrada con ID: " + tablaGermId);
             }
             
             // Crear la repetición
-            RepGerm repGerm = mapearSolicitudAEntidad(solicitud, contGerm);
+            RepGerm repGerm = mapearSolicitudAEntidad(solicitud, tablaGerm);
             RepGerm repGermGuardada = repGermRepository.save(repGerm);
-            
-            // Recalcular automáticamente los valores de INIA
-            contGermService.calcularYActualizarValoresINIA(contGerm);
             
             System.out.println("Repetición creada exitosamente con ID: " + repGermGuardada.getRepGermID());
             return mapearEntidadADTO(repGermGuardada);
@@ -69,13 +63,9 @@ public class RepGermService {
         
         if (repGermExistente.isPresent()) {
             RepGerm repGerm = repGermExistente.get();
-            ContGerm contGerm = repGerm.getContGerm(); // Guardar referencia antes de actualizar
             
             actualizarEntidadDesdeSolicitud(repGerm, solicitud);
             RepGerm repGermActualizada = repGermRepository.save(repGerm);
-            
-            // Recalcular automáticamente los valores de INIA
-            contGermService.calcularYActualizarValoresINIA(contGerm);
             
             return mapearEntidadADTO(repGermActualizada);
         } else {
@@ -89,12 +79,8 @@ public class RepGermService {
         
         if (repGermExistente.isPresent()) {
             RepGerm repGerm = repGermExistente.get();
-            ContGerm contGerm = repGerm.getContGerm(); // Guardar referencia antes de eliminar
             
             repGermRepository.deleteById(id);
-            
-            // Recalcular automáticamente los valores de INIA después de eliminar
-            contGermService.calcularYActualizarValoresINIA(contGerm);
             
             System.out.println("Repetición eliminada con ID: " + id);
         } else {
@@ -102,21 +88,21 @@ public class RepGermService {
         }
     }
 
-    // Obtener todas las repeticiones de un conteo
-    public List<RepGermDTO> obtenerRepeticionesPorConteo(Long contGermId) {
-        List<RepGerm> repeticiones = repGermRepository.findByContGermId(contGermId);
+    // Obtener todas las repeticiones de una tabla
+    public List<RepGermDTO> obtenerRepeticionesPorTabla(Long tablaGermId) {
+        List<RepGerm> repeticiones = repGermRepository.findByTablaGermId(tablaGermId);
         return repeticiones.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
 
-    // Contar repeticiones de un conteo
-    public Long contarRepeticionesPorConteo(Long contGermId) {
-        return repGermRepository.countByContGermId(contGermId);
+    // Contar repeticiones de una tabla
+    public Long contarRepeticionesPorTabla(Long tablaGermId) {
+        return repGermRepository.countByTablaGermId(tablaGermId);
     }
 
     // Mapear de RequestDTO a Entity
-    private RepGerm mapearSolicitudAEntidad(RepGermRequestDTO solicitud, ContGerm contGerm) {
+    private RepGerm mapearSolicitudAEntidad(RepGermRequestDTO solicitud, TablaGerm tablaGerm) {
         RepGerm repGerm = new RepGerm();
         repGerm.setNumRep(solicitud.getNumRep());
         repGerm.setNormales(solicitud.getNormales());
@@ -125,7 +111,7 @@ public class RepGermService {
         repGerm.setFrescas(solicitud.getFrescas());
         repGerm.setMuertas(solicitud.getMuertas());
         repGerm.setTotal(solicitud.getTotal());
-        repGerm.setContGerm(contGerm);
+        repGerm.setTablaGerm(tablaGerm);
         
         return repGerm;
     }
@@ -139,7 +125,7 @@ public class RepGermService {
         repGerm.setFrescas(solicitud.getFrescas());
         repGerm.setMuertas(solicitud.getMuertas());
         repGerm.setTotal(solicitud.getTotal());
-        // El conteo asociado no se cambia en actualizaciones
+        // La tabla asociada no se cambia en actualizaciones
     }
 
     // Mapear de Entity a DTO
@@ -154,9 +140,9 @@ public class RepGermService {
         dto.setMuertas(repGerm.getMuertas());
         dto.setTotal(repGerm.getTotal());
         
-        // Incluir ID del conteo asociado
-        if (repGerm.getContGerm() != null) {
-            dto.setContGermId(repGerm.getContGerm().getContGermID());
+        // Incluir ID de la tabla asociada
+        if (repGerm.getTablaGerm() != null) {
+            dto.setTablaGermId(repGerm.getTablaGerm().getTablaGermID());
         }
         
         return dto;

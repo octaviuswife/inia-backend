@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "Lote")
@@ -42,7 +43,14 @@ public class Lote {
     private String observaciones;
 
     private BigDecimal kilosLimpios;
-    private BigDecimal humedad;
+    
+    // Relación con datos de humedad (múltiples conjuntos de tipo + valor)
+    @OneToMany(mappedBy = "lote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<DatosHumedad> datosHumedad;
+    
+    // Número de artículo - un solo valor seleccionado del catálogo
+    private String numeroArticulo;
+    
     private Double cantidad;
 
     private String origen;

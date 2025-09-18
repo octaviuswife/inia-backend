@@ -25,7 +25,7 @@ public class RepGerm {
     private Integer total;
 
     @ManyToOne
-    @JoinColumn(name = "contGermID")
-    private ContGerm contGerm;
+    @JoinColumn(name = "tablaGermID")
+    private TablaGerm tablaGerm;
 }
 

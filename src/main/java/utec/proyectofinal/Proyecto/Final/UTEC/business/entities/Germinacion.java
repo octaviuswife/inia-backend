@@ -17,16 +17,9 @@ public class Germinacion extends Analisis {
 
     private LocalDate fechaFin;
 
-    private String tratamiento;
-    private String productoYDosis;
-    private Integer numSemillasPRep;
-    private String metodo;
-    private Double temperatura;
-    private String prefrio;
-    private String pretratamiento;
     private String numDias;
 
     @OneToMany(mappedBy = "germinacion", cascade = CascadeType.ALL)
-    private List<ContGerm> contGerm;
+    private List<TablaGerm> tablaGerm;
 
 }

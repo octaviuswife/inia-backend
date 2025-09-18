@@ -1,7 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.request;
 
-import lombok.Data;
 import java.util.List;
+
+import lombok.Data;
 
 @Data
 public class RepGermRequestDTO {
