@@ -1,20 +1,20 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.mappers;
 
 import jakarta.persistence.EntityManager;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
 
 public class MappingUtils {
 
-    public static CatalogoDTO toCatalogoDTO(Catalogo catalogo) {
-        CatalogoDTO dto = new CatalogoDTO();
-        dto.setCatalogoID(catalogo.getCatalogoID());
-        dto.setNombreComun(catalogo.getNombreComun());
-        dto.setNombreCientifico(catalogo.getNombreCientifico());
-        dto.setMaleza(catalogo.getMaleza());
+    public static MalezasYCultivosCatalogoDTO toCatalogoDTO(MalezasYCultivosCatalogo malezasYCultivosCatalogo) {
+        MalezasYCultivosCatalogoDTO dto = new MalezasYCultivosCatalogoDTO();
+        dto.setCatalogoID(malezasYCultivosCatalogo.getCatalogoID());
+        dto.setNombreComun(malezasYCultivosCatalogo.getNombreComun());
+        dto.setNombreCientifico(malezasYCultivosCatalogo.getNombreCientifico());
+        dto.setMaleza(malezasYCultivosCatalogo.getMaleza());
         return dto;
     }
 
@@ -38,7 +38,7 @@ public class MappingUtils {
         listado.setListadoNum(solicitud.getListadoNum());
 
         if (solicitud.getIdCatalogo() != null) {
-            Catalogo catalogo = entityManager.getReference(Catalogo.class, solicitud.getIdCatalogo());
+            MalezasYCultivosCatalogo catalogo = entityManager.getReference(MalezasYCultivosCatalogo.class, solicitud.getIdCatalogo());
             listado.setCatalogo(catalogo);
         }
         return listado;

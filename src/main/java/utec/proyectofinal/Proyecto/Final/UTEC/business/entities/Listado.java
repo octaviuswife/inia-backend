@@ -28,6 +28,6 @@ public class Listado {
 
     @ManyToOne
     @JoinColumn(name = "catalogo_id", referencedColumnName = "catalogoID")
-    private Catalogo catalogo;
+    private MalezasYCultivosCatalogo catalogo;
 }
 

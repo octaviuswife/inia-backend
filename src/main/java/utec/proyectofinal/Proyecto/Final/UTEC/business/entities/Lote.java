@@ -2,6 +2,8 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -22,12 +24,15 @@ public class Lote {
     @JoinColumn(name = "cultivarID")
     private Cultivar cultivar;
 
-    private String tipo;
-    private String empresa;
+    private TipoLote tipo;
+    
+    @ManyToOne
+    @JoinColumn(name = "empresaID")
+    private Contacto empresa;
 
     @ManyToOne
     @JoinColumn(name = "clienteID")
-    private Cliente cliente;
+    private Contacto cliente;
 
     private String codigoCC;
     private String codigoFF;
@@ -36,7 +41,7 @@ public class Lote {
 
     @ManyToOne
     @JoinColumn(name = "depositoID")
-    private Deposito deposito;
+    private Catalogo deposito;
 
     private String unidadEmbolsado;
     private String remitente;
@@ -48,13 +53,19 @@ public class Lote {
     @OneToMany(mappedBy = "lote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DatosHumedad> datosHumedad;
     
-    // Número de artículo - un solo valor seleccionado del catálogo
-    private String numeroArticulo;
+    @ManyToOne
+    @JoinColumn(name = "numeroArticuloID")
+    private Catalogo numeroArticulo;
     
     private Double cantidad;
 
-    private String origen;
-    private String estado;
+    @ManyToOne
+    @JoinColumn(name = "origenID")
+    private Catalogo origen;
+    
+    @ManyToOne
+    @JoinColumn(name = "estadoID")
+    private Catalogo estado;
     private LocalDate fechaCosecha;
     private Boolean activo;
 }

@@ -1,7 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +16,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepos
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
@@ -92,7 +91,7 @@ public class PurezaService {
     }
 
     // Obtener todos los catálogos
-    public List<CatalogoDTO> obtenerTodosCatalogos() {
+    public List<MalezasYCultivosCatalogoDTO> obtenerTodosCatalogos() {
         return catalogoRepository.findAll()
                 .stream()
                 .map(MappingUtils::toCatalogoDTO)

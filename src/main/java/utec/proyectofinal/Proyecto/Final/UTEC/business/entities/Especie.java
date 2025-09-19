@@ -16,6 +16,7 @@ public class Especie {
 
     private String nombreCientifico;
     private String nombreComun;
+    private Boolean activo = true;
 
     @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Cultivar> cultivares;

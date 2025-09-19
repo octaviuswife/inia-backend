@@ -17,7 +17,9 @@ public class DatosHumedad {
     @JoinColumn(name = "loteID")
     private Lote lote;
 
-    private String tipoHumedad; // Valor seleccionado de la lista configurable
+    @ManyToOne
+    @JoinColumn(name = "tipoHumedadID")
+    private Catalogo tipoHumedad; // Valor seleccionado del catalogo configurable
 
-    private BigDecimal valor; // Valor numérico ingresado manualmente
+    private BigDecimal valor;
 }

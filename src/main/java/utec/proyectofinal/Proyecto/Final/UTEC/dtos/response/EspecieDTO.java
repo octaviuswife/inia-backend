@@ -7,9 +7,8 @@ import java.util.List;
 @Data
 public class EspecieDTO {
     private Long especieID;
-
     private String nombreCientifico;
     private String nombreComun;
-
+    private Boolean activo;
     private List<String> cultivares;
 }

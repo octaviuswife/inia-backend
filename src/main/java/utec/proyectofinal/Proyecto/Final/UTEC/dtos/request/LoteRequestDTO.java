@@ -11,7 +11,7 @@ public class LoteRequestDTO {
     private String ficha;
     private Long cultivarID;
     private String tipo;
-    private String empresa;
+    private Long empresaID;
     private Long clienteID;
     private String codigoCC;
     private String codigoFF;
@@ -26,8 +26,8 @@ public class LoteRequestDTO {
     // Datos de humedad - lista de objetos con tipo y valor
     private List<DatosHumedadRequestDTO> datosHumedad;
     
-    // Número de artículo - un solo valor seleccionado del catálogo
-    private String numeroArticulo;
+    // Número de artículo - ID del catálogo seleccionado
+    private Long numeroArticuloID;
     
     private Double cantidad;
     private String origen;

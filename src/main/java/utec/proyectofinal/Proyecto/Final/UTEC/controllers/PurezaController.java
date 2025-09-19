@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoPureza;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.PurezaService;
@@ -111,9 +111,9 @@ public class PurezaController {
 
     // Obtener todos los catálogos para el select de otras semillas
     @GetMapping("/catalogos")
-    public ResponseEntity<List<CatalogoDTO>> obtenerTodosCatalogos() {
+    public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerTodosCatalogos() {
         try {
-            List<CatalogoDTO> catalogos = purezaService.obtenerTodosCatalogos();
+            List<MalezasYCultivosCatalogoDTO> catalogos = purezaService.obtenerTodosCatalogos();
             return new ResponseEntity<>(catalogos, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

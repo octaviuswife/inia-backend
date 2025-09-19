@@ -9,17 +9,17 @@ import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cliente;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.DatosHumedad;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Deposito;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DatosHumedadRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosHumedadDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
 
 @Service
@@ -27,6 +27,9 @@ public class LoteService {
 
     @Autowired
     private LoteRepository loteRepository;
+    
+    @Autowired
+    private CatalogoService catalogoService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -115,8 +118,28 @@ public class LoteService {
             System.out.println("Mapeando campos básicos...");
             lote.setNumeroFicha(solicitud.getNumeroFicha());
             lote.setFicha(solicitud.getFicha());
-            lote.setTipo(solicitud.getTipo());
-            lote.setEmpresa(solicitud.getEmpresa());
+            
+            // Convertir String a enum TipoLote
+            if (solicitud.getTipo() != null) {
+                lote.setTipo(TipoLote.valueOf(solicitud.getTipo().toUpperCase()));
+            }
+            
+            // Mapear Empresa
+            if (solicitud.getEmpresaID() != null) {
+                try {
+                    System.out.println("Buscando empresa con ID: " + solicitud.getEmpresaID());
+                    Contacto empresa = entityManager.find(Contacto.class, solicitud.getEmpresaID());
+                    if (empresa != null) {
+                        lote.setEmpresa(empresa);
+                        System.out.println("Empresa encontrada y asignada");
+                    } else {
+                        System.out.println("Empresa no encontrada con ID: " + solicitud.getEmpresaID());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error al buscar empresa: " + e.getMessage());
+                }
+            }
+            
             lote.setCodigoCC(solicitud.getCodigoCC());
             lote.setCodigoFF(solicitud.getCodigoFF());
             lote.setFechaEntrega(solicitud.getFechaEntrega());
@@ -131,7 +154,13 @@ public class LoteService {
                 List<DatosHumedad> datosHumedad = solicitud.getDatosHumedad().stream()
                     .map(dhr -> {
                         DatosHumedad dh = new DatosHumedad();
-                        dh.setTipoHumedad(dhr.getTipoHumedad());
+                        
+                        // Obtener el catálogo de tipo humedad por ID
+                        if (dhr.getTipoHumedadID() != null) {
+                            Catalogo tipoHumedad = catalogoService.obtenerEntidadPorId(dhr.getTipoHumedadID());
+                            dh.setTipoHumedad(tipoHumedad);
+                        }
+                        
                         dh.setValor(dhr.getValor());
                         dh.setLote(lote);
                         return dh;
@@ -140,10 +169,12 @@ public class LoteService {
                 lote.setDatosHumedad(datosHumedad);
             }
             
-            lote.setNumeroArticulo(solicitud.getNumeroArticulo());
+            // Mapear número de artículo
+            if (solicitud.getNumeroArticuloID() != null) {
+                Catalogo numeroArticulo = catalogoService.obtenerEntidadPorId(solicitud.getNumeroArticuloID());
+                lote.setNumeroArticulo(numeroArticulo);
+            }
             lote.setCantidad(solicitud.getCantidad());
-            lote.setOrigen(solicitud.getOrigen());
-            lote.setEstado(solicitud.getEstado());
             lote.setFechaCosecha(solicitud.getFechaCosecha());
 
             System.out.println("Mapeando entidades relacionadas...");
@@ -166,7 +197,7 @@ public class LoteService {
             if (solicitud.getClienteID() != null) {
                 try {
                     System.out.println("Buscando cliente con ID: " + solicitud.getClienteID());
-                    Cliente cliente = entityManager.find(Cliente.class, solicitud.getClienteID());
+                    Contacto cliente = entityManager.find(Contacto.class, solicitud.getClienteID());
                     if (cliente != null) {
                         lote.setCliente(cliente);
                         System.out.println("Cliente encontrado y asignado");
@@ -181,7 +212,7 @@ public class LoteService {
             if (solicitud.getDepositoID() != null) {
                 try {
                     System.out.println("Buscando deposito con ID: " + solicitud.getDepositoID());
-                    Deposito deposito = entityManager.find(Deposito.class, solicitud.getDepositoID());
+                    Catalogo deposito = catalogoService.obtenerEntidadPorId(solicitud.getDepositoID());
                     if (deposito != null) {
                         lote.setDeposito(deposito);
                         System.out.println("Deposito encontrado y asignado");
@@ -207,8 +238,18 @@ public class LoteService {
     private void actualizarEntidadDesdeSolicitud(Lote lote, LoteRequestDTO solicitud) {
         lote.setNumeroFicha(solicitud.getNumeroFicha());
         lote.setFicha(solicitud.getFicha());
-        lote.setTipo(solicitud.getTipo());
-        lote.setEmpresa(solicitud.getEmpresa());
+        
+        // Convertir String a enum TipoLote
+        if (solicitud.getTipo() != null) {
+            lote.setTipo(TipoLote.valueOf(solicitud.getTipo().toUpperCase()));
+        }
+        
+        // Mapear Empresa
+        if (solicitud.getEmpresaID() != null) {
+            Contacto empresa = entityManager.find(Contacto.class, solicitud.getEmpresaID());
+            lote.setEmpresa(empresa);
+        }
+        
         lote.setCodigoCC(solicitud.getCodigoCC());
         lote.setCodigoFF(solicitud.getCodigoFF());
         lote.setFechaEntrega(solicitud.getFechaEntrega());
@@ -230,7 +271,13 @@ public class LoteService {
                 List<DatosHumedad> datosHumedad = solicitud.getDatosHumedad().stream()
                     .map(dhr -> {
                         DatosHumedad dh = new DatosHumedad();
-                        dh.setTipoHumedad(dhr.getTipoHumedad());
+                        
+                        // Obtener el catálogo de tipo humedad por ID
+                        if (dhr.getTipoHumedadID() != null) {
+                            Catalogo tipoHumedad = catalogoService.obtenerEntidadPorId(dhr.getTipoHumedadID());
+                            dh.setTipoHumedad(tipoHumedad);
+                        }
+                        
                         dh.setValor(dhr.getValor());
                         dh.setLote(lote);
                         return dh;
@@ -240,10 +287,14 @@ public class LoteService {
             }
         }
         
-        lote.setNumeroArticulo(solicitud.getNumeroArticulo());
+        // Actualizar número de artículo
+        if (solicitud.getNumeroArticuloID() != null) {
+            Catalogo numeroArticulo = catalogoService.obtenerEntidadPorId(solicitud.getNumeroArticuloID());
+            lote.setNumeroArticulo(numeroArticulo);
+        } else {
+            lote.setNumeroArticulo(null);
+        }
         lote.setCantidad(solicitud.getCantidad());
-        lote.setOrigen(solicitud.getOrigen());
-        lote.setEstado(solicitud.getEstado());
         lote.setFechaCosecha(solicitud.getFechaCosecha());
 
         // Actualizar entidades relacionadas usando EntityManager
@@ -260,7 +311,7 @@ public class LoteService {
 
         if (solicitud.getClienteID() != null) {
             try {
-                Cliente cliente = entityManager.find(Cliente.class, solicitud.getClienteID());
+                Contacto cliente = entityManager.find(Contacto.class, solicitud.getClienteID());
                 lote.setCliente(cliente);
             } catch (Exception e) {
                 // Si no se encuentra el cliente, no lo actualizamos
@@ -271,7 +322,7 @@ public class LoteService {
 
         if (solicitud.getDepositoID() != null) {
             try {
-                Deposito deposito = entityManager.find(Deposito.class, solicitud.getDepositoID());
+                Catalogo deposito = catalogoService.obtenerEntidadPorId(solicitud.getDepositoID());
                 lote.setDeposito(deposito);
             } catch (Exception e) {
                 // Si no se encuentra el deposito, no lo actualizamos
@@ -288,8 +339,18 @@ public class LoteService {
         dto.setLoteID(lote.getLoteID());
         dto.setNumeroFicha(lote.getNumeroFicha());
         dto.setFicha(lote.getFicha());
-        dto.setTipo(lote.getTipo());
-        dto.setEmpresa(lote.getEmpresa());
+        
+        // Convertir enum TipoLote a String
+        if (lote.getTipo() != null) {
+            dto.setTipo(lote.getTipo().name());
+        }
+        
+        // Mapear Empresa
+        if (lote.getEmpresa() != null) {
+            dto.setEmpresaID(lote.getEmpresa().getContactoID());
+            dto.setEmpresaNombre(lote.getEmpresa().getNombre());
+        }
+        
         dto.setCodigoCC(lote.getCodigoCC());
         dto.setCodigoFF(lote.getCodigoFF());
         dto.setFechaEntrega(lote.getFechaEntrega());
@@ -305,36 +366,52 @@ public class LoteService {
                 .map(dh -> {
                     DatosHumedadDTO dhDTO = new DatosHumedadDTO();
                     dhDTO.setDatosHumedadID(dh.getDatosHumedadID());
-                    dhDTO.setTipoHumedad(dh.getTipoHumedad());
+                    
+                    if (dh.getTipoHumedad() != null) {
+                        dhDTO.setTipoHumedadID(dh.getTipoHumedad().getId());
+                        dhDTO.setTipoHumedadValor(dh.getTipoHumedad().getValor());
+                    }
+                    
                     dhDTO.setValor(dh.getValor());
-                    dhDTO.setLoteID(lote.getLoteID());
                     return dhDTO;
                 })
                 .collect(Collectors.toList());
             dto.setDatosHumedad(datosHumedadDTO);
         }
         
-        dto.setNumeroArticulo(lote.getNumeroArticulo());
+        // Mapear número de artículo
+        if (lote.getNumeroArticulo() != null) {
+            dto.setNumeroArticuloID(lote.getNumeroArticulo().getId());
+            dto.setNumeroArticuloValor(lote.getNumeroArticulo().getValor());
+        }
         dto.setCantidad(lote.getCantidad());
-        dto.setOrigen(lote.getOrigen());
-        dto.setEstado(lote.getEstado());
         dto.setFechaCosecha(lote.getFechaCosecha());
         dto.setActivo(lote.getActivo());
 
         // Mapear entidades relacionadas
         if (lote.getCultivar() != null) {
-            dto.setCultivar(lote.getCultivar().getNombre());
-            if (lote.getCultivar().getEspecie() != null) {
-                dto.setEspecie(lote.getCultivar().getEspecie().getNombreComun());
-            }
+            dto.setCultivarID(lote.getCultivar().getCultivarID());
+            dto.setCultivarNombre(lote.getCultivar().getNombre());
         }
 
         if (lote.getCliente() != null) {
-            dto.setCliente(lote.getCliente().getNombre());
+            dto.setClienteID(lote.getCliente().getContactoID());
+            dto.setClienteNombre(lote.getCliente().getNombre());
         }
 
         if (lote.getDeposito() != null) {
-            dto.setDeposito(lote.getDeposito().getNombre());
+            dto.setDepositoID(lote.getDeposito().getId());
+            dto.setDepositoValor(lote.getDeposito().getValor());
+        }
+        
+        if (lote.getOrigen() != null) {
+            dto.setOrigenID(lote.getOrigen().getId());
+            dto.setOrigenValor(lote.getOrigen().getValor());
+        }
+        
+        if (lote.getEstado() != null) {
+            dto.setEstadoID(lote.getEstado().getId());
+            dto.setEstadoValor(lote.getEstado().getValor());
         }
 
         return dto;

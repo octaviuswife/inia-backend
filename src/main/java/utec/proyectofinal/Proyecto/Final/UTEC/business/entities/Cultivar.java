@@ -17,5 +17,6 @@ public class Cultivar {
     private Especie especie;
 
     private String nombre;
+    private Boolean activo = true;
 }
 

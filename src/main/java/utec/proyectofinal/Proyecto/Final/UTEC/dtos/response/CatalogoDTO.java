@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class CatalogoDTO {
-    private Long catalogoID;
-    private String nombreComun;
-    private String nombreCientifico;
-    private Boolean maleza;
+    private Long id;
+    private String tipo;
+    private String valor;
+    private Boolean activo;
 }
