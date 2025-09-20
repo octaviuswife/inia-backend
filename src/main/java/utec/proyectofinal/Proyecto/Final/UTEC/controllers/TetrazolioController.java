@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeadosRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoTetrazolio;
@@ -79,6 +80,21 @@ public class TetrazolioController {
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Actualizar porcentajes redondeados (solo cuando todas las repeticiones estén completas)
+    @PutMapping("/{id}/porcentajes")
+    public ResponseEntity<TetrazolioDTO> actualizarPorcentajesRedondeados(@PathVariable Long id, @RequestBody PorcentajesRedondeadosRequestDTO solicitud) {
+        try {
+            TetrazolioDTO tetrazolioActualizado = tetrazolioService.actualizarPorcentajesRedondeados(id, solicitud);
+            return new ResponseEntity<>(tetrazolioActualizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            System.err.println("Error al actualizar porcentajes: " + e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            System.err.println("Error interno al actualizar porcentajes: " + e.getMessage());
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
