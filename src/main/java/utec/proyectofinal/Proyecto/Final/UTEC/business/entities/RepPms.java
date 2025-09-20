@@ -14,7 +14,9 @@ public class RepPms {
     private Long repPMSID;
 
     private Integer numRep;
+    private Integer numTanda;
     private BigDecimal peso;
+    private Boolean valido; // Indica si la repetición es válida según el CV
 
     @ManyToOne
     @JoinColumn(name = "pmsID")

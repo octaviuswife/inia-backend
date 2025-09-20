@@ -9,5 +9,7 @@ import java.math.BigDecimal;
 public class RepPmsDTO {
     private Long repPMSID;
     private Integer numRep;
+    private Integer numTanda;
     private BigDecimal peso;
+    private Boolean valido;
 }

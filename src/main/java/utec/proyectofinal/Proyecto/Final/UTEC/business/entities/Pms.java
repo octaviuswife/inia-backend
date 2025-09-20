@@ -11,6 +11,12 @@ import java.util.List;
 @Data
 public class Pms extends Analisis {
 
+    // Campos de configuración inicial
+    private Integer numRepeticionesEsperadas;
+    private Integer numTandas;
+    private Boolean esSemillaBrozosa;
+    
+    // Campos calculados
     private BigDecimal promedio100g;
     private BigDecimal desvioStd;
     private BigDecimal coefVariacion;

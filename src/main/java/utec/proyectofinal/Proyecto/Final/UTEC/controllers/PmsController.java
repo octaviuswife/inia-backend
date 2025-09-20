@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
 
@@ -96,6 +97,19 @@ public class PmsController {
         try {
             List<PmsDTO> lista = pmsService.obtenerPmsPorIdLote(idLote);
             return new ResponseEntity<>(lista, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Actualizar PMS con valor redondeado (solo cuando todas las repeticiones estén completas)
+    @PutMapping("/{id}/redondeo")
+    public ResponseEntity<PmsDTO> actualizarPmsConRedondeo(@PathVariable Long id, @RequestBody PmsRedondeoRequestDTO solicitud) {
+        try {
+            PmsDTO actualizado = pmsService.actualizarPmsConRedondeo(id, solicitud);
+            return new ResponseEntity<>(actualizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

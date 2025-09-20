@@ -7,11 +7,9 @@ import java.math.BigDecimal;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PmsRequestDTO extends AnalisisRequestDTO {
-    // Campos específicos de PMS
-    private BigDecimal promedio100g;
-    private BigDecimal desvioStd;
-    private BigDecimal coefVariacion;
-    private BigDecimal pmssinRedon;
-    private BigDecimal pmsconRedon;
+    // Campos de configuración inicial
+    private Integer numRepeticionesEsperadas;
+    private Integer numTandas; // Por defecto será 1
+    private Boolean esSemillaBrozosa;
 }
 
