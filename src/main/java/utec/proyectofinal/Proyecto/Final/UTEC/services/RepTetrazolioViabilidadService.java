@@ -35,6 +35,9 @@ public class RepTetrazolioViabilidadService {
                 throw new RuntimeException("Tetrazolio no encontrado con ID: " + tetrazolioId);
             }
             
+            // Validar límite de repeticiones
+            validarLimiteRepeticiones(tetrazolio);
+            
             // Crear la repetición
             RepTetrazolioViabilidad repeticion = mapearSolicitudAEntidad(solicitud, tetrazolio);
             RepTetrazolioViabilidad repeticionGuardada = repeticionRepository.save(repeticion);
@@ -125,5 +128,18 @@ public class RepTetrazolioViabilidadService {
         dto.setNoViablesNum(repeticion.getNoViablesNum());
         dto.setDuras(repeticion.getDuras());
         return dto;
+    }
+    
+    // Validar que no se excedan las repeticiones esperadas
+    private void validarLimiteRepeticiones(Tetrazolio tetrazolio) {
+        if (tetrazolio.getNumRepeticionesEsperadas() != null && tetrazolio.getNumRepeticionesEsperadas() > 0) {
+            Long repeticionesExistentes = repeticionRepository.countByTetrazolioId(tetrazolio.getAnalisisID());
+            
+            if (repeticionesExistentes >= tetrazolio.getNumRepeticionesEsperadas()) {
+                throw new RuntimeException(
+                    String.format("No se pueden crear más repeticiones. Ya se han creado %d de %d repeticiones esperadas para este análisis.", 
+                                repeticionesExistentes, tetrazolio.getNumRepeticionesEsperadas()));
+            }
+        }
     }
 }

@@ -106,4 +106,30 @@ public class TetrazolioController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Enviar análisis para aprobación (cambiar estado a PENDIENTE_APROBACION)
+    @PutMapping("/{id}/enviar-aprobacion")
+    public ResponseEntity<TetrazolioDTO> enviarAprobacion(@PathVariable Long id) {
+        try {
+            TetrazolioDTO tetrazolioActualizado = tetrazolioService.enviarAprobacion(id);
+            return new ResponseEntity<>(tetrazolioActualizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Aprobar análisis (cambiar estado a APROBADO)
+    @PutMapping("/{id}/aprobar")
+    public ResponseEntity<TetrazolioDTO> aprobarAnalisis(@PathVariable Long id) {
+        try {
+            TetrazolioDTO tetrazolioActualizado = tetrazolioService.aprobarAnalisis(id);
+            return new ResponseEntity<>(tetrazolioActualizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

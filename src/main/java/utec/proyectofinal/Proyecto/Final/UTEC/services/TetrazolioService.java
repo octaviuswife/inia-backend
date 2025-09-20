@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazolioViabilidadRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
@@ -22,6 +23,9 @@ public class TetrazolioService {
 
     @Autowired
     private TetrazolioRepository tetrazolioRepository;
+
+    @Autowired
+    private RepTetrazolioViabilidadRepository repeticionRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -105,6 +109,18 @@ public class TetrazolioService {
     private Tetrazolio mapearSolicitudAEntidad(TetrazolioRequestDTO solicitud) {
         System.out.println("Mapeando solicitud a entidad tetrazolio");
         
+        // Validar que no se ingresen porcentajes redondeados en la creación
+        if (solicitud.getPorcViablesRedondeo() != null || 
+            solicitud.getPorcNoViablesRedondeo() != null || 
+            solicitud.getPorcDurasRedondeo() != null) {
+            throw new RuntimeException("Los porcentajes redondeados solo se pueden ingresar después de completar todas las repeticiones esperadas.");
+        }
+        
+        // Validar que se especifique el número de repeticiones esperadas
+        if (solicitud.getNumRepeticionesEsperadas() == null || solicitud.getNumRepeticionesEsperadas() <= 0) {
+            throw new RuntimeException("Debe especificar un número válido de repeticiones esperadas (mayor a 0).");
+        }
+        
         Tetrazolio tetrazolio = new Tetrazolio();
         
         // Datos del análisis base
@@ -132,6 +148,10 @@ public class TetrazolioService {
         tetrazolio.setTincionHs(solicitud.getTincionHs());
         tetrazolio.setTincionTemp(solicitud.getTincionTemp());
         tetrazolio.setFecha(solicitud.getFecha());
+        tetrazolio.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());
+        tetrazolio.setPorcViablesRedondeo(solicitud.getPorcViablesRedondeo());
+        tetrazolio.setPorcNoViablesRedondeo(solicitud.getPorcNoViablesRedondeo());
+        tetrazolio.setPorcDurasRedondeo(solicitud.getPorcDurasRedondeo());
         
         System.out.println("Tetrazolio mapeado exitosamente");
         return tetrazolio;
@@ -140,6 +160,13 @@ public class TetrazolioService {
     // Actualizar Entity desde RequestDTO para edición
     private void actualizarEntidadDesdeSolicitud(Tetrazolio tetrazolio, TetrazolioRequestDTO solicitud) {
         System.out.println("Actualizando tetrazolio desde solicitud");
+        
+        // Validar actualización de porcentajes redondeados
+        if (solicitud.getPorcViablesRedondeo() != null || 
+            solicitud.getPorcNoViablesRedondeo() != null || 
+            solicitud.getPorcDurasRedondeo() != null) {
+            validarCompletitudRepeticiones(tetrazolio);
+        }
         
         // Datos del análisis base
         tetrazolio.setFechaInicio(solicitud.getFechaInicio());
@@ -164,6 +191,10 @@ public class TetrazolioService {
         tetrazolio.setTincionHs(solicitud.getTincionHs());
         tetrazolio.setTincionTemp(solicitud.getTincionTemp());
         tetrazolio.setFecha(solicitud.getFecha());
+        tetrazolio.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());
+        tetrazolio.setPorcViablesRedondeo(solicitud.getPorcViablesRedondeo());
+        tetrazolio.setPorcNoViablesRedondeo(solicitud.getPorcNoViablesRedondeo());
+        tetrazolio.setPorcDurasRedondeo(solicitud.getPorcDurasRedondeo());
         
         System.out.println("Tetrazolio actualizado exitosamente");
     }
@@ -192,7 +223,55 @@ public class TetrazolioService {
         dto.setTincionHs(tetrazolio.getTincionHs());
         dto.setTincionTemp(tetrazolio.getTincionTemp());
         dto.setFecha(tetrazolio.getFecha());
+        dto.setNumRepeticionesEsperadas(tetrazolio.getNumRepeticionesEsperadas());
+        dto.setPorcViablesRedondeo(tetrazolio.getPorcViablesRedondeo());
+        dto.setPorcNoViablesRedondeo(tetrazolio.getPorcNoViablesRedondeo());
+        dto.setPorcDurasRedondeo(tetrazolio.getPorcDurasRedondeo());
         
         return dto;
+    }
+    
+    // Validar que se hayan completado todas las repeticiones esperadas
+    private void validarCompletitudRepeticiones(Tetrazolio tetrazolio) {
+        if (tetrazolio.getNumRepeticionesEsperadas() != null && tetrazolio.getNumRepeticionesEsperadas() > 0) {
+            Long repeticionesCreadas = repeticionRepository.countByTetrazolioId(tetrazolio.getAnalisisID());
+            
+            if (repeticionesCreadas < tetrazolio.getNumRepeticionesEsperadas()) {
+                throw new RuntimeException(
+                    String.format("No se puede finalizar el análisis. Se esperan %d repeticiones pero solo hay %d creadas. " +
+                                "Complete todas las repeticiones antes de finalizar o actualizar porcentajes.", 
+                                tetrazolio.getNumRepeticionesEsperadas(), repeticionesCreadas));
+            }
+        }
+    }
+    
+    // Cambiar estado a PENDIENTE_APROBACION (con validaciones)
+    public TetrazolioDTO enviarAprobacion(Long id) {
+        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
+        
+        if (tetrazolioExistente.isPresent()) {
+            Tetrazolio tetrazolio = tetrazolioExistente.get();
+            validarCompletitudRepeticiones(tetrazolio);
+            tetrazolio.setEstado(Estado.PENDIENTE_APROBACION);
+            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
+            return mapearEntidadADTO(tetrazolioActualizado);
+        } else {
+            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
+        }
+    }
+    
+    // Cambiar estado a APROBADO (con validaciones)
+    public TetrazolioDTO aprobarAnalisis(Long id) {
+        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
+        
+        if (tetrazolioExistente.isPresent()) {
+            Tetrazolio tetrazolio = tetrazolioExistente.get();
+            validarCompletitudRepeticiones(tetrazolio);
+            tetrazolio.setEstado(Estado.APROBADO);
+            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
+            return mapearEntidadADTO(tetrazolioActualizado);
+        } else {
+            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
+        }
     }
 }
