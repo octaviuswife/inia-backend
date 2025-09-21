@@ -27,7 +27,12 @@ public class Pureza extends Analisis {
     private BigDecimal redonMalezasToleradas;
     private BigDecimal redonPesoTotal;
 
-    private BigDecimal inaseValor;
+    private BigDecimal inasePura;
+    private BigDecimal inaseMateriaInerte;
+    private BigDecimal inaseOtrosCultivos;
+    private BigDecimal inaseMalezas;
+    private BigDecimal inaseMalezasToleradas;
+
     private LocalDate inaseFecha;
 
     @OneToMany(mappedBy = "pureza", cascade = CascadeType.ALL, orphanRemoval = true)

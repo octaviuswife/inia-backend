@@ -40,6 +40,9 @@ public class PurezaService {
 
     // Crear Pureza con estado REGISTRADO
     public PurezaDTO crearPureza(PurezaRequestDTO solicitud) {
+        // Validar pesos antes de crear
+        validarPesos(solicitud.getPesoInicial_g(), solicitud.getPesoTotal_g());
+        
         Pureza pureza = mapearSolicitudAEntidad(solicitud);
         pureza.setEstado(Estado.REGISTRADO);
         return mapearEntidadADTO(purezaRepository.save(pureza));
@@ -49,6 +52,11 @@ public class PurezaService {
     public PurezaDTO actualizarPureza(Long id, PurezaRequestDTO solicitud) {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
+
+        // Validar pesos antes de actualizar
+        BigDecimal pesoInicial = solicitud.getPesoInicial_g() != null ? solicitud.getPesoInicial_g() : pureza.getPesoInicial_g();
+        BigDecimal pesoTotal = solicitud.getPesoTotal_g() != null ? solicitud.getPesoTotal_g() : pureza.getPesoTotal_g();
+        validarPesos(pesoInicial, pesoTotal);
 
         actualizarEntidadDesdeSolicitud(pureza, solicitud);
         return mapearEntidadADTO(purezaRepository.save(pureza));
@@ -130,7 +138,11 @@ public class PurezaService {
         pureza.setRedonMalezasToleradas(solicitud.getRedonMalezasToleradas());
         pureza.setRedonPesoTotal(solicitud.getRedonPesoTotal());
 
-        pureza.setInaseValor(solicitud.getInaseValor());
+        pureza.setInasePura(solicitud.getInasePura());
+        pureza.setInaseMateriaInerte(solicitud.getInaseMateriaInerte());
+        pureza.setInaseOtrosCultivos(solicitud.getInaseOtrosCultivos());
+        pureza.setInaseMalezas(solicitud.getInaseMalezas());
+        pureza.setInaseMalezasToleradas(solicitud.getInaseMalezasToleradas());
         pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null && !solicitud.getOtrasSemillas().isEmpty()) {
@@ -173,7 +185,11 @@ public class PurezaService {
         if (solicitud.getRedonMalezasToleradas() != null) pureza.setRedonMalezasToleradas(solicitud.getRedonMalezasToleradas());
         if (solicitud.getRedonPesoTotal() != null) pureza.setRedonPesoTotal(solicitud.getRedonPesoTotal());
 
-        if (solicitud.getInaseValor() != null) pureza.setInaseValor(solicitud.getInaseValor());
+        if (solicitud.getInasePura() != null) pureza.setInasePura(solicitud.getInasePura());
+        if (solicitud.getInaseMateriaInerte() != null) pureza.setInaseMateriaInerte(solicitud.getInaseMateriaInerte());
+        if (solicitud.getInaseOtrosCultivos() != null) pureza.setInaseOtrosCultivos(solicitud.getInaseOtrosCultivos());
+        if (solicitud.getInaseMalezas() != null) pureza.setInaseMalezas(solicitud.getInaseMalezas());
+        if (solicitud.getInaseMalezasToleradas() != null) pureza.setInaseMalezasToleradas(solicitud.getInaseMalezasToleradas());
         if (solicitud.getInaseFecha() != null) pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null) {
@@ -213,7 +229,11 @@ public class PurezaService {
         dto.setRedonMalezasToleradas(pureza.getRedonMalezasToleradas());
         dto.setRedonPesoTotal(pureza.getRedonPesoTotal());
 
-        dto.setInaseValor(pureza.getInaseValor());
+        dto.setInasePura(pureza.getInasePura());
+        dto.setInaseMateriaInerte(pureza.getInaseMateriaInerte());
+        dto.setInaseOtrosCultivos(pureza.getInaseOtrosCultivos());
+        dto.setInaseMalezas(pureza.getInaseMalezas());
+        dto.setInaseMalezasToleradas(pureza.getInaseMalezasToleradas());
         dto.setInaseFecha(pureza.getInaseFecha());
 
         if (pureza.getListados() != null) {
@@ -230,5 +250,34 @@ public class PurezaService {
         Listado listado = MappingUtils.fromListadoRequest(solicitud, entityManager);
         listado.setPureza(pureza);
         return listado;
+    }
+
+    /**
+     * Valida las reglas de negocio relacionadas con los pesos en el análisis de pureza
+     * @param pesoInicial_g Peso inicial de la muestra
+     * @param pesoTotal_g Peso total después del análisis
+     * @throws RuntimeException si alguna validación falla
+     */
+    private void validarPesos(BigDecimal pesoInicial_g, BigDecimal pesoTotal_g) {
+        if (pesoInicial_g == null || pesoTotal_g == null) {
+            return; // No validar si los valores son nulos
+        }
+
+        // Validación 1: El peso total no puede ser mayor al inicial
+        if (pesoTotal_g.compareTo(pesoInicial_g) > 0) {
+            throw new RuntimeException("El peso total (" + pesoTotal_g + "g) no puede ser mayor al peso inicial (" + pesoInicial_g + "g)");
+        }
+
+        // Validación 2: Alerta si se pierde más del 5% de la muestra
+        BigDecimal diferenciaPeso = pesoInicial_g.subtract(pesoTotal_g);
+        BigDecimal porcentajePerdida = diferenciaPeso.divide(pesoInicial_g, 4, java.math.RoundingMode.HALF_UP)
+                                                    .multiply(new BigDecimal("100"));
+        
+        BigDecimal limitePermitido = new BigDecimal("5.0");
+        if (porcentajePerdida.compareTo(limitePermitido) > 0) {
+            throw new RuntimeException("ALERTA: La muestra ha perdido " + porcentajePerdida.setScale(2, java.math.RoundingMode.HALF_UP) + 
+                                     "% de su peso inicial, lo cual excede el límite permitido del 5%. " +
+                                     "Pérdida: " + diferenciaPeso.setScale(2, java.math.RoundingMode.HALF_UP) + "g");
+        }
     }
 }

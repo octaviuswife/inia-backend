@@ -27,7 +27,11 @@ public class PurezaRequestDTO extends AnalisisRequestDTO {
     private BigDecimal redonMalezasToleradas;
     private BigDecimal redonPesoTotal;
 
-    private BigDecimal inaseValor;
+    private BigDecimal inasePura;
+    private BigDecimal inaseMateriaInerte;
+    private BigDecimal inaseOtrosCultivos;
+    private BigDecimal inaseMalezas;
+    private BigDecimal inaseMalezasToleradas;
     private LocalDate inaseFecha;
 
     private List<ListadoRequestDTO> otrasSemillas;
