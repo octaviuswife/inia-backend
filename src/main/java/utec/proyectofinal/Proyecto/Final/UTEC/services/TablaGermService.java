@@ -1,7 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,9 +16,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TablaGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepGermRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ValoresGermRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TablaGermRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TablaGermDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ValoresGermDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
 
@@ -28,6 +30,9 @@ public class TablaGermService {
 
     @Autowired
     private TablaGermRepository tablaGermRepository;
+
+    @Autowired
+    private RepGermRepository repGermRepository;
 
     @Autowired
     private ValoresGermRepository valoresGermRepository;
@@ -43,7 +48,23 @@ public class TablaGermService {
                 throw new RuntimeException("Germinación no encontrada con ID: " + germinacionId);
             }
 
+            // Validar que la tabla anterior esté finalizada (si existe alguna tabla)
+            List<TablaGerm> tablasExistentes = tablaGermRepository.findByGerminacionId(germinacionId);
+            if (!tablasExistentes.isEmpty()) {
+                // Verificar que todas las tablas existentes estén finalizadas
+                boolean algunaTablaNoFinalizada = tablasExistentes.stream()
+                    .anyMatch(tabla -> tabla.getFinalizada() == null || !tabla.getFinalizada());
+                
+                if (algunaTablaNoFinalizada) {
+                    throw new RuntimeException("No se puede crear una nueva tabla hasta que todas las tablas anteriores estén finalizadas");
+                }
+            }
+
             TablaGerm tablaGerm = mapearSolicitudAEntidad(solicitud, germinacion);
+            
+            // Calcular total automáticamente desde las repeticiones existentes
+            calcularYActualizarTotales(tablaGerm);
+            
             TablaGerm tablaGermGuardada = tablaGermRepository.save(tablaGerm);
 
             // Crear ValoresGerm para INIA e INASE con valores iniciales en 0
@@ -71,14 +92,13 @@ public class TablaGermService {
         
         if (tablaGermExistente.isPresent()) {
             TablaGerm tablaGerm = tablaGermExistente.get();
+            
             actualizarEntidadDesdeSolicitud(tablaGerm, solicitud);
+            
+            // Calcular total automáticamente desde las repeticiones
+            calcularYActualizarTotales(tablaGerm);
+            
             TablaGerm tablaGermActualizada = tablaGermRepository.save(tablaGerm);
-
-            // Calcular automáticamente promedios sin redondeo
-            calcularPromediosSinRedondeo(tablaGermActualizada);
-
-            // Actualizar valores INIA con los porcentajes con redondeo ingresados
-            actualizarValoresInia(tablaGermActualizada);
 
             return mapearEntidadADTO(tablaGermActualizada);
         } else {
@@ -112,6 +132,146 @@ public class TablaGermService {
         return tablaGermRepository.countByGerminacionId(germinacionId);
     }
 
+    // Actualizar solo los porcentajes con redondeo
+    public TablaGermDTO actualizarPorcentajes(Long tablaId, PorcentajesRedondeoRequestDTO solicitud) {
+        Optional<TablaGerm> tablaExistente = tablaGermRepository.findById(tablaId);
+        
+        if (tablaExistente.isPresent()) {
+            TablaGerm tabla = tablaExistente.get();
+            
+           
+            
+            // Validar que se puedan ingresar porcentajes
+            if (!puedeIngresarPorcentajes(tablaId)) {
+                throw new RuntimeException("No se pueden ingresar porcentajes hasta completar todas las repeticiones");
+            }
+            
+            // Actualizar solo los porcentajes
+            tabla.setPorcentajeNormalesConRedondeo(solicitud.getPorcentajeNormalesConRedondeo());
+            tabla.setPorcentajeAnormalesConRedondeo(solicitud.getPorcentajeAnormalesConRedondeo());
+            tabla.setPorcentajeDurasConRedondeo(solicitud.getPorcentajeDurasConRedondeo());
+            tabla.setPorcentajeFrescasConRedondeo(solicitud.getPorcentajeFrescasConRedondeo());
+            tabla.setPorcentajeMuertasConRedondeo(solicitud.getPorcentajeMuertasConRedondeo());
+            
+            TablaGerm tablaActualizada = tablaGermRepository.save(tabla);
+            
+            // Actualizar valores INIA con los porcentajes con redondeo ingresados
+            actualizarValoresInia(tablaActualizada);
+            
+            return mapearEntidadADTO(tablaActualizada);
+        } else {
+            throw new RuntimeException("Tabla no encontrada con ID: " + tablaId);
+        }
+    }
+
+    // Finalizar tabla (solo si todas las repeticiones están completas)
+    public TablaGermDTO finalizarTabla(Long tablaId) {
+        Optional<TablaGerm> tablaExistente = tablaGermRepository.findById(tablaId);
+        
+        if (tablaExistente.isPresent()) {
+            TablaGerm tabla = tablaExistente.get();
+            
+            // Validar que no esté ya finalizada
+            if (tabla.getFinalizada() != null && tabla.getFinalizada()) {
+                throw new RuntimeException("La tabla ya está finalizada");
+            }
+            
+            // Validar que todas las repeticiones estén completas
+            if (!todasLasRepeticionesCompletas(tabla)) {
+                throw new RuntimeException("No se puede finalizar la tabla. Faltan repeticiones por completar.");
+            }
+            
+            // Validar que los campos de porcentaje con redondeo estén ingresados
+            if (!camposPorcentajeCompletos(tabla)) {
+                throw new RuntimeException("No se puede finalizar la tabla. Debe ingresar todos los porcentajes con redondeo.");
+            }
+            
+            // Marcar como finalizada
+            tabla.setFinalizada(true);
+            TablaGerm tablaActualizada = tablaGermRepository.save(tabla);
+            
+            System.out.println("Tabla finalizada exitosamente con ID: " + tablaId);
+            return mapearEntidadADTO(tablaActualizada);
+        } else {
+            throw new RuntimeException("Tabla no encontrada con ID: " + tablaId);
+        }
+    }
+
+    // Validar que todas las repeticiones esperadas estén completas
+    private boolean todasLasRepeticionesCompletas(TablaGerm tabla) {
+        if (tabla.getGerminacion() == null || tabla.getGerminacion().getNumeroRepeticiones() == null) {
+            return false;
+        }
+        
+        // Contar repeticiones existentes
+        List<RepGerm> repeticiones = tabla.getRepGerm();
+        if (repeticiones == null) {
+            return false;
+        }
+        
+        int repeticionesEsperadas = tabla.getGerminacion().getNumeroRepeticiones();
+        int repeticionesExistentes = repeticiones.size();
+        
+        // Verificar que tengamos el número esperado de repeticiones
+        if (repeticionesExistentes != repeticionesEsperadas) {
+            return false;
+        }
+        
+        // Verificar que cada repetición tenga todos sus conteos completos
+        Integer numeroConteos = tabla.getGerminacion().getNumeroConteos();
+        if (numeroConteos == null) {
+            return false;
+        }
+        
+        for (RepGerm repeticion : repeticiones) {
+            if (repeticion.getNormales() == null || repeticion.getNormales().size() != numeroConteos) {
+                return false;
+            }
+            
+            // Verificar que todos los valores estén completados (no sean null)
+            // Los valores 0 son válidos ya que representan conteos no ingresados
+            for (Integer normal : repeticion.getNormales()) {
+                if (normal == null) {
+                    return false;
+                }
+            }
+            
+            // Verificar que al menos algunos valores sean mayores a 0 (que haya datos reales ingresados)
+            boolean tieneValoresIngresados = repeticion.getNormales().stream()
+                .anyMatch(valor -> valor != null && valor > 0);
+            
+            if (!tieneValoresIngresados) {
+                return false; // La repetición no tiene datos reales ingresados
+            }
+        }
+        
+        return true;
+    }
+
+    // Validar que todos los campos de porcentaje con redondeo estén ingresados
+    private boolean camposPorcentajeCompletos(TablaGerm tabla) {
+        return tabla.getPorcentajeNormalesConRedondeo() != null &&
+               tabla.getPorcentajeAnormalesConRedondeo() != null &&
+               tabla.getPorcentajeDurasConRedondeo() != null &&
+               tabla.getPorcentajeFrescasConRedondeo() != null &&
+               tabla.getPorcentajeMuertasConRedondeo() != null;
+    }
+
+    // Validar que se puedan ingresar los porcentajes (todas las repeticiones completas)
+    public boolean puedeIngresarPorcentajes(Long tablaId) {
+        Optional<TablaGerm> tablaExistente = tablaGermRepository.findById(tablaId);
+        
+        if (tablaExistente.isPresent()) {
+            TablaGerm tabla = tablaExistente.get();
+            
+            // Los porcentajes se pueden editar incluso si la tabla está finalizada
+            // Solo verificamos que todas las repeticiones estén completas
+            return todasLasRepeticionesCompletas(tabla);
+        }
+        
+        return false;
+    }
+
     // Crear ValoresGerm automáticos para INIA e INASE con valores en 0
     private void crearValoresGermAutomaticos(TablaGerm tablaGerm) {
         // Crear valores para INIA
@@ -139,53 +299,7 @@ public class TablaGermService {
         valores.setGerminacion(BigDecimal.ZERO);
     }
 
-    // Calcular automáticamente los promedios sin redondeo basados en las repeticiones
-    private void calcularPromediosSinRedondeo(TablaGerm tablaGerm) {
-        if (tablaGerm.getRepGerm() == null || tablaGerm.getRepGerm().isEmpty()) {
-            return;
-        }
 
-        List<BigDecimal> promedios = new ArrayList<>();
-        
-        // Calcular promedio de normales
-        double promedioNormales = tablaGerm.getRepGerm().stream()
-            .flatMap(rep -> rep.getNormales().stream())
-            .mapToDouble(Integer::doubleValue)
-            .average()
-            .orElse(0.0);
-        promedios.add(BigDecimal.valueOf(promedioNormales));
-
-        // Calcular promedio de anormales
-        double promedioAnormales = tablaGerm.getRepGerm().stream()
-            .mapToDouble(rep -> rep.getAnormales() != null ? rep.getAnormales().doubleValue() : 0.0)
-            .average()
-            .orElse(0.0);
-        promedios.add(BigDecimal.valueOf(promedioAnormales));
-
-        // Calcular promedio de duras
-        double promedioDuras = tablaGerm.getRepGerm().stream()
-            .mapToDouble(rep -> rep.getDuras() != null ? rep.getDuras().doubleValue() : 0.0)
-            .average()
-            .orElse(0.0);
-        promedios.add(BigDecimal.valueOf(promedioDuras));
-
-        // Calcular promedio de frescas
-        double promedioFrescas = tablaGerm.getRepGerm().stream()
-            .mapToDouble(rep -> rep.getFrescas() != null ? rep.getFrescas().doubleValue() : 0.0)
-            .average()
-            .orElse(0.0);
-        promedios.add(BigDecimal.valueOf(promedioFrescas));
-
-        // Calcular promedio de muertas
-        double promedioMuertas = tablaGerm.getRepGerm().stream()
-            .mapToDouble(rep -> rep.getMuertas() != null ? rep.getMuertas().doubleValue() : 0.0)
-            .average()
-            .orElse(0.0);
-        promedios.add(BigDecimal.valueOf(promedioMuertas));
-
-        tablaGerm.setPromedioSinRedondeo(promedios);
-        tablaGermRepository.save(tablaGerm);
-    }
 
     // Actualizar valores de INIA con los porcentajes con redondeo ingresados manualmente
     private void actualizarValoresInia(TablaGerm tablaGerm) {
@@ -225,17 +339,13 @@ public class TablaGermService {
         TablaGerm tablaGerm = new TablaGerm();
         
         tablaGerm.setGerminacion(germinacion);
-        tablaGerm.setTotal(solicitud.getTotal());
-        tablaGerm.setPromedioSinRedondeo(solicitud.getPromedioSinRedondeo());
-        
-        // Campos de porcentaje con redondeo
-        tablaGerm.setPorcentajeNormalesConRedondeo(solicitud.getPorcentajeNormalesConRedondeo());
-        tablaGerm.setPorcentajeAnormalesConRedondeo(solicitud.getPorcentajeAnormalesConRedondeo());
-        tablaGerm.setPorcentajeDurasConRedondeo(solicitud.getPorcentajeDurasConRedondeo());
-        tablaGerm.setPorcentajeFrescasConRedondeo(solicitud.getPorcentajeFrescasConRedondeo());
-        tablaGerm.setPorcentajeMuertasConRedondeo(solicitud.getPorcentajeMuertasConRedondeo());
+        // total se calcula automáticamente cuando se agreguen repeticiones
+        tablaGerm.setTotal(0);
         
         tablaGerm.setFechaFinal(solicitud.getFechaFinal());
+        
+        // Campo de control para finalización (por defecto false)
+        tablaGerm.setFinalizada(false);
         
         // Campos movidos desde Germinacion
         tablaGerm.setTratamiento(solicitud.getTratamiento());
@@ -251,15 +361,7 @@ public class TablaGermService {
 
     // Actualizar Entity desde RequestDTO
     private void actualizarEntidadDesdeSolicitud(TablaGerm tablaGerm, TablaGermRequestDTO solicitud) {
-        tablaGerm.setTotal(solicitud.getTotal());
-        tablaGerm.setPromedioSinRedondeo(solicitud.getPromedioSinRedondeo());
-        
-        // Campos de porcentaje con redondeo
-        tablaGerm.setPorcentajeNormalesConRedondeo(solicitud.getPorcentajeNormalesConRedondeo());
-        tablaGerm.setPorcentajeAnormalesConRedondeo(solicitud.getPorcentajeAnormalesConRedondeo());
-        tablaGerm.setPorcentajeDurasConRedondeo(solicitud.getPorcentajeDurasConRedondeo());
-        tablaGerm.setPorcentajeFrescasConRedondeo(solicitud.getPorcentajeFrescasConRedondeo());
-        tablaGerm.setPorcentajeMuertasConRedondeo(solicitud.getPorcentajeMuertasConRedondeo());
+        // total y promedioSinRedondeo se calculan automáticamente
         
         tablaGerm.setFechaFinal(solicitud.getFechaFinal());
         
@@ -278,7 +380,15 @@ public class TablaGermService {
         TablaGermDTO dto = new TablaGermDTO();
         
         dto.setTablaGermID(tablaGerm.getTablaGermID());
-        dto.setRepGerm(tablaGerm.getRepGerm());
+        
+        // Mapear RepGerm entities a RepGermDTO
+        if (tablaGerm.getRepGerm() != null) {
+            List<RepGermDTO> repGermDTOs = tablaGerm.getRepGerm().stream()
+                .map(this::mapearRepGermADTO)
+                .collect(Collectors.toList());
+            dto.setRepGerm(repGermDTOs);
+        }
+        
         dto.setTotal(tablaGerm.getTotal());
         dto.setPromedioSinRedondeo(tablaGerm.getPromedioSinRedondeo());
         
@@ -299,6 +409,9 @@ public class TablaGermService {
         
         dto.setFechaFinal(tablaGerm.getFechaFinal());
         
+        // Campo de control para finalización
+        dto.setFinalizada(tablaGerm.getFinalizada());
+        
         // Campos movidos desde Germinacion
         dto.setTratamiento(tablaGerm.getTratamiento());
         dto.setProductoYDosis(tablaGerm.getProductoYDosis());
@@ -308,6 +421,21 @@ public class TablaGermService {
         dto.setPrefrio(tablaGerm.getPrefrio());
         dto.setPretratamiento(tablaGerm.getPretratamiento());
         
+        return dto;
+    }
+    
+    // Mapear RepGerm a DTO
+    private RepGermDTO mapearRepGermADTO(RepGerm repGerm) {
+        RepGermDTO dto = new RepGermDTO();
+        dto.setRepGermID(repGerm.getRepGermID());
+        dto.setNumRep(repGerm.getNumRep());
+        dto.setNormales(repGerm.getNormales());
+        dto.setAnormales(repGerm.getAnormales());
+        dto.setDuras(repGerm.getDuras());
+        dto.setFrescas(repGerm.getFrescas());
+        dto.setMuertas(repGerm.getMuertas());
+        dto.setTotal(repGerm.getTotal());
+        dto.setTablaGermId(repGerm.getTablaGerm().getTablaGermID());
         return dto;
     }
 
@@ -325,4 +453,24 @@ public class TablaGermService {
         dto.setTablaGermId(valores.getTablaGerm().getTablaGermID());
         return dto;
     }
+    
+    // Calcular y actualizar totales automáticamente
+    private void calcularYActualizarTotales(TablaGerm tablaGerm) {
+        if (tablaGerm.getTablaGermID() == null) {
+            // Nueva tabla, total inicial será 0
+            tablaGerm.setTotal(0);
+            return;
+        }
+        
+        // Obtener todas las repeticiones de esta tabla
+        List<RepGerm> repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());
+        
+        // El total es la suma de todos los totales de las repeticiones
+        int totalCalculado = repeticiones.stream()
+            .mapToInt(rep -> rep.getTotal() != null ? rep.getTotal().intValue() : 0)
+            .sum();
+            
+        tablaGerm.setTotal(totalCalculado);
+    }
+
 }

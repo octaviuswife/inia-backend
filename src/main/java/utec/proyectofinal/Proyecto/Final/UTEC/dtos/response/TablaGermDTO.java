@@ -5,13 +5,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 import lombok.Data;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
 
 @Data
 public class TablaGermDTO {
     private Long tablaGermID;
 
-    private List<RepGerm> repGerm;
+    private List<RepGermDTO> repGerm;
 
     private Integer total;
     private List<BigDecimal> promedioSinRedondeo;
@@ -26,6 +25,9 @@ public class TablaGermDTO {
     private List<ValoresGermDTO> valoresGerm;
 
     private LocalDate fechaFinal;
+
+    // Campo de control para finalización
+    private Boolean finalizada;
 
     // Campos movidos desde Germinacion
     private String tratamiento;

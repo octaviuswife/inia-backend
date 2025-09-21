@@ -12,5 +12,5 @@ public class RepGermRequestDTO {
     private Integer duras;
     private Integer frescas;
     private Integer muertas;
-    private Integer total;
+    // total se calcula automáticamente
 }

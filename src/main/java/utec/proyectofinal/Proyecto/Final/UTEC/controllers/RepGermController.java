@@ -7,6 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepGermRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.RepGermService;
@@ -14,12 +19,20 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepGermService;
 @RestController
 @RequestMapping("/api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion")
 @CrossOrigin(origins = "*")
+@Tag(name = "Repeticiones de Germinación", description = "API para gestión de repeticiones dentro de las tablas de germinación")
 public class RepGermController {
 
     @Autowired
     private RepGermService repGermService;
 
     // Crear nueva repetición para una tabla
+    @Operation(summary = "Crear repetición", 
+              description = "Crea una nueva repetición para una tabla. No puede superar el numeroRepeticiones definido en la germinación")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Repetición creada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Máximo de repeticiones alcanzado o tabla finalizada"),
+        @ApiResponse(responseCode = "404", description = "Tabla no encontrada")
+    })
     @PostMapping
     public ResponseEntity<?> crearRepGerm(
             @PathVariable Long germinacionId,

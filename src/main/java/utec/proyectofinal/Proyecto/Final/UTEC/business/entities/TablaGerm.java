@@ -45,6 +45,9 @@ public class TablaGerm {
 
     private LocalDate fechaFinal;
 
+    // Campo de control para finalización
+    private Boolean finalizada = false;
+
     // Campos movidos desde Germinacion
     private String tratamiento;
     private String productoYDosis;

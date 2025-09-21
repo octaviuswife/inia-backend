@@ -14,4 +14,8 @@ public class GerminacionDTO extends AnalisisDTO{
     private LocalDate fechaFin;
 
     private String numDias;
+    
+    // Nuevos campos de control
+    private Integer numeroRepeticiones;
+    private Integer numeroConteos;
 }

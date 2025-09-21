@@ -13,22 +13,37 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
 
 @RestController
 @RequestMapping("/api/germinaciones")
 @CrossOrigin(origins = "*")
+@Tag(name = "Germinación", description = "API para gestión del análisis de germinación")
 public class GerminacionController {
 
     @Autowired
     private GerminacionService germinacionService;
 
     // Crear nueva Germinación
+    @Operation(summary = "Crear análisis de germinación", 
+              description = "Crea un nuevo análisis de germinación con numeroRepeticiones y numeroConteos definidos")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Germinación creada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos en la solicitud"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping
     public ResponseEntity<GerminacionDTO> crearGerminacion(@RequestBody GerminacionRequestDTO solicitud) {
         try {
@@ -45,6 +60,12 @@ public class GerminacionController {
     }
 
     // Obtener todas las Germinaciones activas
+    @Operation(summary = "Obtener todas las germinaciones", 
+              description = "Obtiene la lista de todos los análisis de germinación activos")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping
     public ResponseEntity<ResponseListadoGerminacion> obtenerTodasGerminaciones() {
         try {
@@ -56,6 +77,13 @@ public class GerminacionController {
     }
 
     // Obtener Germinación por ID
+    @Operation(summary = "Obtener germinación por ID", 
+              description = "Obtiene los detalles de un análisis de germinación específico")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Germinación encontrada"),
+        @ApiResponse(responseCode = "404", description = "Germinación no encontrada"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<GerminacionDTO> obtenerGerminacionPorId(@PathVariable Long id) {
         try {
@@ -100,6 +128,21 @@ public class GerminacionController {
         try {
             List<GerminacionDTO> germinaciones = germinacionService.obtenerGerminacionesPorIdLote(idLote);
             return new ResponseEntity<>(germinaciones, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Finalizar análisis de germinación
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<GerminacionDTO> finalizarAnalisis(
+            @PathVariable Long id, 
+            @RequestParam Estado estado) {
+        try {
+            GerminacionDTO analisisFinalizado = germinacionService.finalizarAnalisis(id, estado);
+            return new ResponseEntity<>(analisisFinalizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

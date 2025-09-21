@@ -13,5 +13,9 @@ public class GerminacionRequestDTO extends AnalisisRequestDTO {
     private LocalDate fechaInicioGerminacion;
     private List<LocalDate> fechaConteos;
     private LocalDate fechaFinGerminacion;
-    private String numDias;
+    // numDias se calculará automáticamente como fechaFinGerminacion - fechaInicioGerminacion
+    
+    // Nuevos campos de control
+    private Integer numeroRepeticiones;
+    private Integer numeroConteos;
 }
