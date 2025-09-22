@@ -1,8 +1,12 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +25,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.LoteService;
 @RestController
 @RequestMapping("/api/lotes")
 @CrossOrigin(origins = "*")
+@Tag(name = "Lotes", description = "API para gestión de lotes de semillas")
+@SecurityRequirement(name = "JWT")
 public class LoteController {
 
     @Autowired
@@ -28,6 +34,8 @@ public class LoteController {
 
     // Crear nuevo Lote
     @PostMapping
+    @Operation(summary = "Crear lote", description = "Crea un nuevo lote de semillas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     public ResponseEntity<LoteDTO> crearLote(@RequestBody LoteRequestDTO solicitud) {
         try {
             LoteDTO loteCreado = loteService.crearLote(solicitud);
@@ -45,6 +53,8 @@ public class LoteController {
 
     // Obtener todos los Lotes activos (listado simple)
     @GetMapping("/activos")
+    @Operation(summary = "Listar lotes activos", description = "Obtiene todos los lotes activos")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<ResponseListadoLoteSimple> obtenerTodosLotesActivos() {
         try {
             ResponseListadoLoteSimple respuesta = loteService.obtenerTodosLotesActivos();
@@ -56,6 +66,8 @@ public class LoteController {
 
     // Obtener todos los Lotes inactivos (listado simple)
     @GetMapping("/inactivos")
+    @Operation(summary = "Listar lotes inactivos", description = "Obtiene todos los lotes inactivos")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<ResponseListadoLoteSimple> obtenerTodosLotesInactivos() {
         try {
             ResponseListadoLoteSimple respuesta = loteService.obtenerTodosLotesInactivos();
@@ -67,6 +79,8 @@ public class LoteController {
 
     // Obtener Lote por ID (completo)
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener lote por ID", description = "Obtiene un lote específico por su ID")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<LoteDTO> obtenerLotePorId(@PathVariable Long id) {
         try {
             LoteDTO lote = loteService.obtenerLotePorId(id);
@@ -80,6 +94,8 @@ public class LoteController {
 
     // Actualizar Lote
     @PutMapping("/{id}")
+    @Operation(summary = "Actualizar lote", description = "Actualiza un lote existente")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     public ResponseEntity<LoteDTO> actualizarLote(@PathVariable Long id, @RequestBody LoteRequestDTO solicitud) {
         try {
             LoteDTO loteActualizado = loteService.actualizarLote(id, solicitud);
@@ -93,6 +109,8 @@ public class LoteController {
 
     // Eliminar Lote (cambiar activo a false)
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar lote", description = "Desactiva un lote (cambiar activo a false)")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<HttpStatus> eliminarLote(@PathVariable Long id) {
         try {
             loteService.eliminarLote(id);

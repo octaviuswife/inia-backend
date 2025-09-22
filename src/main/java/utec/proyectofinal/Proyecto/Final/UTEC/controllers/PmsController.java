@@ -2,6 +2,9 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
 @RestController
 @RequestMapping("/api/pms")
 @CrossOrigin(origins = "*")
+@Tag(name = "PMS", description = "API para gestión del análisis de Peso de Mil Semillas")
+@SecurityRequirement(name = "JWT")
 public class PmsController {
 
     @Autowired
