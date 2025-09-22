@@ -31,7 +31,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
 @RequestMapping("/api/germinaciones")
 @CrossOrigin(origins = "*")
 @Tag(name = "Germinación", description = "API para gestión del análisis de germinación")
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "bearerAuth")
 public class GerminacionController {
 
     @Autowired
@@ -101,6 +101,12 @@ public class GerminacionController {
     }
 
     // Actualizar Germinación
+    @Operation(summary = "Actualizar germinación", description = "Actualiza los detalles de una germinación existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Germinación actualizada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Germinación no encontrada"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<GerminacionDTO> actualizarGerminacion(@PathVariable Long id, @RequestBody GerminacionRequestDTO solicitud) {
@@ -115,6 +121,7 @@ public class GerminacionController {
     }
 
     // Eliminar Germinación (cambiar estado a INACTIVO)
+    @Operation(summary = "Eliminar germinación", description = "Cambia el estado de la germinación a INACTIVO")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarGerminacion(@PathVariable Long id) {
@@ -129,6 +136,7 @@ public class GerminacionController {
     }
 
     // Obtener Germinaciones por Lote
+    @Operation(summary = "Obtener germinaciones por lote", description = "Devuelve una lista de germinaciones asociadas a un lote específico")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<GerminacionDTO>> obtenerGerminacionesPorIdLote(@PathVariable Long idLote) {
@@ -141,6 +149,7 @@ public class GerminacionController {
     }
 
     // Finalizar análisis de germinación
+    @Operation(summary = "Finalizar análisis de germinación", description = "Marca el análisis como FINALIZADO, impidiendo más modificaciones")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<GerminacionDTO> finalizarAnalisis(@PathVariable Long id) {

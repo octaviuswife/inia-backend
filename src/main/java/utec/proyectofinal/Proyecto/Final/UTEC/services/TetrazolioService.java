@@ -33,6 +33,9 @@ public class TetrazolioService {
 
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
+    
+    @Autowired
+    private AnalisisService analisisService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -67,7 +70,7 @@ public class TetrazolioService {
             Tetrazolio tetrazolio = tetrazolioExistente.get();
             
             // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-            if (tetrazolio.getEstado() == Estado.APROBADO && esAnalista()) {
+            if (tetrazolio.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
                 tetrazolio.setEstado(Estado.PENDIENTE_APROBACION);
             }
             
@@ -292,18 +295,11 @@ public class TetrazolioService {
             Tetrazolio tetrazolio = tetrazolioExistente.get();
             validarCompletitudRepeticiones(tetrazolio);
             
-            // Si es analista, pasar a PENDIENTE_APROBACION
-            // Si es admin, pasar directamente a APROBADO
-            if (esAnalista()) {
-                tetrazolio.setEstado(Estado.PENDIENTE_APROBACION);
-            } else {
-                tetrazolio.setEstado(Estado.APROBADO);
-            }
+            // Usar el servicio común para finalizar el análisis
+            analisisService.finalizarAnalisis(tetrazolio);
             
+            // Guardar cambios
             Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
-            
-            // Registrar en historial
-            analisisHistorialService.registrarModificacion(tetrazolioActualizado);
             
             return mapearEntidadADTO(tetrazolioActualizado);
         } else {
@@ -318,30 +314,18 @@ public class TetrazolioService {
         if (tetrazolioExistente.isPresent()) {
             Tetrazolio tetrazolio = tetrazolioExistente.get();
             
-            // Validar que esté en estado PENDIENTE_APROBACION
-            if (tetrazolio.getEstado() != Estado.PENDIENTE_APROBACION) {
-                throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION para ser aprobado");
-            }
-            
+            // Validar completitud específica del tetrazolio
             validarCompletitudRepeticiones(tetrazolio);
-            tetrazolio.setEstado(Estado.APROBADO);
-            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
             
-            // Registrar en historial
-            analisisHistorialService.registrarModificacion(tetrazolioActualizado);
+            // Usar el servicio común para aprobar el análisis
+            analisisService.aprobarAnalisis(tetrazolio);
+            
+            // Guardar cambios
+            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
             
             return mapearEntidadADTO(tetrazolioActualizado);
         } else {
             throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
         }
-    }
-
-    // Método para determinar si el usuario actual es analista
-    private boolean esAnalista() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getAuthorities() != null) {
-            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
-        }
-        return false;
     }
 }

@@ -29,13 +29,15 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.PurezaService;
 @RequestMapping("/api/purezas")
 @CrossOrigin(origins = "*")
 @Tag(name = "Pureza", description = "API para gestión del análisis de pureza")
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "bearerAuth")
 public class PurezaController {
 
     @Autowired
     private PurezaService purezaService;
 
     // Crear nueva Pureza
+    @Operation(summary = "Crear análisis de pureza", 
+              description = "Crea un nuevo análisis de pureza con numeroRepeticiones y numeroConteos definidos")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PurezaDTO> crearPureza(@RequestBody PurezaRequestDTO solicitud) {
@@ -55,6 +57,8 @@ public class PurezaController {
     }
 
     // Obtener todas las Purezas activas
+    @Operation(summary = "Listar todas las purezas", 
+              description = "Obtiene todos los análisis de pureza activos")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoPureza> obtenerTodasPurezasActivas() {
@@ -67,6 +71,8 @@ public class PurezaController {
     }
 
     // Obtener Pureza por ID
+    @Operation(summary = "Obtener pureza por ID", 
+              description = "Obtiene un análisis de pureza específico por su ID")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<PurezaDTO> obtenerPurezaPorId(@PathVariable Long id) {
@@ -81,6 +87,8 @@ public class PurezaController {
     }
 
     // Actualizar Pureza
+    @Operation(summary = "Actualizar análisis de pureza", 
+              description = "Actualiza un análisis de pureza existente")    
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PurezaDTO> actualizarPureza(@PathVariable Long id, @RequestBody PurezaRequestDTO solicitud) {
@@ -95,6 +103,8 @@ public class PurezaController {
     }
 
     // Eliminar Pureza (cambiar estado a INACTIVO)
+    @Operation(summary = "Eliminar análisis de pureza", 
+              description = "Elimina   un análisis de pureza cambiando su estado a INACTIVO")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarPureza(@PathVariable Long id) {
@@ -109,6 +119,8 @@ public class PurezaController {
     }
 
     // Obtener Purezas por Lote
+    @Operation(summary = "Obtener purezas por lote", 
+              description = "Obtiene todos los análisis de pureza asociados a un lote específico")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<PurezaDTO>> obtenerPurezasPorIdLote(@PathVariable Long idLote) {
@@ -121,6 +133,8 @@ public class PurezaController {
     }
 
     // Obtener todos los catálogos para el select de otras semillas
+    @Operation(summary = "Listar todos los catálogos", 
+              description = "Obtiene todos los catálogos necesarios para el análisis de pureza")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/catalogos")
     public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerTodosCatalogos() {
@@ -133,6 +147,8 @@ public class PurezaController {
     }
 
     // Finalizar análisis de pureza
+    @Operation(summary = "Finalizar análisis de pureza", 
+              description = "Finaliza un análisis de pureza cambiando su estado a FINALIZADO")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<PurezaDTO> finalizarAnalisis(@PathVariable Long id) {
@@ -147,6 +163,8 @@ public class PurezaController {
     }
 
     // Aprobar análisis (solo admin)
+    @Operation(summary = "Aprobar análisis de pureza", 
+              description = "Aprueba un análisis de pureza, cambiando su estado a APROBADO (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<PurezaDTO> aprobarAnalisis(@PathVariable Long id) {

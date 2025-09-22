@@ -31,6 +31,9 @@ public class GerminacionService {
 
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
+    
+    @Autowired
+    private AnalisisService analisisService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -65,7 +68,7 @@ public class GerminacionService {
             Germinacion germinacion = germinacionExistente.get();
             
             // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-            if (germinacion.getEstado() == Estado.APROBADO && esAnalista()) {
+            if (germinacion.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
                 germinacion.setEstado(Estado.PENDIENTE_APROBACION);
                 System.out.println("Análisis aprobado editado por analista - cambiando estado a PENDIENTE_APROBACION");
             }
@@ -80,15 +83,6 @@ public class GerminacionService {
         } else {
             throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
         }
-    }
-    
-    // Método para determinar si el usuario actual es analista
-    private boolean esAnalista() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getAuthorities() != null) {
-            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
-        }
-        return false;
     }
 
     // Eliminar Germinación (cambiar estado a INACTIVO)
@@ -317,20 +311,11 @@ public class GerminacionService {
                 throw new RuntimeException("No se puede finalizar el análisis. Hay tablas pendientes de completar.");
             }
             
-            if (esAnalista()) {
-                // Analista: enviar a pendiente de aprobación
-                germinacion.setEstado(Estado.PENDIENTE_APROBACION);
-                System.out.println("Análisis finalizado por analista - enviado a PENDIENTE_APROBACION");
-            } else {
-                // Admin: aprobar directamente
-                germinacion.setEstado(Estado.APROBADO);
-                System.out.println("Análisis finalizado por admin - estado APROBADO");
-            }
+            // Usar el servicio común para finalizar el análisis
+            analisisService.finalizarAnalisis(germinacion);
             
+            // Guardar cambios
             Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
-            
-            // Registrar en el historial
-            analisisHistorialService.registrarModificacion(germinacionActualizada);
             
             return mapearEntidadADTO(germinacionActualizada);
         } else {
@@ -346,12 +331,12 @@ public class GerminacionService {
         
         if (germinacionExistente.isPresent()) {
             Germinacion germinacion = germinacionExistente.get();
-            germinacion.setEstado(Estado.APROBADO);
             
+            // Usar el servicio común para aprobar el análisis
+            analisisService.aprobarAnalisis(germinacion);
+            
+            // Guardar cambios
             Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
-            
-            // Registrar en el historial
-            analisisHistorialService.registrarModificacion(germinacionActualizada);
             
             return mapearEntidadADTO(germinacionActualizada);
         } else {

@@ -41,6 +41,9 @@ public class PurezaService {
 
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
+    
+    @Autowired
+    private AnalisisService analisisService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -66,7 +69,7 @@ public class PurezaService {
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
 
         // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-        if (pureza.getEstado() == Estado.APROBADO && esAnalista()) {
+        if (pureza.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
             pureza.setEstado(Estado.PENDIENTE_APROBACION);
         }
 
@@ -312,18 +315,11 @@ public class PurezaService {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
         
-        if (esAnalista()) {
-            // Analista: enviar a pendiente de aprobación
-            pureza.setEstado(Estado.PENDIENTE_APROBACION);
-        } else {
-            // Admin: aprobar directamente
-            pureza.setEstado(Estado.APROBADO);
-        }
+        // Usar el servicio común para finalizar el análisis
+        analisisService.finalizarAnalisis(pureza);
         
+        // Guardar cambios
         Pureza purezaActualizada = purezaRepository.save(pureza);
-        
-        // Registrar en el historial
-        analisisHistorialService.registrarModificacion(purezaActualizada);
         
         return mapearEntidadADTO(purezaActualizada);
     }
@@ -335,23 +331,12 @@ public class PurezaService {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
         
-        pureza.setEstado(Estado.APROBADO);
+        // Usar el servicio común para aprobar el análisis
+        analisisService.aprobarAnalisis(pureza);
+        
+        // Guardar cambios
         Pureza purezaActualizada = purezaRepository.save(pureza);
         
-        // Registrar en el historial
-        analisisHistorialService.registrarModificacion(purezaActualizada);
-        
         return mapearEntidadADTO(purezaActualizada);
-    }
-
-    /**
-     * Método para determinar si el usuario actual es analista
-     */
-    private boolean esAnalista() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getAuthorities() != null) {
-            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
-        }
-        return false;
     }
 }

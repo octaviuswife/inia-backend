@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepTetrazolioViabilidadRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepTetrazolioViabilidadDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadService;
@@ -22,12 +26,17 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
 @RestController
 @RequestMapping("/api/tetrazolios/{tetrazolioId}/repeticiones")
 @CrossOrigin(origins = "*")
+@Tag(name = "Repeticiones Tetrazolio Viabilidad", description = "API para gestión de repeticiones de análisis de tetrazolio viabilidad")
+@SecurityRequirement(name = "bearerAuth")
 public class RepTetrazolioViabilidadController {
 
     @Autowired
     private RepTetrazolioViabilidadService repeticionService;
 
     // Crear nueva repetición para un tetrazolio específico
+    @Operation(summary = "Crear repetición de tetrazolio viabilidad", 
+              description = "Crea una nueva repetición para un análisis de tetrazolio viabilidad específico")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PostMapping
     public ResponseEntity<RepTetrazolioViabilidadDTO> crearRepeticion(
             @PathVariable Long tetrazolioId,
@@ -46,6 +55,9 @@ public class RepTetrazolioViabilidadController {
     }
 
     // Obtener todas las repeticiones de un tetrazolio
+    @Operation(summary = "Listar repeticiones de tetrazolio viabilidad", 
+              description = "Obtiene todas las repeticiones asociadas a un análisis de tetrazolio viabilidad específico")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<RepTetrazolioViabilidadDTO>> obtenerRepeticionesPorTetrazolio(@PathVariable Long tetrazolioId) {
         try {
@@ -58,6 +70,9 @@ public class RepTetrazolioViabilidadController {
     }
 
     // Contar repeticiones de un tetrazolio
+    @Operation(summary = "Contar repeticiones de tetrazolio viabilidad", 
+              description = "Cuenta el número de repeticiones asociadas a un análisis de tetrazolio viabilidad específico")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/count")
     public ResponseEntity<Long> contarRepeticionesPorTetrazolio(@PathVariable Long tetrazolioId) {
         try {
@@ -69,6 +84,9 @@ public class RepTetrazolioViabilidadController {
     }
 
     // Obtener repetición específica por ID (ruta alternativa fuera del contexto del tetrazolio)
+    @Operation(summary = "Obtener repetición de tetrazolio viabilidad por ID", 
+              description = "Obtiene una repetición específica de un análisis de tetrazolio viabilidad por su ID")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/{repeticionId}")
     public ResponseEntity<RepTetrazolioViabilidadDTO> obtenerRepeticionPorId(
             @PathVariable Long tetrazolioId,
@@ -84,6 +102,9 @@ public class RepTetrazolioViabilidadController {
     }
 
     // Actualizar repetición específica
+    @Operation(summary = "Actualizar repetición de tetrazolio viabilidad", 
+              description = "Actualiza una repetición específica de un análisis de tetrazolio viabilidad")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PutMapping("/{repeticionId}")
     public ResponseEntity<RepTetrazolioViabilidadDTO> actualizarRepeticion(
             @PathVariable Long tetrazolioId,
@@ -100,6 +121,9 @@ public class RepTetrazolioViabilidadController {
     }
 
     // Eliminar repetición específica (eliminación real)
+    @Operation(summary = "Eliminar repetición de tetrazolio viabilidad", 
+              description = "Elimina una repetición específica de un análisis de tetrazolio viabilidad (eliminación física)")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{repeticionId}")
     public ResponseEntity<HttpStatus> eliminarRepeticion(
             @PathVariable Long tetrazolioId,

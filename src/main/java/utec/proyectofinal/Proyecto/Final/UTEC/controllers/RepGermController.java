@@ -5,11 +5,13 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepGermRequestDTO;
@@ -20,6 +22,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepGermService;
 @RequestMapping("/api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion")
 @CrossOrigin(origins = "*")
 @Tag(name = "Repeticiones de Germinación", description = "API para gestión de repeticiones dentro de las tablas de germinación")
+@SecurityRequirement(name = "bearerAuth")
 public class RepGermController {
 
     @Autowired
@@ -33,6 +36,7 @@ public class RepGermController {
         @ApiResponse(responseCode = "400", description = "Máximo de repeticiones alcanzado o tabla finalizada"),
         @ApiResponse(responseCode = "404", description = "Tabla no encontrada")
     })
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PostMapping
     public ResponseEntity<?> crearRepGerm(
             @PathVariable Long germinacionId,
@@ -47,6 +51,8 @@ public class RepGermController {
     }
 
     // Obtener repetición por ID
+    @Operation(summary = "Obtener repetición por ID", description = "Devuelve una repetición específica por su ID")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/{repeticionId}")
     public ResponseEntity<?> obtenerRepGermPorId(
             @PathVariable Long germinacionId,
@@ -61,6 +67,8 @@ public class RepGermController {
     }
 
     // Actualizar repetición existente
+    @Operation(summary = "Actualizar repetición", description = "Actualiza los datos de una repetición existente")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PutMapping("/{repeticionId}")
     public ResponseEntity<?> actualizarRepGerm(
             @PathVariable Long germinacionId,
@@ -76,6 +84,8 @@ public class RepGermController {
     }
 
     // Eliminar repetición
+    @Operation(summary = "Eliminar repetición", description = "Elimina una repetición específica por su ID")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{repeticionId}")
     public ResponseEntity<?> eliminarRepGerm(
             @PathVariable Long germinacionId,
@@ -90,6 +100,8 @@ public class RepGermController {
     }
 
     // Obtener todas las repeticiones de una tabla
+    @Operation(summary = "Obtener repeticiones por tabla", description = "Devuelve todas las repeticiones asociadas a una tabla específica")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<?> obtenerRepeticionesPorTabla(
             @PathVariable Long germinacionId,
@@ -103,6 +115,8 @@ public class RepGermController {
     }
 
     // Contar repeticiones de una tabla
+    @Operation(summary = "Contar repeticiones por tabla", description = "Devuelve el número total de repeticiones asociadas a una tabla específica")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/contar")
     public ResponseEntity<?> contarRepeticionesPorTabla(
             @PathVariable Long germinacionId,

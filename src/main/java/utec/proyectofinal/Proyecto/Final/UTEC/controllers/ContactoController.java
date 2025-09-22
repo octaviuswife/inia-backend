@@ -3,7 +3,13 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ContactoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ContactoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoContacto;
@@ -14,12 +20,17 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/contactos")
 @CrossOrigin(origins = "*")
+@Tag(name = "Contactos", description = "API para gestión de contactos y empresas")
+@SecurityRequirement(name = "bearerAuth")
 public class ContactoController {
 
     @Autowired
     private ContactoService contactoService;
 
     // Obtener todos los contactos activos
+    @Operation(summary = "Listar todos los contactos", 
+              description = "Obtiene todos los contactos activos, incluyendo clientes y empresas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<ContactoDTO>> obtenerTodosLosContactos() {
         try {
@@ -31,6 +42,9 @@ public class ContactoController {
     }
 
     // Obtener solo clientes
+    @Operation(summary = "Listar todos los clientes", 
+              description = "Obtiene todos los contactos que son clientes")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/clientes")
     public ResponseEntity<List<ContactoDTO>> obtenerClientes() {
         try {
@@ -42,6 +56,9 @@ public class ContactoController {
     }
 
     // Obtener solo empresas
+    @Operation(summary = "Listar todas las empresas", 
+              description = "Obtiene todos los contactos que son empresas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/empresas")
     public ResponseEntity<List<ContactoDTO>> obtenerEmpresas() {
         try {
@@ -53,6 +70,9 @@ public class ContactoController {
     }
 
     // Obtener contacto por ID
+    @Operation(summary = "Obtener contacto por ID", 
+              description = "Obtiene un contacto específico por su ID")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/{contactoID}")
     public ResponseEntity<ContactoDTO> obtenerContactoPorId(@PathVariable Long contactoID) {
         try {
@@ -66,6 +86,9 @@ public class ContactoController {
     }
 
     // Crear nuevo contacto
+    @Operation(summary = "Crear nuevo contacto", 
+              description = "Crea un nuevo contacto o empresa (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> crearContacto(@RequestBody ContactoRequestDTO contactoRequestDTO) {
         try {
@@ -80,6 +103,9 @@ public class ContactoController {
     }
 
     // Actualizar contacto existente
+    @Operation(summary = "Actualizar contacto", 
+              description = "Actualiza un contacto o empresa existente (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{contactoID}")
     public ResponseEntity<?> actualizarContacto(@PathVariable Long contactoID, 
                                               @RequestBody ContactoRequestDTO contactoRequestDTO) {
@@ -98,6 +124,8 @@ public class ContactoController {
     }
 
     // Eliminar contacto (soft delete)
+    @Operation(summary = "Eliminar contacto")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{contactoID}")
     public ResponseEntity<?> eliminarContacto(@PathVariable Long contactoID) {
         try {
@@ -112,6 +140,8 @@ public class ContactoController {
     }
 
     // Reactivar contacto
+    @Operation(summary = "Reactivar contacto")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{contactoID}/reactivar")
     public ResponseEntity<?> reactivarContacto(@PathVariable Long contactoID) {
         try {
@@ -129,6 +159,8 @@ public class ContactoController {
     }
 
     // Buscar contactos por nombre
+    @Operation(summary = "Buscar contactos por nombre")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/buscar")
     public ResponseEntity<List<ContactoDTO>> buscarContactosPorNombre(@RequestParam String nombre) {
         try {
@@ -140,6 +172,8 @@ public class ContactoController {
     }
 
     // Buscar clientes por nombre
+    @Operation(summary = "Buscar clientes por nombre")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/clientes/buscar")
     public ResponseEntity<List<ContactoDTO>> buscarClientes(@RequestParam String nombre) {
         try {
@@ -151,6 +185,8 @@ public class ContactoController {
     }
 
     // Buscar empresas por nombre
+    @Operation(summary = "Buscar empresas por nombre")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/empresas/buscar")
     public ResponseEntity<List<ContactoDTO>> buscarEmpresas(@RequestParam String nombre) {
         try {

@@ -5,7 +5,12 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DosnRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
@@ -15,12 +20,17 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.DosnService;
 @RestController
 @RequestMapping("/api/dosn")
 @CrossOrigin(origins = "*")
+@Tag(name = "Declaraciones de Origen y Sanidad (DOSN)", description = "API para gestión de DOSN")
+@SecurityRequirement(name = "bearerAuth")
 public class DosnController {
 
     @Autowired
     private DosnService dosnService;
 
     // Crear nueva Dosn
+    @Operation(summary = "Crear declaración de origen y sanidad (DOSN)", 
+              description = "Crea una nueva declaración de origen y sanidad (DOSN)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PostMapping
     public ResponseEntity<DosnDTO> crearDosn(@RequestBody DosnRequestDTO solicitud) {
         try {
@@ -32,6 +42,9 @@ public class DosnController {
     }
 
     // Obtener todas las Dosn activas
+    @Operation(summary = "Listar todas las declaraciones de origen y sanidad (DOSN)", 
+              description = "Obtiene todas las declaraciones de origen y sanidad (DOSN) activas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoDosn> obtenerTodasDosnActivas() {
         try {
@@ -43,6 +56,9 @@ public class DosnController {
     }
 
     // Obtener Dosn por ID
+    @Operation(summary = "Obtener declaración de origen y sanidad (DOSN) por ID", 
+              description = "Obtiene una declaración de origen y sanidad (DOSN) específica por su ID")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<DosnDTO> obtenerDosnPorId(@PathVariable Long id) {
         try {
@@ -56,6 +72,9 @@ public class DosnController {
     }
 
     // Actualizar Dosn
+    @Operation(summary = "Actualizar declaración de origen y sanidad (DOSN)", 
+              description = "Actualiza una declaración de origen y sanidad (DOSN) existente")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PutMapping("/{id}")
     public ResponseEntity<DosnDTO> actualizarDosn(@PathVariable Long id, @RequestBody DosnRequestDTO solicitud) {
         try {
@@ -69,6 +88,9 @@ public class DosnController {
     }
 
     // Eliminar Dosn (cambiar estado a INACTIVO)
+    @Operation(summary = "Eliminar análisis de DOSN", 
+              description = "Elimina una declaración de origen y sanidad (DOSN) cambiando su estado a INACTIVO")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarDosn(@PathVariable Long id) {
         try {
@@ -82,11 +104,46 @@ public class DosnController {
     }
 
     // Obtener Dosn por Lote
+    @Operation(summary = "Obtener declaraciones de origen y sanidad (DOSN) por ID de lote", 
+              description = "Obtiene todas las declaraciones de origen y sanidad (DOSN) asociadas a un lote específico")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<DosnDTO>> obtenerDosnPorIdLote(@PathVariable Integer idLote) {
         try {
             List<DosnDTO> dosn = dosnService.obtenerDosnPorIdLote(idLote);
             return new ResponseEntity<>(dosn, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Finalizar análisis de DOSN
+    @Operation(summary = "Finalizar análisis de DOSN", 
+              description = "Finaliza una declaración de origen y sanidad (DOSN) según el rol del usuario")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<DosnDTO> finalizarAnalisis(@PathVariable Long id) {
+        try {
+            DosnDTO dosnFinalizada = dosnService.finalizarAnalisis(id);
+            return new ResponseEntity<>(dosnFinalizada, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Aprobar análisis de DOSN (solo admin)
+    @Operation(summary = "Aprobar análisis de DOSN", 
+              description = "Aprueba una declaración de origen y sanidad (DOSN) - solo administradores")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/aprobar")
+    public ResponseEntity<DosnDTO> aprobarAnalisis(@PathVariable Long id) {
+        try {
+            DosnDTO dosnAprobada = dosnService.aprobarAnalisis(id);
+            return new ResponseEntity<>(dosnAprobada, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

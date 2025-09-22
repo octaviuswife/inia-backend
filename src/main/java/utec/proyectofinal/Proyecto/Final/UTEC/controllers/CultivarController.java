@@ -2,7 +2,13 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CultivarRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CultivarDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.CultivarService;
@@ -12,12 +18,17 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/cultivar")
 @CrossOrigin(origins = "*")
+@Tag(name = "Cultivares", description = "API para gestión de cultivares")
+@SecurityRequirement(name = "bearerAuth")
 public class CultivarController {
 
     @Autowired
     private CultivarService cultivarService;
 
     // Obtener todos activos
+    @Operation(summary = "Listar todos los cultivares activos", 
+              description = "Obtiene todos los cultivares que están activos en el sistema")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<CultivarDTO>> obtenerTodos() {
         List<CultivarDTO> cultivares = cultivarService.obtenerTodos();
@@ -25,6 +36,9 @@ public class CultivarController {
     }
 
     // Obtener inactivos
+    @Operation(summary = "Listar todos los cultivares inactivos", 
+              description = "Obtiene todos los cultivares que están inactivos en el sistema")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/inactivos")
     public ResponseEntity<List<CultivarDTO>> obtenerInactivos() {
         List<CultivarDTO> cultivares = cultivarService.obtenerInactivos();
@@ -32,6 +46,9 @@ public class CultivarController {
     }
 
     // Obtener por especie
+    @Operation(summary = "Listar todos los cultivares por especie", 
+              description = "Obtiene todos los cultivares asociados a una especie específica")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/especie/{especieID}")
     public ResponseEntity<List<CultivarDTO>> obtenerPorEspecie(@PathVariable Long especieID) {
         List<CultivarDTO> cultivares = cultivarService.obtenerPorEspecie(especieID);
@@ -39,6 +56,9 @@ public class CultivarController {
     }
 
     // Buscar por nombre
+    @Operation(summary = "Buscar cultivares por nombre", 
+              description = "Busca cultivares cuyo nombre contenga el texto especificado")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/buscar")
     public ResponseEntity<List<CultivarDTO>> buscarPorNombre(@RequestParam String nombre) {
         List<CultivarDTO> cultivares = cultivarService.buscarPorNombre(nombre);
@@ -46,6 +66,9 @@ public class CultivarController {
     }
 
     // Obtener por ID
+    @Operation(summary = "Obtener cultivar por ID", 
+              description = "Obtiene un cultivar específico por su ID")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<CultivarDTO> obtenerPorId(@PathVariable Long id) {
         CultivarDTO cultivar = cultivarService.obtenerPorId(id);
@@ -56,6 +79,9 @@ public class CultivarController {
     }
 
     // Crear
+    @Operation(summary = "Crear nuevo cultivar", 
+              description = "Crea un nuevo cultivar en el sistema")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<CultivarDTO> crear(@RequestBody CultivarRequestDTO solicitud) {
         try {
@@ -67,6 +93,9 @@ public class CultivarController {
     }
 
     // Actualizar
+    @Operation(summary = "Actualizar cultivar", 
+              description = "Actualiza los detalles de un cultivar existente")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<CultivarDTO> actualizar(@PathVariable Long id, @RequestBody CultivarRequestDTO solicitud) {
         try {
@@ -81,6 +110,9 @@ public class CultivarController {
     }
 
     // Eliminar (soft delete)
+    @Operation(summary = "Eliminar cultivar", 
+              description = "Elimina (cambia a inactivo) un cultivar existente")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         cultivarService.eliminar(id);
@@ -88,6 +120,9 @@ public class CultivarController {
     }
 
     // Reactivar
+    @Operation(summary = "Reactivar cultivar", 
+              description = "Reactiva un cultivar que estaba inactivo")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
     public ResponseEntity<CultivarDTO> reactivar(@PathVariable Long id) {
         CultivarDTO reactivado = cultivarService.reactivar(id);

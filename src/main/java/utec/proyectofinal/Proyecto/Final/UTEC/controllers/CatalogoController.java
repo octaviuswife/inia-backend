@@ -17,7 +17,7 @@ import java.util.List;
 @RequestMapping("/api/catalogo")
 @CrossOrigin(origins = "*")
 @Tag(name = "Catálogos", description = "API para gestión de catálogos del sistema")
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "bearerAuth")
 public class CatalogoController {
 
     @Autowired
@@ -96,34 +96,46 @@ public class CatalogoController {
     }
 
     // Eliminar físicamente (solo para casos especiales)
+    @Operation(summary = "Eliminar catálogo físicamente", description = "Elimina un catálogo de forma permanente (solo administradores)")
     @DeleteMapping("/{id}/fisico")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarFisicamente(@PathVariable Long id) {
         catalogoService.eliminarFisicamente(id);
         return ResponseEntity.ok().build();
     }
 
     // Endpoints específicos para obtener tipos de datos
+    @Operation(summary = "Obtener Catalogo Humedad")
     @GetMapping("/humedad")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerTiposHumedad() {
         return obtenerPorTipo("HUMEDAD");
     }
 
+    @Operation(summary = "Obtener Catalogo Numero de Articulos")
     @GetMapping("/articulos")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerNumerosArticulo() {
         return obtenerPorTipo("ARTICULO");
     }
 
+    @Operation(summary = "Obtener Catalogo Origen")
     @GetMapping("/origenes")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerOrigenes() {
         return obtenerPorTipo("ORIGEN");
     }
 
+    @Operation(summary = "Obtener Catalogo Estados")
     @GetMapping("/estados")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerEstados() {
         return obtenerPorTipo("ESTADO");
     }
 
+    @Operation(summary = "Obtener Catalogo Deposito")
     @GetMapping("/depositos")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerDepositos() {
         return obtenerPorTipo("DEPOSITO");
     }

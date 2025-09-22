@@ -29,13 +29,15 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.TetrazolioService;
 @RequestMapping("/api/tetrazolios")
 @CrossOrigin(origins = "*")
 @Tag(name = "Tetrazolio", description = "API para gestión del análisis de tetrazolio")
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "bearerAuth")
 public class TetrazolioController {
 
     @Autowired
     private TetrazolioService tetrazolioService;
 
     // Crear nuevo Tetrazolio
+    @Operation(summary = "Crear análisis de tetrazolio", 
+              description = "Crea un nuevo análisis de tetrazolio con numeroRepeticiones y numeroConteos definidos")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<TetrazolioDTO> crearTetrazolio(@RequestBody TetrazolioRequestDTO solicitud) {
@@ -55,6 +57,8 @@ public class TetrazolioController {
     }
 
     // Obtener todos los Tetrazolios activos
+    @Operation(summary = "Listar todos los análisis de tetrazolio", 
+              description = "Obtiene todos los análisis de tetrazolio activos en el sistema")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoTetrazolio> obtenerTodosTetrazolio() {
@@ -67,6 +71,8 @@ public class TetrazolioController {
     }
 
     // Obtener Tetrazolio por ID
+    @Operation(summary = "Obtener análisis de tetrazolio por ID", 
+              description = "Obtiene un análisis de tetrazolio específico por su ID")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<TetrazolioDTO> obtenerTetrazolioPorId(@PathVariable Long id) {
@@ -81,6 +87,8 @@ public class TetrazolioController {
     }
 
     // Actualizar Tetrazolio
+    @Operation(summary = "Actualizar análisis de tetrazolio", 
+              description = "Actualiza los detalles de un análisis de tetrazolio existente")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<TetrazolioDTO> actualizarTetrazolio(@PathVariable Long id, @RequestBody TetrazolioRequestDTO solicitud) {
@@ -95,6 +103,7 @@ public class TetrazolioController {
     }
 
     // Actualizar porcentajes redondeados (solo cuando todas las repeticiones estén completas)
+    @Operation(summary = "Actualizar porcentajes redondeados")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/porcentajes")
     public ResponseEntity<TetrazolioDTO> actualizarPorcentajesRedondeados(@PathVariable Long id, @RequestBody PorcentajesRedondeadosRequestDTO solicitud) {
@@ -111,6 +120,7 @@ public class TetrazolioController {
     }
 
     // Eliminar Tetrazolio (cambiar estado a INACTIVO)
+    @Operation(summary = "Eliminar análisis de tetrazolio")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarTetrazolio(@PathVariable Long id) {
@@ -125,6 +135,8 @@ public class TetrazolioController {
     }
 
     // Obtener Tetrazolios por Lote
+    @Operation(summary = "Obtener tetrazolios por lote", 
+              description = "Obtiene todos los análisis de tetrazolio asociados a un lote específico")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<TetrazolioDTO>> obtenerTetrazoliosPorIdLote(@PathVariable Long idLote) {
@@ -137,6 +149,8 @@ public class TetrazolioController {
     }
 
     // Enviar análisis para aprobación (cambiar estado a PENDIENTE_APROBACION)
+    @Operation(summary = "Enviar análisis para aprobación", 
+              description = "Envía un análisis de tetrazolio para su aprobación, cambiando su estado a PENDIENTE_APROBACION")
     @PreAuthorize("hasRole('ANALISTA')")
     @PutMapping("/{id}/enviar-aprobacion")
     public ResponseEntity<TetrazolioDTO> enviarAprobacion(@PathVariable Long id) {
@@ -151,6 +165,8 @@ public class TetrazolioController {
     }
 
     // Aprobar análisis (cambiar estado a APROBADO)
+    @Operation(summary = "Aprobar análisis de tetrazolio", 
+              description = "Aprueba un análisis de tetrazolio, cambiando su estado a APROBADO (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<TetrazolioDTO> aprobarAnalisis(@PathVariable Long id) {

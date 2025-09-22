@@ -26,7 +26,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.LoteService;
 @RequestMapping("/api/lotes")
 @CrossOrigin(origins = "*")
 @Tag(name = "Lotes", description = "API para gestión de lotes de semillas")
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "bearerAuth")
 public class LoteController {
 
     @Autowired

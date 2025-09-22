@@ -1,23 +1,42 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.EspecieRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.EspecieService;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/especie")
 @CrossOrigin(origins = "*")
+@Tag(name = "Especies", description = "API para gestión de especies")
+@SecurityRequirement(name = "bearerAuth")
 public class EspecieController {
 
     @Autowired
     private EspecieService especieService;
 
     // Obtener todas activas
+    @Operation(summary = "Listar todas las especies",
+              description = "Obtiene todas las especies activas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<EspecieDTO>> obtenerTodas() {
         List<EspecieDTO> especies = especieService.obtenerTodas();
@@ -25,6 +44,9 @@ public class EspecieController {
     }
 
     // Obtener inactivas
+    @Operation(summary = "Listar especies inactivas", 
+              description = "Obtiene todas las especies inactivas")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/inactivas")
     public ResponseEntity<List<EspecieDTO>> obtenerInactivas() {
         List<EspecieDTO> especies = especieService.obtenerInactivas();
@@ -32,6 +54,9 @@ public class EspecieController {
     }
 
     // Buscar por nombre común
+    @Operation(summary = "Buscar especies por nombre común", 
+              description = "Busca especies cuyo nombre común contenga el texto proporcionado")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/buscar/comun")
     public ResponseEntity<List<EspecieDTO>> buscarPorNombreComun(@RequestParam String nombre) {
         List<EspecieDTO> especies = especieService.buscarPorNombreComun(nombre);
@@ -39,6 +64,9 @@ public class EspecieController {
     }
 
     // Buscar por nombre científico
+    @Operation(summary = "Buscar especies por nombre científico", 
+              description = "Busca especies cuyo nombre científico contenga el texto proporcionado")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/buscar/cientifico")
     public ResponseEntity<List<EspecieDTO>> buscarPorNombreCientifico(@RequestParam String nombre) {
         List<EspecieDTO> especies = especieService.buscarPorNombreCientifico(nombre);
@@ -46,6 +74,9 @@ public class EspecieController {
     }
 
     // Obtener por ID
+    @Operation(summary = "Obtener especie por ID", 
+              description = "Obtiene una especie específica por su ID")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<EspecieDTO> obtenerPorId(@PathVariable Long id) {
         EspecieDTO especie = especieService.obtenerPorId(id);
@@ -56,6 +87,9 @@ public class EspecieController {
     }
 
     // Crear
+    @Operation(summary = "Crear nueva especie", 
+              description = "Crea una nueva especie (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<EspecieDTO> crear(@RequestBody EspecieRequestDTO solicitud) {
         EspecieDTO creada = especieService.crear(solicitud);
@@ -63,6 +97,9 @@ public class EspecieController {
     }
 
     // Actualizar
+    @Operation(summary = "Actualizar especie", 
+              description = "Actualiza una especie existente (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<EspecieDTO> actualizar(@PathVariable Long id, @RequestBody EspecieRequestDTO solicitud) {
         EspecieDTO actualizada = especieService.actualizar(id, solicitud);
@@ -73,6 +110,9 @@ public class EspecieController {
     }
 
     // Eliminar (soft delete)
+    @Operation(summary = "Eliminar especie", 
+              description = "Elimina una especie (soft delete) (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         especieService.eliminar(id);
@@ -80,6 +120,9 @@ public class EspecieController {
     }
 
     // Reactivar
+    @Operation(summary = "Reactivar especie", 
+              description = "Reactiva una especie (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
     public ResponseEntity<EspecieDTO> reactivar(@PathVariable Long id) {
         EspecieDTO reactivada = especieService.reactivar(id);

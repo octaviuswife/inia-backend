@@ -34,6 +34,9 @@ public class DosnService {
 
     @Autowired
     private CatalogoRepository catalogoRepository;
+    
+    @Autowired
+    private AnalisisService analisisService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -199,5 +202,39 @@ public class DosnService {
         Listado listado = MappingUtils.fromListadoRequest(solicitud, entityManager);
         listado.setDosn(dosn);
         return listado;
+    }
+
+    /**
+     * Finalizar análisis según el rol del usuario
+     * - Analistas: pasa a PENDIENTE_APROBACION
+     * - Administradores: pasa directamente a APROBADO
+     */
+    public DosnDTO finalizarAnalisis(Long id) {
+        Dosn dosn = dosnRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
+
+        // Usar el servicio común para finalizar el análisis
+        analisisService.finalizarAnalisis(dosn);
+        
+        // Guardar cambios
+        Dosn dosnActualizada = dosnRepository.save(dosn);
+        
+        return mapearEntidadADTO(dosnActualizada);
+    }
+
+    /**
+     * Aprobar análisis (solo administradores)
+     */
+    public DosnDTO aprobarAnalisis(Long id) {
+        Dosn dosn = dosnRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
+
+        // Usar el servicio común para aprobar el análisis
+        analisisService.aprobarAnalisis(dosn);
+        
+        // Guardar cambios
+        Dosn dosnActualizada = dosnRepository.save(dosn);
+        
+        return mapearEntidadADTO(dosnActualizada);
     }
 }

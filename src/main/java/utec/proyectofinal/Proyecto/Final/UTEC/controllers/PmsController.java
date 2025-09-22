@@ -28,13 +28,15 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
 @RequestMapping("/api/pms")
 @CrossOrigin(origins = "*")
 @Tag(name = "PMS", description = "API para gestión del análisis de Peso de Mil Semillas")
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "bearerAuth")
 public class PmsController {
 
     @Autowired
     private PmsService pmsService;
 
     // Crear nuevo Pms
+    @Operation(summary = "Crear análisis de peso de mil semillas (PMS)", 
+              description = "Crea un nuevo análisis de peso de mil semillas (PMS)")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PmsDTO> crearPms(@RequestBody PmsRequestDTO solicitud) {
@@ -49,6 +51,8 @@ public class PmsController {
     }
 
     // Obtener todos los Pms activos
+    @Operation(summary = "Listar todos los análisis de peso de mil semillas (PMS)", 
+              description = "Obtiene todos los análisis de peso de mil semillas (PMS) activos")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<PmsDTO>> obtenerTodos() {
@@ -61,6 +65,8 @@ public class PmsController {
     }
 
     // Obtener Pms por ID
+    @Operation(summary = "Obtener análisis de peso de mil semillas (PMS) por ID", 
+              description = "Obtiene un análisis de peso de mil semillas (PMS) específico por su ID")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<PmsDTO> obtenerPorId(@PathVariable Long id) {
@@ -75,6 +81,8 @@ public class PmsController {
     }
 
     // Actualizar Pms
+    @Operation(summary = "Actualizar análisis de peso de mil semillas (PMS)", 
+              description = "Actualiza un análisis de peso de mil semillas (PMS) existente")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PmsDTO> actualizarPms(@PathVariable Long id, @RequestBody PmsRequestDTO solicitud) {
@@ -89,6 +97,8 @@ public class PmsController {
     }
 
     // Eliminar Pms (cambiar estado a INACTIVO)
+    @Operation(summary = "Eliminar análisis de peso de mil semillas (PMS)", 
+              description = "Elimina (cambia a inactivo) un análisis de peso de mil semillas (PMS) existente")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarPms(@PathVariable Long id) {
@@ -103,6 +113,8 @@ public class PmsController {
     }
 
     // Obtener Pms por Lote
+    @Operation(summary = "Obtener análisis de peso de mil semillas (PMS) por ID de lote", 
+              description = "Obtiene todos los análisis de peso de mil semillas (PMS) asociados a un lote específico")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<PmsDTO>> obtenerPmsPorIdLote(@PathVariable Long idLote) {
@@ -115,6 +127,8 @@ public class PmsController {
     }
 
     // Actualizar PMS con valor redondeado (solo cuando todas las repeticiones estén completas)
+    @Operation(summary = "Actualizar análisis de peso de mil semillas (PMS) con redondeo", 
+              description = "Actualiza un análisis de peso de mil semillas (PMS) existente con valores redondeados")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/redondeo")
     public ResponseEntity<PmsDTO> actualizarPmsConRedondeo(@PathVariable Long id, @RequestBody PmsRedondeoRequestDTO solicitud) {
@@ -129,6 +143,8 @@ public class PmsController {
     }
 
     // Finalizar análisis PMS
+    @Operation(summary = "Finalizar análisis de peso de mil semillas (PMS)", 
+              description = "Finaliza un análisis de peso de mil semillas (PMS), marcándolo como completado")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<PmsDTO> finalizarAnalisis(@PathVariable Long id) {
@@ -143,6 +159,8 @@ public class PmsController {
     }
 
     // Aprobar análisis (solo admin)
+    @Operation(summary = "Aprobar análisis de peso de mil semillas (PMS)", 
+              description = "Aprueba un análisis de peso de mil semillas (PMS) - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<PmsDTO> aprobarAnalisis(@PathVariable Long id) {

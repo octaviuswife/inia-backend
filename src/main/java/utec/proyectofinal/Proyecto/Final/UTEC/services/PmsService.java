@@ -39,6 +39,9 @@ public class PmsService {
 
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
+    
+    @Autowired
+    private AnalisisService analisisService;
 
     // Crear Pms con estado REGISTRADO
     public PmsDTO crearPms(PmsRequestDTO solicitud) {
@@ -72,7 +75,7 @@ public class PmsService {
             Pms pms = existente.get();
             
             // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-            if (pms.getEstado() == Estado.APROBADO && esAnalista()) {
+            if (pms.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
                 pms.setEstado(Estado.PENDIENTE_APROBACION);
             }
             
@@ -393,18 +396,11 @@ public class PmsService {
         if (pmsExistente.isPresent()) {
             Pms pms = pmsExistente.get();
             
-            // Si es analista, pasar a PENDIENTE_APROBACION
-            // Si es admin, pasar directamente a APROBADO
-            if (esAnalista()) {
-                pms.setEstado(Estado.PENDIENTE_APROBACION);
-            } else {
-                pms.setEstado(Estado.APROBADO);
-            }
+            // Usar el servicio común para finalizar el análisis
+            analisisService.finalizarAnalisis(pms);
             
+            // Guardar cambios
             Pms pmsActualizado = pmsRepository.save(pms);
-            
-            // Registrar en historial
-            analisisHistorialService.registrarModificacion(pmsActualizado);
             
             return mapearEntidadADTO(pmsActualizado);
         } else {
@@ -419,29 +415,15 @@ public class PmsService {
         if (pmsExistente.isPresent()) {
             Pms pms = pmsExistente.get();
             
-            // Validar que esté en estado PENDIENTE_APROBACION
-            if (pms.getEstado() != Estado.PENDIENTE_APROBACION) {
-                throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION para ser aprobado");
-            }
+            // Usar el servicio común para aprobar el análisis
+            analisisService.aprobarAnalisis(pms);
             
-            pms.setEstado(Estado.APROBADO);
+            // Guardar cambios
             Pms pmsActualizado = pmsRepository.save(pms);
-            
-            // Registrar en historial
-            analisisHistorialService.registrarModificacion(pmsActualizado);
             
             return mapearEntidadADTO(pmsActualizado);
         } else {
             throw new RuntimeException("Análisis PMS no encontrado con ID: " + id);
         }
-    }
-
-    // Método para determinar si el usuario actual es analista
-    private boolean esAnalista() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getAuthorities() != null) {
-            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
-        }
-        return false;
     }
 }

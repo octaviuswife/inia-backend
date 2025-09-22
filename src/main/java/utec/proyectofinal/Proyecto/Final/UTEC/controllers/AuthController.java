@@ -85,7 +85,7 @@ public class AuthController {
 
     @PostMapping("/validate")
     @Operation(summary = "Validar token", description = "Valida si un token JWT es válido")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
         try {
             String token = authHeader.replace("Bearer ", "");
@@ -128,7 +128,7 @@ public class AuthController {
     @GetMapping("/pending")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Listar solicitudes pendientes", description = "Lista todas las solicitudes de registro pendientes de aprobación")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<UsuarioDTO>> listarSolicitudesPendientes() {
         List<UsuarioDTO> solicitudes = usuarioService.listarSolicitudesPendientes();
         return ResponseEntity.ok(solicitudes);
@@ -137,7 +137,7 @@ public class AuthController {
     @PostMapping("/approve/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Aprobar usuario", description = "Aprueba un usuario registrado y le asigna un rol")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> aprobarUsuario(@PathVariable Integer id, @RequestBody AprobarUsuarioRequestDTO solicitud) {
         try {
             UsuarioDTO usuarioAprobado = usuarioService.aprobarUsuario(id, solicitud);
@@ -154,7 +154,7 @@ public class AuthController {
     @DeleteMapping("/reject/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Rechazar solicitud", description = "Rechaza y elimina una solicitud de registro")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> rechazarSolicitud(@PathVariable Integer id) {
         try {
             usuarioService.rechazarSolicitud(id);
@@ -168,7 +168,7 @@ public class AuthController {
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Listar usuarios", description = "Lista todos los usuarios del sistema")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<UsuarioDTO>> listarUsuarios() {
         List<UsuarioDTO> usuarios = usuarioService.listarTodosUsuarios();
         return ResponseEntity.ok(usuarios);
@@ -177,7 +177,7 @@ public class AuthController {
     @GetMapping("/users/active")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Listar usuarios activos", description = "Lista todos los usuarios activos del sistema")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<UsuarioDTO>> listarUsuariosActivos() {
         List<UsuarioDTO> usuarios = usuarioService.listarUsuariosActivos();
         return ResponseEntity.ok(usuarios);
@@ -186,7 +186,7 @@ public class AuthController {
     @PutMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Gestionar usuario", description = "Actualiza el rol o estado de un usuario")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> gestionarUsuario(@PathVariable Integer id, @RequestBody GestionarUsuarioRequestDTO solicitud) {
         try {
             UsuarioDTO usuarioActualizado = usuarioService.gestionarUsuario(id, solicitud);
@@ -205,7 +205,7 @@ public class AuthController {
     @GetMapping("/profile")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @Operation(summary = "Obtener perfil", description = "Obtiene el perfil del usuario autenticado")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> obtenerPerfil() {
         try {
             UsuarioDTO perfil = usuarioService.obtenerPerfil();
@@ -219,7 +219,7 @@ public class AuthController {
     @PutMapping("/profile")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @Operation(summary = "Actualizar perfil", description = "Actualiza el perfil del usuario autenticado")
-    @SecurityRequirement(name = "JWT")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> actualizarPerfil(@RequestBody ActualizarPerfilRequestDTO solicitud) {
         try {
             UsuarioDTO perfilActualizado = usuarioService.actualizarPerfil(solicitud);
