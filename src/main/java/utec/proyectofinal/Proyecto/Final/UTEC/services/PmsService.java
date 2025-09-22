@@ -8,6 +8,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
@@ -34,6 +37,9 @@ public class PmsService {
     @Autowired
     private LoteRepository loteRepository;
 
+    @Autowired
+    private AnalisisHistorialService analisisHistorialService;
+
     // Crear Pms con estado REGISTRADO
     public PmsDTO crearPms(PmsRequestDTO solicitud) {
         // Validar que se especifique el número de repeticiones esperadas
@@ -51,6 +57,10 @@ public class PmsService {
         pms.setEstado(Estado.REGISTRADO);
 
         Pms guardado = pmsRepository.save(pms);
+        
+        // Registrar automáticamente en el historial
+        analisisHistorialService.registrarCreacion(guardado);
+        
         return mapearEntidadADTO(guardado);
     }
 
@@ -60,8 +70,18 @@ public class PmsService {
 
         if (existente.isPresent()) {
             Pms pms = existente.get();
+            
+            // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
+            if (pms.getEstado() == Estado.APROBADO && esAnalista()) {
+                pms.setEstado(Estado.PENDIENTE_APROBACION);
+            }
+            
             actualizarEntidadDesdeSolicitud(pms, solicitud);
             Pms actualizado = pmsRepository.save(pms);
+            
+            // Registrar automáticamente en el historial
+            analisisHistorialService.registrarModificacion(actualizado);
+            
             return mapearEntidadADTO(actualizado);
         } else {
             throw new RuntimeException("Pms no encontrado con ID: " + id);
@@ -362,6 +382,65 @@ public class PmsService {
             if (repeticionesValidas.size() >= pms.getNumRepeticionesEsperadas()) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    // Finalizar análisis PMS - cambia estado según rol del usuario
+    public PmsDTO finalizarAnalisis(Long id) {
+        Optional<Pms> pmsExistente = pmsRepository.findById(id);
+        
+        if (pmsExistente.isPresent()) {
+            Pms pms = pmsExistente.get();
+            
+            // Si es analista, pasar a PENDIENTE_APROBACION
+            // Si es admin, pasar directamente a APROBADO
+            if (esAnalista()) {
+                pms.setEstado(Estado.PENDIENTE_APROBACION);
+            } else {
+                pms.setEstado(Estado.APROBADO);
+            }
+            
+            Pms pmsActualizado = pmsRepository.save(pms);
+            
+            // Registrar en historial
+            analisisHistorialService.registrarModificacion(pmsActualizado);
+            
+            return mapearEntidadADTO(pmsActualizado);
+        } else {
+            throw new RuntimeException("Análisis PMS no encontrado con ID: " + id);
+        }
+    }
+
+    // Aprobar análisis PMS (solo para administradores)
+    public PmsDTO aprobarAnalisis(Long id) {
+        Optional<Pms> pmsExistente = pmsRepository.findById(id);
+        
+        if (pmsExistente.isPresent()) {
+            Pms pms = pmsExistente.get();
+            
+            // Validar que esté en estado PENDIENTE_APROBACION
+            if (pms.getEstado() != Estado.PENDIENTE_APROBACION) {
+                throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION para ser aprobado");
+            }
+            
+            pms.setEstado(Estado.APROBADO);
+            Pms pmsActualizado = pmsRepository.save(pms);
+            
+            // Registrar en historial
+            analisisHistorialService.registrarModificacion(pmsActualizado);
+            
+            return mapearEntidadADTO(pmsActualizado);
+        } else {
+            throw new RuntimeException("Análisis PMS no encontrado con ID: " + id);
+        }
+    }
+
+    // Método para determinar si el usuario actual es analista
+    private boolean esAnalista() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getAuthorities() != null) {
+            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
         }
         return false;
     }

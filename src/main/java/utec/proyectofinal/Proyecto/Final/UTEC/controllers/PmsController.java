@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,7 @@ public class PmsController {
     private PmsService pmsService;
 
     // Crear nuevo Pms
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PmsDTO> crearPms(@RequestBody PmsRequestDTO solicitud) {
         try {
@@ -42,6 +44,7 @@ public class PmsController {
     }
 
     // Obtener todos los Pms activos
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<PmsDTO>> obtenerTodos() {
         try {
@@ -53,6 +56,7 @@ public class PmsController {
     }
 
     // Obtener Pms por ID
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<PmsDTO> obtenerPorId(@PathVariable Long id) {
         try {
@@ -66,6 +70,7 @@ public class PmsController {
     }
 
     // Actualizar Pms
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PmsDTO> actualizarPms(@PathVariable Long id, @RequestBody PmsRequestDTO solicitud) {
         try {
@@ -79,6 +84,7 @@ public class PmsController {
     }
 
     // Eliminar Pms (cambiar estado a INACTIVO)
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarPms(@PathVariable Long id) {
         try {
@@ -92,6 +98,7 @@ public class PmsController {
     }
 
     // Obtener Pms por Lote
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<PmsDTO>> obtenerPmsPorIdLote(@PathVariable Long idLote) {
         try {
@@ -103,11 +110,40 @@ public class PmsController {
     }
 
     // Actualizar PMS con valor redondeado (solo cuando todas las repeticiones estén completas)
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/redondeo")
     public ResponseEntity<PmsDTO> actualizarPmsConRedondeo(@PathVariable Long id, @RequestBody PmsRedondeoRequestDTO solicitud) {
         try {
             PmsDTO actualizado = pmsService.actualizarPmsConRedondeo(id, solicitud);
             return new ResponseEntity<>(actualizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Finalizar análisis PMS
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<PmsDTO> finalizarAnalisis(@PathVariable Long id) {
+        try {
+            PmsDTO analisisFinalizado = pmsService.finalizarAnalisis(id);
+            return new ResponseEntity<>(analisisFinalizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Aprobar análisis (solo admin)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/aprobar")
+    public ResponseEntity<PmsDTO> aprobarAnalisis(@PathVariable Long id) {
+        try {
+            PmsDTO analisisAprobado = pmsService.aprobarAnalisis(id);
+            return new ResponseEntity<>(analisisAprobado, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {

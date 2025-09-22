@@ -29,6 +29,9 @@ public class GerminacionService {
     @Autowired
     private GerminacionRepository germinacionRepository;
 
+    @Autowired
+    private AnalisisHistorialService analisisHistorialService;
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -41,6 +44,10 @@ public class GerminacionService {
             germinacion.setEstado(Estado.REGISTRADO);
             
             Germinacion germinacionGuardada = germinacionRepository.save(germinacion);
+            
+            // Registrar automáticamente en el historial
+            analisisHistorialService.registrarCreacion(germinacionGuardada);
+            
             System.out.println("Germinación creada exitosamente con ID: " + germinacionGuardada.getAnalisisID());
             
             return mapearEntidadADTO(germinacionGuardada);
@@ -65,6 +72,10 @@ public class GerminacionService {
             
             actualizarEntidadDesdeSolicitud(germinacion, solicitud);
             Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
+            
+            // Registrar automáticamente en el historial
+            analisisHistorialService.registrarModificacion(germinacionActualizada);
+            
             return mapearEntidadADTO(germinacionActualizada);
         } else {
             throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
@@ -121,34 +132,6 @@ public class GerminacionService {
         return germinaciones.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
-    }
-
-    // Finalizar análisis de germinación (solo si todas las tablas están finalizadas)
-    public GerminacionDTO finalizarAnalisis(Long germinacionId, Estado nuevoEstado) {
-        Optional<Germinacion> germinacionExistente = germinacionRepository.findById(germinacionId);
-        
-        if (germinacionExistente.isPresent()) {
-            Germinacion germinacion = germinacionExistente.get();
-            
-            // Validar que el estado sea válido para finalización
-            if (nuevoEstado != Estado.PENDIENTE_APROBACION && nuevoEstado != Estado.APROBADO) {
-                throw new RuntimeException("El estado debe ser PENDIENTE_APROBACION o APROBADO para finalizar el análisis");
-            }
-            
-            // Validar que todas las tablas estén finalizadas
-            if (!todasTablasFinalizadas(germinacion)) {
-                throw new RuntimeException("No se puede finalizar el análisis. Hay tablas pendientes de completar.");
-            }
-            
-            // Cambiar estado
-            germinacion.setEstado(nuevoEstado);
-            Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
-            
-            System.out.println("Análisis de germinación finalizado exitosamente con ID: " + germinacionId + " - Estado: " + nuevoEstado);
-            return mapearEntidadADTO(germinacionActualizada);
-        } else {
-            throw new RuntimeException("Germinación no encontrada con ID: " + germinacionId);
-        }
     }
 
     // Validar que todas las tablas asociadas estén finalizadas
@@ -316,5 +299,63 @@ public class GerminacionService {
         dto.setNumeroConteos(germinacion.getNumeroConteos());
         
         return dto;
+    }
+
+    /**
+     * Finalizar análisis según el rol del usuario
+     * - Analistas: pasa a PENDIENTE_APROBACION
+     * - Administradores: pasa directamente a APROBADO
+     */
+    public GerminacionDTO finalizarAnalisis(Long id) {
+        Optional<Germinacion> germinacionExistente = germinacionRepository.findById(id);
+        
+        if (germinacionExistente.isPresent()) {
+            Germinacion germinacion = germinacionExistente.get();
+            
+            // Validar que todas las tablas estén finalizadas
+            if (!todasTablasFinalizadas(germinacion)) {
+                throw new RuntimeException("No se puede finalizar el análisis. Hay tablas pendientes de completar.");
+            }
+            
+            if (esAnalista()) {
+                // Analista: enviar a pendiente de aprobación
+                germinacion.setEstado(Estado.PENDIENTE_APROBACION);
+                System.out.println("Análisis finalizado por analista - enviado a PENDIENTE_APROBACION");
+            } else {
+                // Admin: aprobar directamente
+                germinacion.setEstado(Estado.APROBADO);
+                System.out.println("Análisis finalizado por admin - estado APROBADO");
+            }
+            
+            Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
+            
+            // Registrar en el historial
+            analisisHistorialService.registrarModificacion(germinacionActualizada);
+            
+            return mapearEntidadADTO(germinacionActualizada);
+        } else {
+            throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
+        }
+    }
+
+    /**
+     * Aprobar análisis (solo administradores)
+     */
+    public GerminacionDTO aprobarAnalisis(Long id) {
+        Optional<Germinacion> germinacionExistente = germinacionRepository.findById(id);
+        
+        if (germinacionExistente.isPresent()) {
+            Germinacion germinacion = germinacionExistente.get();
+            germinacion.setEstado(Estado.APROBADO);
+            
+            Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
+            
+            // Registrar en el historial
+            analisisHistorialService.registrarModificacion(germinacionActualizada);
+            
+            return mapearEntidadADTO(germinacionActualizada);
+        } else {
+            throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
+        }
     }
 }

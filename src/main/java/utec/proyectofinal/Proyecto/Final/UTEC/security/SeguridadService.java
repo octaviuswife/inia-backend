@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.PasswordService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,13 +29,32 @@ public class SeguridadService {
 
         Usuario usuarioEncontrado = objUsuario.get();
 
+        // Verificar que el usuario esté activo (campo legacy)
         if (!usuarioEncontrado.getActivo()) {
             throw new RuntimeException("USUARIO_INACTIVO");
+        }
+
+        // Verificar el estado del usuario
+        if (usuarioEncontrado.getEstado() == EstadoUsuario.PENDIENTE) {
+            throw new RuntimeException("USUARIO_PENDIENTE_APROBACION");
+        }
+
+        if (usuarioEncontrado.getEstado() == EstadoUsuario.INACTIVO) {
+            throw new RuntimeException("USUARIO_INACTIVO");
+        }
+
+        // Verificar que tenga un rol asignado
+        if (usuarioEncontrado.getRol() == null) {
+            throw new RuntimeException("USUARIO_SIN_ROL");
         }
 
         if (!passwordService.matchPassword(password, usuarioEncontrado.getContrasenia())) {
             throw new RuntimeException("CONTRASENIA_INCORRECTA");
         }
+
+        // Actualizar fecha de última conexión
+        usuarioEncontrado.setFechaUltimaConexion(LocalDateTime.now());
+        usuarioRepository.save(usuarioEncontrado);
 
         return objUsuario;
     }

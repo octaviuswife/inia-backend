@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 import jakarta.persistence.*;
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 
 import java.time.LocalDateTime;
@@ -32,11 +33,15 @@ public class Usuario {
     private String contrasenia;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)  // Permitir null para usuarios pendientes
     private Rol rol;
     
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Boolean activo = true;
+    private EstadoUsuario estado = EstadoUsuario.PENDIENTE;
+    
+    @Column(nullable = false)
+    private Boolean activo = true; // Mantenemos por compatibilidad
     
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
@@ -51,6 +56,9 @@ public class Usuario {
 
     // Método para obtener roles como lista (compatibilidad con JWT)
     public List<String> getRoles() {
+        if (rol == null) {
+            return Arrays.asList(); // Usuario sin rol asignado
+        }
         return Arrays.asList("ROLE_" + rol.name());
     }
     
@@ -78,5 +86,18 @@ public class Usuario {
     
     public boolean puedeAprobar() {
         return rol == Rol.ADMIN;
+    }
+    
+    // Métodos para gestión de estados
+    public boolean estaActivo() {
+        return estado == EstadoUsuario.ACTIVO;
+    }
+    
+    public boolean estaPendiente() {
+        return estado == EstadoUsuario.PENDIENTE;
+    }
+    
+    public boolean estaInactivo() {
+        return estado == EstadoUsuario.INACTIVO;
     }
 }

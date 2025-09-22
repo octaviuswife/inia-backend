@@ -6,4 +6,6 @@ public enum Estado {
     PENDIENTE_APROBACION,
     APROBADO,
     INACTIVO,
+    A_REPETIR,
+    // SOLICITUD_REPETICION,
 }

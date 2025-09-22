@@ -1,9 +1,13 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityManager;
@@ -35,6 +39,9 @@ public class PurezaService {
     @Autowired
     private CatalogoRepository catalogoRepository;
 
+    @Autowired
+    private AnalisisHistorialService analisisHistorialService;
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -45,7 +52,12 @@ public class PurezaService {
         
         Pureza pureza = mapearSolicitudAEntidad(solicitud);
         pureza.setEstado(Estado.REGISTRADO);
-        return mapearEntidadADTO(purezaRepository.save(pureza));
+        Pureza purezaGuardada = purezaRepository.save(pureza);
+        
+        // Registrar automáticamente en el historial
+        analisisHistorialService.registrarCreacion(purezaGuardada);
+        
+        return mapearEntidadADTO(purezaGuardada);
     }
 
     // Editar Pureza
@@ -53,13 +65,23 @@ public class PurezaService {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
 
+        // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
+        if (pureza.getEstado() == Estado.APROBADO && esAnalista()) {
+            pureza.setEstado(Estado.PENDIENTE_APROBACION);
+        }
+
         // Validar pesos antes de actualizar
         BigDecimal pesoInicial = solicitud.getPesoInicial_g() != null ? solicitud.getPesoInicial_g() : pureza.getPesoInicial_g();
         BigDecimal pesoTotal = solicitud.getPesoTotal_g() != null ? solicitud.getPesoTotal_g() : pureza.getPesoTotal_g();
         validarPesos(pesoInicial, pesoTotal);
 
         actualizarEntidadDesdeSolicitud(pureza, solicitud);
-        return mapearEntidadADTO(purezaRepository.save(pureza));
+        Pureza purezaActualizada = purezaRepository.save(pureza);
+        
+        // Registrar automáticamente en el historial
+        analisisHistorialService.registrarModificacion(purezaActualizada);
+        
+        return mapearEntidadADTO(purezaActualizada);
     }
 
     // Eliminar Pureza (cambiar estado a INACTIVO)
@@ -279,5 +301,57 @@ public class PurezaService {
                                      "% de su peso inicial, lo cual excede el límite permitido del 5%. " +
                                      "Pérdida: " + diferenciaPeso.setScale(2, java.math.RoundingMode.HALF_UP) + "g");
         }
+    }
+
+    /**
+     * Finalizar análisis según el rol del usuario
+     * - Analistas: pasa a PENDIENTE_APROBACION
+     * - Administradores: pasa directamente a APROBADO
+     */
+    public PurezaDTO finalizarAnalisis(Long id) {
+        Pureza pureza = purezaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
+        
+        if (esAnalista()) {
+            // Analista: enviar a pendiente de aprobación
+            pureza.setEstado(Estado.PENDIENTE_APROBACION);
+        } else {
+            // Admin: aprobar directamente
+            pureza.setEstado(Estado.APROBADO);
+        }
+        
+        Pureza purezaActualizada = purezaRepository.save(pureza);
+        
+        // Registrar en el historial
+        analisisHistorialService.registrarModificacion(purezaActualizada);
+        
+        return mapearEntidadADTO(purezaActualizada);
+    }
+
+    /**
+     * Aprobar análisis (solo administradores)
+     */
+    public PurezaDTO aprobarAnalisis(Long id) {
+        Pureza pureza = purezaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
+        
+        pureza.setEstado(Estado.APROBADO);
+        Pureza purezaActualizada = purezaRepository.save(pureza);
+        
+        // Registrar en el historial
+        analisisHistorialService.registrarModificacion(purezaActualizada);
+        
+        return mapearEntidadADTO(purezaActualizada);
+    }
+
+    /**
+     * Método para determinar si el usuario actual es analista
+     */
+    private boolean esAnalista() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getAuthorities() != null) {
+            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
+        }
+        return false;
     }
 }

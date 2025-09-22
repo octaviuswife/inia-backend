@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ public class TetrazolioController {
     private TetrazolioService tetrazolioService;
 
     // Crear nuevo Tetrazolio
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<TetrazolioDTO> crearTetrazolio(@RequestBody TetrazolioRequestDTO solicitud) {
         try {
@@ -48,6 +50,7 @@ public class TetrazolioController {
     }
 
     // Obtener todos los Tetrazolios activos
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoTetrazolio> obtenerTodosTetrazolio() {
         try {
@@ -59,6 +62,7 @@ public class TetrazolioController {
     }
 
     // Obtener Tetrazolio por ID
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<TetrazolioDTO> obtenerTetrazolioPorId(@PathVariable Long id) {
         try {
@@ -72,6 +76,7 @@ public class TetrazolioController {
     }
 
     // Actualizar Tetrazolio
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<TetrazolioDTO> actualizarTetrazolio(@PathVariable Long id, @RequestBody TetrazolioRequestDTO solicitud) {
         try {
@@ -85,6 +90,7 @@ public class TetrazolioController {
     }
 
     // Actualizar porcentajes redondeados (solo cuando todas las repeticiones estén completas)
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/porcentajes")
     public ResponseEntity<TetrazolioDTO> actualizarPorcentajesRedondeados(@PathVariable Long id, @RequestBody PorcentajesRedondeadosRequestDTO solicitud) {
         try {
@@ -100,6 +106,7 @@ public class TetrazolioController {
     }
 
     // Eliminar Tetrazolio (cambiar estado a INACTIVO)
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarTetrazolio(@PathVariable Long id) {
         try {
@@ -113,6 +120,7 @@ public class TetrazolioController {
     }
 
     // Obtener Tetrazolios por Lote
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<TetrazolioDTO>> obtenerTetrazoliosPorIdLote(@PathVariable Long idLote) {
         try {
@@ -124,6 +132,7 @@ public class TetrazolioController {
     }
 
     // Enviar análisis para aprobación (cambiar estado a PENDIENTE_APROBACION)
+    @PreAuthorize("hasRole('ANALISTA')")
     @PutMapping("/{id}/enviar-aprobacion")
     public ResponseEntity<TetrazolioDTO> enviarAprobacion(@PathVariable Long id) {
         try {
@@ -137,6 +146,7 @@ public class TetrazolioController {
     }
 
     // Aprobar análisis (cambiar estado a APROBADO)
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<TetrazolioDTO> aprobarAnalisis(@PathVariable Long id) {
         try {
