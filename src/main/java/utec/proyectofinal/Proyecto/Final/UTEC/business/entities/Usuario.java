@@ -59,7 +59,7 @@ public class Usuario {
         if (rol == null) {
             return Arrays.asList(); // Usuario sin rol asignado
         }
-        return Arrays.asList("ROLE_" + rol.name());
+        return Arrays.asList(rol.name());
     }
     
     // Método para obtener el nombre completo

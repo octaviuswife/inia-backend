@@ -71,7 +71,7 @@ public class AnalisisService {
     public boolean esAnalista() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getAuthorities() != null) {
-            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
+            return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ANALISTA"));
         }
         return false;
     }
