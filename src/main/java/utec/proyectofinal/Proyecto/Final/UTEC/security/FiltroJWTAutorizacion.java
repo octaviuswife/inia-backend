@@ -37,14 +37,22 @@ public class FiltroJWTAutorizacion extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException ex) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            ((HttpServletResponse) response).sendError(HttpServletResponse.SC_FORBIDDEN, ex.getMessage());
+            // Log del error para debugging
+            System.err.println("Error JWT: " + ex.getMessage());
+            SecurityContextHolder.clearContext();
+            // Continuar con el filtro para que Spring Security maneje la autenticación fallida
+            filterChain.doFilter(request, response);
+            return;
         }
     }
 
     private void crearAutenticacion(Claims claims) {
         List<String> autorizaciones = (List<String>) claims.get("authorities");
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, autorizaciones.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
+        // Agregar prefijo ROLE_ para que funcione con hasRole()
+        List<SimpleGrantedAuthority> authorities = autorizaciones.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .collect(Collectors.toList());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 

@@ -56,8 +56,8 @@ public class WebSecurityConfig {
                         // GESTIÓN DE USUARIOS - Solo ADMIN
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                         */
-                        // DESARROLLO: Permitir todo temporalmente, despues cambiar por .authenticated()
-                        .anyRequest().permitAll());
+                        // DESARROLLO: Cambiar a authenticated() para que funcione JWT
+                        .anyRequest().authenticated());
 
 
 
