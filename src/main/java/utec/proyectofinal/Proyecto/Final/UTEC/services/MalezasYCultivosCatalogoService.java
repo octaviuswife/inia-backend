@@ -77,9 +77,6 @@ public class MalezasYCultivosCatalogoService {
                     catalogo.setNombreComun(solicitud.getNombreComun());
                     catalogo.setNombreCientifico(solicitud.getNombreCientifico());
                     catalogo.setMaleza(solicitud.getMaleza());
-                    if (solicitud.getActivo() != null) {
-                        catalogo.setActivo(solicitud.getActivo());
-                    }
 
                     MalezasYCultivosCatalogo actualizado = repository.save(catalogo);
                     return mapearEntidadADTO(actualizado);
