@@ -50,10 +50,10 @@ public class PmsService {
             throw new RuntimeException("Debe especificar un número válido de repeticiones esperadas (mayor a 0).");
         }
         
-        // Validar que el número de repeticiones no exceda 16 en total
-        Integer numTandas = Optional.ofNullable(solicitud.getNumTandas()).orElse(1);
-        if (solicitud.getNumRepeticionesEsperadas() * numTandas > 16) {
-            throw new RuntimeException("El total de repeticiones no puede superar 16 (repeticiones x tandas).");
+        // Validar que en el peor caso (múltiples tandas inválidas) no se supere el límite de 16 repeticiones totales
+        // Como mínimo necesitamos 1 tanda válida, así que validamos que las repeticiones por tanda no excedan 16
+        if (solicitud.getNumRepeticionesEsperadas() > 16) {
+            throw new RuntimeException("El número de repeticiones por tanda no puede superar 16.");
         }
         
         Pms pms = mapearSolicitudAEntidad(solicitud);
@@ -208,6 +208,10 @@ public class PmsService {
             // Incrementar número de tandas si aún no se alcanza el límite de repeticiones
             if (puedeIncrementarTandas(pms)) {
                 pms.setNumTandas(pms.getNumTandas() + 1);
+                System.out.println("CV no aceptable. Se incrementa el número de tandas a: " + pms.getNumTandas());
+            } else {
+                System.out.println("CV no aceptable pero se alcanzó el límite máximo de 16 repeticiones. No se pueden agregar más tandas.");
+                // El análisis queda con repeticiones inválidas pero no se puede continuar
             }
         }
         
@@ -264,10 +268,8 @@ public class PmsService {
         }
 
         // Campos específicos de PMS (solo campos de configuración, no los calculados)
-        // El número de repeticiones esperadas NO se puede editar una vez creado
-        if (solicitud.getNumTandas() != null) {
-            pms.setNumTandas(solicitud.getNumTandas());
-        }
+        // El número de repeticiones esperadas Y el número de tandas NO se pueden editar una vez creado
+        // numTandas se maneja automáticamente por la lógica del sistema
         pms.setEsSemillaBrozosa(solicitud.getEsSemillaBrozosa());
     }
 
@@ -381,7 +383,9 @@ public class PmsService {
 
     private boolean puedeIncrementarTandas(Pms pms) {
         long totalRepeticiones = repPmsRepository.countByPmsId(pms.getAnalisisID());
-        return totalRepeticiones < 16; // Límite máximo de 16 repeticiones
+        // Verificar si agregar una tanda más (con numRepeticionesEsperadas) superaría el límite de 16
+        long repeticionesConNuevaTanda = totalRepeticiones + pms.getNumRepeticionesEsperadas();
+        return repeticionesConNuevaTanda <= 16;
     }
 
     private boolean todasLasRepeticionesCompletas(Pms pms) {
