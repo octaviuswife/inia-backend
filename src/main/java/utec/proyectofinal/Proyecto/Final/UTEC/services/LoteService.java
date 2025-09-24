@@ -175,6 +175,39 @@ public class LoteService {
                 lote.setNumeroArticulo(numeroArticulo);
             }
             lote.setCantidad(solicitud.getCantidad());
+            
+            // Mapear origen
+            if (solicitud.getOrigenID() != null) {
+                try {
+                    System.out.println("Buscando origen con ID: " + solicitud.getOrigenID());
+                    Catalogo origen = catalogoService.obtenerEntidadPorId(solicitud.getOrigenID());
+                    if (origen != null) {
+                        lote.setOrigen(origen);
+                        System.out.println("Origen encontrado y asignado");
+                    } else {
+                        System.out.println("Origen no encontrado con ID: " + solicitud.getOrigenID());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error al buscar origen: " + e.getMessage());
+                }
+            }
+            
+            // Mapear estado
+            if (solicitud.getEstadoID() != null) {
+                try {
+                    System.out.println("Buscando estado con ID: " + solicitud.getEstadoID());
+                    Catalogo estado = catalogoService.obtenerEntidadPorId(solicitud.getEstadoID());
+                    if (estado != null) {
+                        lote.setEstado(estado);
+                        System.out.println("Estado encontrado y asignado");
+                    } else {
+                        System.out.println("Estado no encontrado con ID: " + solicitud.getEstadoID());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error al buscar estado: " + e.getMessage());
+                }
+            }
+            
             lote.setFechaCosecha(solicitud.getFechaCosecha());
 
             System.out.println("Mapeando entidades relacionadas...");
@@ -295,6 +328,23 @@ public class LoteService {
             lote.setNumeroArticulo(null);
         }
         lote.setCantidad(solicitud.getCantidad());
+        
+        // Actualizar origen
+        if (solicitud.getOrigenID() != null) {
+            Catalogo origen = catalogoService.obtenerEntidadPorId(solicitud.getOrigenID());
+            lote.setOrigen(origen);
+        } else {
+            lote.setOrigen(null);
+        }
+        
+        // Actualizar estado
+        if (solicitud.getEstadoID() != null) {
+            Catalogo estado = catalogoService.obtenerEntidadPorId(solicitud.getEstadoID());
+            lote.setEstado(estado);
+        } else {
+            lote.setEstado(null);
+        }
+        
         lote.setFechaCosecha(solicitud.getFechaCosecha());
 
         // Actualizar entidades relacionadas usando EntityManager

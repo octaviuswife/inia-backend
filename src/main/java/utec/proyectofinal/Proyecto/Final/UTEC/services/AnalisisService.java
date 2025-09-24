@@ -1,6 +1,11 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +33,12 @@ public class AnalisisService {
      * @return El análisis actualizado
      */
     public Analisis finalizarAnalisis(Analisis analisis) {
+        //chequear si el estado del analisis no es APROBADO o INACTIVO o A_REPETIR
+
+        if (analisis.getEstado() == Estado.APROBADO || analisis.getEstado() == Estado.INACTIVO || analisis.getEstado() == Estado.A_REPETIR) {
+            throw new RuntimeException("El análisis ya está finalizado, inactivo o marcado para repetir");
+        }
+
         if (esAnalista()) {
             // Analista: enviar a pendiente de aprobación
             analisis.setEstado(Estado.PENDIENTE_APROBACION);
@@ -47,9 +58,14 @@ public class AnalisisService {
      * 
      * @param analisis El análisis a aprobar
      * @return El análisis actualizado
-     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION
+     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está INACTIVO
      */
     public Analisis aprobarAnalisis(Analisis analisis) {
+        // Validar que no esté inactivo
+        if (analisis.getEstado() == Estado.INACTIVO) {
+            throw new RuntimeException("No se puede aprobar un análisis que está en estado INACTIVO");
+        }
+        
         // Validar que esté en estado PENDIENTE_APROBACION
         if (analisis.getEstado() != Estado.PENDIENTE_APROBACION) {
             throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION para ser aprobado");
@@ -74,5 +90,73 @@ public class AnalisisService {
             return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
         }
         return false;
+    }
+
+    /**
+     * Método genérico para finalizar análisis con validación específica opcional
+     * 
+     * @param <T> Tipo del análisis que extiende Analisis
+     * @param <D> Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo específico
+     * @param mapper Función para mapear entidad a DTO
+     * @param validator Validación específica opcional (puede ser null)
+     * @return DTO del análisis finalizado
+     */
+    public <T extends Analisis, D> D finalizarAnalisisGenerico(
+            Long id, 
+            JpaRepository<T, Long> repository,
+            Function<T, D> mapper,
+            Consumer<T> validator) {
+        
+        T analisis = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
+        
+        // Ejecutar validación específica si existe
+        if (validator != null) {
+            validator.accept(analisis);
+        }
+        
+        // Finalizar usando la lógica común
+        finalizarAnalisis(analisis);
+        
+        // Guardar cambios
+        T analisisActualizado = repository.save(analisis);
+        
+        return mapper.apply(analisisActualizado);
+    }
+
+    /**
+     * Método genérico para aprobar análisis con validación específica opcional
+     * 
+     * @param <T> Tipo del análisis que extiende Analisis
+     * @param <D> Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo específico
+     * @param mapper Función para mapear entidad a DTO
+     * @param validator Validación específica opcional (puede ser null)
+     * @return DTO del análisis aprobado
+     */
+    public <T extends Analisis, D> D aprobarAnalisisGenerico(
+            Long id,
+            JpaRepository<T, Long> repository,
+            Function<T, D> mapper,
+            Consumer<T> validator) {
+        
+        T analisis = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
+        
+        // Ejecutar validación específica si existe
+        if (validator != null) {
+            validator.accept(analisis);
+        }
+        
+        // Aprobar usando la lógica común
+        aprobarAnalisis(analisis);
+        
+        // Guardar cambios
+        T analisisActualizado = repository.save(analisis);
+        
+        return mapper.apply(analisisActualizado);
     }
 }

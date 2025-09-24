@@ -64,39 +64,35 @@ public class TetrazolioService {
 
     // Editar Tetrazolio
     public TetrazolioDTO actualizarTetrazolio(Long id, TetrazolioRequestDTO solicitud) {
-        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
+        Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
         
-        if (tetrazolioExistente.isPresent()) {
-            Tetrazolio tetrazolio = tetrazolioExistente.get();
-            
-            // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-            if (tetrazolio.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
-                tetrazolio.setEstado(Estado.PENDIENTE_APROBACION);
-            }
-            
-            actualizarEntidadDesdeSolicitud(tetrazolio, solicitud);
-            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
-            
-            // Registrar automáticamente en el historial
-            analisisHistorialService.registrarModificacion(tetrazolioActualizado);
-            
-            return mapearEntidadADTO(tetrazolioActualizado);
-        } else {
-            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
+        // Manejar cambios de estado según rol del usuario
+        Estado estadoOriginal = tetrazolio.getEstado();
+        
+        if (estadoOriginal == Estado.APROBADO && analisisService.esAnalista()) {
+            // Si es ANALISTA editando un análisis APROBADO, cambiar a PENDIENTE_APROBACION
+            tetrazolio.setEstado(Estado.PENDIENTE_APROBACION);
         }
+        // Si es ADMIN editando análisis APROBADO, mantiene el estado APROBADO
+        // Para otros estados se mantiene igual
+        
+        actualizarEntidadDesdeSolicitud(tetrazolio, solicitud);
+        Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
+        
+        // Registrar automáticamente en el historial
+        analisisHistorialService.registrarModificacion(tetrazolioActualizado);
+        
+        return mapearEntidadADTO(tetrazolioActualizado);
     }
 
     // Eliminar Tetrazolio (cambiar estado a INACTIVO)
     public void eliminarTetrazolio(Long id) {
-        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
+        Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
         
-        if (tetrazolioExistente.isPresent()) {
-            Tetrazolio tetrazolio = tetrazolioExistente.get();
-            tetrazolio.setEstado(Estado.INACTIVO);
-            tetrazolioRepository.save(tetrazolio);
-        } else {
-            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
-        }
+        tetrazolio.setEstado(Estado.INACTIVO);
+        tetrazolioRepository.save(tetrazolio);
     }
 
     // Listar todos los Tetrazolios activos usando ResponseListadoTetrazolio
@@ -113,12 +109,10 @@ public class TetrazolioService {
 
     // Obtener Tetrazolio por ID
     public TetrazolioDTO obtenerTetrazolioPorId(Long id) {
-        Optional<Tetrazolio> tetrazolio = tetrazolioRepository.findById(id);
-        if (tetrazolio.isPresent()) {
-            return mapearEntidadADTO(tetrazolio.get());
-        } else {
-            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
-        }
+        Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
+        
+        return mapearEntidadADTO(tetrazolio);
     }
 
     // Obtener Tetrazolios por Lote
@@ -131,25 +125,20 @@ public class TetrazolioService {
 
     // Actualizar porcentajes redondeados (solo cuando todas las repeticiones estén completas)
     public TetrazolioDTO actualizarPorcentajesRedondeados(Long id, PorcentajesRedondeadosRequestDTO solicitud) {
-        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
+        Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
         
-        if (tetrazolioExistente.isPresent()) {
-            Tetrazolio tetrazolio = tetrazolioExistente.get();
-            
-            // Validar que se hayan completado todas las repeticiones antes de permitir actualizar porcentajes
-            validarCompletitudRepeticiones(tetrazolio);
-            
-            // Actualizar solo los porcentajes
-            tetrazolio.setPorcViablesRedondeo(solicitud.getPorcViablesRedondeo());
-            tetrazolio.setPorcNoViablesRedondeo(solicitud.getPorcNoViablesRedondeo());
-            tetrazolio.setPorcDurasRedondeo(solicitud.getPorcDurasRedondeo());
-            
-            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
-            System.out.println("Porcentajes redondeados actualizados exitosamente para tetrazolio ID: " + id);
-            return mapearEntidadADTO(tetrazolioActualizado);
-        } else {
-            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
-        }
+        // Validación específica de tetrazolio: completitud de repeticiones antes de actualizar porcentajes
+        validarCompletitudRepeticiones(tetrazolio);
+        
+        // Actualizar solo los porcentajes
+        tetrazolio.setPorcViablesRedondeo(solicitud.getPorcViablesRedondeo());
+        tetrazolio.setPorcNoViablesRedondeo(solicitud.getPorcNoViablesRedondeo());
+        tetrazolio.setPorcDurasRedondeo(solicitud.getPorcDurasRedondeo());
+        
+        Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
+        System.out.println("Porcentajes redondeados actualizados exitosamente para tetrazolio ID: " + id);
+        return mapearEntidadADTO(tetrazolioActualizado);
     }
 
     // Mapear de RequestDTO a Entity para creación
@@ -221,7 +210,7 @@ public class TetrazolioService {
         tetrazolio.setTincionHs(solicitud.getTincionHs());
         tetrazolio.setTincionTemp(solicitud.getTincionTemp());
         tetrazolio.setFecha(solicitud.getFecha());
-        tetrazolio.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());
+        // El número de repeticiones esperadas NO se puede editar una vez creado
         
         System.out.println("Tetrazolio actualizado exitosamente");
     }
@@ -272,60 +261,24 @@ public class TetrazolioService {
         }
     }
     
-    // Cambiar estado a PENDIENTE_APROBACION (con validaciones)
-    public TetrazolioDTO enviarAprobacion(Long id) {
-        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
-        
-        if (tetrazolioExistente.isPresent()) {
-            Tetrazolio tetrazolio = tetrazolioExistente.get();
-            validarCompletitudRepeticiones(tetrazolio);
-            tetrazolio.setEstado(Estado.PENDIENTE_APROBACION);
-            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
-            return mapearEntidadADTO(tetrazolioActualizado);
-        } else {
-            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
-        }
-    }
-    
     // Finalizar análisis Tetrazolio - cambia estado según rol del usuario
+    // Finalizar análisis (solo cuando todas las repeticiones estén completas)
     public TetrazolioDTO finalizarAnalisis(Long id) {
-        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
-        
-        if (tetrazolioExistente.isPresent()) {
-            Tetrazolio tetrazolio = tetrazolioExistente.get();
-            validarCompletitudRepeticiones(tetrazolio);
-            
-            // Usar el servicio común para finalizar el análisis
-            analisisService.finalizarAnalisis(tetrazolio);
-            
-            // Guardar cambios
-            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
-            
-            return mapearEntidadADTO(tetrazolioActualizado);
-        } else {
-            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
-        }
+        return analisisService.finalizarAnalisisGenerico(
+            id,
+            tetrazolioRepository,
+            this::mapearEntidadADTO,
+            this::validarCompletitudRepeticiones // Validación específica de Tetrazolio
+        );
     }
 
-    // Cambiar estado a APROBADO (con validaciones)
+    // Aprobar análisis (solo para administradores)
     public TetrazolioDTO aprobarAnalisis(Long id) {
-        Optional<Tetrazolio> tetrazolioExistente = tetrazolioRepository.findById(id);
-        
-        if (tetrazolioExistente.isPresent()) {
-            Tetrazolio tetrazolio = tetrazolioExistente.get();
-            
-            // Validar completitud específica del tetrazolio
-            validarCompletitudRepeticiones(tetrazolio);
-            
-            // Usar el servicio común para aprobar el análisis
-            analisisService.aprobarAnalisis(tetrazolio);
-            
-            // Guardar cambios
-            Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
-            
-            return mapearEntidadADTO(tetrazolioActualizado);
-        } else {
-            throw new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id);
-        }
+        return analisisService.aprobarAnalisisGenerico(
+            id,
+            tetrazolioRepository,
+            this::mapearEntidadADTO,
+            this::validarCompletitudRepeticiones // Validación específica de Tetrazolio
+        );
     }
 }

@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 public class PmsRequestDTO extends AnalisisRequestDTO {
     // Campos de configuración inicial
     private Integer numRepeticionesEsperadas;
-    private Integer numTandas; // Por defecto será 1
     private Boolean esSemillaBrozosa;
 }
 

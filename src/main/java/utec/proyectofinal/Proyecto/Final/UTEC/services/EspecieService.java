@@ -68,9 +68,6 @@ public class EspecieService {
                 .map(especie -> {
                     especie.setNombreComun(solicitud.getNombreComun());
                     especie.setNombreCientifico(solicitud.getNombreCientifico());
-                    if (solicitud.getActivo() != null) {
-                        especie.setActivo(solicitud.getActivo());
-                    }
 
                     Especie actualizada = especieRepository.save(especie);
                     return mapearEntidadADTO(actualizada);
@@ -95,6 +92,9 @@ public class EspecieService {
     public EspecieDTO reactivar(Long id) {
         return especieRepository.findById(id)
                 .map(especie -> {
+                    if (especie.getActivo() != null && especie.getActivo()) {
+                        throw new RuntimeException("La especie ya está activa");
+                    }
                     especie.setActivo(true);
                     Especie reactivada = especieRepository.save(especie);
                     return mapearEntidadADTO(reactivada);

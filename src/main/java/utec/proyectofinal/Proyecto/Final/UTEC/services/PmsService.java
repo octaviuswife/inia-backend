@@ -74,10 +74,15 @@ public class PmsService {
         if (existente.isPresent()) {
             Pms pms = existente.get();
             
-            // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-            if (pms.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
+            // Manejar cambios de estado según rol del usuario
+            Estado estadoOriginal = pms.getEstado();
+            
+            if (estadoOriginal == Estado.APROBADO && analisisService.esAnalista()) {
+                // Si es ANALISTA editando un análisis APROBADO, cambiar a PENDIENTE_APROBACION
                 pms.setEstado(Estado.PENDIENTE_APROBACION);
             }
+            // Si es ADMIN editando análisis APROBADO, mantiene el estado APROBADO
+            // Para otros estados se mantiene igual
             
             actualizarEntidadDesdeSolicitud(pms, solicitud);
             Pms actualizado = pmsRepository.save(pms);
@@ -187,9 +192,14 @@ public class PmsService {
             // CV aceptable - marcar todas las repeticiones como válidas
             marcarRepeticionesComoValidas(repeticionesTanda, true);
             
-            // Si todas las tandas están completas, cambiar estado
+            // Si todas las tandas están completas, cambiar estado según rol del usuario
             if (todasLasTandasCompletas(pms)) {
-                pms.setEstado(Estado.PENDIENTE_APROBACION);
+                if (analisisService.esAnalista()) {
+                    pms.setEstado(Estado.PENDIENTE_APROBACION);
+                } else {
+                    // Si es admin, aprobar automáticamente
+                    pms.setEstado(Estado.APROBADO);
+                }
             }
         } else {
             // CV no aceptable - marcar repeticiones como inválidas
@@ -232,7 +242,7 @@ public class PmsService {
 
         // Campos específicos de PMS
         pms.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());
-        pms.setNumTandas(Optional.ofNullable(solicitud.getNumTandas()).orElse(1));
+        pms.setNumTandas(1); // Siempre inicia con 1 tanda
         pms.setEsSemillaBrozosa(solicitud.getEsSemillaBrozosa());
 
         return pms;
@@ -254,7 +264,7 @@ public class PmsService {
         }
 
         // Campos específicos de PMS (solo campos de configuración, no los calculados)
-        pms.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());
+        // El número de repeticiones esperadas NO se puede editar una vez creado
         if (solicitud.getNumTandas() != null) {
             pms.setNumTandas(solicitud.getNumTandas());
         }
@@ -391,39 +401,26 @@ public class PmsService {
 
     // Finalizar análisis PMS - cambia estado según rol del usuario
     public PmsDTO finalizarAnalisis(Long id) {
-        Optional<Pms> pmsExistente = pmsRepository.findById(id);
-        
-        if (pmsExistente.isPresent()) {
-            Pms pms = pmsExistente.get();
-            
-            // Usar el servicio común para finalizar el análisis
-            analisisService.finalizarAnalisis(pms);
-            
-            // Guardar cambios
-            Pms pmsActualizado = pmsRepository.save(pms);
-            
-            return mapearEntidadADTO(pmsActualizado);
-        } else {
-            throw new RuntimeException("Análisis PMS no encontrado con ID: " + id);
-        }
+        return analisisService.finalizarAnalisisGenerico(
+            id, 
+            pmsRepository, 
+            this::mapearEntidadADTO,
+            pms -> {
+                // Validación específica de PMS: completitud de repeticiones
+                if (!todasLasRepeticionesCompletas(pms)) {
+                    throw new RuntimeException("No se puede finalizar el análisis hasta completar todas las repeticiones válidas");
+                }
+            }
+        );
     }
 
     // Aprobar análisis PMS (solo para administradores)
     public PmsDTO aprobarAnalisis(Long id) {
-        Optional<Pms> pmsExistente = pmsRepository.findById(id);
-        
-        if (pmsExistente.isPresent()) {
-            Pms pms = pmsExistente.get();
-            
-            // Usar el servicio común para aprobar el análisis
-            analisisService.aprobarAnalisis(pms);
-            
-            // Guardar cambios
-            Pms pmsActualizado = pmsRepository.save(pms);
-            
-            return mapearEntidadADTO(pmsActualizado);
-        } else {
-            throw new RuntimeException("Análisis PMS no encontrado con ID: " + id);
-        }
+        return analisisService.aprobarAnalisisGenerico(
+            id,
+            pmsRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica para aprobar
+        );
     }
 }

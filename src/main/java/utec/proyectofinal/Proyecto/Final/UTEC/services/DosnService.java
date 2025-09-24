@@ -37,6 +37,9 @@ public class DosnService {
     
     @Autowired
     private AnalisisService analisisService;
+    
+    @Autowired
+    private AnalisisHistorialService analisisHistorialService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -45,7 +48,13 @@ public class DosnService {
     public DosnDTO crearDosn(DosnRequestDTO solicitud) {
         Dosn dosn = mapearSolicitudAEntidad(solicitud);
         dosn.setEstado(Estado.REGISTRADO);
-        return mapearEntidadADTO(dosnRepository.save(dosn));
+        
+        Dosn dosnGuardada = dosnRepository.save(dosn);
+        
+        // Registrar automáticamente en el historial
+        analisisHistorialService.registrarCreacion(dosnGuardada);
+        
+        return mapearEntidadADTO(dosnGuardada);
     }
 
     // Editar Dosn
@@ -53,8 +62,25 @@ public class DosnService {
         Dosn dosn = dosnRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
 
+        // Manejar cambios de estado según rol del usuario
+        Estado estadoOriginal = dosn.getEstado();
+        
+        if (estadoOriginal == Estado.APROBADO && analisisService.esAnalista()) {
+            // Si es ANALISTA editando un análisis APROBADO, cambiar a PENDIENTE_APROBACION
+            dosn.setEstado(Estado.PENDIENTE_APROBACION);
+        }
+        // Si es ADMIN editando análisis APROBADO, mantiene el estado APROBADO
+        // Para otros estados se mantiene igual
+
         actualizarEntidadDesdeSolicitud(dosn, solicitud);
-        return mapearEntidadADTO(dosnRepository.save(dosn));
+        
+        // Guardar la entidad actualizada
+        Dosn dosnActualizada = dosnRepository.save(dosn);
+        
+        // Registrar automáticamente en el historial
+        analisisHistorialService.registrarModificacion(dosnActualizada);
+        
+        return mapearEntidadADTO(dosnActualizada);
     }
 
     // Eliminar Dosn (estado INACTIVO)
@@ -105,7 +131,6 @@ public class DosnService {
 
         dosn.setFechaInicio(solicitud.getFechaInicio());
         dosn.setFechaFin(solicitud.getFechaFin());
-        //dosn.setPublicadoParcial(solicitud.getPublicadoParcial());
         dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
         dosn.setComentarios(solicitud.getComentarios());
 
@@ -139,7 +164,6 @@ public class DosnService {
 
         if (solicitud.getFechaInicio() != null) dosn.setFechaInicio(solicitud.getFechaInicio());
         if (solicitud.getFechaFin() != null) dosn.setFechaFin(solicitud.getFechaFin());
-        //if (solicitud.getPublicadoParcial() != null) dosn.setPublicadoParcial(solicitud.getPublicadoParcial());
         if (solicitud.getCumpleEstandar() != null) dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) dosn.setComentarios(solicitud.getComentarios());
 
@@ -171,7 +195,6 @@ public class DosnService {
         dto.setEstado(dosn.getEstado());
         dto.setFechaInicio(dosn.getFechaInicio());
         dto.setFechaFin(dosn.getFechaFin());
-        //dto.setPublicadoParcial(dosn.getPublicadoParcial());
         dto.setCumpleEstandar(dosn.getCumpleEstandar());
         dto.setComentarios(dosn.getComentarios());
         dto.setLote(dosn.getLote() != null ? dosn.getLote().getFicha() : null);
@@ -210,31 +233,23 @@ public class DosnService {
      * - Administradores: pasa directamente a APROBADO
      */
     public DosnDTO finalizarAnalisis(Long id) {
-        Dosn dosn = dosnRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
-
-        // Usar el servicio común para finalizar el análisis
-        analisisService.finalizarAnalisis(dosn);
-        
-        // Guardar cambios
-        Dosn dosnActualizada = dosnRepository.save(dosn);
-        
-        return mapearEntidadADTO(dosnActualizada);
+        return analisisService.finalizarAnalisisGenerico(
+            id,
+            dosnRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica
+        );
     }
 
     /**
      * Aprobar análisis (solo administradores)
      */
     public DosnDTO aprobarAnalisis(Long id) {
-        Dosn dosn = dosnRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
-
-        // Usar el servicio común para aprobar el análisis
-        analisisService.aprobarAnalisis(dosn);
-        
-        // Guardar cambios
-        Dosn dosnActualizada = dosnRepository.save(dosn);
-        
-        return mapearEntidadADTO(dosnActualizada);
+        return analisisService.aprobarAnalisisGenerico(
+            id,
+            dosnRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica
+        );
     }
 }

@@ -7,5 +7,4 @@ public class MalezasYCultivosCatalogoRequestDTO {
     private String nombreComun;
     private String nombreCientifico;
     private Boolean maleza;
-    private Boolean activo = true;
 }

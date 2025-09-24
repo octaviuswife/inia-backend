@@ -12,7 +12,6 @@ public class DosnRequestDTO {
     private Long idLote;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
-    private Boolean publicadoParcial;
     private Boolean cumpleEstandar;
     private String comentarios;
 

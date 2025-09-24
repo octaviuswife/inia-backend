@@ -30,7 +30,7 @@ public class LoteRequestDTO {
     private Long numeroArticuloID;
     
     private Double cantidad;
-    private String origen;
-    private String estado;
+    private Long origenID;
+    private Long estadoID;
     private LocalDate fechaCosecha;
 }

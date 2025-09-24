@@ -68,10 +68,15 @@ public class PurezaService {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
 
-        // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-        if (pureza.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
+        // Manejar cambios de estado según rol del usuario
+        Estado estadoOriginal = pureza.getEstado();
+        
+        if (estadoOriginal == Estado.APROBADO && analisisService.esAnalista()) {
+            // Si es ANALISTA editando un análisis APROBADO, cambiar a PENDIENTE_APROBACION
             pureza.setEstado(Estado.PENDIENTE_APROBACION);
         }
+        // Si es ADMIN editando análisis APROBADO o FINALIZADO, mantiene su estado
+        // Para otros estados (REGISTRADO, PENDIENTE_APROBACION) se mantiene igual
 
         // Validar pesos antes de actualizar
         BigDecimal pesoInicial = solicitud.getPesoInicial_g() != null ? solicitud.getPesoInicial_g() : pureza.getPesoInicial_g();
@@ -281,7 +286,7 @@ public class PurezaService {
      * Valida las reglas de negocio relacionadas con los pesos en el análisis de pureza
      * @param pesoInicial_g Peso inicial de la muestra
      * @param pesoTotal_g Peso total después del análisis
-     * @throws RuntimeException si alguna validación falla
+     * @throws RuntimeException si alguna validación crítica falla
      */
     private void validarPesos(BigDecimal pesoInicial_g, BigDecimal pesoTotal_g) {
         if (pesoInicial_g == null || pesoTotal_g == null) {
@@ -293,16 +298,18 @@ public class PurezaService {
             throw new RuntimeException("El peso total (" + pesoTotal_g + "g) no puede ser mayor al peso inicial (" + pesoInicial_g + "g)");
         }
 
-        // Validación 2: Alerta si se pierde más del 5% de la muestra
+        // Validación 2: Solo información para el frontend si se pierde más del 5% de la muestra
+        // No arroja error, el frontend debe manejar esta validación como alerta
         BigDecimal diferenciaPeso = pesoInicial_g.subtract(pesoTotal_g);
         BigDecimal porcentajePerdida = diferenciaPeso.divide(pesoInicial_g, 4, java.math.RoundingMode.HALF_UP)
                                                     .multiply(new BigDecimal("100"));
         
         BigDecimal limitePermitido = new BigDecimal("5.0");
         if (porcentajePerdida.compareTo(limitePermitido) > 0) {
-            throw new RuntimeException("ALERTA: La muestra ha perdido " + porcentajePerdida.setScale(2, java.math.RoundingMode.HALF_UP) + 
-                                     "% de su peso inicial, lo cual excede el límite permitido del 5%. " +
-                                     "Pérdida: " + diferenciaPeso.setScale(2, java.math.RoundingMode.HALF_UP) + "g");
+            // Solo log para información, no error
+            System.out.println("INFO: La muestra ha perdido " + porcentajePerdida.setScale(2, java.math.RoundingMode.HALF_UP) + 
+                             "% de su peso inicial, lo cual excede el límite recomendado del 5%. " +
+                             "Pérdida: " + diferenciaPeso.setScale(2, java.math.RoundingMode.HALF_UP) + "g");
         }
     }
 
@@ -312,31 +319,23 @@ public class PurezaService {
      * - Administradores: pasa directamente a APROBADO
      */
     public PurezaDTO finalizarAnalisis(Long id) {
-        Pureza pureza = purezaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
-        
-        // Usar el servicio común para finalizar el análisis
-        analisisService.finalizarAnalisis(pureza);
-        
-        // Guardar cambios
-        Pureza purezaActualizada = purezaRepository.save(pureza);
-        
-        return mapearEntidadADTO(purezaActualizada);
+        return analisisService.finalizarAnalisisGenerico(
+            id,
+            purezaRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica
+        );
     }
 
     /**
      * Aprobar análisis (solo administradores)
      */
     public PurezaDTO aprobarAnalisis(Long id) {
-        Pureza pureza = purezaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
-        
-        // Usar el servicio común para aprobar el análisis
-        analisisService.aprobarAnalisis(pureza);
-        
-        // Guardar cambios
-        Pureza purezaActualizada = purezaRepository.save(pureza);
-        
-        return mapearEntidadADTO(purezaActualizada);
+        return analisisService.aprobarAnalisisGenerico(
+            id,
+            purezaRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica
+        );
     }
 }

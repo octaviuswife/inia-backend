@@ -6,5 +6,4 @@ import lombok.Data;
 public class CultivarRequestDTO {
     private Long especieID;
     private String nombre;
-    private Boolean activo = true;
 }

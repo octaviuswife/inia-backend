@@ -148,15 +148,15 @@ public class TetrazolioController {
         }
     }
 
-    // Enviar análisis para aprobación (cambiar estado a PENDIENTE_APROBACION)
-    @Operation(summary = "Enviar análisis para aprobación", 
-              description = "Envía un análisis de tetrazolio para su aprobación, cambiando su estado a PENDIENTE_APROBACION")
-    @PreAuthorize("hasRole('ANALISTA')")
-    @PutMapping("/{id}/enviar-aprobacion")
-    public ResponseEntity<TetrazolioDTO> enviarAprobacion(@PathVariable Long id) {
+    // Finalizar análisis de tetrazolio
+    @Operation(summary = "Finalizar análisis de tetrazolio", 
+              description = "Finaliza un análisis de tetrazolio cambiando su estado según el rol del usuario (analista -> PENDIENTE_APROBACION, admin -> APROBADO)")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<TetrazolioDTO> finalizarAnalisis(@PathVariable Long id) {
         try {
-            TetrazolioDTO tetrazolioActualizado = tetrazolioService.enviarAprobacion(id);
-            return new ResponseEntity<>(tetrazolioActualizado, HttpStatus.OK);
+            TetrazolioDTO tetrazolioFinalizado = tetrazolioService.finalizarAnalisis(id);
+            return new ResponseEntity<>(tetrazolioFinalizado, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
@@ -164,15 +164,15 @@ public class TetrazolioController {
         }
     }
 
-    // Aprobar análisis (cambiar estado a APROBADO)
+    // Aprobar análisis (solo admin)
     @Operation(summary = "Aprobar análisis de tetrazolio", 
               description = "Aprueba un análisis de tetrazolio, cambiando su estado a APROBADO (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<TetrazolioDTO> aprobarAnalisis(@PathVariable Long id) {
         try {
-            TetrazolioDTO tetrazolioActualizado = tetrazolioService.aprobarAnalisis(id);
-            return new ResponseEntity<>(tetrazolioActualizado, HttpStatus.OK);
+            TetrazolioDTO tetrazolioAprobado = tetrazolioService.aprobarAnalisis(id);
+            return new ResponseEntity<>(tetrazolioAprobado, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {

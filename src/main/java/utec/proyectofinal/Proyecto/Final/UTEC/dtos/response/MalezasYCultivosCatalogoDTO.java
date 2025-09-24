@@ -8,5 +8,5 @@ public class MalezasYCultivosCatalogoDTO {
     private String nombreComun;
     private String nombreCientifico;
     private Boolean maleza;
-    private Boolean activo;
+    // Campo activo removido intencionalmente - no necesario en responses
 }

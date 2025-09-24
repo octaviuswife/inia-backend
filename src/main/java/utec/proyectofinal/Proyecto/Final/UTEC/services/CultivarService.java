@@ -84,9 +84,6 @@ public class CultivarService {
                     }
                     
                     cultivar.setNombre(solicitud.getNombre());
-                    if (solicitud.getActivo() != null) {
-                        cultivar.setActivo(solicitud.getActivo());
-                    }
 
                     Cultivar actualizado = cultivarRepository.save(cultivar);
                     return mapearEntidadADTO(actualizado);
@@ -107,6 +104,9 @@ public class CultivarService {
     public CultivarDTO reactivar(Long id) {
         return cultivarRepository.findById(id)
                 .map(cultivar -> {
+                    if (cultivar.getActivo() != null && cultivar.getActivo()) {
+                        throw new RuntimeException("El cultivar ya está activo");
+                    }
                     cultivar.setActivo(true);
                     Cultivar reactivado = cultivarRepository.save(cultivar);
                     return mapearEntidadADTO(reactivado);

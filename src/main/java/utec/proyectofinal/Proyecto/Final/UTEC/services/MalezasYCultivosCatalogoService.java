@@ -114,7 +114,7 @@ public class MalezasYCultivosCatalogoService {
         dto.setNombreComun(catalogo.getNombreComun());
         dto.setNombreCientifico(catalogo.getNombreCientifico());
         dto.setMaleza(catalogo.getMaleza());
-        dto.setActivo(catalogo.getActivo());
+        // Campo activo removido del DTO - no necesario en responses
         return dto;
     }
 
