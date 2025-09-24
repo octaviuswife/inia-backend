@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoDOSN;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,12 +12,12 @@ public class DosnDTO extends AnalisisDTO {
     private LocalDate fechaINIA;
     private BigDecimal gramosAnalizadosINIA;
 
-    private List<String> tipoINIA;
+    private List<TipoDOSN> tipoINIA;
 
     private LocalDate fechaINASE;
     private BigDecimal gramosAnalizadosINASE;
 
-    private List<String> tipoINASE;
+    private List<TipoDOSN> tipoINASE;
 
     private BigDecimal cuscuta_g;
     private Integer cuscutaNum;

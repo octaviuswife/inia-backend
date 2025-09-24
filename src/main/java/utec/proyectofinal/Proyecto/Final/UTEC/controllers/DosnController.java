@@ -42,8 +42,8 @@ public class DosnController {
     }
 
     // Obtener todas las Dosn activas
-    @Operation(summary = "Listar todas las declaraciones de origen y sanidad (DOSN)", 
-              description = "Obtiene todas las declaraciones de origen y sanidad (DOSN) activas")
+    @Operation(summary = "Listar todos los DOSN", 
+              description = "Obtiene todos los DOSN activas")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoDosn> obtenerTodasDosnActivas() {
@@ -104,8 +104,8 @@ public class DosnController {
     }
 
     // Obtener Dosn por Lote
-    @Operation(summary = "Obtener declaraciones de origen y sanidad (DOSN) por ID de lote", 
-              description = "Obtiene todas las declaraciones de origen y sanidad (DOSN) asociadas a un lote específico")
+    @Operation(summary = "Obtener DOSN por ID de lote", 
+              description = "Obtiene todos los DOSN asociados a un lote específico")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<DosnDTO>> obtenerDosnPorIdLote(@PathVariable Integer idLote) {
@@ -119,7 +119,7 @@ public class DosnController {
 
     // Finalizar análisis de DOSN
     @Operation(summary = "Finalizar análisis de DOSN", 
-              description = "Finaliza una declaración de origen y sanidad (DOSN) según el rol del usuario")
+              description = "Finaliza un DOSN según el rol del usuario")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<DosnDTO> finalizarAnalisis(@PathVariable Long id) {
@@ -135,7 +135,7 @@ public class DosnController {
 
     // Aprobar análisis de DOSN (solo admin)
     @Operation(summary = "Aprobar análisis de DOSN", 
-              description = "Aprueba una declaración de origen y sanidad (DOSN) - solo administradores")
+              description = "Aprueba un DOSN - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<DosnDTO> aprobarAnalisis(@PathVariable Long id) {
