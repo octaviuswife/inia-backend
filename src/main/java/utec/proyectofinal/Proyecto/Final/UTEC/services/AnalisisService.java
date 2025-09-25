@@ -1,5 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,7 +26,16 @@ public class AnalisisService {
     private AnalisisHistorialService analisisHistorialService;
 
     /**
-     * Finaliza un análisis según el rol del usuario actual
+     * Establece la fecha de inicio automáticamente al crear un análisis
+     * 
+     * @param analisis El análisis recién creado
+     */
+    public void establecerFechaInicio(Analisis analisis) {
+        analisis.setFechaInicio(LocalDateTime.now());
+    }
+
+    /**
+     * Finaliza un análisis según el rol del usuario actual y establece fecha fin
      * - Si es analista, cambia estado a PENDIENTE_APROBACION
      * - Si es admin, cambia estado a APROBADO directamente
      * 
@@ -46,6 +56,9 @@ public class AnalisisService {
             // Admin: aprobar directamente
             analisis.setEstado(Estado.APROBADO);
         }
+        
+        // Establecer fecha de finalización
+        analisis.setFechaFin(LocalDateTime.now());
         
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
@@ -72,6 +85,11 @@ public class AnalisisService {
         }
         
         analisis.setEstado(Estado.APROBADO);
+        
+        // Establecer fecha de finalización si no está establecida
+        if (analisis.getFechaFin() == null) {
+            analisis.setFechaFin(LocalDateTime.now());
+        }
         
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);

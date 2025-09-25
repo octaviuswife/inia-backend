@@ -101,7 +101,9 @@ public class GerminacionController {
     }
 
     // Actualizar Germinación
-    @Operation(summary = "Actualizar germinación", description = "Actualiza los detalles de una germinación existente")
+    @Operation(summary = "Actualizar germinación", 
+              description = "Actualiza los detalles de una germinación existente. " +
+                          "Nota: numeroRepeticiones y numeroConteos no se pueden modificar una vez creado")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Germinación actualizada exitosamente"),
         @ApiResponse(responseCode = "404", description = "Germinación no encontrada"),

@@ -6,6 +6,5 @@ import java.math.BigDecimal;
 @Data
 public class RepPmsRequestDTO {
     private Integer numRep;
-    private Integer numTanda;
     private BigDecimal peso;
 }

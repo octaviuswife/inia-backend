@@ -1,16 +1,17 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoCrudRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CatalogoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoCatalogo;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class CatalogoService {
@@ -54,7 +55,7 @@ public class CatalogoService {
         Catalogo catalogo = new Catalogo();
         catalogo.setTipo(tipo);
         catalogo.setValor(solicitud.getValor());
-        catalogo.setActivo(solicitud.getActivo());
+        catalogo.setActivo(true); // Siempre activo al crear
 
         Catalogo guardado = catalogoRepository.save(catalogo);
         return mapearEntidadADTO(guardado);
@@ -74,7 +75,6 @@ public class CatalogoService {
 
                     catalogo.setTipo(tipo);
                     catalogo.setValor(solicitud.getValor());
-                    catalogo.setActivo(solicitud.getActivo());
 
                     Catalogo actualizado = catalogoRepository.save(catalogo);
                     return mapearEntidadADTO(actualizado);

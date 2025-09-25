@@ -10,12 +10,12 @@ import java.util.List;
 @Data
 public class Germinacion extends Analisis {
 
-    private LocalDate fechaInicio;
+    private LocalDate fechaInicioGerm;
 
     @ElementCollection
     private List<LocalDate> fechaConteos;
 
-    private LocalDate fechaFin;
+    private LocalDate fechaUltConteo;
 
     private String numDias;
     

@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -49,12 +51,17 @@ public class PurezaService {
     private EntityManager entityManager;
 
     // Crear Pureza con estado REGISTRADO
+    @Transactional
     public PurezaDTO crearPureza(PurezaRequestDTO solicitud) {
         // Validar pesos antes de crear
         validarPesos(solicitud.getPesoInicial_g(), solicitud.getPesoTotal_g());
         
         Pureza pureza = mapearSolicitudAEntidad(solicitud);
         pureza.setEstado(Estado.REGISTRADO);
+        
+        // Establecer fecha de inicio automáticamente
+        analisisService.establecerFechaInicio(pureza);
+        
         Pureza purezaGuardada = purezaRepository.save(pureza);
         
         // Registrar automáticamente en el historial
@@ -64,6 +71,7 @@ public class PurezaService {
     }
 
     // Editar Pureza
+    @Transactional
     public PurezaDTO actualizarPureza(Long id, PurezaRequestDTO solicitud) {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
@@ -146,8 +154,7 @@ public class PurezaService {
             pureza.setLote(lote);
         }
 
-        pureza.setFechaInicio(solicitud.getFechaInicio());
-        pureza.setFechaFin(solicitud.getFechaFin());
+        // Las fechas fechaInicio y fechaFin son automáticas, no del request
         pureza.setCumpleEstandar(solicitud.getCumpleEstandar());
         pureza.setComentarios(solicitud.getComentarios());
 
@@ -194,8 +201,7 @@ public class PurezaService {
             pureza.setLote(lote);
         }
 
-        if (solicitud.getFechaInicio() != null) pureza.setFechaInicio(solicitud.getFechaInicio());
-        if (solicitud.getFechaFin() != null) pureza.setFechaFin(solicitud.getFechaFin());
+
         if (solicitud.getCumpleEstandar() != null) pureza.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) pureza.setComentarios(solicitud.getComentarios());
 
@@ -223,12 +229,22 @@ public class PurezaService {
         if (solicitud.getInaseFecha() != null) pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null) {
-            listadoRepository.deleteAll(pureza.getListados());
+            // Inicializar la lista si es null
+            if (pureza.getListados() == null) {
+                pureza.setListados(new ArrayList<>());
+            }
+            
+            // Limpiar listados existentes
+            pureza.getListados().clear();
 
-            List<Listado> nuevosListados = solicitud.getOtrasSemillas().stream()
-                    .map(req -> crearListadoDesdeSolicitud(req, pureza))
-                    .collect(Collectors.toList());
-            pureza.setListados(nuevosListados);
+            // Si hay nuevos listados, crearlos y agregarlos
+            if (!solicitud.getOtrasSemillas().isEmpty()) {
+                List<Listado> nuevosListados = solicitud.getOtrasSemillas().stream()
+                        .map(req -> crearListadoDesdeSolicitud(req, pureza))
+                        .collect(Collectors.toList());
+                
+                pureza.getListados().addAll(nuevosListados);
+            }
         }
     }
 
@@ -272,6 +288,9 @@ public class PurezaService {
                     .collect(Collectors.toList());
             dto.setOtrasSemillas(otrasSemillasDTO);
         }
+
+        // Mapear historial de análisis
+        dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(pureza.getAnalisisID()));
 
         return dto;
     }

@@ -6,8 +6,7 @@ import java.time.LocalDate;
 @Data
 public class AnalisisRequestDTO {
     private Long idLote;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
+    // fechaInicio y fechaFin son automáticas, no se incluyen en el request
     private Boolean cumpleEstandar;
     private String comentarios;
 }

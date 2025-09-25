@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Data
 public class RepGermRequestDTO {
-    private Integer numRep;
     private List<Integer> normales;
     private Integer anormales;
     private Integer duras;
     private Integer frescas;
     private Integer muertas;
+    // numRep se genera automáticamente
     // total se calcula automáticamente
 }

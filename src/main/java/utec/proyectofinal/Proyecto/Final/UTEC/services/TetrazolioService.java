@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -41,12 +42,16 @@ public class TetrazolioService {
     private EntityManager entityManager;
 
     // Crear Tetrazolio con estado REGISTRADO
+    @Transactional
     public TetrazolioDTO crearTetrazolio(TetrazolioRequestDTO solicitud) {
         try {
             System.out.println("Iniciando creación de tetrazolio con solicitud: " + solicitud);
             
             Tetrazolio tetrazolio = mapearSolicitudAEntidad(solicitud);
             tetrazolio.setEstado(Estado.REGISTRADO);
+            
+            // Establecer fecha de inicio automáticamente
+            analisisService.establecerFechaInicio(tetrazolio);
             
             Tetrazolio tetrazolioGuardado = tetrazolioRepository.save(tetrazolio);
             
@@ -63,6 +68,7 @@ public class TetrazolioService {
     }
 
     // Editar Tetrazolio
+    @Transactional
     public TetrazolioDTO actualizarTetrazolio(Long id, TetrazolioRequestDTO solicitud) {
         Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
@@ -124,6 +130,7 @@ public class TetrazolioService {
     }
 
     // Actualizar porcentajes redondeados (solo cuando todas las repeticiones estén completas)
+    @Transactional
     public TetrazolioDTO actualizarPorcentajesRedondeados(Long id, PorcentajesRedondeadosRequestDTO solicitud) {
         Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
@@ -152,9 +159,7 @@ public class TetrazolioService {
         
         Tetrazolio tetrazolio = new Tetrazolio();
         
-        // Datos del análisis base
-        tetrazolio.setFechaInicio(solicitud.getFechaInicio());
-        tetrazolio.setFechaFin(solicitud.getFechaFin());
+        // Datos del análisis base (fechaInicio y fechaFin son automáticas)
         tetrazolio.setCumpleEstandar(solicitud.getCumpleEstandar());
         tetrazolio.setComentarios(solicitud.getComentarios());
         
@@ -188,8 +193,6 @@ public class TetrazolioService {
         System.out.println("Actualizando tetrazolio desde solicitud");
         
         // Datos del análisis base
-        tetrazolio.setFechaInicio(solicitud.getFechaInicio());
-        tetrazolio.setFechaFin(solicitud.getFechaFin());
         tetrazolio.setCumpleEstandar(solicitud.getCumpleEstandar());
         tetrazolio.setComentarios(solicitud.getComentarios());
         
@@ -243,6 +246,9 @@ public class TetrazolioService {
         dto.setPorcViablesRedondeo(tetrazolio.getPorcViablesRedondeo());
         dto.setPorcNoViablesRedondeo(tetrazolio.getPorcNoViablesRedondeo());
         dto.setPorcDurasRedondeo(tetrazolio.getPorcDurasRedondeo());
+        
+        // Mapear historial de análisis
+        dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(tetrazolio.getAnalisisID()));
         
         return dto;
     }

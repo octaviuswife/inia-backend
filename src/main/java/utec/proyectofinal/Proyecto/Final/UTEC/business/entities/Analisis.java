@@ -5,6 +5,7 @@ import lombok.Data;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -22,8 +23,8 @@ public abstract class Analisis {
     private Lote lote;
 
     private Estado estado;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
+    private LocalDateTime fechaInicio;
+    private LocalDateTime fechaFin;
 
     private Boolean cumpleEstandar;
 

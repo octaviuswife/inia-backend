@@ -7,12 +7,10 @@ import java.util.List;
 
 @Data
 public class GerminacionDTO extends AnalisisDTO{
-    private LocalDate fechaInicio;
-
+    // Campos específicos de Germinación
+    private LocalDate fechaInicioGerm; // Fecha de inicio específica de germinación
     private List<LocalDate> fechaConteos;
-
-    private LocalDate fechaFin;
-
+    private LocalDate fechaUltConteo; // Fecha del último conteo
     private String numDias;
     
     // Nuevos campos de control

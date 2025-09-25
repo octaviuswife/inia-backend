@@ -132,7 +132,10 @@ public class RepGermService {
     // Mapear de RequestDTO a Entity
     private RepGerm mapearSolicitudAEntidad(RepGermRequestDTO solicitud, TablaGerm tablaGerm) {
         RepGerm repGerm = new RepGerm();
-        repGerm.setNumRep(solicitud.getNumRep());
+        
+        // Generar numRep automáticamente (siguiente número disponible)
+        Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGerm.getTablaGermID());
+        repGerm.setNumRep(repeticionesExistentes.intValue() + 1);
         
         // Inicializar lista normales con el número de conteos definido en la germinación
         Integer numeroConteos = (tablaGerm.getGerminacion() != null && tablaGerm.getGerminacion().getNumeroConteos() != null) 
@@ -197,7 +200,7 @@ public class RepGermService {
 
     // Actualizar Entity desde RequestDTO
     private void actualizarEntidadDesdeSolicitud(RepGerm repGerm, RepGermRequestDTO solicitud) {
-        repGerm.setNumRep(solicitud.getNumRep());
+        // numRep NO se actualiza, es generado automáticamente y es inmutable
         
         // Gestionar la lista normales preservando el tamaño según numeroConteos
         Integer numeroConteos = (repGerm.getTablaGerm().getGerminacion() != null && 

@@ -10,9 +10,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class GerminacionRequestDTO extends AnalisisRequestDTO {
     // Campos específicos de Germinación
-    private LocalDate fechaInicioGerminacion;
+    private LocalDate fechaInicioGerm; // Fecha de inicio específica de germinación
     private List<LocalDate> fechaConteos;
-    private LocalDate fechaFinGerminacion;
+    private LocalDate fechaUltConteo; // Fecha del último conteo
+    private String numDias; // Calculado y enviado desde el frontend
     
     // Nuevos campos de control
     private Integer numeroRepeticiones;

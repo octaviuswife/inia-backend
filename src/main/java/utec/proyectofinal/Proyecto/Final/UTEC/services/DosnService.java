@@ -1,17 +1,19 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Dosn;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
@@ -21,7 +23,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoDosn;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 
 @Service
 public class DosnService {
@@ -45,9 +46,13 @@ public class DosnService {
     private EntityManager entityManager;
 
     // Crear Dosn
+    @Transactional
     public DosnDTO crearDosn(DosnRequestDTO solicitud) {
         Dosn dosn = mapearSolicitudAEntidad(solicitud);
         dosn.setEstado(Estado.REGISTRADO);
+        
+        // Establecer fecha de inicio automáticamente
+        analisisService.establecerFechaInicio(dosn);
         
         Dosn dosnGuardada = dosnRepository.save(dosn);
         
@@ -58,6 +63,7 @@ public class DosnService {
     }
 
     // Editar Dosn
+    @Transactional
     public DosnDTO actualizarDosn(Long id, DosnRequestDTO solicitud) {
         Dosn dosn = dosnRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
@@ -129,11 +135,10 @@ public class DosnService {
             dosn.setLote(lote);
         }
 
-        dosn.setFechaInicio(solicitud.getFechaInicio());
-        dosn.setFechaFin(solicitud.getFechaFin());
         dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
         dosn.setComentarios(solicitud.getComentarios());
 
+        // Las fechas fechaInicio y fechaFin son automáticas
         dosn.setFechaINIA(solicitud.getFechaINIA());
         dosn.setGramosAnalizadosINIA(solicitud.getGramosAnalizadosINIA());
         dosn.setTipoINIA(solicitud.getTipoINIA());
@@ -162,8 +167,6 @@ public class DosnService {
             dosn.setLote(lote);
         }
 
-        if (solicitud.getFechaInicio() != null) dosn.setFechaInicio(solicitud.getFechaInicio());
-        if (solicitud.getFechaFin() != null) dosn.setFechaFin(solicitud.getFechaFin());
         if (solicitud.getCumpleEstandar() != null) dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) dosn.setComentarios(solicitud.getComentarios());
 
@@ -180,11 +183,22 @@ public class DosnService {
         if (solicitud.getFechaCuscuta() != null) dosn.setFechaCuscuta(solicitud.getFechaCuscuta());
 
         if (solicitud.getListados() != null) {
-            listadoRepository.deleteAll(dosn.getListados());
-            List<Listado> nuevosListados = solicitud.getListados().stream()
-                    .map(req -> crearListadoDesdeSolicitud(req, dosn))
-                    .collect(Collectors.toList());
-            dosn.setListados(nuevosListados);
+            // Inicializar la lista si es null
+            if (dosn.getListados() == null) {
+                dosn.setListados(new ArrayList<>());
+            }
+            
+            // Limpiar listados existentes
+            dosn.getListados().clear();
+
+            // Si hay nuevos listados, crearlos y agregarlos
+            if (!solicitud.getListados().isEmpty()) {
+                List<Listado> nuevosListados = solicitud.getListados().stream()
+                        .map(req -> crearListadoDesdeSolicitud(req, dosn))
+                        .collect(Collectors.toList());
+                
+                dosn.getListados().addAll(nuevosListados);
+            }
         }
     }
 
@@ -217,6 +231,9 @@ public class DosnService {
                     .collect(Collectors.toList());
             dto.setListados(listadoDTOs);
         }
+
+        // Mapear historial de análisis
+        dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(dosn.getAnalisisID()));
 
         return dto;
     }

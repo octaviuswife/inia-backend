@@ -1,5 +1,4 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -12,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms;
@@ -43,6 +43,7 @@ public class PmsService {
     @Autowired
     private AnalisisService analisisService;
 
+        @Transactional
     // Crear Pms con estado REGISTRADO
     public PmsDTO crearPms(PmsRequestDTO solicitud) {
         // Validar que se especifique el número de repeticiones esperadas
@@ -68,6 +69,7 @@ public class PmsService {
     }
 
     // Editar Pms
+    @Transactional
     public PmsDTO actualizarPms(Long id, PmsRequestDTO solicitud) {
         Optional<Pms> existente = pmsRepository.findById(id);
 
@@ -140,6 +142,7 @@ public class PmsService {
     }
 
     // Actualizar PMS con redondeo (solo cuando todas las repeticiones estén completas)
+    @Transactional
     public PmsDTO actualizarPmsConRedondeo(Long id, PmsRedondeoRequestDTO solicitud) {
         Optional<Pms> pmsExistente = pmsRepository.findById(id);
         
@@ -230,8 +233,6 @@ public class PmsService {
     private Pms mapearSolicitudAEntidad(PmsRequestDTO solicitud) {
         Pms pms = new Pms();
 
-        pms.setFechaInicio(solicitud.getFechaInicio());
-        pms.setFechaFin(solicitud.getFechaFin());
         pms.setCumpleEstandar(solicitud.getCumpleEstandar());
         pms.setComentarios(solicitud.getComentarios());
 
@@ -253,8 +254,7 @@ public class PmsService {
     }
 
     private void actualizarEntidadDesdeSolicitud(Pms pms, PmsRequestDTO solicitud) {
-        pms.setFechaInicio(solicitud.getFechaInicio());
-        pms.setFechaFin(solicitud.getFechaFin());
+
         pms.setCumpleEstandar(solicitud.getCumpleEstandar());
         pms.setComentarios(solicitud.getComentarios());
 
@@ -298,6 +298,9 @@ public class PmsService {
         dto.setCoefVariacion(pms.getCoefVariacion());
         dto.setPmssinRedon(pms.getPmssinRedon());
         dto.setPmsconRedon(pms.getPmsconRedon());
+
+        // Mapear historial de análisis
+        dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(pms.getAnalisisID()));
 
         return dto;
     }
@@ -413,6 +416,10 @@ public class PmsService {
                 // Validación específica de PMS: completitud de repeticiones
                 if (!todasLasRepeticionesCompletas(pms)) {
                     throw new RuntimeException("No se puede finalizar el análisis hasta completar todas las repeticiones válidas");
+                }
+                // Validación específica de PMS: debe tener promedio con redondeo ingresado
+                if (pms.getPmsconRedon() == null) {
+                    throw new RuntimeException("Debe ingresar el promedio con redondeo (PMS con redondeo) antes de finalizar el análisis");
                 }
             }
         );
