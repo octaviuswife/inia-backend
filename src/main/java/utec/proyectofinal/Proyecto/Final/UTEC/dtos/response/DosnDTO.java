@@ -9,6 +9,7 @@ import java.util.List;
 
 @Data
 public class DosnDTO extends AnalisisDTO {
+    private Boolean cumpleEstandar;
     private LocalDate fechaINIA;
     private BigDecimal gramosAnalizadosINIA;
 

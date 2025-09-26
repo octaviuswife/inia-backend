@@ -18,8 +18,6 @@ public abstract class AnalisisDTO {
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
 
-    private Boolean cumpleEstandar;
-
     private String comentarios;
 
     private List<AnalisisHistorialDTO> historial;

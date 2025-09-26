@@ -6,6 +6,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivos
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.MalezasYCultivosCatalogoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoMYCCatalogo;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,9 +31,9 @@ public class MalezasYCultivosCatalogoService {
                 .collect(Collectors.toList());
     }
 
-    // Filtrar por maleza/cultivo
-    public List<MalezasYCultivosCatalogoDTO> obtenerPorTipo(Boolean esMaleza) {
-        return repository.findByMalezaAndActivoTrue(esMaleza).stream()
+    // Filtrar por tipo de especie
+    public List<MalezasYCultivosCatalogoDTO> obtenerPorTipo(TipoMYCCatalogo tipoMYCCatalogo) {
+        return repository.findByTipoMYCCatalogoAndActivoTrue(tipoMYCCatalogo).stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
@@ -63,7 +64,7 @@ public class MalezasYCultivosCatalogoService {
         MalezasYCultivosCatalogo catalogo = new MalezasYCultivosCatalogo();
         catalogo.setNombreComun(solicitud.getNombreComun());
         catalogo.setNombreCientifico(solicitud.getNombreCientifico());
-        catalogo.setMaleza(solicitud.getMaleza());
+        catalogo.setTipoMYCCatalogo(solicitud.getTipoMYCCatalogo());
         catalogo.setActivo(true);
 
         MalezasYCultivosCatalogo guardado = repository.save(catalogo);
@@ -76,7 +77,7 @@ public class MalezasYCultivosCatalogoService {
                 .map(catalogo -> {
                     catalogo.setNombreComun(solicitud.getNombreComun());
                     catalogo.setNombreCientifico(solicitud.getNombreCientifico());
-                    catalogo.setMaleza(solicitud.getMaleza());
+                    catalogo.setTipoMYCCatalogo(solicitud.getTipoMYCCatalogo());
 
                     MalezasYCultivosCatalogo actualizado = repository.save(catalogo);
                     return mapearEntidadADTO(actualizado);
@@ -110,7 +111,7 @@ public class MalezasYCultivosCatalogoService {
         dto.setCatalogoID(catalogo.getCatalogoID());
         dto.setNombreComun(catalogo.getNombreComun());
         dto.setNombreCientifico(catalogo.getNombreCientifico());
-        dto.setMaleza(catalogo.getMaleza());
+        dto.setTipoMYCCatalogo(catalogo.getTipoMYCCatalogo());
         // Campo activo removido del DTO - no necesario en responses
         return dto;
     }

@@ -233,7 +233,6 @@ public class PmsService {
     private Pms mapearSolicitudAEntidad(PmsRequestDTO solicitud) {
         Pms pms = new Pms();
 
-        pms.setCumpleEstandar(solicitud.getCumpleEstandar());
         pms.setComentarios(solicitud.getComentarios());
 
         if (solicitud.getIdLote() != null) {
@@ -255,7 +254,6 @@ public class PmsService {
 
     private void actualizarEntidadDesdeSolicitud(Pms pms, PmsRequestDTO solicitud) {
 
-        pms.setCumpleEstandar(solicitud.getCumpleEstandar());
         pms.setComentarios(solicitud.getComentarios());
 
         if (solicitud.getIdLote() != null) {
@@ -280,7 +278,6 @@ public class PmsService {
         dto.setEstado(pms.getEstado());
         dto.setFechaInicio(pms.getFechaInicio());
         dto.setFechaFin(pms.getFechaFin());
-        dto.setCumpleEstandar(pms.getCumpleEstandar());
         dto.setComentarios(pms.getComentarios());
 
         if (pms.getLote() != null) {
@@ -432,6 +429,16 @@ public class PmsService {
             pmsRepository,
             this::mapearEntidadADTO,
             null // No hay validación específica para aprobar
+        );
+    }
+
+    // Marcar análisis para repetir (solo administradores)
+    public PmsDTO marcarParaRepetir(Long id) {
+        return analisisService.marcarParaRepetirGenerico(
+            id,
+            pmsRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica para marcar a repetir
         );
     }
 }

@@ -151,7 +151,6 @@ public class GerminacionService {
         Germinacion germinacion = new Germinacion();
         
         // Datos del análisis base (fechaInicio y fechaFin son automáticas, no del request)
-        germinacion.setCumpleEstandar(solicitud.getCumpleEstandar());
         germinacion.setComentarios(solicitud.getComentarios());
         
         // Validar y establecer lote
@@ -205,7 +204,6 @@ public class GerminacionService {
         
         // Datos del análisis base
 
-        germinacion.setCumpleEstandar(solicitud.getCumpleEstandar());
         germinacion.setComentarios(solicitud.getComentarios());
         
         // Validar y establecer lote si se proporciona
@@ -249,7 +247,6 @@ public class GerminacionService {
         dto.setEstado(germinacion.getEstado());
         dto.setFechaInicio(germinacion.getFechaInicio());
         dto.setFechaFin(germinacion.getFechaFin());
-        dto.setCumpleEstandar(germinacion.getCumpleEstandar());
         dto.setComentarios(germinacion.getComentarios());
         
         // Datos del lote si existe
@@ -301,6 +298,16 @@ public class GerminacionService {
             germinacionRepository,
             this::mapearEntidadADTO,
             null // No hay validación específica para aprobar
+        );
+    }
+
+    // Marcar análisis para repetir (solo administradores)
+    public GerminacionDTO marcarParaRepetir(Long id) {
+        return analisisService.marcarParaRepetirGenerico(
+            id,
+            germinacionRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica para marcar a repetir
         );
     }
 }

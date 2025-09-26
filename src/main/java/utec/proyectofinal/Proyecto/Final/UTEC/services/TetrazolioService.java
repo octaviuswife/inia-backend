@@ -160,7 +160,6 @@ public class TetrazolioService {
         Tetrazolio tetrazolio = new Tetrazolio();
         
         // Datos del análisis base (fechaInicio y fechaFin son automáticas)
-        tetrazolio.setCumpleEstandar(solicitud.getCumpleEstandar());
         tetrazolio.setComentarios(solicitud.getComentarios());
         
         // Validar y establecer lote
@@ -193,7 +192,6 @@ public class TetrazolioService {
         System.out.println("Actualizando tetrazolio desde solicitud");
         
         // Datos del análisis base
-        tetrazolio.setCumpleEstandar(solicitud.getCumpleEstandar());
         tetrazolio.setComentarios(solicitud.getComentarios());
         
         // Validar y establecer lote si se proporciona
@@ -227,7 +225,6 @@ public class TetrazolioService {
         dto.setEstado(tetrazolio.getEstado());
         dto.setFechaInicio(tetrazolio.getFechaInicio());
         dto.setFechaFin(tetrazolio.getFechaFin());
-        dto.setCumpleEstandar(tetrazolio.getCumpleEstandar());
         dto.setComentarios(tetrazolio.getComentarios());
         
         // Datos del lote si existe
@@ -285,6 +282,16 @@ public class TetrazolioService {
             tetrazolioRepository,
             this::mapearEntidadADTO,
             this::validarCompletitudRepeticiones // Validación específica de Tetrazolio
+        );
+    }
+
+    // Marcar análisis para repetir (solo administradores)
+    public TetrazolioDTO marcarParaRepetir(Long id) {
+        return analisisService.marcarParaRepetirGenerico(
+            id,
+            tetrazolioRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica para marcar a repetir
         );
     }
 }

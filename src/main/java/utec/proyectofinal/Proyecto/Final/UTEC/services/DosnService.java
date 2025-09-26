@@ -6,7 +6,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional;   
+
+
+    
+
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -267,6 +271,18 @@ public class DosnService {
             dosnRepository,
             this::mapearEntidadADTO,
             null // No hay validación específica
+        );
+    }
+
+    /**
+     * Marcar análisis para repetir (solo administradores)
+     */
+    public DosnDTO marcarParaRepetir(Long id) {
+        return analisisService.marcarParaRepetirGenerico(
+            id,
+            dosnRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica para marcar a repetir
         );
     }
 }

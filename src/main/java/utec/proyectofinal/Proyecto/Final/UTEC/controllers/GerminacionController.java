@@ -184,4 +184,20 @@ public class GerminacionController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Marcar análisis para repetir (solo admin)
+    @Operation(summary = "Marcar análisis de germinación para repetir", 
+              description = "Marca un análisis de germinación para repetir - solo administradores")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/repetir")
+    public ResponseEntity<GerminacionDTO> marcarParaRepetir(@PathVariable Long id) {
+        try {
+            GerminacionDTO analisisRepetir = germinacionService.marcarParaRepetir(id);
+            return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

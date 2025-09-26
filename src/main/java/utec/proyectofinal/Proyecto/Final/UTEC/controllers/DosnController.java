@@ -148,4 +148,20 @@ public class DosnController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Marcar análisis para repetir (solo admin)
+    @Operation(summary = "Marcar análisis de DOSN para repetir", 
+              description = "Marca un DOSN para repetir - solo administradores")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/repetir")
+    public ResponseEntity<DosnDTO> marcarParaRepetir(@PathVariable Long id) {
+        try {
+            DosnDTO dosnRepetir = dosnService.marcarParaRepetir(id);
+            return new ResponseEntity<>(dosnRepetir, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

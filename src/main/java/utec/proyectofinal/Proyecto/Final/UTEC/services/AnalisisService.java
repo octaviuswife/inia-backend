@@ -1,7 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -98,6 +97,34 @@ public class AnalisisService {
     }
     
     /**
+     * Marca un análisis para repetir (solo administradores)
+     * - Verifica que esté en estado PENDIENTE_APROBACION
+     * - Cambia estado a A_REPETIR
+     * 
+     * @param analisis El análisis a marcar para repetir
+     * @return El análisis actualizado
+     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está INACTIVO
+     */
+    public Analisis marcarParaRepetir(Analisis analisis) {
+        // Validar que no esté inactivo
+        if (analisis.getEstado() == Estado.INACTIVO) {
+            throw new RuntimeException("No se puede marcar para repetir un análisis inactivo");
+        }
+        
+        // Validar que esté en estado PENDIENTE_APROBACION o en APROBADO
+        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION && analisis.getEstado() != Estado.APROBADO) {
+            throw new RuntimeException("Solo se pueden marcar para repetir análisis en estado PENDIENTE_APROBACION");
+        }
+        
+        analisis.setEstado(Estado.A_REPETIR);
+        
+        // Registrar en el historial
+        analisisHistorialService.registrarModificacion(analisis);
+        
+        return analisis;
+    }
+
+    /**
      * Verifica si el usuario actual es un analista
      * 
      * @return true si el usuario tiene rol ANALISTA
@@ -175,6 +202,39 @@ public class AnalisisService {
         // Guardar cambios
         T analisisActualizado = repository.save(analisis);
         
+        return mapper.apply(analisisActualizado);
+    }
+
+    /**
+     * Método genérico para marcar análisis a repetir con validación específica opcional
+     * 
+     * @param <T> Tipo del análisis que extiende Analisis
+     * @param <D> Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo específico
+     * @param mapper Función para mapear entidad a DTO
+     * @param validator Validación específica opcional (puede ser null)
+     * @return DTO del análisis marcado para repetir
+     */
+    public <T extends Analisis, D> D marcarParaRepetirGenerico(
+            Long id,
+            JpaRepository<T, Long> repository,
+            Function<T, D> mapper,
+            Consumer<T> validator) {
+        
+        T analisis = repository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
+        
+        // Aplicar validación específica si se proporciona
+        if (validator != null) {
+            validator.accept(analisis);
+        }
+        
+        // Marcar para repetir usando el método común
+        marcarParaRepetir(analisis);
+        
+        // Guardar y devolver
+        T analisisActualizado = repository.save(analisis);
         return mapper.apply(analisisActualizado);
     }
 }

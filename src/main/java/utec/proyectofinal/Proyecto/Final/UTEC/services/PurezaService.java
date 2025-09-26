@@ -357,4 +357,16 @@ public class PurezaService {
             null // No hay validación específica
         );
     }
+
+    /**
+     * Marcar análisis para repetir (solo administradores)
+     */
+    public PurezaDTO marcarParaRepetir(Long id) {
+        return analisisService.marcarParaRepetirGenerico(
+            id,
+            purezaRepository,
+            this::mapearEntidadADTO,
+            null // No hay validación específica para marcar a repetir
+        );
+    }
 }

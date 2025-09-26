@@ -12,6 +12,7 @@ import java.util.List;
 public class Pureza extends Analisis {
 
     private LocalDate fecha;
+    private Boolean cumpleEstandar;
     private BigDecimal pesoInicial_g;
     private BigDecimal semillaPura_g;
     private BigDecimal materiaInerte_g;

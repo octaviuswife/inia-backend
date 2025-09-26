@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.MalezasYCultivosCatalogoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoMYCCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.MalezasYCultivosCatalogoService;
 
 import java.util.List;
@@ -46,7 +47,7 @@ public class MalezasYCultivosCatalogoController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @Operation(summary = "Listar malezas", description = "Obtiene todas las malezas del catálogo")
     public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerMalezas() {
-        List<MalezasYCultivosCatalogoDTO> malezas = service.obtenerPorTipo(true);
+        List<MalezasYCultivosCatalogoDTO> malezas = service.obtenerPorTipo(TipoMYCCatalogo.MALEZA);
         return ResponseEntity.ok(malezas);
     }
 
@@ -55,8 +56,26 @@ public class MalezasYCultivosCatalogoController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @Operation(summary = "Listar cultivos", description = "Obtiene todos los cultivos del catálogo")
     public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerCultivos() {
-        List<MalezasYCultivosCatalogoDTO> cultivos = service.obtenerPorTipo(false);
+        List<MalezasYCultivosCatalogoDTO> cultivos = service.obtenerPorTipo(TipoMYCCatalogo.CULTIVO);
         return ResponseEntity.ok(cultivos);
+    }
+
+    // Obtener brassicas
+    @GetMapping("/brassicas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Listar brassicas", description = "Obtiene todas las brassicas del catálogo")
+    public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerBrassicas() {
+        List<MalezasYCultivosCatalogoDTO> brassicas = service.obtenerPorTipo(TipoMYCCatalogo.BRASSICA);
+        return ResponseEntity.ok(brassicas);
+    }
+
+    // Obtener por tipo específico
+    @GetMapping("/tipo/{tipoEspecie}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Listar por tipo de especie", description = "Obtiene elementos del catálogo por tipo de especie")
+    public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerPorTipo(@PathVariable TipoMYCCatalogo tipoMYCCatalogo) {
+        List<MalezasYCultivosCatalogoDTO> elementos = service.obtenerPorTipo(tipoMYCCatalogo);
+        return ResponseEntity.ok(elementos);
     }
 
     // Buscar por nombre común

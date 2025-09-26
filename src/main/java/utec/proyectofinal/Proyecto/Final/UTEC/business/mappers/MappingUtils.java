@@ -14,7 +14,7 @@ public class MappingUtils {
         dto.setCatalogoID(malezasYCultivosCatalogo.getCatalogoID());
         dto.setNombreComun(malezasYCultivosCatalogo.getNombreComun());
         dto.setNombreCientifico(malezasYCultivosCatalogo.getNombreCientifico());
-        dto.setMaleza(malezasYCultivosCatalogo.getMaleza());
+        dto.setTipoMYCCatalogo(malezasYCultivosCatalogo.getTipoMYCCatalogo());
         // Omitir campo activo intencionalmente
         return dto;
     }

@@ -2,6 +2,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoMYCCatalogo;
 
 import java.util.List;
 
@@ -15,7 +16,10 @@ public class MalezasYCultivosCatalogo {
     private Long catalogoID;
     private String nombreComun;
     private String nombreCientifico;
-    private Boolean maleza;
+    
+    @Enumerated(EnumType.STRING)
+    private TipoMYCCatalogo tipoMYCCatalogo;
+    
     private Boolean activo = true;
 
     @OneToMany(mappedBy = "catalogo", cascade = CascadeType.ALL, orphanRemoval = true)

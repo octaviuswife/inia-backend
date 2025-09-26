@@ -3,6 +3,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoMYCCatalogo;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public interface MalezasYCultivosCatalogoRepository extends JpaRepository<Maleza
     
     List<MalezasYCultivosCatalogo> findByActivoFalse();
     
-    List<MalezasYCultivosCatalogo> findByMalezaAndActivoTrue(Boolean maleza);
+    List<MalezasYCultivosCatalogo> findByTipoMYCCatalogoAndActivoTrue(TipoMYCCatalogo tipoMYCCatalogo);
     
     List<MalezasYCultivosCatalogo> findByNombreComunContainingIgnoreCaseAndActivoTrue(String nombreComun);
     

@@ -7,5 +7,4 @@ public enum Estado {
     APROBADO,
     INACTIVO,
     A_REPETIR,
-    // SOLICITUD_REPETICION,
 }

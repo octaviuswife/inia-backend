@@ -174,4 +174,20 @@ public class PmsController {
         }
     }
 
+    // Marcar análisis para repetir (solo admin)
+    @Operation(summary = "Marcar análisis de peso de mil semillas (PMS) para repetir", 
+              description = "Marca un análisis de peso de mil semillas (PMS) para repetir - solo administradores")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/repetir")
+    public ResponseEntity<PmsDTO> marcarParaRepetir(@PathVariable Long id) {
+        try {
+            PmsDTO analisisRepetir = pmsService.marcarParaRepetir(id);
+            return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

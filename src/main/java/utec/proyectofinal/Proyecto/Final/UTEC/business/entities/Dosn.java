@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 public class Dosn extends Analisis {
 
+    private Boolean cumpleEstandar;
     private LocalDate fechaINIA;
     private BigDecimal gramosAnalizadosINIA;
 

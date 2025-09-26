@@ -177,4 +177,20 @@ public class PurezaController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Marcar análisis para repetir (solo admin)
+    @Operation(summary = "Marcar análisis de pureza para repetir", 
+              description = "Marca un análisis de pureza para repetir - solo administradores")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/repetir")
+    public ResponseEntity<PurezaDTO> marcarParaRepetir(@PathVariable Long id) {
+        try {
+            PurezaDTO analisisRepetir = purezaService.marcarParaRepetir(id);
+            return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
