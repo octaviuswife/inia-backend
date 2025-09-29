@@ -281,6 +281,7 @@ public class PmsService {
         dto.setComentarios(pms.getComentarios());
 
         if (pms.getLote() != null) {
+            dto.setIdLote(pms.getLote().getLoteID());
             dto.setLote(pms.getLote().getFicha());
         }
 

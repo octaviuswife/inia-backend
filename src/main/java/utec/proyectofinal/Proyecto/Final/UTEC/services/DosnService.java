@@ -215,6 +215,7 @@ public class DosnService {
         dto.setFechaFin(dosn.getFechaFin());
         dto.setCumpleEstandar(dosn.getCumpleEstandar());
         dto.setComentarios(dosn.getComentarios());
+        dto.setIdLote(dosn.getLote() != null ? dosn.getLote().getLoteID() : null);
         dto.setLote(dosn.getLote() != null ? dosn.getLote().getFicha() : null);
 
         dto.setFechaINIA(dosn.getFechaINIA());

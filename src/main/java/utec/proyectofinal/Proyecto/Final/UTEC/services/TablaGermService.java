@@ -391,6 +391,7 @@ public class TablaGermService {
         
         dto.setTotal(tablaGerm.getTotal());
         dto.setPromedioSinRedondeo(tablaGerm.getPromedioSinRedondeo());
+        dto.setPromediosSinRedPorConteo(tablaGerm.getPromediosSinRedPorConteo());
         
         // Campos de porcentaje con redondeo
         dto.setPorcentajeNormalesConRedondeo(tablaGerm.getPorcentajeNormalesConRedondeo());

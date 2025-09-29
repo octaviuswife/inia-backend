@@ -12,7 +12,8 @@ public abstract class AnalisisDTO {
 
     private Long analisisID;
 
-    private String lote;
+    private Long idLote; // ID del lote
+    private String lote; // Nombre del lote
 
     private Estado estado;
     private LocalDateTime fechaInicio;

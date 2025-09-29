@@ -347,5 +347,72 @@ public class RepGermService {
         promedios.add(promedioMuertas);
         
         tablaGerm.setPromedioSinRedondeo(promedios);
+        
+        // Calcular promediosSinRedPorConteo
+        calcularPromediosPorConteo(tablaGerm, repeticiones);
+    }
+    
+    // Calcular promedios por cada conteo individual de normales + los otros campos
+    private void calcularPromediosPorConteo(TablaGerm tablaGerm, List<RepGerm> repeticiones) {
+        if (repeticiones.isEmpty()) {
+            tablaGerm.setPromediosSinRedPorConteo(new ArrayList<>());
+            return;
+        }
+        
+        int numRepeticiones = repeticiones.size();
+        List<BigDecimal> promediosPorConteo = new ArrayList<>();
+        
+        // Obtener el número de conteos desde la germinación
+        Integer numConteos = tablaGerm.getGerminacion() != null ? 
+            tablaGerm.getGerminacion().getNumeroConteos() : null;
+            
+        if (numConteos != null && numConteos > 0) {
+            // Calcular promedio para cada conteo de normales por separado
+            for (int conteo = 0; conteo < numConteos; conteo++) {
+                final int conteoIndex = conteo;
+                int sumaNormalesConteo = repeticiones.stream()
+                    .mapToInt(rep -> {
+                        if (rep.getNormales() != null && rep.getNormales().size() > conteoIndex) {
+                            return rep.getNormales().get(conteoIndex);
+                        }
+                        return 0;
+                    })
+                    .sum();
+                BigDecimal promedioConteo = BigDecimal.valueOf(sumaNormalesConteo)
+                    .divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);
+                promediosPorConteo.add(promedioConteo);
+            }
+        }
+        
+        // Agregar los otros campos (anormales, duras, frescas, muertas) igual que antes
+        // 2. Promedio de anormales
+        int sumaAnormales = repeticiones.stream()
+            .mapToInt(rep -> rep.getAnormales() != null ? rep.getAnormales() : 0)
+            .sum();
+        BigDecimal promedioAnormales = BigDecimal.valueOf(sumaAnormales).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);
+        promediosPorConteo.add(promedioAnormales);
+        
+        // 3. Promedio de duras
+        int sumaDuras = repeticiones.stream()
+            .mapToInt(rep -> rep.getDuras() != null ? rep.getDuras() : 0)
+            .sum();
+        BigDecimal promedioDuras = BigDecimal.valueOf(sumaDuras).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);
+        promediosPorConteo.add(promedioDuras);
+        
+        // 4. Promedio de frescas
+        int sumaFrescas = repeticiones.stream()
+            .mapToInt(rep -> rep.getFrescas() != null ? rep.getFrescas() : 0)
+            .sum();
+        BigDecimal promedioFrescas = BigDecimal.valueOf(sumaFrescas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);
+        promediosPorConteo.add(promedioFrescas);
+        
+        // 5. Promedio de muertas
+        int sumaMuertas = repeticiones.stream()
+            .mapToInt(rep -> rep.getMuertas() != null ? rep.getMuertas() : 0)
+            .sum();
+        BigDecimal promedioMuertas = BigDecimal.valueOf(sumaMuertas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);
+        promediosPorConteo.add(promedioMuertas);
+        
+        tablaGerm.setPromediosSinRedPorConteo(promediosPorConteo);
     }
 }

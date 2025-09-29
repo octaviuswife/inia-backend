@@ -251,6 +251,7 @@ public class GerminacionService {
         
         // Datos del lote si existe
         if (germinacion.getLote() != null) {
+            dto.setIdLote(germinacion.getLote().getLoteID());
             dto.setLote(germinacion.getLote().getFicha());
         }
         

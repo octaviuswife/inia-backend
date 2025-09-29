@@ -252,6 +252,7 @@ public class PurezaService {
         PurezaDTO dto = new PurezaDTO();
 
         dto.setAnalisisID(pureza.getAnalisisID());
+        dto.setIdLote(pureza.getLote() != null ? pureza.getLote().getLoteID() : null);
         dto.setLote(pureza.getLote() != null ? pureza.getLote().getFicha() : null);
         dto.setEstado(pureza.getEstado());
         dto.setFechaInicio(pureza.getFechaInicio());

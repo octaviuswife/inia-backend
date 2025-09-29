@@ -33,6 +33,9 @@ public class TablaGerm {
     @ElementCollection
     private List<BigDecimal> promedioSinRedondeo;
 
+    @ElementCollection
+    private List<BigDecimal> promediosSinRedPorConteo;
+
     // Campos de porcentaje con redondeo (5 campos ingresados manualmente)
     private BigDecimal porcentajeNormalesConRedondeo;
     private BigDecimal porcentajeAnormalesConRedondeo;

@@ -229,6 +229,7 @@ public class TetrazolioService {
         
         // Datos del lote si existe
         if (tetrazolio.getLote() != null) {
+            dto.setIdLote(tetrazolio.getLote().getLoteID());
             dto.setLote(tetrazolio.getLote().getFicha());
         }
         
