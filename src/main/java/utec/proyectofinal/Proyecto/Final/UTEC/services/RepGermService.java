@@ -11,8 +11,6 @@ import java.math.RoundingMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepGermRepository;
@@ -29,19 +27,18 @@ public class RepGermService {
     @Autowired
     private TablaGermRepository tablaGermRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     // Crear nueva repetición asociada a una tabla
     public RepGermDTO crearRepGerm(Long tablaGermId, RepGermRequestDTO solicitud) {
         try {
             System.out.println("Creando repetición para tabla ID: " + tablaGermId);
             
             // Validar que la tabla existe
-            TablaGerm tablaGerm = entityManager.find(TablaGerm.class, tablaGermId);
-            if (tablaGerm == null) {
+            Optional<TablaGerm> tablaGermOpt = tablaGermRepository.findById(tablaGermId);
+            if (tablaGermOpt.isEmpty()) {
                 throw new RuntimeException("Tabla no encontrada con ID: " + tablaGermId);
             }
+            
+            TablaGerm tablaGerm = tablaGermOpt.get();
             
             // Validar que la tabla no esté finalizada
             if (tablaGerm.getFinalizada() != null && tablaGerm.getFinalizada()) {

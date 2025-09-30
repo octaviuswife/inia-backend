@@ -1,11 +1,13 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.mappers;
 
-import jakarta.persistence.EntityManager;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
+import java.util.Optional;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 
 public class MappingUtils {
 
@@ -32,15 +34,19 @@ public class MappingUtils {
         return dto;
     }
 
-    public static Listado fromListadoRequest(ListadoRequestDTO solicitud, EntityManager entityManager) {
+    public static Listado fromListadoRequest(ListadoRequestDTO solicitud, MalezasYCultivosCatalogoRepository catalogoRepository) {
         Listado listado = new Listado();
         listado.setListadoTipo(solicitud.getListadoTipo());
         listado.setListadoInsti(solicitud.getListadoInsti());
         listado.setListadoNum(solicitud.getListadoNum());
 
         if (solicitud.getIdCatalogo() != null) {
-            MalezasYCultivosCatalogo catalogo = entityManager.getReference(MalezasYCultivosCatalogo.class, solicitud.getIdCatalogo());
-            listado.setCatalogo(catalogo);
+            Optional<MalezasYCultivosCatalogo> catalogoOpt = catalogoRepository.findById(solicitud.getIdCatalogo());
+            if (catalogoOpt.isPresent()) {
+                listado.setCatalogo(catalogoOpt.get());
+            } else {
+                throw new RuntimeException("Catálogo no encontrado con ID: " + solicitud.getIdCatalogo());
+            }
         }
         return listado;
     }

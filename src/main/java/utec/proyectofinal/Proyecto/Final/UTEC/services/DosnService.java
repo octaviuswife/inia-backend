@@ -2,25 +2,23 @@ package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;   
 
-
-    
-
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Dosn;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DosnRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
@@ -39,30 +37,33 @@ public class DosnService {
 
     @Autowired
     private CatalogoRepository catalogoRepository;
-    
+
+    @Autowired
+    private LoteRepository loteRepository;
+
+    @Autowired
+    private MalezasYCultivosCatalogoRepository malezasYCultivosCatalogoRepository;
+
     @Autowired
     private AnalisisService analisisService;
-    
+
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     // Crear Dosn
     @Transactional
     public DosnDTO crearDosn(DosnRequestDTO solicitud) {
         Dosn dosn = mapearSolicitudAEntidad(solicitud);
         dosn.setEstado(Estado.REGISTRADO);
-        
+
         // Establecer fecha de inicio automáticamente
         analisisService.establecerFechaInicio(dosn);
-        
+
         Dosn dosnGuardada = dosnRepository.save(dosn);
-        
+
         // Registrar automáticamente en el historial
         analisisHistorialService.registrarCreacion(dosnGuardada);
-        
+
         return mapearEntidadADTO(dosnGuardada);
     }
 
@@ -74,7 +75,7 @@ public class DosnService {
 
         // Manejar cambios de estado según rol del usuario
         Estado estadoOriginal = dosn.getEstado();
-        
+
         if (estadoOriginal == Estado.APROBADO && analisisService.esAnalista()) {
             // Si es ANALISTA editando un análisis APROBADO, cambiar a PENDIENTE_APROBACION
             dosn.setEstado(Estado.PENDIENTE_APROBACION);
@@ -83,13 +84,13 @@ public class DosnService {
         // Para otros estados se mantiene igual
 
         actualizarEntidadDesdeSolicitud(dosn, solicitud);
-        
+
         // Guardar la entidad actualizada
         Dosn dosnActualizada = dosnRepository.save(dosn);
-        
+
         // Registrar automáticamente en el historial
         analisisHistorialService.registrarModificacion(dosnActualizada);
-        
+
         return mapearEntidadADTO(dosnActualizada);
     }
 
@@ -135,8 +136,12 @@ public class DosnService {
         Dosn dosn = new Dosn();
 
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.getReference(Lote.class, solicitud.getIdLote());
-            dosn.setLote(lote);
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                dosn.setLote(loteOpt.get());
+            } else {
+                throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
+            }
         }
 
         dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
@@ -167,19 +172,25 @@ public class DosnService {
 
     private void actualizarEntidadDesdeSolicitud(Dosn dosn, DosnRequestDTO solicitud) {
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.getReference(Lote.class, solicitud.getIdLote());
-            dosn.setLote(lote);
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                dosn.setLote(loteOpt.get());
+            } else {
+                throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
+            }
         }
 
         if (solicitud.getCumpleEstandar() != null) dosn.setCumpleEstandar(solicitud.getCumpleEstandar());
         if (solicitud.getComentarios() != null) dosn.setComentarios(solicitud.getComentarios());
 
         if (solicitud.getFechaINIA() != null) dosn.setFechaINIA(solicitud.getFechaINIA());
-        if (solicitud.getGramosAnalizadosINIA() != null) dosn.setGramosAnalizadosINIA(solicitud.getGramosAnalizadosINIA());
+        if (solicitud.getGramosAnalizadosINIA() != null)
+            dosn.setGramosAnalizadosINIA(solicitud.getGramosAnalizadosINIA());
         if (solicitud.getTipoINIA() != null) dosn.setTipoINIA(solicitud.getTipoINIA());
 
         if (solicitud.getFechaINASE() != null) dosn.setFechaINASE(solicitud.getFechaINASE());
-        if (solicitud.getGramosAnalizadosINASE() != null) dosn.setGramosAnalizadosINASE(solicitud.getGramosAnalizadosINASE());
+        if (solicitud.getGramosAnalizadosINASE() != null)
+            dosn.setGramosAnalizadosINASE(solicitud.getGramosAnalizadosINASE());
         if (solicitud.getTipoINASE() != null) dosn.setTipoINASE(solicitud.getTipoINASE());
 
         if (solicitud.getCuscuta_g() != null) dosn.setCuscuta_g(solicitud.getCuscuta_g());
@@ -191,7 +202,7 @@ public class DosnService {
             if (dosn.getListados() == null) {
                 dosn.setListados(new ArrayList<>());
             }
-            
+
             // Limpiar listados existentes
             dosn.getListados().clear();
 
@@ -200,7 +211,7 @@ public class DosnService {
                 List<Listado> nuevosListados = solicitud.getListados().stream()
                         .map(req -> crearListadoDesdeSolicitud(req, dosn))
                         .collect(Collectors.toList());
-                
+
                 dosn.getListados().addAll(nuevosListados);
             }
         }
@@ -244,7 +255,7 @@ public class DosnService {
     }
 
     private Listado crearListadoDesdeSolicitud(ListadoRequestDTO solicitud, Dosn dosn) {
-        Listado listado = MappingUtils.fromListadoRequest(solicitud, entityManager);
+        Listado listado = MappingUtils.fromListadoRequest(solicitud, malezasYCultivosCatalogoRepository);
         listado.setDosn(dosn);
         return listado;
     }
@@ -256,10 +267,10 @@ public class DosnService {
      */
     public DosnDTO finalizarAnalisis(Long id) {
         return analisisService.finalizarAnalisisGenerico(
-            id,
-            dosnRepository,
-            this::mapearEntidadADTO,
-            null // No hay validación específica
+                id,
+                dosnRepository,
+                this::mapearEntidadADTO,
+                null // No hay validación específica
         );
     }
 
@@ -268,10 +279,10 @@ public class DosnService {
      */
     public DosnDTO aprobarAnalisis(Long id) {
         return analisisService.aprobarAnalisisGenerico(
-            id,
-            dosnRepository,
-            this::mapearEntidadADTO,
-            null // No hay validación específica
+                id,
+                dosnRepository,
+                this::mapearEntidadADTO,
+                null // No hay validación específica
         );
     }
 
@@ -280,10 +291,12 @@ public class DosnService {
      */
     public DosnDTO marcarParaRepetir(Long id) {
         return analisisService.marcarParaRepetirGenerico(
-            id,
-            dosnRepository,
-            this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+                id,
+                dosnRepository,
+                this::mapearEntidadADTO,
+                null // No hay validación específica para marcar a repetir
         );
     }
 }
+
+

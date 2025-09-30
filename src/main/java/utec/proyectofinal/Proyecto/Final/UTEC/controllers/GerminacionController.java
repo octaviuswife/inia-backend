@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
@@ -102,8 +103,8 @@ public class GerminacionController {
 
     // Actualizar Germinación
     @Operation(summary = "Actualizar germinación", 
-              description = "Actualiza los detalles de una germinación existente. " +
-                          "Nota: numeroRepeticiones y numeroConteos no se pueden modificar una vez creado")
+              description = "Actualiza solo los campos editables de una germinación existente. " +
+                          "Las fechas no se pueden modificar por seguridad.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Germinación actualizada exitosamente"),
         @ApiResponse(responseCode = "404", description = "Germinación no encontrada"),
@@ -111,9 +112,9 @@ public class GerminacionController {
     })
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<GerminacionDTO> actualizarGerminacion(@PathVariable Long id, @RequestBody GerminacionRequestDTO solicitud) {
+    public ResponseEntity<GerminacionDTO> actualizarGerminacion(@PathVariable Long id, @RequestBody GerminacionEditRequestDTO dto) {
         try {
-            GerminacionDTO germinacionActualizada = germinacionService.actualizarGerminacion(id, solicitud);
+            GerminacionDTO germinacionActualizada = germinacionService.actualizarGerminacionSeguro(id, dto);
             return new ResponseEntity<>(germinacionActualizada, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);

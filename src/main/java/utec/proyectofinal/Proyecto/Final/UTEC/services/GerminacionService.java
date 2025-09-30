@@ -10,13 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
@@ -28,13 +28,13 @@ public class GerminacionService {
     private GerminacionRepository germinacionRepository;
 
     @Autowired
+    private LoteRepository loteRepository;
+
+    @Autowired
     private AnalisisHistorialService analisisHistorialService;
     
     @Autowired
     private AnalisisService analisisService;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     // Crear Germinación con estado REGISTRADO
     @Transactional
@@ -75,6 +75,45 @@ public class GerminacionService {
             }
             
             actualizarEntidadDesdeSolicitud(germinacion, solicitud);
+            Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
+            
+            // Registrar automáticamente en el historial
+            analisisHistorialService.registrarModificacion(germinacionActualizada);
+            
+            return mapearEntidadADTO(germinacionActualizada);
+        } else {
+            throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
+        }
+    }
+
+    // Editar Germinación con DTO específico (sin fechas)
+    @Transactional
+    public GerminacionDTO actualizarGerminacionSeguro(Long id, GerminacionEditRequestDTO dto) {
+        Optional<Germinacion> germinacionExistente = germinacionRepository.findById(id);
+        
+        if (germinacionExistente.isPresent()) {
+            Germinacion germinacion = germinacionExistente.get();
+            
+            // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
+            if (germinacion.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
+                germinacion.setEstado(Estado.PENDIENTE_APROBACION);
+                System.out.println("Análisis aprobado editado por analista - cambiando estado a PENDIENTE_APROBACION");
+            }
+            
+            // Actualizar solo los campos permitidos del DTO de edición
+            if (dto.getIdLote() != null) {
+                Optional<Lote> loteOpt = loteRepository.findById(dto.getIdLote());
+                if (loteOpt.isPresent()) {
+                    germinacion.setLote(loteOpt.get());
+                } else {
+                    throw new RuntimeException("Lote no encontrado con ID: " + dto.getIdLote());
+                }
+            }
+            if (dto.getComentarios() != null) {
+                germinacion.setComentarios(dto.getComentarios());
+            }
+            // numDias NO es editable - se mantiene el valor original
+            
             Germinacion germinacionActualizada = germinacionRepository.save(germinacion);
             
             // Registrar automáticamente en el historial
@@ -156,8 +195,9 @@ public class GerminacionService {
         // Validar y establecer lote
         if (solicitud.getIdLote() != null) {
             System.out.println("Buscando lote con ID: " + solicitud.getIdLote());
-            Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
-            if (lote != null) {
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                Lote lote = loteOpt.get();
                 germinacion.setLote(lote);
                 System.out.println("Lote encontrado y asignado: " + lote.getLoteID());
             } else {
@@ -208,9 +248,9 @@ public class GerminacionService {
         
         // Validar y establecer lote si se proporciona
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
-            if (lote != null) {
-                germinacion.setLote(lote);
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                germinacion.setLote(loteOpt.get());
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }
@@ -221,19 +261,21 @@ public class GerminacionService {
         // Actualizar campos de control si se proporcionan
         // NO se pueden editar una vez creado el análisis (como en Tetrazolio)
         // Los campos numeroRepeticiones y numeroConteos son de solo lectura en edición
-        // actucalizar las fechas de conteo
-
-        List<LocalDate> fechaConteos = new ArrayList<>();
-
-        if (solicitud.getFechaConteos() != null) {
-            // Solo agregar fechas que no sean null
-            for (LocalDate fecha : solicitud.getFechaConteos()) {
-                if (fecha != null) {
-                    fechaConteos.add(fecha);
-                }
+        
+        // NO PERMITIR edición de fechas una vez creado el análisis
+        // Las fechas son inmutables después de la creación para mantener integridad de datos
+        if (solicitud.getFechaConteos() != null && !solicitud.getFechaConteos().isEmpty()) {
+            // Verificar si las fechas son diferentes a las existentes
+            List<LocalDate> fechasExistentes = germinacion.getFechaConteos();
+            List<LocalDate> fechasNuevas = solicitud.getFechaConteos().stream()
+                .filter(fecha -> fecha != null)
+                .collect(java.util.stream.Collectors.toList());
+            
+            // Si las fechas son diferentes, rechazar la actualización
+            if (!fechasExistentes.equals(fechasNuevas)) {
+                throw new RuntimeException("No se pueden modificar las fechas de conteo una vez creado el análisis de germinación");
             }
         }
-        germinacion.setFechaConteos(fechaConteos);
 
         System.out.println("Germinación actualizada exitosamente");
     }

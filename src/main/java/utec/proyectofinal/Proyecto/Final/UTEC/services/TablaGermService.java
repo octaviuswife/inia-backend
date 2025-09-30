@@ -9,8 +9,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
@@ -18,6 +16,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TablaGermRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepGermRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ValoresGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TablaGermRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TablaGermDTO;
@@ -37,16 +36,18 @@ public class TablaGermService {
     @Autowired
     private ValoresGermRepository valoresGermRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @Autowired
+    private GerminacionRepository germinacionRepository;
 
     // Crear nueva tabla asociada a una germinación
     public TablaGermDTO crearTablaGerm(Long germinacionId, TablaGermRequestDTO solicitud) {
         try {
-            Germinacion germinacion = entityManager.find(Germinacion.class, germinacionId);
-            if (germinacion == null) {
+            Optional<Germinacion> germinacionOpt = germinacionRepository.findById(germinacionId);
+            if (germinacionOpt.isEmpty()) {
                 throw new RuntimeException("Germinación no encontrada con ID: " + germinacionId);
             }
+            
+            Germinacion germinacion = germinacionOpt.get();
 
             // Validar que la tabla anterior esté finalizada (si existe alguna tabla)
             List<TablaGerm> tablasExistentes = tablaGermRepository.findByGerminacionId(germinacionId);

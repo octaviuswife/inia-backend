@@ -3,6 +3,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.services;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,14 +13,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pureza;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
@@ -42,13 +44,16 @@ public class PurezaService {
     private CatalogoRepository catalogoRepository;
 
     @Autowired
+    private MalezasYCultivosCatalogoRepository malezasYCultivosCatalogoRepository;
+
+    @Autowired
+    private LoteRepository loteRepository;
+
+    @Autowired
     private AnalisisHistorialService analisisHistorialService;
     
     @Autowired
     private AnalisisService analisisService;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     // Crear Pureza con estado REGISTRADO
     @Transactional
@@ -150,8 +155,12 @@ public class PurezaService {
         Pureza pureza = new Pureza();
 
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.getReference(Lote.class, solicitud.getIdLote());
-            pureza.setLote(lote);
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                pureza.setLote(loteOpt.get());
+            } else {
+                throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
+            }
         }
 
         // Las fechas fechaInicio y fechaFin son automáticas, no del request
@@ -194,11 +203,12 @@ public class PurezaService {
 
     private void actualizarEntidadDesdeSolicitud(Pureza pureza, PurezaRequestDTO solicitud) {
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
-            if (lote == null) {
-                throw new RuntimeException("Lote no encontrado con id: " + solicitud.getIdLote());
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                pureza.setLote(loteOpt.get());
+            } else {
+                throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }
-            pureza.setLote(lote);
         }
 
 
@@ -297,7 +307,7 @@ public class PurezaService {
     }
 
     private Listado crearListadoDesdeSolicitud(ListadoRequestDTO solicitud, Pureza pureza) {
-        Listado listado = MappingUtils.fromListadoRequest(solicitud, entityManager);
+        Listado listado = MappingUtils.fromListadoRequest(solicitud, malezasYCultivosCatalogoRepository);
         listado.setPureza(pureza);
         return listado;
     }
