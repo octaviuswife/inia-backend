@@ -24,6 +24,9 @@ public class AnalisisService {
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
 
+    @Autowired
+    private NotificacionService notificacionService;
+
     /**
      * Establece la fecha de inicio automáticamente al crear un análisis
      * 
@@ -62,6 +65,14 @@ public class AnalisisService {
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
         
+        // Crear notificación automática para finalización de análisis
+        try {
+            notificacionService.notificarAnalisisFinalizado(analisis.getAnalisisID());
+        } catch (Exception e) {
+            // Log error but don't fail the analysis finalization
+            System.err.println("Error creating notification for analysis finalization: " + e.getMessage());
+        }
+        
         return analisis;
     }
 
@@ -93,6 +104,14 @@ public class AnalisisService {
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
         
+        // Crear notificación automática para aprobación de análisis
+        try {
+            notificacionService.notificarAnalisisAprobado(analisis.getAnalisisID());
+        } catch (Exception e) {
+            // Log error but don't fail the analysis approval
+            System.err.println("Error creating notification for analysis approval: " + e.getMessage());
+        }
+        
         return analisis;
     }
     
@@ -120,6 +139,14 @@ public class AnalisisService {
         
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
+        
+        // Crear notificación automática para rechazo de análisis (marcado para repetir)
+        try {
+            notificacionService.notificarAnalisisRepetir(analisis.getAnalisisID());
+        } catch (Exception e) {
+            // Log error but don't fail the analysis rejection
+            System.err.println("Error creating notification for analysis rejection: " + e.getMessage());
+        }
         
         return analisis;
     }

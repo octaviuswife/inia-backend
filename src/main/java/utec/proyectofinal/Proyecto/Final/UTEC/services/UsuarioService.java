@@ -15,7 +15,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,6 +27,9 @@ public class UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private NotificacionService notificacionService;
 
     /**
      * Registrar nueva solicitud de usuario
@@ -55,6 +57,15 @@ public class UsuarioService {
         usuario.setActivo(false); // Inactivo hasta ser aprobado
 
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
+        
+        // Crear notificación automática para el nuevo usuario registrado
+        try {
+            notificacionService.notificarNuevoUsuario(usuarioGuardado.getUsuarioID().longValue());
+        } catch (Exception e) {
+            // Log error but don't fail the registration
+            System.err.println("Error creating notification for new user: " + e.getMessage());
+        }
+        
         return mapearEntidadADTO(usuarioGuardado);
     }
 
@@ -84,6 +95,15 @@ public class UsuarioService {
         usuario.setActivo(true);
 
         Usuario usuarioActualizado = usuarioRepository.save(usuario);
+        
+        // Crear notificación automática para aprobación de usuario
+        try {
+            notificacionService.notificarUsuarioAprobado(usuarioActualizado.getUsuarioID().longValue());
+        } catch (Exception e) {
+            // Log error but don't fail the approval
+            System.err.println("Error creating notification for user approval: " + e.getMessage());
+        }
+        
         return mapearEntidadADTO(usuarioActualizado);
     }
 
@@ -96,6 +116,14 @@ public class UsuarioService {
 
         if (usuario.getEstado() != EstadoUsuario.PENDIENTE) {
             throw new RuntimeException("Solo se pueden rechazar usuarios en estado PENDIENTE");
+        }
+
+        // Crear notificación automática para rechazo de usuario
+        try {
+            notificacionService.notificarUsuarioRechazado(usuario.getUsuarioID().longValue());
+        } catch (Exception e) {
+            // Log error but continue with rejection
+            System.err.println("Error creating notification for user rejection: " + e.getMessage());
         }
 
         usuarioRepository.delete(usuario);

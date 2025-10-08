@@ -7,11 +7,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepTetrazolioViabilidad;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazolioViabilidadRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepTetrazolioViabilidadRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepTetrazolioViabilidadDTO;
 
@@ -21,8 +20,8 @@ public class RepTetrazolioViabilidadService {
     @Autowired
     private RepTetrazolioViabilidadRepository repeticionRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @Autowired
+    private TetrazolioRepository tetrazolioRepository;
 
     // Crear nueva repetición asociada a un tetrazolio
     public RepTetrazolioViabilidadDTO crearRepeticion(Long tetrazolioId, RepTetrazolioViabilidadRequestDTO solicitud) {
@@ -30,10 +29,12 @@ public class RepTetrazolioViabilidadService {
             System.out.println("Creando repetición para tetrazolio ID: " + tetrazolioId);
             
             // Validar que el tetrazolio existe
-            Tetrazolio tetrazolio = entityManager.find(Tetrazolio.class, tetrazolioId);
-            if (tetrazolio == null) {
+            Optional<Tetrazolio> tetrazolioOpt = tetrazolioRepository.findById(tetrazolioId);
+            if (tetrazolioOpt.isEmpty()) {
                 throw new RuntimeException("Tetrazolio no encontrado con ID: " + tetrazolioId);
             }
+            
+            Tetrazolio tetrazolio = tetrazolioOpt.get();
             
             // Validar límite de repeticiones
             validarLimiteRepeticiones(tetrazolio);

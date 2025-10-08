@@ -7,14 +7,15 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.DatosHumedad;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CultivarRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ContactoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosHumedadDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
@@ -29,10 +30,16 @@ public class LoteService {
     private LoteRepository loteRepository;
     
     @Autowired
+    private CatalogoRepository catalogoRepository;
+    
+    @Autowired
+    private CultivarRepository cultivarRepository;
+    
+    @Autowired
+    private ContactoRepository contactoRepository;
+    
+    @Autowired
     private CatalogoService catalogoService;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     // Crear Lote con activo = true
     public LoteDTO crearLote(LoteRequestDTO solicitud) {
@@ -128,9 +135,9 @@ public class LoteService {
             if (solicitud.getEmpresaID() != null) {
                 try {
                     System.out.println("Buscando empresa con ID: " + solicitud.getEmpresaID());
-                    Contacto empresa = entityManager.find(Contacto.class, solicitud.getEmpresaID());
-                    if (empresa != null) {
-                        lote.setEmpresa(empresa);
+                    Optional<Contacto> empresaOpt = contactoRepository.findById(solicitud.getEmpresaID());
+                    if (empresaOpt.isPresent()) {
+                        lote.setEmpresa(empresaOpt.get());
                         System.out.println("Empresa encontrada y asignada");
                     } else {
                         System.out.println("Empresa no encontrada con ID: " + solicitud.getEmpresaID());
@@ -211,13 +218,13 @@ public class LoteService {
             lote.setFechaCosecha(solicitud.getFechaCosecha());
 
             System.out.println("Mapeando entidades relacionadas...");
-            // Mapear entidades relacionadas usando EntityManager
+            // Mapear entidades relacionadas usando repositorios
             if (solicitud.getCultivarID() != null) {
                 try {
                     System.out.println("Buscando cultivar con ID: " + solicitud.getCultivarID());
-                    Cultivar cultivar = entityManager.find(Cultivar.class, solicitud.getCultivarID());
-                    if (cultivar != null) {
-                        lote.setCultivar(cultivar);
+                    Optional<Cultivar> cultivarOpt = cultivarRepository.findById(solicitud.getCultivarID());
+                    if (cultivarOpt.isPresent()) {
+                        lote.setCultivar(cultivarOpt.get());
                         System.out.println("Cultivar encontrado y asignado");
                     } else {
                         System.out.println("Cultivar no encontrado con ID: " + solicitud.getCultivarID());
@@ -230,9 +237,9 @@ public class LoteService {
             if (solicitud.getClienteID() != null) {
                 try {
                     System.out.println("Buscando cliente con ID: " + solicitud.getClienteID());
-                    Contacto cliente = entityManager.find(Contacto.class, solicitud.getClienteID());
-                    if (cliente != null) {
-                        lote.setCliente(cliente);
+                    Optional<Contacto> clienteOpt = contactoRepository.findById(solicitud.getClienteID());
+                    if (clienteOpt.isPresent()) {
+                        lote.setCliente(clienteOpt.get());
                         System.out.println("Cliente encontrado y asignado");
                     } else {
                         System.out.println("Cliente no encontrado con ID: " + solicitud.getClienteID());
@@ -279,8 +286,12 @@ public class LoteService {
         
         // Mapear Empresa
         if (solicitud.getEmpresaID() != null) {
-            Contacto empresa = entityManager.find(Contacto.class, solicitud.getEmpresaID());
-            lote.setEmpresa(empresa);
+            Optional<Contacto> empresaOpt = contactoRepository.findById(solicitud.getEmpresaID());
+            if (empresaOpt.isPresent()) {
+                lote.setEmpresa(empresaOpt.get());
+            } else {
+                throw new RuntimeException("Empresa no encontrada con ID: " + solicitud.getEmpresaID());
+            }
         }
         
         lote.setCodigoCC(solicitud.getCodigoCC());
@@ -347,11 +358,13 @@ public class LoteService {
         
         lote.setFechaCosecha(solicitud.getFechaCosecha());
 
-        // Actualizar entidades relacionadas usando EntityManager
+        // Actualizar entidades relacionadas usando repositorios
         if (solicitud.getCultivarID() != null) {
             try {
-                Cultivar cultivar = entityManager.find(Cultivar.class, solicitud.getCultivarID());
-                lote.setCultivar(cultivar);
+                Optional<Cultivar> cultivarOpt = cultivarRepository.findById(solicitud.getCultivarID());
+                if (cultivarOpt.isPresent()) {
+                    lote.setCultivar(cultivarOpt.get());
+                }
             } catch (Exception e) {
                 // Si no se encuentra el cultivar, no lo actualizamos
             }
@@ -361,8 +374,10 @@ public class LoteService {
 
         if (solicitud.getClienteID() != null) {
             try {
-                Contacto cliente = entityManager.find(Contacto.class, solicitud.getClienteID());
-                lote.setCliente(cliente);
+                Optional<Contacto> clienteOpt = contactoRepository.findById(solicitud.getClienteID());
+                if (clienteOpt.isPresent()) {
+                    lote.setCliente(clienteOpt.get());
+                }
             } catch (Exception e) {
                 // Si no se encuentra el cliente, no lo actualizamos
             }

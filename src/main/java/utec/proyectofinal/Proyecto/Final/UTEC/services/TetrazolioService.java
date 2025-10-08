@@ -5,18 +5,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazolioViabilidadRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeadosRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
@@ -33,13 +29,13 @@ public class TetrazolioService {
     private RepTetrazolioViabilidadRepository repeticionRepository;
 
     @Autowired
+    private LoteRepository loteRepository;
+
+    @Autowired
     private AnalisisHistorialService analisisHistorialService;
     
     @Autowired
     private AnalisisService analisisService;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     // Crear Tetrazolio con estado REGISTRADO
     @Transactional
@@ -165,8 +161,9 @@ public class TetrazolioService {
         // Validar y establecer lote
         if (solicitud.getIdLote() != null) {
             System.out.println("Buscando lote con ID: " + solicitud.getIdLote());
-            Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
-            if (lote != null) {
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                Lote lote = loteOpt.get();
                 tetrazolio.setLote(lote);
                 System.out.println("Lote encontrado y asignado: " + lote.getLoteID());
             } else {
@@ -196,9 +193,9 @@ public class TetrazolioService {
         
         // Validar y establecer lote si se proporciona
         if (solicitud.getIdLote() != null) {
-            Lote lote = entityManager.find(Lote.class, solicitud.getIdLote());
-            if (lote != null) {
-                tetrazolio.setLote(lote);
+            Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
+            if (loteOpt.isPresent()) {
+                tetrazolio.setLote(loteOpt.get());
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }
@@ -229,6 +226,7 @@ public class TetrazolioService {
         
         // Datos del lote si existe
         if (tetrazolio.getLote() != null) {
+            dto.setIdLote(tetrazolio.getLote().getLoteID());
             dto.setLote(tetrazolio.getLote().getFicha());
         }
         

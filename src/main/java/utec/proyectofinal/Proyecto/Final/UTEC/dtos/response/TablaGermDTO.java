@@ -14,6 +14,7 @@ public class TablaGermDTO {
 
     private Integer total;
     private List<BigDecimal> promedioSinRedondeo;
+    private List<BigDecimal> promediosSinRedPorConteo;
 
     // Campos de porcentaje con redondeo (5 campos ingresados manualmente)
     private BigDecimal porcentajeNormalesConRedondeo;

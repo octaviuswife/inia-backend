@@ -5,6 +5,9 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +27,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
 
@@ -79,6 +85,27 @@ public class GerminacionController {
         }
     }
 
+    // Obtener germinaciones con paginado para listado
+    @Operation(summary = "Obtener germinaciones paginadas", 
+              description = "Obtiene la lista paginada de análisis de germinación para el listado")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista paginada obtenida exitosamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<Page<GerminacionListadoDTO>> obtenerGerminacionesPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<GerminacionListadoDTO> response = germinacionService.obtenerGerminacionesPaginadas(pageable);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Obtener Germinación por ID
     @Operation(summary = "Obtener germinación por ID", 
               description = "Obtiene los detalles de un análisis de germinación específico")
@@ -102,8 +129,8 @@ public class GerminacionController {
 
     // Actualizar Germinación
     @Operation(summary = "Actualizar germinación", 
-              description = "Actualiza los detalles de una germinación existente. " +
-                          "Nota: numeroRepeticiones y numeroConteos no se pueden modificar una vez creado")
+              description = "Actualiza solo los campos editables de una germinación existente. " +
+                          "Las fechas no se pueden modificar por seguridad.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Germinación actualizada exitosamente"),
         @ApiResponse(responseCode = "404", description = "Germinación no encontrada"),
@@ -111,9 +138,9 @@ public class GerminacionController {
     })
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<GerminacionDTO> actualizarGerminacion(@PathVariable Long id, @RequestBody GerminacionRequestDTO solicitud) {
+    public ResponseEntity<GerminacionDTO> actualizarGerminacion(@PathVariable Long id, @RequestBody GerminacionEditRequestDTO dto) {
         try {
-            GerminacionDTO germinacionActualizada = germinacionService.actualizarGerminacion(id, solicitud);
+            GerminacionDTO germinacionActualizada = germinacionService.actualizarGerminacionSeguro(id, dto);
             return new ResponseEntity<>(germinacionActualizada, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
