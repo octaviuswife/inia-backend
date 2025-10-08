@@ -60,15 +60,6 @@ public class MalezasYCultivosCatalogoController {
         return ResponseEntity.ok(cultivos);
     }
 
-    // Obtener brassicas
-    @GetMapping("/brassicas")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
-    @Operation(summary = "Listar brassicas", description = "Obtiene todas las brassicas del catálogo")
-    public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerBrassicas() {
-        List<MalezasYCultivosCatalogoDTO> brassicas = service.obtenerPorTipo(TipoMYCCatalogo.BRASSICA);
-        return ResponseEntity.ok(brassicas);
-    }
-
     // Obtener por tipo específico
     @GetMapping("/tipo/{tipoEspecie}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
