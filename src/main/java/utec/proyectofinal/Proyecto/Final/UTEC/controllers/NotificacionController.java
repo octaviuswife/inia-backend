@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.NotificacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.NotificacionDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.NotificacionService;
@@ -25,6 +29,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.NotificacionService;
 @RestController
 @RequestMapping("/api/notificaciones")
 @CrossOrigin(origins = "*")
+@Tag(name = "Notificaciones", description = "Gestión de notificaciones del sistema")
 public class NotificacionController {
 
     @Autowired
@@ -32,6 +37,9 @@ public class NotificacionController {
 
     // Crear notificación manual
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Crear notificación manual", description = "Crear una notificación manual (solo administradores)")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<NotificacionDTO> crearNotificacion(@RequestBody NotificacionRequestDTO request) {
         NotificacionDTO notificacion = notificacionService.crearNotificacion(request);
         return ResponseEntity.ok(notificacion);
@@ -39,32 +47,78 @@ public class NotificacionController {
 
     // Obtener notificaciones de un usuario con paginación
     @GetMapping("/usuario/{usuarioId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Obtener notificaciones por usuario", description = "Obtener notificaciones de un usuario con paginación (solo admins pueden ver otras notificaciones)")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Page<NotificacionDTO>> obtenerNotificacionesPorUsuario(
             @PathVariable Long usuarioId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
         Pageable pageable = PageRequest.of(page, size);
-        Page<NotificacionDTO> notificaciones = notificacionService.obtenerNotificacionesPorUsuario(usuarioId, pageable);
+        Page<NotificacionDTO> notificaciones = notificacionService.obtenerNotificacionesPorUsuarioConValidacion(usuarioId, pageable);
+        return ResponseEntity.ok(notificaciones);
+    }
+
+    // Obtener MIS notificaciones con paginación (usuario actual)
+    @GetMapping("/mis-notificaciones")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Obtener mis notificaciones", description = "Obtener notificaciones del usuario autenticado con paginación")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Page<NotificacionDTO>> obtenerMisNotificaciones(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NotificacionDTO> notificaciones = notificacionService.obtenerMisNotificaciones(pageable);
         return ResponseEntity.ok(notificaciones);
     }
 
     // Obtener notificaciones no leídas de un usuario
     @GetMapping("/usuario/{usuarioId}/no-leidas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Obtener notificaciones no leídas", description = "Obtener notificaciones no leídas de un usuario (solo admins pueden ver otras notificaciones)")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<NotificacionDTO>> obtenerNotificacionesNoLeidas(@PathVariable Long usuarioId) {
-        List<NotificacionDTO> notificaciones = notificacionService.obtenerNotificacionesNoLeidas(usuarioId);
+        List<NotificacionDTO> notificaciones = notificacionService.obtenerNotificacionesNoLeidasConValidacion(usuarioId);
+        return ResponseEntity.ok(notificaciones);
+    }
+
+    // Obtener MIS notificaciones no leídas (usuario actual)
+    @GetMapping("/mis-notificaciones/no-leidas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Obtener mis notificaciones no leídas", description = "Obtener notificaciones no leídas del usuario autenticado")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<List<NotificacionDTO>> obtenerMisNotificacionesNoLeidas() {
+        List<NotificacionDTO> notificaciones = notificacionService.obtenerMisNotificacionesNoLeidas();
         return ResponseEntity.ok(notificaciones);
     }
 
     // Contar notificaciones no leídas
     @GetMapping("/usuario/{usuarioId}/contar-no-leidas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Contar notificaciones no leídas", description = "Contar el número de notificaciones no leídas de un usuario (solo admins pueden ver otras notificaciones)")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Long> contarNotificacionesNoLeidas(@PathVariable Long usuarioId) {
-        Long count = notificacionService.contarNotificacionesNoLeidas(usuarioId);
+        Long count = notificacionService.contarNotificacionesNoLeidasConValidacion(usuarioId);
+        return ResponseEntity.ok(count);
+    }
+
+    // Contar MIS notificaciones no leídas (usuario actual)
+    @GetMapping("/mis-notificaciones/contar-no-leidas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Contar mis notificaciones no leídas", description = "Contar el número de notificaciones no leídas del usuario autenticado")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Long> contarMisNotificacionesNoLeidas() {
+        Long count = notificacionService.contarMisNotificacionesNoLeidas();
         return ResponseEntity.ok(count);
     }
 
     // Marcar notificación como leída
     @PutMapping("/{notificacionId}/marcar-leida")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Marcar notificación como leída", description = "Marcar una notificación específica como leída")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<NotificacionDTO> marcarComoLeida(@PathVariable Long notificacionId) {
         NotificacionDTO notificacion = notificacionService.marcarComoLeida(notificacionId);
         return ResponseEntity.ok(notificacion);
@@ -72,40 +126,31 @@ public class NotificacionController {
 
     // Marcar todas las notificaciones de un usuario como leídas
     @PutMapping("/usuario/{usuarioId}/marcar-todas-leidas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Marcar todas como leídas", description = "Marcar todas las notificaciones de un usuario como leídas (solo admins pueden marcar otras notificaciones)")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> marcarTodasComoLeidas(@PathVariable Long usuarioId) {
-        notificacionService.marcarTodasComoLeidas(usuarioId);
+        notificacionService.marcarTodasComoLeidasConValidacion(usuarioId);
+        return ResponseEntity.ok().build();
+    }
+
+    // Marcar todas MIS notificaciones como leídas (usuario actual)
+    @PutMapping("/mis-notificaciones/marcar-todas-leidas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Marcar todas mis notificaciones como leídas", description = "Marcar todas las notificaciones del usuario autenticado como leídas")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Void> marcarTodasMisNotificacionesComoLeidas() {
+        notificacionService.marcarTodasMisNotificacionesComoLeidas();
         return ResponseEntity.ok().build();
     }
 
     // Eliminar notificación (marcar como inactiva)
     @DeleteMapping("/{notificacionId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Eliminar notificación", description = "Eliminar una notificación (marcar como inactiva)")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> eliminarNotificacion(@PathVariable Long notificacionId) {
         notificacionService.eliminarNotificacion(notificacionId);
-        return ResponseEntity.ok().build();
-    }
-
-    // Endpoints internos para generar notificaciones automáticas
-    @PostMapping("/interno/nuevo-usuario/{usuarioId}")
-    public ResponseEntity<Void> notificarNuevoUsuario(@PathVariable Long usuarioId) {
-        notificacionService.notificarNuevoUsuario(usuarioId);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/interno/analisis-finalizado/{analisisId}")
-    public ResponseEntity<Void> notificarAnalisisFinalizado(@PathVariable Long analisisId) {
-        notificacionService.notificarAnalisisFinalizado(analisisId);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/interno/analisis-aprobado/{analisisId}")
-    public ResponseEntity<Void> notificarAnalisisAprobado(@PathVariable Long analisisId) {
-        notificacionService.notificarAnalisisAprobado(analisisId);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/interno/analisis-repetir/{analisisId}")
-    public ResponseEntity<Void> notificarAnalisisRepetir(@PathVariable Long analisisId) {
-        notificacionService.notificarAnalisisRepetir(analisisId);
         return ResponseEntity.ok().build();
     }
 }

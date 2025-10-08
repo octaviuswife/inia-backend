@@ -11,13 +11,13 @@ import java.util.List;
 @Repository
 public interface NotificacionRepository extends JpaRepository<Notificacion, Long> {
     
-    Page<Notificacion> findByUsuarioIdAndActivoTrueOrderByFechaCreacionDesc(Long usuarioId, Pageable pageable);
+    Page<Notificacion> findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(Integer usuarioId, Pageable pageable);
     
-    List<Notificacion> findByUsuarioIdAndLeidoFalseAndActivoTrueOrderByFechaCreacionDesc(Long usuarioId);
+    List<Notificacion> findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrueOrderByFechaCreacionDesc(Integer usuarioId);
     
-    List<Notificacion> findByUsuarioIdAndLeidoFalseAndActivoTrue(Long usuarioId);
+    List<Notificacion> findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(Integer usuarioId);
     
-    Long countByUsuarioIdAndLeidoFalseAndActivoTrue(Long usuarioId);
+    Long countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(Integer usuarioId);
     
     List<Notificacion> findByAnalisisIdAndActivoTrue(Long analisisId);
 }
