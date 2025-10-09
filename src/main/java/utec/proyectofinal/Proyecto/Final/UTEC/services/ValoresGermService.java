@@ -19,6 +19,9 @@ public class ValoresGermService {
 
     @Autowired
     private ValoresGermRepository valoresGermRepository;
+    
+    @Autowired
+    private AnalisisService analisisService;
 
     // Obtener valores por ID
     public ValoresGermDTO obtenerValoresPorId(Long id) {
@@ -36,6 +39,10 @@ public class ValoresGermService {
         
         if (valoresExistentes.isPresent()) {
             ValoresGerm valores = valoresExistentes.get();
+            
+            // Manejar edición de análisis finalizado según rol
+            analisisService.manejarEdicionAnalisisFinalizado(valores.getTablaGerm().getGerminacion());
+            
             actualizarEntidadDesdeSolicitud(valores, solicitud);
             ValoresGerm valoresActualizados = valoresGermRepository.save(valores);
             System.out.println("Valores de germinación actualizados para instituto: " + valores.getInstituto());

@@ -40,6 +40,9 @@ public class TablaGermService {
     @Autowired
     private GerminacionRepository germinacionRepository;
 
+    @Autowired
+    private AnalisisService analisisService;
+
     // Crear nueva tabla asociada a una germinación
     public TablaGermDTO crearTablaGerm(Long germinacionId, TablaGermRequestDTO solicitud) {
         try {
@@ -191,6 +194,9 @@ public class TablaGermService {
         if (tablaGermExistente.isPresent()) {
             TablaGerm tablaGerm = tablaGermExistente.get();
             
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(tablaGerm.getGerminacion());
+            
             // Validar datos de la solicitud
             validarDatosTablaGerm(solicitud, tablaGerm.getGerminacion());
             
@@ -240,7 +246,8 @@ public class TablaGermService {
         if (tablaExistente.isPresent()) {
             TablaGerm tabla = tablaExistente.get();
             
-
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(tabla.getGerminacion());
             
             // Validar que se puedan ingresar porcentajes
             if (!puedeIngresarPorcentajes(tablaId)) {

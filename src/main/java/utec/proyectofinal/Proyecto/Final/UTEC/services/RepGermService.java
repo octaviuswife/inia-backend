@@ -27,6 +27,9 @@ public class RepGermService {
     @Autowired
     private TablaGermRepository tablaGermRepository;
 
+    @Autowired
+    private AnalisisService analisisService;
+
     // Crear nueva repetición asociada a una tabla
     public RepGermDTO crearRepGerm(Long tablaGermId, RepGermRequestDTO solicitud) {
         try {
@@ -81,6 +84,8 @@ public class RepGermService {
         if (repGermExistente.isPresent()) {
             RepGerm repGerm = repGermExistente.get();
             
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(repGerm.getTablaGerm().getGerminacion());
         
             // Validar datos de la solicitud
             validarDatosRepeticion(solicitud, repGerm.getTablaGerm());

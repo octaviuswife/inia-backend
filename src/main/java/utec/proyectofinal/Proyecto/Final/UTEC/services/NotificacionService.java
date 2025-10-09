@@ -184,6 +184,30 @@ public class NotificacionService {
         }
     }
 
+    // Notificación cuando un análisis editado vuelve a estado pendiente de aprobación
+    public void notificarAnalisisPendienteAprobacion(Long analisisId) {
+        // Buscar todos los administradores
+        List<Usuario> administradores = usuarioRepository.findByEstado(utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario.ACTIVO)
+                .stream()
+                .filter(u -> u.getRol() == utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)
+                .collect(Collectors.toList());
+        
+        Analisis analisis = analisisRepository.findById(analisisId)
+                .orElseThrow(() -> new RuntimeException("Análisis no encontrado"));
+
+        for (Usuario admin : administradores) {
+            Notificacion notificacion = new Notificacion();
+            notificacion.setNombre("Análisis modificado - Requiere nueva aprobación");
+            notificacion.setMensaje("El análisis ID " + analisisId + " del lote " + analisis.getLote().getFicha() + 
+                                  " ha sido modificado y requiere nueva aprobación.");
+            notificacion.setUsuario(admin);
+            notificacion.setAnalisisId(analisisId);
+            notificacion.setTipo(ANALISIS_FINALIZADO); // Reutilizamos el tipo existente
+            
+            notificacionRepository.save(notificacion);
+        }
+    }
+
     // Obtener notificaciones de un usuario
     public Page<NotificacionDTO> obtenerNotificacionesPorUsuario(Long usuarioId, Pageable pageable) {
         Page<Notificacion> notificaciones = notificacionRepository.findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(usuarioId.intValue(), pageable);
