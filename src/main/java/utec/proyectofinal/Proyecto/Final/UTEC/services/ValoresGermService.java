@@ -1,5 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -87,6 +88,9 @@ public class ValoresGermService {
 
     // Actualizar Entity desde RequestDTO
     private void actualizarEntidadDesdeSolicitud(ValoresGerm valores, ValoresGermRequestDTO solicitud) {
+        // Validar que la suma no supere 100 (excluyendo el campo germinacion)
+        validarSumaValores(solicitud, valores.getInstituto());
+        
         valores.setNormales(solicitud.getNormales());
         valores.setAnormales(solicitud.getAnormales());
         valores.setDuras(solicitud.getDuras());
@@ -94,6 +98,35 @@ public class ValoresGermService {
         valores.setMuertas(solicitud.getMuertas());
         valores.setGerminacion(solicitud.getGerminacion());
         // El instituto y la tablaGerm asociada no se cambian en actualizaciones
+    }
+    
+    /**
+     * Validar que la suma de normales + anormales + duras + frescas + muertas no supere 100
+     * (El campo germinacion no se incluye en esta validación)
+     */
+    private void validarSumaValores(ValoresGermRequestDTO solicitud, Instituto instituto) {
+        BigDecimal suma = BigDecimal.ZERO;
+        
+        if (solicitud.getNormales() != null) {
+            suma = suma.add(solicitud.getNormales());
+        }
+        if (solicitud.getAnormales() != null) {
+            suma = suma.add(solicitud.getAnormales());
+        }
+        if (solicitud.getDuras() != null) {
+            suma = suma.add(solicitud.getDuras());
+        }
+        if (solicitud.getFrescas() != null) {
+            suma = suma.add(solicitud.getFrescas());
+        }
+        if (solicitud.getMuertas() != null) {
+            suma = suma.add(solicitud.getMuertas());
+        }
+        
+        if (suma.compareTo(new BigDecimal("100")) > 0) {
+            throw new RuntimeException("La suma de los valores (normales + anormales + duras + frescas + muertas) para " + 
+                                     instituto + " no puede superar 100. Suma actual: " + suma);
+        }
     }
 
     // Mapear de Entity a DTO

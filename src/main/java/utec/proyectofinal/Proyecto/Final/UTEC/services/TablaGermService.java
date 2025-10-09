@@ -191,12 +191,6 @@ public class TablaGermService {
         if (tablaGermExistente.isPresent()) {
             TablaGerm tablaGerm = tablaGermExistente.get();
             
-            // Validar que la tabla no esté finalizada
-            if (tablaGerm.getFinalizada() != null && tablaGerm.getFinalizada()) {
-                throw new RuntimeException("No se puede actualizar una tabla finalizada");
-            }
-            
-          
             // Validar datos de la solicitud
             validarDatosTablaGerm(solicitud, tablaGerm.getGerminacion());
             

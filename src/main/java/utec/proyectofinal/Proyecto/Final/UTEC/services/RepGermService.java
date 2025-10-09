@@ -40,20 +40,15 @@ public class RepGermService {
             
             TablaGerm tablaGerm = tablaGermOpt.get();
             
-            // Validar que la tabla no esté finalizada
-            if (tablaGerm.getFinalizada() != null && tablaGerm.getFinalizada()) {
-                throw new RuntimeException("No se pueden agregar repeticiones a una tabla finalizada");
-            }
-            
-            // Validar número máximo de repeticiones permitidas
+            //validar numero de repeticiones permitidas
             if (tablaGerm.getGerminacion() != null && tablaGerm.getGerminacion().getNumeroRepeticiones() != null) {
-                long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);
+                Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);
                 if (repeticionesExistentes >= tablaGerm.getGerminacion().getNumeroRepeticiones()) {
-                    throw new RuntimeException("No se pueden crear más repeticiones. Máximo permitido: " + 
+                    throw new RuntimeException("No se pueden agregar más repeticiones. El número máximo de repeticiones permitidas es: " + 
                         tablaGerm.getGerminacion().getNumeroRepeticiones());
                 }
             }
-            
+
             // Crear la repetición
             RepGerm repGerm = mapearSolicitudAEntidad(solicitud, tablaGerm);
             RepGerm repGermGuardada = repGermRepository.save(repGerm);
@@ -189,29 +184,56 @@ public class RepGermService {
      * Validar datos de la repetición
      */
     private void validarDatosRepeticion(RepGermRequestDTO solicitud, TablaGerm tablaGerm) {
-        // Validar que los valores no sean negativos
-        if (solicitud.getAnormales() != null && solicitud.getAnormales() < 0) {
-            throw new RuntimeException("El número de semillas anormales no puede ser negativo");
+        Integer numSemillasPRep = tablaGerm.getNumSemillasPRep();
+        
+        // Validar que los valores no sean negativos ni excedan numSemillasPRep
+        if (solicitud.getAnormales() != null) {
+            if (solicitud.getAnormales() < 0) {
+                throw new RuntimeException("El número de semillas anormales no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getAnormales() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas anormales no puede exceder " + numSemillasPRep);
+            }
         }
         
-        if (solicitud.getDuras() != null && solicitud.getDuras() < 0) {
-            throw new RuntimeException("El número de semillas duras no puede ser negativo");
+        if (solicitud.getDuras() != null) {
+            if (solicitud.getDuras() < 0) {
+                throw new RuntimeException("El número de semillas duras no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getDuras() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas duras no puede exceder " + numSemillasPRep);
+            }
         }
         
-        if (solicitud.getFrescas() != null && solicitud.getFrescas() < 0) {
-            throw new RuntimeException("El número de semillas frescas no puede ser negativo");
+        if (solicitud.getFrescas() != null) {
+            if (solicitud.getFrescas() < 0) {
+                throw new RuntimeException("El número de semillas frescas no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getFrescas() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas frescas no puede exceder " + numSemillasPRep);
+            }
         }
         
-        if (solicitud.getMuertas() != null && solicitud.getMuertas() < 0) {
-            throw new RuntimeException("El número de semillas muertas no puede ser negativo");
+        if (solicitud.getMuertas() != null) {
+            if (solicitud.getMuertas() < 0) {
+                throw new RuntimeException("El número de semillas muertas no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getMuertas() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas muertas no puede exceder " + numSemillasPRep);
+            }
         }
         
         // Validar valores de normales
         if (solicitud.getNormales() != null) {
             for (int i = 0; i < solicitud.getNormales().size(); i++) {
                 Integer valor = solicitud.getNormales().get(i);
-                if (valor != null && valor < 0) {
-                    throw new RuntimeException("El valor del conteo " + (i + 1) + " de normales no puede ser negativo");
+                if (valor != null) {
+                    if (valor < 0) {
+                        throw new RuntimeException("El valor del conteo " + (i + 1) + " de normales no puede ser negativo");
+                    }
+                    if (numSemillasPRep != null && valor > numSemillasPRep) {
+                        throw new RuntimeException("El valor del conteo " + (i + 1) + " de normales no puede exceder " + numSemillasPRep);
+                    }
                 }
             }
         }
