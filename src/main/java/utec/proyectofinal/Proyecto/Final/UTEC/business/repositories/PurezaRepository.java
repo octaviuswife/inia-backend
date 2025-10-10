@@ -17,4 +17,6 @@ public interface PurezaRepository extends JpaRepository<Pureza, Long> {
     
     @Query("SELECT p FROM Pureza p WHERE p.lote.loteID = :idLote")
     List<Pureza> findByIdLote(@Param("idLote") Long idLote);
+    
+    List<Pureza> findByLoteLoteID(Long loteID);
 }

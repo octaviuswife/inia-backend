@@ -22,4 +22,6 @@ public interface GerminacionRepository extends JpaRepository<Germinacion, Long> 
     
     @Query("SELECT g FROM Germinacion g WHERE g.lote.loteID = :idLote")
     List<Germinacion> findByIdLote(@Param("idLote") Long idLote);
+    
+    List<Germinacion> findByLoteLoteID(Long loteID);
 }

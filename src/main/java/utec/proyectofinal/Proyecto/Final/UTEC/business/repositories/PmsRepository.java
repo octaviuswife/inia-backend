@@ -14,5 +14,7 @@ public interface PmsRepository extends JpaRepository<Pms, Long> {
 
     @Query("SELECT p FROM Pms p WHERE p.lote.loteID = :idLote")
     List<Pms> findByIdLote(@Param("idLote") Integer idLote);
+    
+    List<Pms> findByLoteLoteID(Long loteID);
 
 }
