@@ -323,6 +323,11 @@ public class PurezaService {
             return; // No validar si los valores son nulos
         }
 
+        // Validación especial: El peso inicial no puede ser cero o negativo
+        if (pesoInicial_g.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El peso inicial debe ser mayor a cero para realizar el análisis");
+        }
+
         // Validación 1: El peso total no puede ser mayor al inicial
         if (pesoTotal_g.compareTo(pesoInicial_g) > 0) {
             throw new RuntimeException("El peso total (" + pesoTotal_g + "g) no puede ser mayor al peso inicial (" + pesoInicial_g + "g)");

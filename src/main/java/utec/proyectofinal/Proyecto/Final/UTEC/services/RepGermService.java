@@ -27,6 +27,9 @@ public class RepGermService {
     @Autowired
     private TablaGermRepository tablaGermRepository;
 
+    @Autowired
+    private AnalisisService analisisService;
+
     // Crear nueva repetición asociada a una tabla
     public RepGermDTO crearRepGerm(Long tablaGermId, RepGermRequestDTO solicitud) {
         try {
@@ -40,20 +43,15 @@ public class RepGermService {
             
             TablaGerm tablaGerm = tablaGermOpt.get();
             
-            // Validar que la tabla no esté finalizada
-            if (tablaGerm.getFinalizada() != null && tablaGerm.getFinalizada()) {
-                throw new RuntimeException("No se pueden agregar repeticiones a una tabla finalizada");
-            }
-            
-            // Validar número máximo de repeticiones permitidas
+            //validar numero de repeticiones permitidas
             if (tablaGerm.getGerminacion() != null && tablaGerm.getGerminacion().getNumeroRepeticiones() != null) {
-                long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);
+                Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);
                 if (repeticionesExistentes >= tablaGerm.getGerminacion().getNumeroRepeticiones()) {
-                    throw new RuntimeException("No se pueden crear más repeticiones. Máximo permitido: " + 
+                    throw new RuntimeException("No se pueden agregar más repeticiones. El número máximo de repeticiones permitidas es: " + 
                         tablaGerm.getGerminacion().getNumeroRepeticiones());
                 }
             }
-            
+
             // Crear la repetición
             RepGerm repGerm = mapearSolicitudAEntidad(solicitud, tablaGerm);
             RepGerm repGermGuardada = repGermRepository.save(repGerm);
@@ -85,6 +83,12 @@ public class RepGermService {
         
         if (repGermExistente.isPresent()) {
             RepGerm repGerm = repGermExistente.get();
+            
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(repGerm.getTablaGerm().getGerminacion());
+        
+            // Validar datos de la solicitud
+            validarDatosRepeticion(solicitud, repGerm.getTablaGerm());
             
             actualizarEntidadDesdeSolicitud(repGerm, solicitud);
             RepGerm repGermActualizada = repGermRepository.save(repGerm);
@@ -128,6 +132,9 @@ public class RepGermService {
 
     // Mapear de RequestDTO a Entity
     private RepGerm mapearSolicitudAEntidad(RepGermRequestDTO solicitud, TablaGerm tablaGerm) {
+        // Validar datos de la solicitud
+        validarDatosRepeticion(solicitud, tablaGerm);
+        
         RepGerm repGerm = new RepGerm();
         
         // Generar numRep automáticamente (siguiente número disponible)
@@ -164,6 +171,11 @@ public class RepGermService {
         
         repGerm.setTablaGerm(tablaGerm);
         
+        // Validar que haya al menos un valor
+        if (totalCalculado == 0) {
+            throw new RuntimeException("Debe ingresar al menos un valor");
+        }
+        
         // Validar que el total no supere numSemillasPRep
         if (tablaGerm.getNumSemillasPRep() != null && totalCalculado > tablaGerm.getNumSemillasPRep()) {
             throw new RuntimeException("El total de la repetición (" + totalCalculado + 
@@ -171,6 +183,65 @@ public class RepGermService {
         }
         
         return repGerm;
+    }
+    
+    /**
+     * Validar datos de la repetición
+     */
+    private void validarDatosRepeticion(RepGermRequestDTO solicitud, TablaGerm tablaGerm) {
+        Integer numSemillasPRep = tablaGerm.getNumSemillasPRep();
+        
+        // Validar que los valores no sean negativos ni excedan numSemillasPRep
+        if (solicitud.getAnormales() != null) {
+            if (solicitud.getAnormales() < 0) {
+                throw new RuntimeException("El número de semillas anormales no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getAnormales() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas anormales no puede exceder " + numSemillasPRep);
+            }
+        }
+        
+        if (solicitud.getDuras() != null) {
+            if (solicitud.getDuras() < 0) {
+                throw new RuntimeException("El número de semillas duras no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getDuras() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas duras no puede exceder " + numSemillasPRep);
+            }
+        }
+        
+        if (solicitud.getFrescas() != null) {
+            if (solicitud.getFrescas() < 0) {
+                throw new RuntimeException("El número de semillas frescas no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getFrescas() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas frescas no puede exceder " + numSemillasPRep);
+            }
+        }
+        
+        if (solicitud.getMuertas() != null) {
+            if (solicitud.getMuertas() < 0) {
+                throw new RuntimeException("El número de semillas muertas no puede ser negativo");
+            }
+            if (numSemillasPRep != null && solicitud.getMuertas() > numSemillasPRep) {
+                throw new RuntimeException("El número de semillas muertas no puede exceder " + numSemillasPRep);
+            }
+        }
+        
+        // Validar valores de normales
+        if (solicitud.getNormales() != null) {
+            for (int i = 0; i < solicitud.getNormales().size(); i++) {
+                Integer valor = solicitud.getNormales().get(i);
+                if (valor != null) {
+                    if (valor < 0) {
+                        throw new RuntimeException("El valor del conteo " + (i + 1) + " de normales no puede ser negativo");
+                    }
+                    if (numSemillasPRep != null && valor > numSemillasPRep) {
+                        throw new RuntimeException("El valor del conteo " + (i + 1) + " de normales no puede exceder " + numSemillasPRep);
+                    }
+                }
+            }
+        }
     }
     
     // Método para calcular el total de una repetición
@@ -226,6 +297,11 @@ public class RepGermService {
         // Calcular total automáticamente
         Integer totalCalculado = calcularTotal(normalesActualizadas, repGerm.getAnormales(), 
                                              repGerm.getDuras(), repGerm.getFrescas(), repGerm.getMuertas());
+        
+        // Validar que haya al menos un valor 
+        if (totalCalculado == 0) {
+            throw new RuntimeException("Debe ingresar al menos un valor");
+        }
         repGerm.setTotal(totalCalculado);
         
         // Validar que el total no supere numSemillasPRep

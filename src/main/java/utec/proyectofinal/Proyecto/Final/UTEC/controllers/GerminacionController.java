@@ -5,6 +5,9 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
 
@@ -74,6 +79,27 @@ public class GerminacionController {
     public ResponseEntity<ResponseListadoGerminacion> obtenerTodasGerminaciones() {
         try {
             ResponseListadoGerminacion response = germinacionService.obtenerTodasGerminaciones();
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Obtener germinaciones con paginado para listado
+    @Operation(summary = "Obtener germinaciones paginadas", 
+              description = "Obtiene la lista paginada de análisis de germinación para el listado")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista paginada obtenida exitosamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<Page<GerminacionListadoDTO>> obtenerGerminacionesPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<GerminacionListadoDTO> response = germinacionService.obtenerGerminacionesPaginadas(pageable);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

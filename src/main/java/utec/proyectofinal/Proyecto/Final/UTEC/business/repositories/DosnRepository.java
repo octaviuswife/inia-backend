@@ -16,5 +16,7 @@ public interface DosnRepository extends JpaRepository<Dosn, Long> {
 
     @Query("SELECT d FROM Dosn d WHERE d.lote.loteID = :idLote")
     List<Dosn> findByIdLote(@Param("idLote") Integer idLote);
+    
+    List<Dosn> findByLoteLoteID(Long loteID);
 
 }

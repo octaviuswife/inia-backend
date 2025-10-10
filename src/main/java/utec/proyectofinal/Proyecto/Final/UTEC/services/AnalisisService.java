@@ -24,6 +24,9 @@ public class AnalisisService {
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
 
+    @Autowired
+    private NotificacionService notificacionService;
+
     /**
      * Establece la fecha de inicio automáticamente al crear un análisis
      * 
@@ -62,6 +65,14 @@ public class AnalisisService {
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
         
+        // Crear notificación automática para finalización de análisis
+        try {
+            notificacionService.notificarAnalisisFinalizado(analisis.getAnalisisID());
+        } catch (Exception e) {
+            // Log error but don't fail the analysis finalization
+            System.err.println("Error creating notification for analysis finalization: " + e.getMessage());
+        }
+        
         return analisis;
     }
 
@@ -93,6 +104,14 @@ public class AnalisisService {
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
         
+        // Crear notificación automática para aprobación de análisis
+        try {
+            notificacionService.notificarAnalisisAprobado(analisis.getAnalisisID());
+        } catch (Exception e) {
+            // Log error but don't fail the analysis approval
+            System.err.println("Error creating notification for analysis approval: " + e.getMessage());
+        }
+        
         return analisis;
     }
     
@@ -121,6 +140,14 @@ public class AnalisisService {
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
         
+        // Crear notificación automática para rechazo de análisis (marcado para repetir)
+        try {
+            notificacionService.notificarAnalisisRepetir(analisis.getAnalisisID());
+        } catch (Exception e) {
+            // Log error but don't fail the analysis rejection
+            System.err.println("Error creating notification for analysis rejection: " + e.getMessage());
+        }
+        
         return analisis;
     }
 
@@ -135,6 +162,34 @@ public class AnalisisService {
             return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALISTA"));
         }
         return false;
+    }
+
+    /**
+     * Maneja el cambio de estado cuando se edita un análisis finalizado
+     * - Si es admin: mantiene el estado actual (FINALIZADO/APROBADO)
+     * - Si es analista: cambia a PENDIENTE_APROBACION para nueva revisión
+     * 
+     * @param analisis El análisis que se está editando
+     */
+    public void manejarEdicionAnalisisFinalizado(Analisis analisis) {
+        // Solo procesar si el análisis está finalizado o aprobado
+        if (analisis.getEstado() == Estado.APROBADO) {
+            if (esAnalista()) {
+                // Analista: cambiar a pendiente de aprobación para nueva revisión
+                analisis.setEstado(Estado.PENDIENTE_APROBACION);
+                
+                // Registrar en el historial
+                analisisHistorialService.registrarModificacion(analisis);
+                
+                // Crear notificación para informar que necesita nueva aprobación
+                try {
+                    notificacionService.notificarAnalisisPendienteAprobacion(analisis.getAnalisisID());
+                } catch (Exception e) {
+                    System.err.println("Error creating notification for analysis pending approval: " + e.getMessage());
+                }
+            }
+            // Si es admin: no hacer nada, mantener estado actual
+        }
     }
 
     /**

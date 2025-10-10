@@ -23,6 +23,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TablaGermDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ValoresGermDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 @Service
 public class TablaGermService {
@@ -39,6 +40,9 @@ public class TablaGermService {
     @Autowired
     private GerminacionRepository germinacionRepository;
 
+    @Autowired
+    private AnalisisService analisisService;
+
     // Crear nueva tabla asociada a una germinación
     public TablaGermDTO crearTablaGerm(Long germinacionId, TablaGermRequestDTO solicitud) {
         try {
@@ -48,6 +52,10 @@ public class TablaGermService {
             }
             
             Germinacion germinacion = germinacionOpt.get();
+            
+            
+            // Validar datos de la solicitud
+            validarDatosTablaGerm(solicitud, germinacion);
 
             // Validar que la tabla anterior esté finalizada (si existe alguna tabla)
             List<TablaGerm> tablasExistentes = tablaGermRepository.findByGerminacionId(germinacionId);
@@ -59,6 +67,12 @@ public class TablaGermService {
                 if (algunaTablaNoFinalizada) {
                     throw new RuntimeException("No se puede crear una nueva tabla hasta que todas las tablas anteriores estén finalizadas");
                 }
+                
+            
+            } else {
+                // Si no hay tablas existentes, es la primera tabla: cambiar estado a EN_PROCESO
+                germinacion.setEstado(Estado.EN_PROCESO);
+                germinacionRepository.save(germinacion);
             }
 
             TablaGerm tablaGerm = mapearSolicitudAEntidad(solicitud, germinacion);
@@ -74,6 +88,92 @@ public class TablaGermService {
             return mapearEntidadADTO(tablaGermGuardada);
         } catch (Exception e) {
             throw new RuntimeException("Error al crear tabla de germinación: " + e.getMessage(), e);
+        }
+    }
+    
+    
+    
+    /**
+     * Validar datos de la tabla de germinación
+     */
+    private void validarDatosTablaGerm(TablaGermRequestDTO solicitud, Germinacion germinacion) {
+        // Validar fecha final
+        if (solicitud.getFechaFinal() == null) {
+            throw new RuntimeException("La fecha final es obligatoria");
+        }
+        
+        // Validar que la fecha final esté dentro del rango de la germinación
+        if (germinacion.getFechaInicioGerm() != null && 
+            solicitud.getFechaFinal().isBefore(germinacion.getFechaInicioGerm())) {
+            throw new RuntimeException("La fecha final no puede ser anterior a la fecha de inicio de germinación");
+        }
+        
+        if (germinacion.getFechaUltConteo() != null && 
+            solicitud.getFechaFinal().isAfter(germinacion.getFechaUltConteo())) {
+            throw new RuntimeException("La fecha final no puede ser posterior a la fecha de último conteo");
+        }
+        
+        // Validar número de semillas por repetición
+        if (solicitud.getNumSemillasPRep() == null || solicitud.getNumSemillasPRep() <= 0) {
+            throw new RuntimeException("El número de semillas por repetición debe ser mayor a 0");
+        }
+    }
+    
+    /**
+     * Validar porcentajes con redondeo
+     */
+    private void validarPorcentajes(PorcentajesRedondeoRequestDTO solicitud) {
+        // Validar que todos los porcentajes estén entre 0 y 100
+        if (solicitud.getPorcentajeNormalesConRedondeo() != null) {
+            validarRangoPorcentaje("Normales", solicitud.getPorcentajeNormalesConRedondeo());
+        }
+        
+        if (solicitud.getPorcentajeAnormalesConRedondeo() != null) {
+            validarRangoPorcentaje("Anormales", solicitud.getPorcentajeAnormalesConRedondeo());
+        }
+        
+        if (solicitud.getPorcentajeDurasConRedondeo() != null) {
+            validarRangoPorcentaje("Duras", solicitud.getPorcentajeDurasConRedondeo());
+        }
+        
+        if (solicitud.getPorcentajeFrescasConRedondeo() != null) {
+            validarRangoPorcentaje("Frescas", solicitud.getPorcentajeFrescasConRedondeo());
+        }
+        
+        if (solicitud.getPorcentajeMuertasConRedondeo() != null) {
+            validarRangoPorcentaje("Muertas", solicitud.getPorcentajeMuertasConRedondeo());
+        }
+        
+        // Validar que la suma de todos los porcentajes sea aproximadamente 100
+        if (solicitud.getPorcentajeNormalesConRedondeo() != null &&
+            solicitud.getPorcentajeAnormalesConRedondeo() != null &&
+            solicitud.getPorcentajeDurasConRedondeo() != null &&
+            solicitud.getPorcentajeFrescasConRedondeo() != null &&
+            solicitud.getPorcentajeMuertasConRedondeo() != null) {
+            
+            double suma = solicitud.getPorcentajeNormalesConRedondeo().doubleValue() +
+                         solicitud.getPorcentajeAnormalesConRedondeo().doubleValue() +
+                         solicitud.getPorcentajeDurasConRedondeo().doubleValue() +
+                         solicitud.getPorcentajeFrescasConRedondeo().doubleValue() +
+                         solicitud.getPorcentajeMuertasConRedondeo().doubleValue();
+            
+            // Permitir un margen de error de ±1 debido al redondeo
+            if (suma < 99.0 || suma > 101.0) {
+                throw new RuntimeException("La suma de todos los porcentajes debe ser aproximadamente 100% (actual: " + suma + "%)");
+            }
+        }
+    }
+    
+    /**
+     * Validar que un porcentaje esté en el rango 0-100
+     */
+    private void validarRangoPorcentaje(String tipo, BigDecimal porcentaje) {
+        if (porcentaje.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("El porcentaje de " + tipo + " no puede ser negativo");
+        }
+        
+        if (porcentaje.compareTo(new BigDecimal("100")) > 0) {
+            throw new RuntimeException("El porcentaje de " + tipo + " no puede ser mayor a 100%");
         }
     }
 
@@ -93,6 +193,12 @@ public class TablaGermService {
         
         if (tablaGermExistente.isPresent()) {
             TablaGerm tablaGerm = tablaGermExistente.get();
+            
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(tablaGerm.getGerminacion());
+            
+            // Validar datos de la solicitud
+            validarDatosTablaGerm(solicitud, tablaGerm.getGerminacion());
             
             actualizarEntidadDesdeSolicitud(tablaGerm, solicitud);
             
@@ -140,12 +246,16 @@ public class TablaGermService {
         if (tablaExistente.isPresent()) {
             TablaGerm tabla = tablaExistente.get();
             
-           
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(tabla.getGerminacion());
             
             // Validar que se puedan ingresar porcentajes
             if (!puedeIngresarPorcentajes(tablaId)) {
                 throw new RuntimeException("No se pueden ingresar porcentajes hasta completar todas las repeticiones");
             }
+            
+            // Validar porcentajes
+            validarPorcentajes(solicitud);
             
             // Actualizar solo los porcentajes
             tabla.setPorcentajeNormalesConRedondeo(solicitud.getPorcentajeNormalesConRedondeo());
