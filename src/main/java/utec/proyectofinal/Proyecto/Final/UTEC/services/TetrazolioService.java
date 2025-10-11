@@ -18,6 +18,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoTetrazolio;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class TetrazolioService {
@@ -123,6 +126,35 @@ public class TetrazolioService {
         return tetrazolios.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
+    }
+
+    // Listar Tetrazolio con paginado (para listado)
+    public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadas(Pageable pageable) {
+        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Mapear entidad a DTO de listado simple
+    private TetrazolioListadoDTO mapearEntidadAListadoDTO(Tetrazolio tetrazolio) {
+        TetrazolioListadoDTO dto = new TetrazolioListadoDTO();
+        dto.setAnalisisID(tetrazolio.getAnalisisID());
+        dto.setEstado(tetrazolio.getEstado());
+        dto.setFechaInicio(tetrazolio.getFechaInicio());
+        dto.setFechaFin(tetrazolio.getFechaFin());
+        if (tetrazolio.getLote() != null) {
+            dto.setIdLote(tetrazolio.getLote().getLoteID());
+            dto.setLote(tetrazolio.getLote().getFicha());
+        }
+        if (tetrazolio.getAnalisisID() != null) {
+            var historial = analisisHistorialService.obtenerHistorialAnalisis(tetrazolio.getAnalisisID());
+            if (!historial.isEmpty()) {
+                var primerRegistro = historial.get(historial.size() - 1);
+                dto.setUsuarioCreador(primerRegistro.getUsuario());
+                var ultimoRegistro = historial.get(0);
+                dto.setUsuarioModificador(ultimoRegistro.getUsuario());
+            }
+        }
+        return dto;
     }
 
     // Actualizar porcentajes redondeados (solo cuando todas las repeticiones estén completas)

@@ -1,6 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,4 +19,7 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
     
     @Query("SELECT l FROM Lote l WHERE l.activo = :activo")
     List<Lote> findLotesByActivo(Boolean activo);
+
+    // Pageable for listing
+    Page<Lote> findByActivo(Boolean activo, Pageable pageable);
 }

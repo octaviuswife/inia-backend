@@ -22,6 +22,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO;
 
 @Service
 public class LoteService {
@@ -114,6 +117,22 @@ public class LoteService {
             return mapearEntidadADTO(lote.get());
         }
         throw new RuntimeException("Lote no encontrado con id: " + id);
+    }
+
+    // Listar Lotes con paginado para listado
+    public Page<LoteListadoDTO> obtenerLotesPaginadas(Pageable pageable) {
+        Page<Lote> lotePage = loteRepository.findByActivo(true, pageable);
+        return lotePage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    private LoteListadoDTO mapearEntidadAListadoDTO(Lote lote) {
+        LoteListadoDTO dto = new LoteListadoDTO();
+        dto.setLoteID(lote.getLoteID());
+        dto.setFicha(lote.getFicha());
+    dto.setNumeroFicha(lote.getNumeroFicha() != null ? lote.getNumeroFicha().toString() : null);
+        dto.setFechaCosecha(lote.getFechaCosecha());
+        dto.setActivo(lote.getActivo());
+        return dto;
     }
 
     // Mapear de RequestDTO a Entity para creación

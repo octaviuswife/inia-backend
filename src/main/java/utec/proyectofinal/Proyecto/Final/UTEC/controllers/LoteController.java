@@ -92,6 +92,22 @@ public class LoteController {
         }
     }
 
+    // Obtener Lotes con paginado para listado
+    @GetMapping("/listado")
+    @Operation(summary = "Obtener lotes paginadas", description = "Obtiene la lista paginada de lotes activos para el listado")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO>> obtenerLotesPaginadas(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+        try {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO> response = loteService.obtenerLotesPaginadas(pageable);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Actualizar Lote
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar lote", description = "Actualiza un lote existente")

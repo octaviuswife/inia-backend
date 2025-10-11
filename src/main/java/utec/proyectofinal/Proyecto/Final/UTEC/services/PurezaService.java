@@ -27,6 +27,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoPureza;
@@ -139,6 +142,35 @@ public class PurezaService {
                 .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
+    }
+
+    // Listar Pureza con paginado (para listado)
+    public Page<PurezaListadoDTO> obtenerPurezaPaginadas(Pageable pageable) {
+        Page<Pureza> purezaPage = purezaRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return purezaPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Mapear entidad a DTO de listado simple
+    private PurezaListadoDTO mapearEntidadAListadoDTO(Pureza pureza) {
+        PurezaListadoDTO dto = new PurezaListadoDTO();
+        dto.setAnalisisID(pureza.getAnalisisID());
+        dto.setEstado(pureza.getEstado());
+        dto.setFechaInicio(pureza.getFechaInicio());
+        dto.setFechaFin(pureza.getFechaFin());
+        if (pureza.getLote() != null) {
+            dto.setIdLote(pureza.getLote().getLoteID());
+            dto.setLote(pureza.getLote().getFicha());
+        }
+        if (pureza.getAnalisisID() != null) {
+            var historial = analisisHistorialService.obtenerHistorialAnalisis(pureza.getAnalisisID());
+            if (!historial.isEmpty()) {
+                var primerRegistro = historial.get(historial.size() - 1);
+                dto.setUsuarioCreador(primerRegistro.getUsuario());
+                var ultimoRegistro = historial.get(0);
+                dto.setUsuarioModificador(ultimoRegistro.getUsuario());
+            }
+        }
+        return dto;
     }
 
     // Obtener todos los catálogos

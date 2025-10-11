@@ -148,6 +148,23 @@ public class TetrazolioController {
         }
     }
 
+    // Obtener Tetrazolios con paginado para listado
+    @Operation(summary = "Obtener tetrazolios paginadas", 
+              description = "Obtiene la lista paginada de análisis de tetrazolio para el listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO>> obtenerTetrazoliosPaginadas(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+        try {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO> response = tetrazolioService.obtenerTetrazoliosPaginadas(pageable);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Finalizar análisis de tetrazolio
     @Operation(summary = "Finalizar análisis de tetrazolio", 
               description = "Finaliza un análisis de tetrazolio cambiando su estado según el rol del usuario (analista -> PENDIENTE_APROBACION, admin -> APROBADO)")
