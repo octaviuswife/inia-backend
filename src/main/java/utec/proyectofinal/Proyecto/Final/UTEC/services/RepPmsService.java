@@ -26,6 +26,9 @@ public class RepPmsService {
     @Autowired
     private PmsService pmsService;
 
+    @Autowired
+    private AnalisisService analisisService;
+
     // Crear nueva repetición asociada a un Pms
     public RepPmsDTO crearRepeticion(Long pmsId, RepPmsRequestDTO solicitud) {
         Optional<Pms> pmsOpt = pmsRepository.findById(pmsId);
@@ -92,8 +95,30 @@ public class RepPmsService {
 
         if (existente.isPresent()) {
             RepPms rep = existente.get();
+            
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(rep.getPms());
+            
             actualizarEntidadDesdeSolicitud(rep, solicitud);
             RepPms actualizado = repPmsRepository.save(rep);
+            
+            // Después de actualizar la repetición, recalcular las estadísticas de la tanda
+            Pms pms = rep.getPms();
+            Integer numTanda = rep.getNumTanda();
+            
+            // Contar repeticiones de la tanda actual
+            long repeticionesTandaActual = repPmsRepository.findByPmsId(pms.getAnalisisID()).stream()
+                .filter(r -> r.getNumTanda().equals(numTanda))
+                .count();
+            
+            // Si la tanda está completa, procesar cálculos completos
+            if (repeticionesTandaActual >= pms.getNumRepeticionesEsperadas()) {
+                pmsService.procesarCalculosTanda(pms.getAnalisisID(), numTanda);
+            } else {
+                // Si la tanda no está completa, solo actualizar estadísticas generales
+                pmsService.actualizarEstadisticasPms(pms.getAnalisisID());
+            }
+            
             return mapearEntidadADTO(actualizado);
         } else {
             throw new RuntimeException("Repetición PMS no encontrada con ID: " + id);
@@ -105,7 +130,25 @@ public class RepPmsService {
         Optional<RepPms> existente = repPmsRepository.findById(id);
 
         if (existente.isPresent()) {
+            RepPms rep = existente.get();
+            Pms pms = rep.getPms();
+            Integer numTanda = rep.getNumTanda();
+            
+            // Eliminar la repetición
             repPmsRepository.deleteById(id);
+            
+            // Después de eliminar, verificar si la tanda aún está completa y recalcular
+            long repeticionesTandaActual = repPmsRepository.findByPmsId(pms.getAnalisisID()).stream()
+                .filter(r -> r.getNumTanda().equals(numTanda))
+                .count();
+            
+            // Si la tanda sigue completa, procesar cálculos completos
+            if (repeticionesTandaActual >= pms.getNumRepeticionesEsperadas()) {
+                pmsService.procesarCalculosTanda(pms.getAnalisisID(), numTanda);
+            } else {
+                // Si la tanda ya no está completa, solo actualizar estadísticas generales
+                pmsService.actualizarEstadisticasPms(pms.getAnalisisID());
+            }
         } else {
             throw new RuntimeException("Repetición PMS no encontrada con ID: " + id);
         }
