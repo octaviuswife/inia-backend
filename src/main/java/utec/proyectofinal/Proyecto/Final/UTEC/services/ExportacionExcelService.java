@@ -414,7 +414,6 @@ public class ExportacionExcelService {
         
         // Datos del lote
         dto.setLote(lote.getFicha());
-        dto.setNumeroFicha(lote.getNumeroFicha() != null ? lote.getNumeroFicha().toString() : "");
         dto.setKilos(lote.getKilosLimpios() != null ? lote.getKilosLimpios().toString() : "");
         
         // Número de análisis (usando el ID del lote como referencia temporal)

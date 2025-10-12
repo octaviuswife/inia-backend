@@ -17,7 +17,6 @@ public class Lote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long loteID;
 
-    private Integer numeroFicha;
     private String ficha;
 
     @ManyToOne

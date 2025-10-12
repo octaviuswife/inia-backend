@@ -5,5 +5,6 @@ public enum TipoCatalogo {
     ORIGEN,
     ARTICULO,
     ESTADO,
-    DEPOSITO
+    DEPOSITO,
+    UNIDAD_EMBOLSADO
 }
