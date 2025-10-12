@@ -17,4 +17,6 @@ public interface TetrazolioRepository extends JpaRepository<Tetrazolio, Long> {
     
     @Query("SELECT t FROM Tetrazolio t WHERE t.lote.loteID = :idLote")
     List<Tetrazolio> findByIdLote(@Param("idLote") Long idLote);
+    
+    List<Tetrazolio> findByLoteLoteID(Long loteID);
 }

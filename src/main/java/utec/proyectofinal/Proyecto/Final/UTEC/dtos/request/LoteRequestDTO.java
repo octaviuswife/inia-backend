@@ -7,7 +7,6 @@ import java.util.List;
 
 @Data
 public class LoteRequestDTO {
-    private Integer numeroFicha;
     private String ficha;
     private Long cultivarID;
     private String tipo;

@@ -1,5 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,6 +46,10 @@ public class LoteService {
     public LoteDTO crearLote(LoteRequestDTO solicitud) {
         try {
             System.out.println("Creando lote con solicitud: " + solicitud);
+            
+            // Validar fechaRecibo no sea posterior a la fecha actual
+            validarFechaRecibo(solicitud.getFechaRecibo());
+            
             Lote lote = mapearSolicitudAEntidad(solicitud);
             lote.setActivo(true);
             
@@ -63,6 +68,9 @@ public class LoteService {
     public LoteDTO actualizarLote(Long id, LoteRequestDTO solicitud) {
         Optional<Lote> loteExistente = loteRepository.findById(id);
         if (loteExistente.isPresent()) {
+            // Validar fechaRecibo no sea posterior a la fecha actual
+            validarFechaRecibo(solicitud.getFechaRecibo());
+            
             Lote lote = loteExistente.get();
             actualizarEntidadDesdeSolicitud(lote, solicitud);
             Lote loteActualizado = loteRepository.save(lote);
@@ -123,7 +131,6 @@ public class LoteService {
             Lote lote = new Lote();
             
             System.out.println("Mapeando campos básicos...");
-            lote.setNumeroFicha(solicitud.getNumeroFicha());
             lote.setFicha(solicitud.getFicha());
             
             // Convertir String a enum TipoLote
@@ -276,7 +283,6 @@ public class LoteService {
 
     // Actualizar Entity desde RequestDTO para edición
     private void actualizarEntidadDesdeSolicitud(Lote lote, LoteRequestDTO solicitud) {
-        lote.setNumeroFicha(solicitud.getNumeroFicha());
         lote.setFicha(solicitud.getFicha());
         
         // Convertir String a enum TipoLote
@@ -402,7 +408,6 @@ public class LoteService {
         LoteDTO dto = new LoteDTO();
         
         dto.setLoteID(lote.getLoteID());
-        dto.setNumeroFicha(lote.getNumeroFicha());
         dto.setFicha(lote.getFicha());
         
         // Convertir enum TipoLote a String
@@ -482,13 +487,29 @@ public class LoteService {
         return dto;
     }
 
-    // Mapear de Entity a DTO simple (solo ID, numeroFicha, ficha, activo)
+    // Mapear de Entity a DTO simple (solo ID, ficha, activo, cultivar, especie)
     private LoteSimpleDTO mapearEntidadASimpleDTO(Lote lote) {
         LoteSimpleDTO dto = new LoteSimpleDTO();
         dto.setLoteID(lote.getLoteID());
-        dto.setNumeroFicha(lote.getNumeroFicha());
         dto.setFicha(lote.getFicha());
         dto.setActivo(lote.getActivo());
+        
+        // Mapear cultivar nombre directamente
+        if (lote.getCultivar() != null) {
+            dto.setCultivarNombre(lote.getCultivar().getNombre());
+        }
+        
+        // Mapear especie nombre directamente
+        if (lote.getCultivar() != null && lote.getCultivar().getEspecie() != null) {
+            dto.setEspecieNombre(lote.getCultivar().getEspecie().getNombreComun());
+        }
+        
         return dto;
+    }
+
+    private void validarFechaRecibo(LocalDate fechaRecibo) {
+        if (fechaRecibo != null && fechaRecibo.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("La fecha de recibo no puede ser posterior a la fecha actual");
+        }
     }
 }

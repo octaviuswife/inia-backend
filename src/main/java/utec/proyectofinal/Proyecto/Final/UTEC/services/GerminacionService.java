@@ -97,11 +97,8 @@ public class GerminacionService {
         if (germinacionExistente.isPresent()) {
             Germinacion germinacion = germinacionExistente.get();
             
-            // Si el análisis está APROBADO y el usuario actual es ANALISTA, cambiar a PENDIENTE_APROBACION
-            if (germinacion.getEstado() == Estado.APROBADO && analisisService.esAnalista()) {
-                germinacion.setEstado(Estado.PENDIENTE_APROBACION);
-                System.out.println("Análisis aprobado editado por analista - cambiando estado a PENDIENTE_APROBACION");
-            }
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(germinacion);
             
             // Actualizar solo los campos permitidos del DTO de edición
             if (dto.getIdLote() != null) {

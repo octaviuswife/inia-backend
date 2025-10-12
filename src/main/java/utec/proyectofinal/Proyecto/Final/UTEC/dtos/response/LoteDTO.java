@@ -8,7 +8,6 @@ import java.util.List;
 @Data
 public class LoteDTO {
     private Long loteID;
-    private Integer numeroFicha;
     private String ficha;
     private Long cultivarID;
     private String cultivarNombre;

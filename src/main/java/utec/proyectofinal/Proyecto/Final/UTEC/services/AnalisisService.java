@@ -165,6 +165,34 @@ public class AnalisisService {
     }
 
     /**
+     * Maneja el cambio de estado cuando se edita un análisis finalizado
+     * - Si es admin: mantiene el estado actual (FINALIZADO/APROBADO)
+     * - Si es analista: cambia a PENDIENTE_APROBACION para nueva revisión
+     * 
+     * @param analisis El análisis que se está editando
+     */
+    public void manejarEdicionAnalisisFinalizado(Analisis analisis) {
+        // Solo procesar si el análisis está finalizado o aprobado
+        if (analisis.getEstado() == Estado.APROBADO) {
+            if (esAnalista()) {
+                // Analista: cambiar a pendiente de aprobación para nueva revisión
+                analisis.setEstado(Estado.PENDIENTE_APROBACION);
+                
+                // Registrar en el historial
+                analisisHistorialService.registrarModificacion(analisis);
+                
+                // Crear notificación para informar que necesita nueva aprobación
+                try {
+                    notificacionService.notificarAnalisisPendienteAprobacion(analisis.getAnalisisID());
+                } catch (Exception e) {
+                    System.err.println("Error creating notification for analysis pending approval: " + e.getMessage());
+                }
+            }
+            // Si es admin: no hacer nada, mantener estado actual
+        }
+    }
+
+    /**
      * Método genérico para finalizar análisis con validación específica opcional
      * 
      * @param <T> Tipo del análisis que extiende Analisis
