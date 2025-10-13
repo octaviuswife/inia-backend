@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -302,8 +303,39 @@ public class DosnService {
                 id,
                 dosnRepository,
                 this::mapearEntidadADTO,
-                null // No hay validación específica
+                this::validarAntesDeFinalizar // Validación específica para DOSN
         );
+    }
+    
+    /**
+     * Validación básica previa a la finalización de un DOSN.
+     * Requiere al menos una forma de evidencia: resultados INIA o INASE (gramos > 0),
+     * datos de cuscuta o listados no vacíos. Si no hay evidencia lanza RuntimeException.
+     */
+    private void validarAntesDeFinalizar(Dosn dosn) {
+        boolean tieneINIA = dosn.getFechaINIA() != null
+                && dosn.getGramosAnalizadosINIA() != null
+                && dosn.getGramosAnalizadosINIA().compareTo(BigDecimal.ZERO) > 0;
+
+        boolean tieneINASE = dosn.getFechaINASE() != null
+                && dosn.getGramosAnalizadosINASE() != null
+                && dosn.getGramosAnalizadosINASE().compareTo(BigDecimal.ZERO) > 0;
+
+        boolean tieneCuscuta = (dosn.getCuscuta_g() != null && dosn.getCuscuta_g().compareTo(BigDecimal.ZERO) > 0)
+                || (dosn.getCuscutaNum() != null && dosn.getCuscutaNum() > 0);
+
+        boolean tieneListados = dosn.getListados() != null && !dosn.getListados().isEmpty();
+
+        if (!tieneINIA && !tieneINASE && !tieneCuscuta && !tieneListados) {
+            throw new RuntimeException("No se puede finalizar: el DOSN carece de evidencia. Agregue resultados INIA/INASE, listados, o datos de cuscuta antes de finalizar.");
+        }
+
+        if (dosn.getGramosAnalizadosINIA() != null && dosn.getGramosAnalizadosINIA().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Gramos analizados INIA debe ser mayor que 0");
+        }
+        if (dosn.getGramosAnalizadosINASE() != null && dosn.getGramosAnalizadosINASE().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Gramos analizados INASE debe ser mayor que 0");
+        }
     }
 
     /**
