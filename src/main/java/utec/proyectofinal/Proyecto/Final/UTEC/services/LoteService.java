@@ -200,7 +200,6 @@ public class LoteService {
         LoteListadoDTO dto = new LoteListadoDTO();
         dto.setLoteID(lote.getLoteID());
         dto.setFicha(lote.getFicha());
-    dto.setNumeroFicha(lote.getNumeroFicha() != null ? lote.getNumeroFicha().toString() : null);
         dto.setFechaCosecha(lote.getFechaCosecha());
         dto.setActivo(lote.getActivo());
         return dto;
