@@ -19,4 +19,8 @@ public interface TetrazolioRepository extends JpaRepository<Tetrazolio, Long> {
     List<Tetrazolio> findByIdLote(@Param("idLote") Long idLote);
     
     List<Tetrazolio> findByLoteLoteID(Long loteID);
+    
+    // Métodos eficientes para validaciones
+    boolean existsByLoteLoteID(Long loteID);
+    boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
 }

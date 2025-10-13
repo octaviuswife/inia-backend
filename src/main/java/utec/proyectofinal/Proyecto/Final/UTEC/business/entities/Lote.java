@@ -3,10 +3,14 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "Lote")
@@ -66,6 +70,58 @@ public class Lote {
     @JoinColumn(name = "estadoID")
     private Catalogo estado;
     private LocalDate fechaCosecha;
+    
+    // Lista de tipos de análisis asignados a este lote
+    @ElementCollection(targetClass = TipoAnalisis.class, fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(
+        name = "lote_tipos_analisis", 
+        joinColumns = @JoinColumn(name = "lote_id"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"lote_id", "tipo_analisis"})
+    )
+    @Column(name = "tipo_analisis")
+    private List<TipoAnalisis> tiposAnalisisAsignados;
+    
     private Boolean activo;
+    
+    // Métodos personalizados para manejar tipos de análisis sin duplicados
+    public void setTiposAnalisisAsignados(List<TipoAnalisis> tipos) {
+        if (tipos == null) {
+            this.tiposAnalisisAsignados = null;
+            return;
+        }
+        
+        // Usar LinkedHashSet para mantener el orden y eliminar duplicados
+        Set<TipoAnalisis> tiposUnicos = new LinkedHashSet<>(tipos);
+        this.tiposAnalisisAsignados = new ArrayList<>(tiposUnicos);
+    }
+    
+    public List<TipoAnalisis> getTiposAnalisisAsignados() {
+        if (this.tiposAnalisisAsignados == null) {
+            return new ArrayList<>();
+        }
+        
+        // Asegurar que no hay duplicados al retornar
+        Set<TipoAnalisis> tiposUnicos = new LinkedHashSet<>(this.tiposAnalisisAsignados);
+        return new ArrayList<>(tiposUnicos);
+    }
+    
+    public void agregarTipoAnalisis(TipoAnalisis tipo) {
+        if (tipo == null) return;
+        
+        if (this.tiposAnalisisAsignados == null) {
+            this.tiposAnalisisAsignados = new ArrayList<>();
+        }
+        
+        if (!this.tiposAnalisisAsignados.contains(tipo)) {
+            this.tiposAnalisisAsignados.add(tipo);
+        }
+    }
+    
+    public void removerTipoAnalisis(TipoAnalisis tipo) {
+        if (this.tiposAnalisisAsignados != null) {
+            this.tiposAnalisisAsignados.remove(tipo);
+        }
+    }
 }
 

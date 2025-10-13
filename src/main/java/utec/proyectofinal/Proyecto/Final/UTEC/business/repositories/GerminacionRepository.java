@@ -24,4 +24,8 @@ public interface GerminacionRepository extends JpaRepository<Germinacion, Long> 
     List<Germinacion> findByIdLote(@Param("idLote") Long idLote);
     
     List<Germinacion> findByLoteLoteID(Long loteID);
+    
+    // Métodos eficientes para validaciones
+    boolean existsByLoteLoteID(Long loteID);
+    boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
 }

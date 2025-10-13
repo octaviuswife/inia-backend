@@ -16,5 +16,9 @@ public interface PmsRepository extends JpaRepository<Pms, Long> {
     List<Pms> findByIdLote(@Param("idLote") Integer idLote);
     
     List<Pms> findByLoteLoteID(Long loteID);
+    
+    // Métodos eficientes para validaciones
+    boolean existsByLoteLoteID(Long loteID);
+    boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
 
 }
