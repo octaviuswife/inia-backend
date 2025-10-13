@@ -19,6 +19,10 @@ public interface DosnRepository extends JpaRepository<Dosn, Long> {
     List<Dosn> findByIdLote(@Param("idLote") Integer idLote);
     
     List<Dosn> findByLoteLoteID(Long loteID);
+    
+    // Métodos eficientes para validaciones
+    boolean existsByLoteLoteID(Long loteID);
+    boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
 
     // Pageable
     Page<Dosn> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);

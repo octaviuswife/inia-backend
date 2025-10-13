@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
@@ -25,6 +26,9 @@ public class RepPmsService {
 
     @Autowired
     private PmsService pmsService;
+
+    @Autowired
+    private AnalisisService analisisService;
 
     // Crear nueva repetición asociada a un Pms
     public RepPmsDTO crearRepeticion(Long pmsId, RepPmsRequestDTO solicitud) {
@@ -92,8 +96,30 @@ public class RepPmsService {
 
         if (existente.isPresent()) {
             RepPms rep = existente.get();
+            
+            // Manejar edición de análisis finalizado según el rol del usuario
+            analisisService.manejarEdicionAnalisisFinalizado(rep.getPms());
+            
             actualizarEntidadDesdeSolicitud(rep, solicitud);
             RepPms actualizado = repPmsRepository.save(rep);
+            
+            // Después de actualizar la repetición, recalcular las estadísticas de la tanda
+            Pms pms = rep.getPms();
+            Integer numTanda = rep.getNumTanda();
+            
+            // Contar repeticiones de la tanda actual
+            long repeticionesTandaActual = repPmsRepository.findByPmsId(pms.getAnalisisID()).stream()
+                .filter(r -> r.getNumTanda().equals(numTanda))
+                .count();
+            
+            // Si la tanda está completa, procesar cálculos completos
+            if (repeticionesTandaActual >= pms.getNumRepeticionesEsperadas()) {
+                pmsService.procesarCalculosTanda(pms.getAnalisisID(), numTanda);
+            } else {
+                // Si la tanda no está completa, solo actualizar estadísticas generales
+                pmsService.actualizarEstadisticasPms(pms.getAnalisisID());
+            }
+            
             return mapearEntidadADTO(actualizado);
         } else {
             throw new RuntimeException("Repetición PMS no encontrada con ID: " + id);
@@ -105,7 +131,25 @@ public class RepPmsService {
         Optional<RepPms> existente = repPmsRepository.findById(id);
 
         if (existente.isPresent()) {
+            RepPms rep = existente.get();
+            Pms pms = rep.getPms();
+            Integer numTanda = rep.getNumTanda();
+            
+            // Eliminar la repetición
             repPmsRepository.deleteById(id);
+            
+            // Después de eliminar, verificar si la tanda aún está completa y recalcular
+            long repeticionesTandaActual = repPmsRepository.findByPmsId(pms.getAnalisisID()).stream()
+                .filter(r -> r.getNumTanda().equals(numTanda))
+                .count();
+            
+            // Si la tanda sigue completa, procesar cálculos completos
+            if (repeticionesTandaActual >= pms.getNumRepeticionesEsperadas()) {
+                pmsService.procesarCalculosTanda(pms.getAnalisisID(), numTanda);
+            } else {
+                // Si la tanda ya no está completa, solo actualizar estadísticas generales
+                pmsService.actualizarEstadisticasPms(pms.getAnalisisID());
+            }
         } else {
             throw new RuntimeException("Repetición PMS no encontrada con ID: " + id);
         }
@@ -174,43 +218,47 @@ public class RepPmsService {
             }
         }
 
-        // Si todas las tandas están completas, buscar la última tanda válida
-        Integer ultimaTandaValida = null;
-        for (int tandaNum = 1; tandaNum <= pms.getNumTandas(); tandaNum++) {
-            final int tanda = tandaNum;
-            boolean tandaTieneValidez = todasLasRepeticiones.stream()
-                .filter(rep -> rep.getNumTanda().equals(tanda))
-                .anyMatch(rep -> rep.getValido() != null && rep.getValido());
+        // Si todas las tandas están completas, verificar si se puede agregar nueva tanda
+        long totalRepeticiones = todasLasRepeticiones.size();
+        if (totalRepeticiones >= 16) {
+            throw new RuntimeException("Se alcanzó el límite máximo de 16 repeticiones");
+        }
+
+        // Verificar si el CV global de repeticiones válidas es aceptable
+        List<RepPms> repeticionesValidas = todasLasRepeticiones.stream()
+            .filter(rep -> Boolean.TRUE.equals(rep.getValido()))
+            .collect(Collectors.toList());
+
+        if (!repeticionesValidas.isEmpty()) {
+            // Calcular CV global
+            double promedio = repeticionesValidas.stream()
+                .mapToDouble(rep -> rep.getPeso().doubleValue())
+                .average()
+                .orElse(0.0);
+
+            double suma = repeticionesValidas.stream()
+                .mapToDouble(rep -> Math.pow(rep.getPeso().doubleValue() - promedio, 2))
+                .sum();
+
+            double desviacion = Math.sqrt(suma / repeticionesValidas.size());
+            double cv = promedio != 0 ? (desviacion / promedio) * 100 : 0;
+
+            double umbralCV = pms.getEsSemillaBrozosa() ? 6.0 : 4.0;
             
-            if (tandaTieneValidez) {
-                ultimaTandaValida = tanda;
+            if (cv <= umbralCV) {
+                throw new RuntimeException("El CV global (" + String.format("%.2f", cv) + 
+                    ") ya es aceptable (≤ " + umbralCV + "). No se necesitan más repeticiones.");
             }
         }
 
-        if (ultimaTandaValida != null) {
-            // Ya hay una tanda válida, no se necesitan más repeticiones
-            throw new RuntimeException("Ya se completó una tanda válida para este análisis PMS");
-        }
-
-        // Buscar una tanda que tenga repeticiones inválidas para reemplazar
-        for (int tandaNum = 1; tandaNum <= pms.getNumTandas(); tandaNum++) {
-            final int tanda = tandaNum;
-            final int numRepeticionesEsperadas = pms.getNumRepeticionesEsperadas();
-            
-            boolean tandaCompleta = todasLasRepeticiones.stream()
-                .filter(rep -> rep.getNumTanda().equals(tanda))
-                .count() == numRepeticionesEsperadas;
-            
-            boolean tandaInvalida = todasLasRepeticiones.stream()
-                .filter(rep -> rep.getNumTanda().equals(tanda))
-                .allMatch(rep -> Boolean.FALSE.equals(rep.getValido()));
-
-            if (tandaCompleta && tandaInvalida) {
-                int siguienteTanda = tanda + 1;
-                return siguienteTanda <= pms.getNumTandas() ? siguienteTanda : pms.getNumTandas(); // Siguiente tanda disponible
-            }
-        }
-
-        return 1; // Fallback a primera tanda
+        // Si llegamos aquí, necesitamos incrementar a una nueva tanda
+        int nuevaTanda = pms.getNumTandas() + 1;
+        pms.setNumTandas(nuevaTanda);
+        pmsRepository.save(pms);
+        
+        System.out.println("=== Incrementando tandas ===");
+        System.out.println("CV no aceptable. Se incrementa el número de tandas a: " + nuevaTanda);
+        
+        return nuevaTanda;
     }
 }

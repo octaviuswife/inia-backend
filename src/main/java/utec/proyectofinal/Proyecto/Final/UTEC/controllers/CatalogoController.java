@@ -1,17 +1,26 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CatalogoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/catalogo")
@@ -138,5 +147,12 @@ public class CatalogoController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerDepositos() {
         return obtenerPorTipo("DEPOSITO");
+    }
+
+    @Operation(summary = "Obtener Catalogo Unidades de Embolsado")
+    @GetMapping("/unidades-embolsado")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    public ResponseEntity<List<CatalogoDTO>> obtenerUnidadesEmbolsado() {
+        return obtenerPorTipo("UNIDAD_EMBOLSADO");
     }
 }

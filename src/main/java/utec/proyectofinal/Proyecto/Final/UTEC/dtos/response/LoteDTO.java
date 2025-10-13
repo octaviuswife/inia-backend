@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
 import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -8,7 +9,6 @@ import java.util.List;
 @Data
 public class LoteDTO {
     private Long loteID;
-    private Integer numeroFicha;
     private String ficha;
     private Long cultivarID;
     private String cultivarNombre;
@@ -41,5 +41,9 @@ public class LoteDTO {
     private Long estadoID;
     private String estadoValor;
     private LocalDate fechaCosecha;
+    
+    // Lista de tipos de análisis asignados
+    private List<TipoAnalisis> tiposAnalisisAsignados;
+    
     private Boolean activo;
 }

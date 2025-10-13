@@ -1,5 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -8,18 +10,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.DatosHumedad;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CultivarRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ContactoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CultivarRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosHumedadDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
 import org.springframework.data.domain.Page;
@@ -32,8 +40,7 @@ public class LoteService {
     @Autowired
     private LoteRepository loteRepository;
     
-    @Autowired
-    private CatalogoRepository catalogoRepository;
+
     
     @Autowired
     private CultivarRepository cultivarRepository;
@@ -43,11 +50,31 @@ public class LoteService {
     
     @Autowired
     private CatalogoService catalogoService;
+    
+    // Repositorios para verificar análisis existentes
+    @Autowired
+    private PmsRepository pmsRepository;
+    
+    @Autowired
+    private GerminacionRepository germinacionRepository;
+    
+    @Autowired
+    private DosnRepository dosnRepository;
+    
+    @Autowired
+    private TetrazolioRepository tetrazolioRepository;
+    
+    @Autowired
+    private PurezaRepository purezaRepository;
 
     // Crear Lote con activo = true
     public LoteDTO crearLote(LoteRequestDTO solicitud) {
         try {
             System.out.println("Creando lote con solicitud: " + solicitud);
+            
+            // Validar fechaRecibo no sea posterior a la fecha actual
+            validarFechaRecibo(solicitud.getFechaRecibo());
+            
             Lote lote = mapearSolicitudAEntidad(solicitud);
             lote.setActivo(true);
             
@@ -57,7 +84,6 @@ public class LoteService {
             return mapearEntidadADTO(loteGuardado);
         } catch (Exception e) {
             System.err.println("Error al crear lote: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Error al crear lote: " + e.getMessage(), e);
         }
     }
@@ -66,12 +92,57 @@ public class LoteService {
     public LoteDTO actualizarLote(Long id, LoteRequestDTO solicitud) {
         Optional<Lote> loteExistente = loteRepository.findById(id);
         if (loteExistente.isPresent()) {
+            // Validar fechaRecibo no sea posterior a la fecha actual
+            validarFechaRecibo(solicitud.getFechaRecibo());
+            
             Lote lote = loteExistente.get();
+            
+            // Validar cambios en tipos de análisis antes de actualizar
+            if (solicitud.getTiposAnalisisAsignados() != null) {
+                validarCambiosTiposAnalisis(lote, solicitud.getTiposAnalisisAsignados());
+            }
+            
             actualizarEntidadDesdeSolicitud(lote, solicitud);
             Lote loteActualizado = loteRepository.save(lote);
             return mapearEntidadADTO(loteActualizado);
         }
         throw new RuntimeException("Lote no encontrado con id: " + id);
+    }
+    
+    // Método para verificar si un tipo de análisis puede ser removido del lote
+    public boolean puedeRemoverTipoAnalisis(Long loteId, TipoAnalisis tipoAnalisis) {
+        // Un tipo de análisis puede ser removido solo si no hay análisis creados de ese tipo
+        return switch (tipoAnalisis) {
+            case PMS -> !pmsRepository.existsByLoteLoteID(loteId);
+            case GERMINACION -> !germinacionRepository.existsByLoteLoteID(loteId);
+            case DOSN -> !dosnRepository.existsByLoteLoteID(loteId);
+            case TETRAZOLIO -> !tetrazolioRepository.existsByLoteLoteID(loteId);
+            case PUREZA -> !purezaRepository.existsByLoteLoteID(loteId);
+            default -> true;
+        };
+    }
+
+    // Método para validar cambios en tipos de análisis durante la edición
+    private void validarCambiosTiposAnalisis(Lote loteExistente, List<TipoAnalisis> nuevosTypes) {
+        List<TipoAnalisis> tiposActuales = loteExistente.getTiposAnalisisAsignados();
+        
+        if (tiposActuales == null) {
+            tiposActuales = new ArrayList<>();
+        }
+        
+        // Verificar tipos que se están removiendo
+        for (TipoAnalisis tipoActual : tiposActuales) {
+            if (!nuevosTypes.contains(tipoActual)) {
+                // Este tipo se está removiendo, verificar si es posible
+                if (!puedeRemoverTipoAnalisis(loteExistente.getLoteID(), tipoActual)) {
+                    throw new RuntimeException("No se puede remover el tipo de análisis " + tipoActual.name() + 
+                                             " porque ya existen análisis creados de este tipo para el lote");
+                }
+            }
+        }
+        
+        // Los tipos que se están agregando siempre son permitidos
+        // (no hay restricciones para agregar nuevos tipos de análisis)
     }
 
     // Eliminar Lote (cambiar activo a false)
@@ -142,7 +213,6 @@ public class LoteService {
             Lote lote = new Lote();
             
             System.out.println("Mapeando campos básicos...");
-            lote.setNumeroFicha(solicitud.getNumeroFicha());
             lote.setFicha(solicitud.getFicha());
             
             // Convertir String a enum TipoLote
@@ -283,19 +353,24 @@ public class LoteService {
                 }
             }
 
+            // Mapear tipos de análisis asignados
+            if (solicitud.getTiposAnalisisAsignados() != null && !solicitud.getTiposAnalisisAsignados().isEmpty()) {
+                // Usar el método personalizado que elimina duplicados
+                lote.setTiposAnalisisAsignados(solicitud.getTiposAnalisisAsignados());
+                System.out.println("Tipos de análisis asignados (sin duplicados): " + lote.getTiposAnalisisAsignados());
+            }
+
             System.out.println("Mapeo completado exitosamente");
             return lote;
             
         } catch (Exception e) {
             System.err.println("Error durante el mapeo: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Error durante el mapeo de la solicitud", e);
         }
     }
 
     // Actualizar Entity desde RequestDTO para edición
     private void actualizarEntidadDesdeSolicitud(Lote lote, LoteRequestDTO solicitud) {
-        lote.setNumeroFicha(solicitud.getNumeroFicha());
         lote.setFicha(solicitud.getFicha());
         
         // Convertir String a enum TipoLote
@@ -414,6 +489,12 @@ public class LoteService {
         } else {
             lote.setDeposito(null);
         }
+        
+        // Mapear tipos de análisis asignados
+        if (solicitud.getTiposAnalisisAsignados() != null && !solicitud.getTiposAnalisisAsignados().isEmpty()) {
+            // Usar el método personalizado que elimina duplicados
+            lote.setTiposAnalisisAsignados(solicitud.getTiposAnalisisAsignados());
+        }
     }
 
     // Mapear de Entity a DTO completo
@@ -421,7 +502,6 @@ public class LoteService {
         LoteDTO dto = new LoteDTO();
         
         dto.setLoteID(lote.getLoteID());
-        dto.setNumeroFicha(lote.getNumeroFicha());
         dto.setFicha(lote.getFicha());
         
         // Convertir enum TipoLote a String
@@ -497,17 +577,90 @@ public class LoteService {
             dto.setEstadoID(lote.getEstado().getId());
             dto.setEstadoValor(lote.getEstado().getValor());
         }
+        
+        // Mapear tipos de análisis asignados - usar el getter personalizado que elimina duplicados
+        List<TipoAnalisis> tiposAnalisis = lote.getTiposAnalisisAsignados();
+        if (tiposAnalisis != null && !tiposAnalisis.isEmpty()) {
+            dto.setTiposAnalisisAsignados(tiposAnalisis);
+        }
 
         return dto;
     }
 
-    // Mapear de Entity a DTO simple (solo ID, numeroFicha, ficha, activo)
+    // Mapear de Entity a DTO simple (solo ID, ficha, activo, cultivar, especie)
     private LoteSimpleDTO mapearEntidadASimpleDTO(Lote lote) {
         LoteSimpleDTO dto = new LoteSimpleDTO();
         dto.setLoteID(lote.getLoteID());
-        dto.setNumeroFicha(lote.getNumeroFicha());
         dto.setFicha(lote.getFicha());
         dto.setActivo(lote.getActivo());
+        
+        // Mapear cultivar nombre directamente
+        if (lote.getCultivar() != null) {
+            dto.setCultivarNombre(lote.getCultivar().getNombre());
+        }
+        
+        // Mapear especie nombre directamente
+        if (lote.getCultivar() != null && lote.getCultivar().getEspecie() != null) {
+            dto.setEspecieNombre(lote.getCultivar().getEspecie().getNombreComun());
+        }
+        
         return dto;
+    }
+
+    private void validarFechaRecibo(LocalDate fechaRecibo) {
+        if (fechaRecibo != null && fechaRecibo.isAfter(LocalDate.now())) {
+            throw new RuntimeException("La fecha de recibo no puede ser posterior a la fecha actual");
+        }
+    }
+    
+    // Método para verificar si un lote es elegible para crear un análisis de un tipo específico
+    public boolean esLoteElegibleParaTipoAnalisis(Long loteId, TipoAnalisis tipoAnalisis) {
+        Optional<Lote> loteOpt = loteRepository.findById(loteId);
+        if (loteOpt.isEmpty()) {
+            return false;
+        }
+        
+        Lote lote = loteOpt.get();
+        
+        // 1. Verificar que el lote tenga ese tipo de análisis asignado
+        if (lote.getTiposAnalisisAsignados() == null || 
+            !lote.getTiposAnalisisAsignados().contains(tipoAnalisis)) {
+            return false;
+        }
+        
+        // 2. Verificar estado de análisis existentes de ese tipo
+        return puedeCrearAnalisisDelTipo(loteId, tipoAnalisis);
+    }
+    
+    // Método para verificar si se puede crear un análisis de un tipo específico
+    public boolean puedeCrearAnalisisDelTipo(Long loteId, TipoAnalisis tipoAnalisis) {
+        // Verificar análisis existentes según el tipo
+        return switch (tipoAnalisis) {
+            case PMS -> !pmsRepository.existsByLoteLoteID(loteId) || 
+                       pmsRepository.existsByLoteLoteIDAndEstado(loteId, Estado.A_REPETIR);
+            case GERMINACION -> !germinacionRepository.existsByLoteLoteID(loteId) || 
+                       germinacionRepository.existsByLoteLoteIDAndEstado(loteId, Estado.A_REPETIR);
+            case DOSN -> !dosnRepository.existsByLoteLoteID(loteId) || 
+                       dosnRepository.existsByLoteLoteIDAndEstado(loteId, Estado.A_REPETIR);
+            case TETRAZOLIO -> !tetrazolioRepository.existsByLoteLoteID(loteId) || 
+                       tetrazolioRepository.existsByLoteLoteIDAndEstado(loteId, Estado.A_REPETIR);
+            case PUREZA -> !purezaRepository.existsByLoteLoteID(loteId) || 
+                       purezaRepository.existsByLoteLoteIDAndEstado(loteId, Estado.A_REPETIR);
+            default -> true;
+        };
+    }
+    
+    // Método para obtener lotes elegibles para un tipo de análisis específico
+    public ResponseListadoLoteSimple obtenerLotesElegiblesParaTipoAnalisis(TipoAnalisis tipoAnalisis) {
+        List<Lote> todosLosLotes = loteRepository.findByActivoTrue();
+        
+        List<LoteSimpleDTO> lotesElegibles = todosLosLotes.stream()
+                .filter(lote -> esLoteElegibleParaTipoAnalisis(lote.getLoteID(), tipoAnalisis))
+                .map(this::mapearEntidadASimpleDTO)
+                .collect(Collectors.toList());
+        
+        ResponseListadoLoteSimple respuesta = new ResponseListadoLoteSimple();
+        respuesta.setLotes(lotesElegibles);
+        return respuesta;
     }
 }

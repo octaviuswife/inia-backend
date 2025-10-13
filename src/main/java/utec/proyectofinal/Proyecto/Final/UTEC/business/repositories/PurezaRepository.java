@@ -24,4 +24,8 @@ public interface PurezaRepository extends JpaRepository<Pureza, Long> {
 
     // Pageable
     Page<Pureza> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
+    
+    // Métodos eficientes para validaciones
+    boolean existsByLoteLoteID(Long loteID);
+    boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
 }
