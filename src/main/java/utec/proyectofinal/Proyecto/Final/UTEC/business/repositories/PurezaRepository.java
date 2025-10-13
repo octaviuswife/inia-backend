@@ -21,12 +21,12 @@ public interface PurezaRepository extends JpaRepository<Pureza, Long> {
     List<Pureza> findByIdLote(@Param("idLote") Long idLote);
     
     List<Pureza> findByLoteLoteID(Long loteID);
-// Métodos eficientes para validaciones
-    boolean existsByLoteLoteID(Long loteID);
-    boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
-
 
     // Pageable
     Page<Pureza> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
+    
+    // Métodos eficientes para validaciones
+    boolean existsByLoteLoteID(Long loteID);
+    boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
 
 }

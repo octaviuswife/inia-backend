@@ -17,6 +17,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeado
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+import java.math.BigDecimal;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoTetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO;
 import org.springframework.data.domain.Page;
@@ -293,15 +294,41 @@ public class TetrazolioService {
             }
         }
     }
+
+    /**
+     * Validación mínima previa a la finalización de un Tetrazolio.
+     * Requiere al menos una forma de evidencia: repeticiones creadas o porcentajes calculados
+     * (porcViablesRedondeo, porcNoViablesRedondeo, porcDurasRedondeo) mayores a 0.
+     */
+    private void validarEvidenciaAntesDeFinalizar(Tetrazolio tetrazolio) {
+    boolean tieneRepeticiones = tetrazolio.getRepeticiones() != null && !tetrazolio.getRepeticiones().isEmpty();
+
+    boolean tienePorcViables = tetrazolio.getPorcViablesRedondeo() != null
+        && tetrazolio.getPorcViablesRedondeo().compareTo(BigDecimal.ZERO) > 0;
+    boolean tienePorcNoViables = tetrazolio.getPorcNoViablesRedondeo() != null
+        && tetrazolio.getPorcNoViablesRedondeo().compareTo(BigDecimal.ZERO) > 0;
+    boolean tienePorcDuras = tetrazolio.getPorcDurasRedondeo() != null
+        && tetrazolio.getPorcDurasRedondeo().compareTo(BigDecimal.ZERO) > 0;
+
+    if (!tieneRepeticiones && !tienePorcViables && !tienePorcNoViables && !tienePorcDuras) {
+        throw new RuntimeException("No se puede finalizar: el Tetrazolio carece de evidencia. Agregue repeticiones o porcentajes calculados antes de finalizar.");
+    }
+    }
     
     // Finalizar análisis Tetrazolio - cambia estado según rol del usuario
     // Finalizar análisis (solo cuando todas las repeticiones estén completas)
     public TetrazolioDTO finalizarAnalisis(Long id) {
+        // Run both: completitud de repeticiones and evidence validator before finalizing
         return analisisService.finalizarAnalisisGenerico(
             id,
             tetrazolioRepository,
             this::mapearEntidadADTO,
-            this::validarCompletitudRepeticiones // Validación específica de Tetrazolio
+            (tetrazolio) -> {
+                // Primero validar completitud de repeticiones
+                this.validarCompletitudRepeticiones(tetrazolio);
+                // Luego validar que exista algún dato/evidencia relevante (adaptado desde DOSN)
+                this.validarEvidenciaAntesDeFinalizar(tetrazolio);
+            }
         );
     }
 
@@ -311,7 +338,10 @@ public class TetrazolioService {
             id,
             tetrazolioRepository,
             this::mapearEntidadADTO,
-            this::validarCompletitudRepeticiones // Validación específica de Tetrazolio
+            (tetrazolio) -> {
+                this.validarCompletitudRepeticiones(tetrazolio);
+                this.validarEvidenciaAntesDeFinalizar(tetrazolio);
+            }
         );
     }
 
