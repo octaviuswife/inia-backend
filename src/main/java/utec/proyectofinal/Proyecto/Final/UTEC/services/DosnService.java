@@ -25,6 +25,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoDosn;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO;
 
 @Service
 public class DosnService {
@@ -128,6 +131,35 @@ public class DosnService {
                 .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
+    }
+
+    // Listar Dosn con paginado (para listado)
+    public Page<DosnListadoDTO> obtenerDosnPaginadas(Pageable pageable) {
+        Page<Dosn> dosnPage = dosnRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return dosnPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Mapear entidad a DTO de listado simple
+    private DosnListadoDTO mapearEntidadAListadoDTO(Dosn dosn) {
+        DosnListadoDTO dto = new DosnListadoDTO();
+        dto.setAnalisisID(dosn.getAnalisisID());
+        dto.setEstado(dosn.getEstado());
+        dto.setFechaInicio(dosn.getFechaInicio());
+        dto.setFechaFin(dosn.getFechaFin());
+        if (dosn.getLote() != null) {
+            dto.setIdLote(dosn.getLote().getLoteID());
+            dto.setLote(dosn.getLote().getFicha());
+        }
+        if (dosn.getAnalisisID() != null) {
+            var historial = analisisHistorialService.obtenerHistorialAnalisis(dosn.getAnalisisID());
+            if (!historial.isEmpty()) {
+                var primerRegistro = historial.get(historial.size() - 1);
+                dto.setUsuarioCreador(primerRegistro.getUsuario());
+                var ultimoRegistro = historial.get(0);
+                dto.setUsuarioModificador(ultimoRegistro.getUsuario());
+            }
+        }
+        return dto;
     }
 
     // === Mappers ===

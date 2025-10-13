@@ -2,6 +2,8 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,8 +21,12 @@ public interface PurezaRepository extends JpaRepository<Pureza, Long> {
     List<Pureza> findByIdLote(@Param("idLote") Long idLote);
     
     List<Pureza> findByLoteLoteID(Long loteID);
-    
-    // Métodos eficientes para validaciones
+// Métodos eficientes para validaciones
     boolean existsByLoteLoteID(Long loteID);
     boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);
+
+
+    // Pageable
+    Page<Pureza> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
+
 }

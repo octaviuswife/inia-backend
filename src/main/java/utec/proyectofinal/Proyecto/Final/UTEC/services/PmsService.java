@@ -20,6 +20,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EstadisticasTandaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 @Service
@@ -129,6 +132,34 @@ public class PmsService {
         return lista.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
+    }
+
+    // Listar Pms con paginado (para listado)
+    public Page<PmsListadoDTO> obtenerPmsPaginadas(Pageable pageable) {
+        Page<Pms> pmsPage = pmsRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return pmsPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    private PmsListadoDTO mapearEntidadAListadoDTO(Pms pms) {
+        PmsListadoDTO dto = new PmsListadoDTO();
+        dto.setAnalisisID(pms.getAnalisisID());
+        dto.setEstado(pms.getEstado());
+        dto.setFechaInicio(pms.getFechaInicio());
+        dto.setFechaFin(pms.getFechaFin());
+        if (pms.getLote() != null) {
+            dto.setIdLote(pms.getLote().getLoteID());
+            dto.setLote(pms.getLote().getFicha());
+        }
+        if (pms.getAnalisisID() != null) {
+            var historial = analisisHistorialService.obtenerHistorialAnalisis(pms.getAnalisisID());
+            if (!historial.isEmpty()) {
+                var primerRegistro = historial.get(historial.size() - 1);
+                dto.setUsuarioCreador(primerRegistro.getUsuario());
+                var ultimoRegistro = historial.get(0);
+                dto.setUsuarioModificador(ultimoRegistro.getUsuario());
+            }
+        }
+        return dto;
     }
 
     // Actualizar PMS con redondeo (solo cuando todas las repeticiones estén completas)

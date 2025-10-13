@@ -132,6 +132,23 @@ public class PurezaController {
         }
     }
 
+    // Obtener Purezas con paginado para listado
+    @Operation(summary = "Obtener purezas paginadas", 
+              description = "Obtiene la lista paginada de análisis de pureza para el listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO>> obtenerPurezaPaginadas(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+        try {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO> response = purezaService.obtenerPurezaPaginadas(pageable);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Obtener todos los catálogos para el select de otras semillas
     @Operation(summary = "Listar todos los catálogos", 
               description = "Obtiene todos los catálogos necesarios para el análisis de pureza")

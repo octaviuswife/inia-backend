@@ -117,6 +117,24 @@ public class DosnController {
         }
     }
 
+
+    // Obtener DOSN con paginado para listado
+    @Operation(summary = "Obtener DOSN paginadas", 
+              description = "Obtiene la lista paginada de análisis de DOSN para el listado")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO>> obtenerDosnPaginadas(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+        try {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO> response = dosnService.obtenerDosnPaginadas(pageable);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Finalizar análisis de DOSN
     @Operation(summary = "Finalizar análisis de DOSN", 
               description = "Finaliza un DOSN según el rol del usuario")
