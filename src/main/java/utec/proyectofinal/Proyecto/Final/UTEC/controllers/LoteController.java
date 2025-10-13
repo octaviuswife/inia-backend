@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.LoteService;
@@ -101,12 +102,12 @@ public class LoteController {
     @GetMapping("/listado")
     @Operation(summary = "Obtener lotes paginadas", description = "Obtiene la lista paginada de lotes activos para el listado")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
-    public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO>> obtenerLotesPaginadas(
+    public ResponseEntity<org.springframework.data.domain.Page<LoteSimpleDTO>> obtenerLotesPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
         try {
             org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO> response = loteService.obtenerLotesPaginadas(pageable);
+            org.springframework.data.domain.Page<LoteSimpleDTO> response = loteService.obtenerLotesSimplePaginadas(pageable);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
