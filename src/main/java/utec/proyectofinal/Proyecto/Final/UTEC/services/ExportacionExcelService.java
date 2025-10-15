@@ -11,6 +11,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosExportacionExce
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ExportacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoMYCCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoListado;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,7 +20,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -118,47 +118,102 @@ public class ExportacionExcelService {
     }
 
     private void crearEncabezados(Sheet sheet, CellStyle headerStyle, CellStyle subHeaderStyle, CellStyle yellowHeaderStyle) {
-        // Fila 0: Encabezados principales
+        // Fila 0: Encabezados principales (Fila 1 en Excel, índice 0 en POI)
         Row row0 = sheet.createRow(0);
         
-        // Encabezados básicos
-        String[] encabezadosPrincipales = {
-            "", "", "", "", "", "", "", "", "",
-            "Pureza INIA", "", "", "", "", "",
-            "Pureza INASE", "", "", "", "",
-            "Descripción", "", "", "",
-            "DOSN", "", "", "",
-            "DOSN-I", "", "", "", "",
-            "PMS", "Fecha Análisis", "TS",
-            "Germinación", "", "", "", "",
-            "Germinación -I", "", "", "", "",
-            "V%", "V-I%"
-        };
-        
-        for (int i = 0; i < encabezadosPrincipales.length; i++) {
+        // Columnas A-I: Vacías (datos básicos sin encabezado superior)
+        for (int i = 0; i < 9; i++) {
             Cell cell = row0.createCell(i);
-            cell.setCellValue(encabezadosPrincipales[i]);
-            
-            // Aplicar estilo según el contenido
-            if (encabezadosPrincipales[i].contains("INASE") || encabezadosPrincipales[i].contains("Germinación -I") || encabezadosPrincipales[i].contains("V-I%")) {
-                cell.setCellStyle(yellowHeaderStyle);
-            } else if (!encabezadosPrincipales[i].isEmpty()) {
-                cell.setCellStyle(headerStyle);
-            }
+            cell.setCellValue("");
+            cell.setCellStyle(headerStyle);
         }
         
-        // Fila 1: Subencabezados
+        // Columnas J-O: Pureza INIA (índices 9-14) - 6 columnas
+        Cell purezaIniaCell = row0.createCell(9);
+        purezaIniaCell.setCellValue("Pureza INIA");
+        purezaIniaCell.setCellStyle(headerStyle);
+        
+        // Columnas P-U: Pureza INASE (índices 15-20) - 6 columnas
+        Cell purezaInaseCell = row0.createCell(15);
+        purezaInaseCell.setCellValue("Pureza INASE");
+        purezaInaseCell.setCellStyle(yellowHeaderStyle);
+        
+        // Columnas V-Y: Descripción (índices 21-24) - 4 columnas
+        Cell descripcionCell = row0.createCell(21);
+        descripcionCell.setCellValue("Descripción");
+        descripcionCell.setCellStyle(headerStyle);
+        
+        // Columnas Z-AD: DOSN (índices 25-29) - 5 columnas
+        Cell dosnCell = row0.createCell(25);
+        dosnCell.setCellValue("DOSN");
+        dosnCell.setCellStyle(headerStyle);
+        
+        // Columnas AE-AI: DOSN-I (índices 30-34) - 5 columnas
+        Cell dosniCell = row0.createCell(30);
+        dosniCell.setCellValue("DOSN-I");
+        dosniCell.setCellStyle(yellowHeaderStyle);
+        
+        // Columna AJ: PMS (índice 35)
+        Cell pmsCell = row0.createCell(35);
+        pmsCell.setCellValue("PMS");
+        pmsCell.setCellStyle(headerStyle);
+        
+        // Columna AK: Fecha Análisis (índice 36)
+        Cell fechaCell = row0.createCell(36);
+        fechaCell.setCellValue("Fecha Análisis");
+        fechaCell.setCellStyle(headerStyle);
+        
+        // Columna AL: TS (índice 37)
+        Cell tsCell = row0.createCell(37);
+        tsCell.setCellValue("TS");
+        tsCell.setCellStyle(headerStyle);
+        
+        // Columnas AM-AR: Germinación (índices 38-43) - 6 columnas
+        Cell germinacionCell = row0.createCell(38);
+        germinacionCell.setCellValue("Germinación");
+        germinacionCell.setCellStyle(headerStyle);
+        
+        // Columnas AS-AX: Germinación -I (índices 44-49) - 6 columnas
+        Cell germinacionICell = row0.createCell(44);
+        germinacionICell.setCellValue("Germinación -I");
+        germinacionICell.setCellStyle(yellowHeaderStyle);
+        
+        // Columna AY: V% (índice 50)
+        Cell vCell = row0.createCell(50);
+        vCell.setCellValue("V%");
+        vCell.setCellStyle(headerStyle);
+        
+        // Columna AZ: V-I% (índice 51)
+        Cell viCell = row0.createCell(51);
+        viCell.setCellValue("V-I%");
+        viCell.setCellStyle(yellowHeaderStyle);
+        
+        // Fila 1: Subencabezados (Fila 2 en Excel, índice 1 en POI)
         Row row1 = sheet.createRow(1);
         String[] subEncabezados = {
+            // A-I: Datos básicos (índices 0-8)
             "Especie", "Variedad", "Lote", "Deposito", "N° de articulo", "N° análisis", "Nro. Ficha", "Kilos", "H%",
+            // J-O: Pureza INIA (índices 9-14)
             "SP%", "MI%", "OC%", "M%", "MT.%", "M.T.C%",
+            // P-U: Pureza INASE (índices 15-20)
             "SP-I%", "MI-I%", "OC-I%", "M%", "M.T-I%", "M.T.C%",
+            // V-Y: Descripción (índices 21-24)
             "MI", "OC", "MT", "MTC",
-            "OC", "M", "MT", "MTC",
-            "OC", "M", "MT", "MTC", "DB",
-            "", "", "",
+            // Z-AD: DOSN (índices 25-29)
+            "MTC", "OC", "M", "MT", "DB",
+            // AE-AI: DOSN-I (índices 30-34)
+            "MTC", "OC", "M", "MT", "DB",
+            // AJ: PMS (índice 35)
+            "",
+            // AK: Fecha Análisis (índice 36)
+            "",
+            // AL: TS (índice 37)
+            "",
+            // AM-AR: Germinación (índices 38-43)
             "PN%", "AN%", "D%", "F%", "M%", "G%",
+            // AS-AX: Germinación -I (índices 44-49)
             "PN-I%", "AN-I%", "D-I%", "F-I%", "M-I%", "G-I%",
+            // AY-AZ: Viabilidad (índices 50-51)
             "", ""
         };
         
@@ -168,21 +223,21 @@ public class ExportacionExcelService {
             cell.setCellStyle(subHeaderStyle);
         }
         
-        // Crear celdas combinadas para encabezados principales
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 9, 14));   // Pureza INIA
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 15, 20));  // Pureza INASE
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 21, 24));  // Descripción
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 25, 28));  // DOSN
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 29, 33));  // DOSN-I
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 37, 42));  // Germinación
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 43, 48));  // Germinación -I
+        // Crear celdas combinadas para encabezados principales (fila 0)
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 9, 14));   // Pureza INIA (J-O)
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 15, 20));  // Pureza INASE (P-U)
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 21, 24));  // Descripción (V-Y)
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 25, 29));  // DOSN (Z-AD)
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 30, 34));  // DOSN-I (AE-AI)
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 38, 43));  // Germinación (AM-AR)
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 44, 49));  // Germinación -I (AS-AX)
     }
 
     private void crearFilaDatos(Sheet sheet, int numeroFila, DatosExportacionExcelDTO datos, CellStyle style) {
         Row row = sheet.createRow(numeroFila);
         int col = 0;
         
-        // Datos básicos
+        // A-I: Datos básicos (índices 0-8)
         crearCelda(row, col++, datos.getEspecie(), style);
         crearCelda(row, col++, datos.getVariedad(), style);
         crearCelda(row, col++, datos.getLote(), style);
@@ -193,7 +248,7 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getKilos(), style);
         crearCelda(row, col++, datos.getHumedad(), style);
         
-        // Pureza INIA
+        // J-O: Pureza INIA (índices 9-14) - 6 columnas
         crearCelda(row, col++, datos.getPurezaSemillaPura(), style);
         crearCelda(row, col++, datos.getPurezaMateriaInerte(), style);
         crearCelda(row, col++, datos.getPurezaOtrosCultivos(), style);
@@ -201,7 +256,7 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getPurezaMalezasToleradas(), style);
         crearCelda(row, col++, datos.getPurezaMateriaTotal(), style);
         
-        // Pureza INASE
+        // P-U: Pureza INASE (índices 15-20) - 6 columnas
         crearCelda(row, col++, datos.getPurezaInaseSemillaPura(), style);
         crearCelda(row, col++, datos.getPurezaInaseMateriaInerte(), style);
         crearCelda(row, col++, datos.getPurezaInaseOtrosCultivos(), style);
@@ -209,31 +264,36 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getPurezaInaseMalezasToleradas(), style);
         crearCelda(row, col++, datos.getPurezaInaseMateriaTotal(), style);
         
-        // Descripción
+        // V-Y: Descripción (índices 21-24) - 4 columnas
         crearCelda(row, col++, datos.getDescripcionMalezas(), style);
         crearCelda(row, col++, datos.getDescripcionOtrosCultivos(), style);
         crearCelda(row, col++, datos.getDescripcionMalezasToleradas(), style);
         crearCelda(row, col++, datos.getDescripcionMateriaTotal(), style);
         
-        // DOSN
-        crearCelda(row, col++, datos.getDosnOtrosCultivos(), style);
-        crearCelda(row, col++, datos.getDosnMalezas(), style);
-        crearCelda(row, col++, datos.getDosnMalezasToleradas(), style);
-        crearCelda(row, col++, datos.getDosnMateriaTotal(), style);
+        // Z-AD: DOSN (índices 25-29) - 5 columnas
+        crearCelda(row, col++, datos.getDosnMalezasToleranciaC(), style);  // MTC
+        crearCelda(row, col++, datos.getDosnOtrosCultivos(), style);        // OC
+        crearCelda(row, col++, datos.getDosnMalezas(), style);              // M
+        crearCelda(row, col++, datos.getDosnMalezasToleradas(), style);     // MT
+        crearCelda(row, col++, datos.getDosnBrassica(), style);             // DB
         
-        // DOSN-I
-        crearCelda(row, col++, datos.getDosnInaseOtrosCultivos(), style);
-        crearCelda(row, col++, datos.getDosnInaseMalezas(), style);
-        crearCelda(row, col++, datos.getDosnInaseMalezasToleradas(), style);
-        crearCelda(row, col++, datos.getDosnInaseMateriaTotal(), style);
-        crearCelda(row, col++, datos.getDosnInaseDB(), style);
+        // AE-AI: DOSN-I (índices 30-34) - 5 columnas
+        crearCelda(row, col++, datos.getDosnInaseMalezasToleranciaC(), style);  // MTC
+        crearCelda(row, col++, datos.getDosnInaseOtrosCultivos(), style);        // OC
+        crearCelda(row, col++, datos.getDosnInaseMalezas(), style);              // M
+        crearCelda(row, col++, datos.getDosnInaseMalezasToleradas(), style);     // MT
+        crearCelda(row, col++, datos.getDosnInaseBrassica(), style);             // DB
         
-        // PMS y otros
+        // AJ: PMS (índice 35)
         crearCelda(row, col++, datos.getPms(), style);
+        
+        // AK: Fecha Análisis (índice 36)
         crearCelda(row, col++, datos.getFechaAnalisis() != null ? datos.getFechaAnalisis().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "", style);
+        
+        // AL: TS (índice 37)
         crearCelda(row, col++, datos.getTratamientoSemillas(), style);
         
-        // Germinación INIA
+        // AM-AR: Germinación INIA (índices 38-43) - 6 columnas
         crearCelda(row, col++, datos.getGerminacionPlantulasNormales(), style);
         crearCelda(row, col++, datos.getGerminacionPlantulasAnormales(), style);
         crearCelda(row, col++, datos.getGerminacionSemillasDeterioras(), style);
@@ -241,7 +301,7 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getGerminacionSemillasMuertas(), style);
         crearCelda(row, col++, datos.getGerminacionTotal(), style);
         
-        // Germinación INASE
+        // AS-AX: Germinación INASE (índices 44-49) - 6 columnas
         crearCelda(row, col++, datos.getGerminacionInasePlantulasNormales(), style);
         crearCelda(row, col++, datos.getGerminacionInasePlantulasAnormales(), style);
         crearCelda(row, col++, datos.getGerminacionInaseSemillasDeterioras(), style);
@@ -249,7 +309,7 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getGerminacionInaseSemillasMuertas(), style);
         crearCelda(row, col++, datos.getGerminacionInaseTotal(), style);
         
-        // Viabilidad
+        // AY-AZ: Viabilidad (índices 50-51)
         crearCelda(row, col++, datos.getViabilidadPorcentaje(), style);
         crearCelda(row, col++, datos.getViabilidadInasePorcentaje(), style);
     }
@@ -453,7 +513,8 @@ public class ExportacionExcelService {
             dto.setPurezaOtrosCultivos(pureza.getRedonOtrosCultivos());
             dto.setPurezaMalezas(pureza.getRedonMalezas());
             dto.setPurezaMalezasToleradas(pureza.getRedonMalezasToleradas());
-            dto.setPurezaMateriaTotal(pureza.getRedonPesoTotal());
+            // TODO: Campo 'redonMateriaTotal' no existe en entidad Pureza
+            dto.setPurezaMateriaTotal(null);
             
             // Datos INASE
             dto.setPurezaInaseSemillaPura(pureza.getInasePura());
@@ -461,8 +522,8 @@ public class ExportacionExcelService {
             dto.setPurezaInaseOtrosCultivos(pureza.getInaseOtrosCultivos());
             dto.setPurezaInaseMalezas(pureza.getInaseMalezas());
             dto.setPurezaInaseMalezasToleradas(pureza.getInaseMalezasToleradas());
-            // Para material total INASE, si no hay campo específico, usar el mismo que INIA
-            dto.setPurezaInaseMateriaTotal(pureza.getRedonPesoTotal());
+            // TODO: Campo 'inaseMateriaTotal' no existe en entidad Pureza
+            dto.setPurezaInaseMateriaTotal(null);
             
             if (pureza.getFecha() != null) {
                 dto.setFechaAnalisis(pureza.getFecha());
@@ -473,6 +534,8 @@ public class ExportacionExcelService {
                 System.out.println("Listados encontrados: " + pureza.getListados().size());
                 StringBuilder descripcionMalezas = new StringBuilder();
                 StringBuilder descripcionOtrosCultivos = new StringBuilder();
+                StringBuilder descripcionMalezasToleradas = new StringBuilder();
+                StringBuilder descripcionMateriaTotal = new StringBuilder();
                 
                 for (Listado listado : pureza.getListados()) {
                     if (listado.getCatalogo() != null) {
@@ -493,6 +556,8 @@ public class ExportacionExcelService {
                 
                 dto.setDescripcionMalezas(descripcionMalezas.toString());
                 dto.setDescripcionOtrosCultivos(descripcionOtrosCultivos.toString());
+                dto.setDescripcionMalezasToleradas(descripcionMalezasToleradas.toString());
+                dto.setDescripcionMateriaTotal(descripcionMateriaTotal.toString());
                 
                 System.out.println("Descripciones - Malezas: " + dto.getDescripcionMalezas() + ", Otros cultivos: " + dto.getDescripcionOtrosCultivos());
             } else {
@@ -577,50 +642,84 @@ public class ExportacionExcelService {
                 StringBuilder dosnOtrosCultivos = new StringBuilder();
                 StringBuilder dosnMalezas = new StringBuilder();
                 StringBuilder dosnMalezasToleradas = new StringBuilder();
-                StringBuilder dosnMateriaTotal = new StringBuilder();
+                StringBuilder dosnMalezasToleranciaC = new StringBuilder();
+                StringBuilder dosnBrassica = new StringBuilder();
                 
                 // Para DOSN INASE
                 StringBuilder dosnInaseOtrosCultivos = new StringBuilder();
                 StringBuilder dosnInaseMalezas = new StringBuilder();
                 StringBuilder dosnInaseMalezasToleradas = new StringBuilder();
-                StringBuilder dosnInaseMateriaTotal = new StringBuilder();
+                StringBuilder dosnInaseMalezasToleranciaC = new StringBuilder();
+                StringBuilder dosnInaseBrassica = new StringBuilder();
                 
                 for (Listado listado : dosn.getListados()) {
                     if (listado.getCatalogo() != null) {
                         String nombre = listado.getCatalogo().getNombreComun();
                         TipoMYCCatalogo tipo = listado.getCatalogo().getTipoMYCCatalogo();
+                        TipoListado tipoListado = listado.getListadoTipo();
+                        Instituto instituto = listado.getListadoInsti();
                         
-                        if (TipoMYCCatalogo.MALEZA.equals(tipo)) {
-                            if (dosnMalezas.length() > 0) dosnMalezas.append(", ");
-                            dosnMalezas.append(nombre);
-                            
-                            // También agregar a INASE
-                            if (dosnInaseMalezas.length() > 0) dosnInaseMalezas.append(", ");
-                            dosnInaseMalezas.append(nombre);
-                        } else if (TipoMYCCatalogo.CULTIVO.equals(tipo)) {
-                            if (dosnOtrosCultivos.length() > 0) dosnOtrosCultivos.append(", ");
-                            dosnOtrosCultivos.append(nombre);
-                            
-                            // También agregar a INASE
-                            if (dosnInaseOtrosCultivos.length() > 0) dosnInaseOtrosCultivos.append(", ");
-                            dosnInaseOtrosCultivos.append(nombre);
+                        // Procesar según el tipo de listado y el instituto
+                        if (instituto == Instituto.INIA) {
+                            // DOSN INIA
+                            if (tipoListado == TipoListado.MAL_TOLERANCIA_CERO) {
+                                if (dosnMalezasToleranciaC.length() > 0) dosnMalezasToleranciaC.append(", ");
+                                dosnMalezasToleranciaC.append(nombre);
+                            } else if (tipoListado == TipoListado.BRASSICA) {
+                                if (dosnBrassica.length() > 0) dosnBrassica.append(", ");
+                                dosnBrassica.append(nombre);
+                            } else if (TipoMYCCatalogo.MALEZA.equals(tipo)) {
+                                if (tipoListado == TipoListado.MAL_TOLERANCIA) {
+                                    if (dosnMalezasToleradas.length() > 0) dosnMalezasToleradas.append(", ");
+                                    dosnMalezasToleradas.append(nombre);
+                                } else {
+                                    if (dosnMalezas.length() > 0) dosnMalezas.append(", ");
+                                    dosnMalezas.append(nombre);
+                                }
+                            } else if (TipoMYCCatalogo.CULTIVO.equals(tipo)) {
+                                if (dosnOtrosCultivos.length() > 0) dosnOtrosCultivos.append(", ");
+                                dosnOtrosCultivos.append(nombre);
+                            }
+                        } else if (instituto == Instituto.INASE) {
+                            // DOSN INASE
+                            if (tipoListado == TipoListado.MAL_TOLERANCIA_CERO) {
+                                if (dosnInaseMalezasToleranciaC.length() > 0) dosnInaseMalezasToleranciaC.append(", ");
+                                dosnInaseMalezasToleranciaC.append(nombre);
+                            } else if (tipoListado == TipoListado.BRASSICA) {
+                                if (dosnInaseBrassica.length() > 0) dosnInaseBrassica.append(", ");
+                                dosnInaseBrassica.append(nombre);
+                            } else if (TipoMYCCatalogo.MALEZA.equals(tipo)) {
+                                if (tipoListado == TipoListado.MAL_TOLERANCIA) {
+                                    if (dosnInaseMalezasToleradas.length() > 0) dosnInaseMalezasToleradas.append(", ");
+                                    dosnInaseMalezasToleradas.append(nombre);
+                                } else {
+                                    if (dosnInaseMalezas.length() > 0) dosnInaseMalezas.append(", ");
+                                    dosnInaseMalezas.append(nombre);
+                                }
+                            } else if (TipoMYCCatalogo.CULTIVO.equals(tipo)) {
+                                if (dosnInaseOtrosCultivos.length() > 0) dosnInaseOtrosCultivos.append(", ");
+                                dosnInaseOtrosCultivos.append(nombre);
+                            }
                         }
                     }
                 }
                 
+                // DOSN INIA
                 dto.setDosnOtrosCultivos(dosnOtrosCultivos.toString());
                 dto.setDosnMalezas(dosnMalezas.toString());
                 dto.setDosnMalezasToleradas(dosnMalezasToleradas.toString());
-                dto.setDosnMateriaTotal(dosnMateriaTotal.toString());
+                dto.setDosnMalezasToleranciaC(dosnMalezasToleranciaC.toString());
+                dto.setDosnBrassica(dosnBrassica.toString());
                 
+                // DOSN INASE
                 dto.setDosnInaseOtrosCultivos(dosnInaseOtrosCultivos.toString());
                 dto.setDosnInaseMalezas(dosnInaseMalezas.toString());
                 dto.setDosnInaseMalezasToleradas(dosnInaseMalezasToleradas.toString());
-                dto.setDosnInaseMateriaTotal(dosnInaseMateriaTotal.toString());
+                dto.setDosnInaseMalezasToleranciaC(dosnInaseMalezasToleranciaC.toString());
+                dto.setDosnInaseBrassica(dosnInaseBrassica.toString());
             }
         }
     }
-
     private CellStyle crearEstiloEncabezado(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
         style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
