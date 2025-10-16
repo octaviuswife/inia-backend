@@ -377,6 +377,7 @@ public class LoteService {
     // Actualizar Entity desde RequestDTO para edición
     private void actualizarEntidadDesdeSolicitud(Lote lote, LoteRequestDTO solicitud) {
         lote.setFicha(solicitud.getFicha());
+        lote.setNomLote(solicitud.getNomLote());
         
         // Convertir String a enum TipoLote
         if (solicitud.getTipo() != null) {
@@ -508,6 +509,7 @@ public class LoteService {
         
         dto.setLoteID(lote.getLoteID());
         dto.setFicha(lote.getFicha());
+        dto.setNomLote(lote.getNomLote());
         
         // Convertir enum TipoLote a String
         if (lote.getTipo() != null) {
@@ -597,6 +599,7 @@ public class LoteService {
         LoteSimpleDTO dto = new LoteSimpleDTO();
         dto.setLoteID(lote.getLoteID());
         dto.setFicha(lote.getFicha());
+        dto.setNomLote(lote.getNomLote());
         dto.setActivo(lote.getActivo());
         
         // Mapear cultivar nombre directamente

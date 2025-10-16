@@ -21,7 +21,12 @@ public class Lote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long loteID;
 
+
     private String ficha;
+
+
+    @Column(unique = true)
+    private String nomLote;
 
     @ManyToOne
     @JoinColumn(name = "cultivarID")
@@ -55,6 +60,10 @@ public class Lote {
     // Relación con datos de humedad (múltiples conjuntos de tipo + valor)
     @OneToMany(mappedBy = "lote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DatosHumedad> datosHumedad;
+    
+    // Relación con datos legados importados
+    @OneToMany(mappedBy = "lote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Legado> datosLegados;
     
     @ManyToOne
     @JoinColumn(name = "numeroArticuloID")

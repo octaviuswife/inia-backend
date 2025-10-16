@@ -10,6 +10,7 @@ import java.util.List;
 public class LoteDTO {
     private Long loteID;
     private String ficha;
+    private String nomLote;
     private Long cultivarID;
     private String cultivarNombre;
     private String tipo;

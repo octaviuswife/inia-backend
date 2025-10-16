@@ -37,4 +37,7 @@ public interface ContactoRepository extends JpaRepository<Contacto, Long> {
     // Verificar si existe nombre para un tipo específico
     @Query("SELECT COUNT(c) > 0 FROM Contacto c WHERE LOWER(c.nombre) = LOWER(:nombre) AND c.tipo = :tipo")
     boolean existsByNombreIgnoreCaseAndTipo(@Param("nombre") String nombre, @Param("tipo") TipoContacto tipo);
+    
+    // Buscar por nombre exacto, tipo y activo
+    Optional<Contacto> findByNombreAndTipoAndActivoTrue(String nombre, TipoContacto tipo);
 }

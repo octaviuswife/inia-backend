@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,4 +23,7 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
 
     // Pageable for listing
     Page<Lote> findByActivo(Boolean activo, Pageable pageable);
+    
+    // Buscar por ficha
+    Optional<Lote> findByFicha(String ficha);
 }
