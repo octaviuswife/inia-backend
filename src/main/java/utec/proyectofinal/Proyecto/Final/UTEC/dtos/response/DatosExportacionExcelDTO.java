@@ -1,3 +1,4 @@
+
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
 import lombok.Data;
@@ -42,18 +43,19 @@ public class DatosExportacionExcelDTO {
     private String descripcionMalezasToleradas;
     private String descripcionMateriaTotal;
     
-    // DOSN
-    private String dosnOtrosCultivos;
-    private String dosnMalezas;
-    private String dosnMalezasToleradas;
-    private String dosnMateriaTotal;
+    // DOSN (INIA)
+    private String dosnOtrosCultivos;           // OC
+    private String dosnMalezas;                 // M
+    private String dosnMalezasToleradas;        // MT
+    private String dosnMalezasToleranciaC;   // MTC (Malezas Tolerancia Cero)
+    private String dosnBrassica;                // DB (Brassica)
     
     // DOSN-I (INASE)
-    private String dosnInaseOtrosCultivos;
-    private String dosnInaseMalezas;
-    private String dosnInaseMalezasToleradas;
-    private String dosnInaseMateriaTotal;
-    private String dosnInaseDB;
+    private String dosnInaseOtrosCultivos;      // OC
+    private String dosnInaseMalezas;            // M
+    private String dosnInaseMalezasToleradas;   // MT
+    private String dosnInaseMalezasToleranciaC; // MTC (Malezas Tolerancia Cero)
+    private String dosnInaseBrassica;           // DB (Brassica)
     
     // PMS
     private BigDecimal pms;
