@@ -8,11 +8,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,11 +45,13 @@ public class CatalogoController {
 
     // Obtener catálogos por tipo
     @GetMapping("/tipo/{tipo}")
-    @Operation(summary = "Listar catálogos por tipo", description = "Obtiene catálogos filtrados por tipo")
+    @Operation(summary = "Listar catálogos por tipo", description = "Obtiene catálogos filtrados por tipo y estado (activo/inactivo)")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
-    public ResponseEntity<List<CatalogoDTO>> obtenerPorTipo(@PathVariable String tipo) {
+    public ResponseEntity<List<CatalogoDTO>> obtenerPorTipo(
+            @PathVariable String tipo,
+            @RequestParam(required = false) Boolean activo) {
         try {
-            List<CatalogoDTO> catalogos = catalogoService.obtenerPorTipo(tipo);
+            List<CatalogoDTO> catalogos = catalogoService.obtenerPorTipo(tipo, activo);
             return ResponseEntity.ok(catalogos);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -70,12 +74,14 @@ public class CatalogoController {
     @PostMapping
     @Operation(summary = "Crear catálogo", description = "Crea un nuevo catálogo (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CatalogoDTO> crear(@RequestBody CatalogoRequestDTO solicitud) {
+    public ResponseEntity<?> crear(@RequestBody CatalogoRequestDTO solicitud) {
         try {
             CatalogoDTO creado = catalogoService.crear(solicitud);
             return ResponseEntity.ok(creado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Tipo de catálogo inválido: " + e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -83,15 +89,17 @@ public class CatalogoController {
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar catálogo", description = "Actualiza un catálogo existente (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CatalogoDTO> actualizar(@PathVariable Long id, @RequestBody CatalogoRequestDTO solicitud) {
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody CatalogoRequestDTO solicitud) {
         try {
             CatalogoDTO actualizado = catalogoService.actualizar(id, solicitud);
             if (actualizado != null) {
                 return ResponseEntity.ok(actualizado);
             }
             return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Tipo de catálogo inválido: " + e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -104,6 +112,18 @@ public class CatalogoController {
         return ResponseEntity.ok().build();
     }
 
+    // Reactivar catálogo
+    @Operation(summary = "Reactivar catálogo", description = "Reactiva un catálogo desactivado (solo administradores)")
+    @PutMapping("/{id}/reactivar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CatalogoDTO> reactivar(@PathVariable Long id) {
+        CatalogoDTO reactivado = catalogoService.reactivar(id);
+        if (reactivado != null) {
+            return ResponseEntity.ok(reactivado);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     // Eliminar físicamente (solo para casos especiales)
     @Operation(summary = "Eliminar catálogo físicamente", description = "Elimina un catálogo de forma permanente (solo administradores)")
     @DeleteMapping("/{id}/fisico")
@@ -113,46 +133,46 @@ public class CatalogoController {
         return ResponseEntity.ok().build();
     }
 
-    // Endpoints específicos para obtener tipos de datos
+    // Endpoints específicos para obtener tipos de datos (solo activos por defecto)
     @Operation(summary = "Obtener Catalogo Humedad")
     @GetMapping("/humedad")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerTiposHumedad() {
-        return obtenerPorTipo("HUMEDAD");
+        return obtenerPorTipo("HUMEDAD", true);
     }
 
     @Operation(summary = "Obtener Catalogo Numero de Articulos")
     @GetMapping("/articulos")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerNumerosArticulo() {
-        return obtenerPorTipo("ARTICULO");
+        return obtenerPorTipo("ARTICULO", true);
     }
 
     @Operation(summary = "Obtener Catalogo Origen")
     @GetMapping("/origenes")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerOrigenes() {
-        return obtenerPorTipo("ORIGEN");
+        return obtenerPorTipo("ORIGEN", true);
     }
 
     @Operation(summary = "Obtener Catalogo Estados")
     @GetMapping("/estados")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerEstados() {
-        return obtenerPorTipo("ESTADO");
+        return obtenerPorTipo("ESTADO", true);
     }
 
     @Operation(summary = "Obtener Catalogo Deposito")
     @GetMapping("/depositos")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerDepositos() {
-        return obtenerPorTipo("DEPOSITO");
+        return obtenerPorTipo("DEPOSITO", true);
     }
 
     @Operation(summary = "Obtener Catalogo Unidades de Embolsado")
     @GetMapping("/unidades-embolsado")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerUnidadesEmbolsado() {
-        return obtenerPorTipo("UNIDAD_EMBOLSADO");
+        return obtenerPorTipo("UNIDAD_EMBOLSADO", true);
     }
 }

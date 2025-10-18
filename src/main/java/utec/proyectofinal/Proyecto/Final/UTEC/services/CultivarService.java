@@ -34,6 +34,20 @@ public class CultivarService {
                 .collect(Collectors.toList());
     }
 
+    // Obtener con filtro de estado opcional
+    public List<CultivarDTO> obtenerTodos(Boolean activo) {
+        if (activo == null) {
+            // Devolver todos (activos e inactivos)
+            return cultivarRepository.findAll().stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        } else if (activo) {
+            return obtenerTodos();
+        } else {
+            return obtenerInactivos();
+        }
+    }
+
     // Obtener por especie
     public List<CultivarDTO> obtenerPorEspecie(Long especieID) {
         return cultivarRepository.findByEspecieEspecieIDAndActivoTrue(especieID).stream()

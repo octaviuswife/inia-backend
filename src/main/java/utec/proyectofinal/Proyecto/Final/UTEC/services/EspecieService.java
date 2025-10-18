@@ -30,6 +30,20 @@ public class EspecieService {
                 .collect(Collectors.toList());
     }
 
+    // Obtener con filtro de estado opcional
+    public List<EspecieDTO> obtenerTodas(Boolean activo) {
+        if (activo == null) {
+            // Devolver todas (activas e inactivas)
+            return especieRepository.findAll().stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        } else if (activo) {
+            return obtenerTodas();
+        } else {
+            return obtenerInactivas();
+        }
+    }
+
     // Buscar por nombre común
     public List<EspecieDTO> buscarPorNombreComun(String nombre) {
         return especieRepository.findByNombreComunContainingIgnoreCaseAndActivoTrue(nombre).stream()
