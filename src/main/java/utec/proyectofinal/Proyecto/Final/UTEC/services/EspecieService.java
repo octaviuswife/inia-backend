@@ -110,6 +110,10 @@ public class EspecieService {
                         throw new RuntimeException("La especie ya está activa");
                     }
                     especie.setActivo(true);
+                    // También reactivar cultivares asociados
+                    if (especie.getCultivares() != null) {
+                        especie.getCultivares().forEach(cultivar -> cultivar.setActivo(true));
+                    }
                     Especie reactivada = especieRepository.save(especie);
                     return mapearEntidadADTO(reactivada);
                 })
