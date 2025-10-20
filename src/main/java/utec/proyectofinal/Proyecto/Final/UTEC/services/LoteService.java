@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
@@ -25,14 +27,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRe
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosHumedadDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO;
 
 @Service
 public class LoteService {
@@ -670,5 +670,70 @@ public class LoteService {
         ResponseListadoLoteSimple respuesta = new ResponseListadoLoteSimple();
         respuesta.setLotes(lotesElegibles);
         return respuesta;
+    }
+    
+    // Método para contar análisis pendientes (asignados pero no realizados o todos en A_REPETIR)
+    public long contarAnalisisPendientes() {
+        List<Lote> lotesActivos = loteRepository.findByActivoTrue();
+        long totalPendientes = 0;
+        
+        for (Lote lote : lotesActivos) {
+            if (lote.getTiposAnalisisAsignados() == null) continue;
+            
+            for (TipoAnalisis tipo : lote.getTiposAnalisisAsignados()) {
+                // Verificar si el análisis no existe o todos están marcados como A_REPETIR
+                boolean pendiente = switch (tipo) {
+                    case PMS -> {
+                        // No existe ningún análisis
+                        if (!pmsRepository.existsByLoteLoteID(lote.getLoteID())) {
+                            yield true;
+                        }
+                        // Existen análisis, verificar si TODOS están en A_REPETIR
+                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms> analisis = 
+                            pmsRepository.findByLoteLoteID(lote.getLoteID());
+                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
+                    }
+                    case GERMINACION -> {
+                        if (!germinacionRepository.existsByLoteLoteID(lote.getLoteID())) {
+                            yield true;
+                        }
+                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion> analisis = 
+                            germinacionRepository.findByLoteLoteID(lote.getLoteID());
+                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
+                    }
+                    case DOSN -> {
+                        if (!dosnRepository.existsByLoteLoteID(lote.getLoteID())) {
+                            yield true;
+                        }
+                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Dosn> analisis = 
+                            dosnRepository.findByLoteLoteID(lote.getLoteID());
+                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
+                    }
+                    case TETRAZOLIO -> {
+                        if (!tetrazolioRepository.existsByLoteLoteID(lote.getLoteID())) {
+                            yield true;
+                        }
+                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio> analisis = 
+                            tetrazolioRepository.findByLoteLoteID(lote.getLoteID());
+                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
+                    }
+                    case PUREZA -> {
+                        if (!purezaRepository.existsByLoteLoteID(lote.getLoteID())) {
+                            yield true;
+                        }
+                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pureza> analisis = 
+                            purezaRepository.findByLoteLoteID(lote.getLoteID());
+                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
+                    }
+                    default -> false;
+                };
+                
+                if (pendiente) {
+                    totalPendientes++;
+                }
+            }
+        }
+        
+        return totalPendientes;
     }
 }
