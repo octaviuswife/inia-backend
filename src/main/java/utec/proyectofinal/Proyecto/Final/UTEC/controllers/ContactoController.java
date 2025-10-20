@@ -43,12 +43,13 @@ public class ContactoController {
 
     // Obtener solo clientes
     @Operation(summary = "Listar todos los clientes", 
-              description = "Obtiene todos los contactos que son clientes")
+              description = "Obtiene todos los contactos que son clientes con filtro opcional de estado")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/clientes")
-    public ResponseEntity<List<ContactoDTO>> obtenerClientes() {
+    public ResponseEntity<List<ContactoDTO>> obtenerClientes(
+            @RequestParam(required = false) Boolean activo) {
         try {
-            List<ContactoDTO> clientes = contactoService.obtenerClientes();
+            List<ContactoDTO> clientes = contactoService.obtenerClientes(activo);
             return ResponseEntity.ok(clientes);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -57,12 +58,13 @@ public class ContactoController {
 
     // Obtener solo empresas
     @Operation(summary = "Listar todas las empresas", 
-              description = "Obtiene todos los contactos que son empresas")
+              description = "Obtiene todos los contactos que son empresas con filtro opcional de estado")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/empresas")
-    public ResponseEntity<List<ContactoDTO>> obtenerEmpresas() {
+    public ResponseEntity<List<ContactoDTO>> obtenerEmpresas(
+            @RequestParam(required = false) Boolean activo) {
         try {
-            List<ContactoDTO> empresas = contactoService.obtenerEmpresas();
+            List<ContactoDTO> empresas = contactoService.obtenerEmpresas(activo);
             return ResponseEntity.ok(empresas);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -142,7 +144,7 @@ public class ContactoController {
     // Reactivar contacto
     @Operation(summary = "Reactivar contacto")
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{contactoID}/reactivar")
+    @PutMapping("/{contactoID}/reactivar")
     public ResponseEntity<?> reactivarContacto(@PathVariable Long contactoID) {
         try {
             ContactoDTO contactoReactivado = contactoService.reactivarContacto(contactoID);

@@ -1,14 +1,15 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.EspecieRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.EspecieRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EspecieService {
@@ -28,6 +29,20 @@ public class EspecieService {
         return especieRepository.findByActivoFalse().stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
+    }
+
+    // Obtener con filtro de estado opcional
+    public List<EspecieDTO> obtenerTodas(Boolean activo) {
+        if (activo == null) {
+            // Devolver todas (activas e inactivas)
+            return especieRepository.findAll().stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        } else if (activo) {
+            return obtenerTodas();
+        } else {
+            return obtenerInactivas();
+        }
     }
 
     // Buscar por nombre común
@@ -96,6 +111,10 @@ public class EspecieService {
                         throw new RuntimeException("La especie ya está activa");
                     }
                     especie.setActivo(true);
+                    // También reactivar cultivares asociados
+                    if (especie.getCultivares() != null) {
+                        especie.getCultivares().forEach(cultivar -> cultivar.setActivo(true));
+                    }
                     Especie reactivada = especieRepository.save(especie);
                     return mapearEntidadADTO(reactivada);
                 })

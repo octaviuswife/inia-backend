@@ -33,6 +33,28 @@ public class CatalogoService {
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
+
+    // Obtener catálogos por tipo con filtro de estado opcional
+    public List<CatalogoDTO> obtenerPorTipo(String tipo, Boolean activo) {
+        TipoCatalogo tipoCatalogo = TipoCatalogo.valueOf(tipo.toUpperCase());
+        
+        if (activo == null) {
+            // Si no se especifica, devolver todos (activos e inactivos)
+            return catalogoRepository.findByTipo(tipoCatalogo).stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        } else if (activo) {
+            // Solo activos
+            return catalogoRepository.findByTipoAndActivoTrue(tipoCatalogo).stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        } else {
+            // Solo inactivos
+            return catalogoRepository.findByTipoAndActivoFalse(tipoCatalogo).stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        }
+    }
     
 
     // Obtener por ID
@@ -89,6 +111,17 @@ public class CatalogoService {
                     catalogo.setActivo(false);
                     catalogoRepository.save(catalogo);
                 });
+    }
+
+    // Reactivar catálogo
+    public CatalogoDTO reactivar(Long id) {
+        return catalogoRepository.findById(id)
+                .map(catalogo -> {
+                    catalogo.setActivo(true);
+                    Catalogo reactivado = catalogoRepository.save(catalogo);
+                    return mapearEntidadADTO(reactivado);
+                })
+                .orElse(null);
     }
 
     // Eliminar físicamente

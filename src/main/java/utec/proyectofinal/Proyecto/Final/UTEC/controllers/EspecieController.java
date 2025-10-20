@@ -35,11 +35,12 @@ public class EspecieController {
 
     // Obtener todas activas
     @Operation(summary = "Listar todas las especies",
-              description = "Obtiene todas las especies activas")
+              description = "Obtiene todas las especies con filtro opcional de estado (activo/inactivo)")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
-    public ResponseEntity<List<EspecieDTO>> obtenerTodas() {
-        List<EspecieDTO> especies = especieService.obtenerTodas();
+    public ResponseEntity<List<EspecieDTO>> obtenerTodas(
+            @RequestParam(required = false) Boolean activo) {
+        List<EspecieDTO> especies = especieService.obtenerTodas(activo);
         return ResponseEntity.ok(especies);
     }
 
