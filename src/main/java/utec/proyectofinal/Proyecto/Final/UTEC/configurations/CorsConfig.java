@@ -14,7 +14,12 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // el front
+        // Permitir localhost y la IP local para acceso desde celular
+        config.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "http://192.168.1.3:3000",
+            "http://192.168.1.3:8080"
+        )); // el front
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
