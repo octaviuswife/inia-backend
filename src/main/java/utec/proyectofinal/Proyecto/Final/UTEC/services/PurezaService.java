@@ -207,6 +207,7 @@ public class PurezaService {
         pureza.setOtrosCultivos_g(solicitud.getOtrosCultivos_g());
         pureza.setMalezas_g(solicitud.getMalezas_g());
         pureza.setMalezasToleradas_g(solicitud.getMalezasToleradas_g());
+        pureza.setMalezasTolCero_g(solicitud.getMalezasTolCero_g());
         pureza.setPesoTotal_g(solicitud.getPesoTotal_g());
 
         pureza.setRedonSemillaPura(solicitud.getRedonSemillaPura());
@@ -214,6 +215,7 @@ public class PurezaService {
         pureza.setRedonOtrosCultivos(solicitud.getRedonOtrosCultivos());
         pureza.setRedonMalezas(solicitud.getRedonMalezas());
         pureza.setRedonMalezasToleradas(solicitud.getRedonMalezasToleradas());
+        pureza.setRedonMalezasTolCero(solicitud.getRedonMalezasTolCero());
         pureza.setRedonPesoTotal(solicitud.getRedonPesoTotal());
 
         pureza.setInasePura(solicitud.getInasePura());
@@ -221,6 +223,7 @@ public class PurezaService {
         pureza.setInaseOtrosCultivos(solicitud.getInaseOtrosCultivos());
         pureza.setInaseMalezas(solicitud.getInaseMalezas());
         pureza.setInaseMalezasToleradas(solicitud.getInaseMalezasToleradas());
+        pureza.setInaseMalezasTolCero(solicitud.getInaseMalezasTolCero());
         pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null && !solicitud.getOtrasSemillas().isEmpty()) {
@@ -254,6 +257,7 @@ public class PurezaService {
         if (solicitud.getOtrosCultivos_g() != null) pureza.setOtrosCultivos_g(solicitud.getOtrosCultivos_g());
         if (solicitud.getMalezas_g() != null) pureza.setMalezas_g(solicitud.getMalezas_g());
         if (solicitud.getMalezasToleradas_g() != null) pureza.setMalezasToleradas_g(solicitud.getMalezasToleradas_g());
+        if (solicitud.getMalezasTolCero_g() != null) pureza.setMalezasTolCero_g(solicitud.getMalezasTolCero_g());
         if (solicitud.getPesoTotal_g() != null) pureza.setPesoTotal_g(solicitud.getPesoTotal_g());
 
         if (solicitud.getRedonSemillaPura() != null) pureza.setRedonSemillaPura(solicitud.getRedonSemillaPura());
@@ -261,6 +265,7 @@ public class PurezaService {
         if (solicitud.getRedonOtrosCultivos() != null) pureza.setRedonOtrosCultivos(solicitud.getRedonOtrosCultivos());
         if (solicitud.getRedonMalezas() != null) pureza.setRedonMalezas(solicitud.getRedonMalezas());
         if (solicitud.getRedonMalezasToleradas() != null) pureza.setRedonMalezasToleradas(solicitud.getRedonMalezasToleradas());
+        if (solicitud.getRedonMalezasTolCero() != null) pureza.setRedonMalezasTolCero(solicitud.getRedonMalezasTolCero());
         if (solicitud.getRedonPesoTotal() != null) pureza.setRedonPesoTotal(solicitud.getRedonPesoTotal());
 
         if (solicitud.getInasePura() != null) pureza.setInasePura(solicitud.getInasePura());
@@ -268,6 +273,7 @@ public class PurezaService {
         if (solicitud.getInaseOtrosCultivos() != null) pureza.setInaseOtrosCultivos(solicitud.getInaseOtrosCultivos());
         if (solicitud.getInaseMalezas() != null) pureza.setInaseMalezas(solicitud.getInaseMalezas());
         if (solicitud.getInaseMalezasToleradas() != null) pureza.setInaseMalezasToleradas(solicitud.getInaseMalezasToleradas());
+        if (solicitud.getInaseMalezasTolCero() != null) pureza.setInaseMalezasTolCero(solicitud.getInaseMalezasTolCero());
         if (solicitud.getInaseFecha() != null) pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null) {
@@ -309,6 +315,7 @@ public class PurezaService {
         dto.setOtrosCultivos_g(pureza.getOtrosCultivos_g());
         dto.setMalezas_g(pureza.getMalezas_g());
         dto.setMalezasToleradas_g(pureza.getMalezasToleradas_g());
+        dto.setMalezasTolCero_g(pureza.getMalezasTolCero_g());
         dto.setPesoTotal_g(pureza.getPesoTotal_g());
 
         dto.setRedonSemillaPura(pureza.getRedonSemillaPura());
@@ -316,6 +323,7 @@ public class PurezaService {
         dto.setRedonOtrosCultivos(pureza.getRedonOtrosCultivos());
         dto.setRedonMalezas(pureza.getRedonMalezas());
         dto.setRedonMalezasToleradas(pureza.getRedonMalezasToleradas());
+        dto.setRedonMalezasTolCero(pureza.getRedonMalezasTolCero());
         dto.setRedonPesoTotal(pureza.getRedonPesoTotal());
 
         dto.setInasePura(pureza.getInasePura());
@@ -323,6 +331,7 @@ public class PurezaService {
         dto.setInaseOtrosCultivos(pureza.getInaseOtrosCultivos());
         dto.setInaseMalezas(pureza.getInaseMalezas());
         dto.setInaseMalezasToleradas(pureza.getInaseMalezasToleradas());
+        dto.setInaseMalezasTolCero(pureza.getInaseMalezasTolCero());
         dto.setInaseFecha(pureza.getInaseFecha());
 
         if (pureza.getListados() != null) {
