@@ -15,9 +15,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CultivarService;
 
 import java.util.List;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/cultivar")
-@CrossOrigin(origins = "*")
 @Tag(name = "Cultivares", description = "API para gestión de cultivares")
 @SecurityRequirement(name = "bearerAuth")
 public class CultivarController {

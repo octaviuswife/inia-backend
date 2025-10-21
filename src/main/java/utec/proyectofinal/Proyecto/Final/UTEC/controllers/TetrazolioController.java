@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,9 +24,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoTetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.TetrazolioService;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/tetrazolios")
-@CrossOrigin(origins = "*")
 @Tag(name = "Tetrazolio", description = "API para gestión del análisis de tetrazolio")
 @SecurityRequirement(name = "bearerAuth")
 public class TetrazolioController {

@@ -19,9 +19,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/exportaciones")
-@CrossOrigin(origins = "*")
 @Tag(name = "Exportaciones", description = "API para exportar datos de análisis de semillas")
 @SecurityRequirement(name = "bearerAuth")
 public class ExportacionController {

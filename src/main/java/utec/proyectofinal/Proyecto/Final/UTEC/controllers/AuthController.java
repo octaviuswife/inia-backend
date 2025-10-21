@@ -1,24 +1,41 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.*;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
-import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
-import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ActualizarPerfilRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.AprobarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GestionarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoginRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RegistroUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -36,24 +53,44 @@ public class AuthController {
     private UsuarioService usuarioService;
 
     @PostMapping("/login")
-    @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginData) {
+    @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT en cookies HttpOnly")
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginData, HttpServletResponse response) {
+        System.out.println("🔐 [LOGIN] Iniciando proceso de login...");
+        System.out.println("🔐 [LOGIN] Usuario recibido: " + loginData.getUsuario());
+        
         try {
             String usuario = loginData.getUsuario();
             String password = loginData.getPassword();
             
             Optional<Usuario> usuarioOpt = seguridadService.autenticarUsuario(usuario, password);
+            
+            System.out.println("🔐 [LOGIN] Autenticación completada. Usuario encontrado: " + usuarioOpt.isPresent());
 
             if (usuarioOpt.isPresent()) {
                 Usuario user = usuarioOpt.get();
                 String[] roles = seguridadService.listarRolesPorUsuario(user);
                 
-                String token = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));
+                // Debug: Ver qué roles se están asignando
+                System.out.println("🔐 [LOGIN] Usuario: " + user.getNombre());
+                System.out.println("🔐 [LOGIN] Roles asignados: " + java.util.Arrays.toString(roles));
+                System.out.println("🔐 [LOGIN] Estado usuario: " + user.getEstado());
+                System.out.println("🔐 [LOGIN] Rol en entidad: " + user.getRol());
                 
-                Map<String, Object> response = new HashMap<>();
-                response.put("token", token);
-                response.put("tipo", "Bearer");
-                response.put("usuario", Map.of(
+                // Generar access token y refresh token
+                String accessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));
+                String refreshToken = jwtUtil.generarRefreshToken(user);
+                
+                // Configurar cookies HttpOnly Secure
+                configurarCookieToken(response, "accessToken", accessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));
+                configurarCookieToken(response, "refreshToken", refreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));
+                
+                System.out.println("✅ [LOGIN] Cookies establecidas correctamente");
+                System.out.println("✅ [LOGIN] Preparando respuesta con datos de usuario...");
+                
+                // Responder SOLO con información del usuario (NO incluir token en body)
+                Map<String, Object> responseBody = new HashMap<>();
+                responseBody.put("mensaje", "Login exitoso");
+                responseBody.put("usuario", Map.of(
                     "id", user.getUsuarioID(),
                     "nombre", user.getNombre(),
                     "nombres", user.getNombres(),
@@ -62,13 +99,16 @@ public class AuthController {
                     "roles", roles
                 ));
                 
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(responseBody);
             }
             
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Credenciales incorrectas"));
                     
         } catch (RuntimeException e) {
+            System.err.println("❌ [LOGIN] Error en autenticación: " + e.getMessage());
+            e.printStackTrace();
+            
             String mensaje = switch (e.getMessage()) {
                 case "USUARIO_INCORRECTO" -> "Usuario no encontrado";
                 case "USUARIO_INACTIVO" -> "Usuario inactivo";
@@ -81,6 +121,82 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", mensaje));
         }
+    }
+
+    /**
+     * Configura una cookie HttpOnly Secure para almacenar tokens JWT de forma segura.
+     */
+    private void configurarCookieToken(HttpServletResponse response, String nombre, String valor, int maxAgeSegundos) {
+        // Usar ResponseCookie (Spring Framework 5+) para mejor control de SameSite
+        String cookieValue = String.format(
+            "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax",
+            nombre, valor, maxAgeSegundos
+        );
+        
+        System.out.println("🍪 [AuthController] Estableciendo cookie: " + nombre + " (maxAge: " + maxAgeSegundos + "s)");
+        
+        response.addHeader("Set-Cookie", cookieValue);
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Renovar access token", description = "Usa el refresh token para generar un nuevo access token")
+    public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken, HttpServletResponse response) {
+        try {
+            if (refreshToken == null || refreshToken.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Refresh token no encontrado"));
+            }
+
+            if (!jwtUtil.esTokenValido(refreshToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Refresh token inválido o expirado"));
+            }
+
+            String tipo = jwtUtil.obtenerTipoToken(refreshToken);
+            if (!"refresh".equals(tipo)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token no es de tipo refresh"));
+            }
+
+            Integer userId = jwtUtil.obtenerUserIdDelToken(refreshToken);
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(userId);
+
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Usuario no encontrado"));
+            }
+
+            Usuario user = usuarioOpt.get();
+            String[] roles = seguridadService.listarRolesPorUsuario(user);
+
+            // Generar nuevo access token
+            String nuevoAccessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));
+            configurarCookieToken(response, "accessToken", nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));
+
+            return ResponseEntity.ok(Map.of("mensaje", "Access token renovado exitosamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Error al renovar token: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Cerrar sesión", description = "Invalida las cookies de autenticación")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // Borrar cookies estableciendo Max-Age=0
+        Cookie accessCookie = new Cookie("accessToken", "");
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(0);
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie("refreshToken", "");
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0);
+        response.addCookie(refreshCookie);
+
+        return ResponseEntity.ok(Map.of("mensaje", "Logout exitoso"));
     }
 
     @PostMapping("/validate")

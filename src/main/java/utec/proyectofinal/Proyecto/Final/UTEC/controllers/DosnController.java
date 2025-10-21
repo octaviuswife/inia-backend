@@ -17,9 +17,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoDosn;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.DosnService;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/dosn")
-@CrossOrigin(origins = "*")
 @Tag(name = "Determinacion de Otras Semillas en Número (DOSN)", description = "API para gestión de DOSN")
 @SecurityRequirement(name = "bearerAuth")
 public class DosnController {

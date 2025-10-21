@@ -1,25 +1,30 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import utec.proyectofinal.Proyecto.Final.UTEC.services.LegadoService;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoSimpleDTO;
-
-import java.util.List;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.LegadoService;
 
 /**
  * Controlador para gestión de datos legados
  */
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/legados")
-@CrossOrigin(origins = "*")
 @Tag(name = "Legados", description = "API para gestión de datos históricos legados")
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor

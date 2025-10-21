@@ -3,7 +3,6 @@ package utec.proyectofinal.Proyecto.Final.UTEC.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -76,10 +75,10 @@ public class WebSecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("*") // Para desarrollo, despues cambiar a dominios específicos
+                        .allowedOrigins("http://localhost:3000") // Dominio específico del frontend
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
-                        // .allowCredentials(true); // Comentado para desarrollo
+                        .allowedHeaders("*")
+                        .allowCredentials(true); // CRÍTICO: permite enviar cookies desde el frontend
             }
         };
     }

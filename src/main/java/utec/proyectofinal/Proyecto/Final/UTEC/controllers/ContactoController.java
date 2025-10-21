@@ -17,9 +17,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ContactoService;
 
 import java.util.List;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/contactos")
-@CrossOrigin(origins = "*")
 @Tag(name = "Contactos", description = "API para gestión de contactos y empresas")
 @SecurityRequirement(name = "bearerAuth")
 public class ContactoController {
