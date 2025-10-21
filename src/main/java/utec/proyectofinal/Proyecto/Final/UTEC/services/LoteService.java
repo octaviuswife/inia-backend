@@ -219,6 +219,7 @@ public class LoteService {
             
             System.out.println("Mapeando campos básicos...");
             lote.setFicha(solicitud.getFicha());
+            lote.setNomLote(solicitud.getNomLote());
             
             // Convertir String a enum TipoLote
             if (solicitud.getTipo() != null) {
