@@ -1,6 +1,7 @@
 
 package utec.proyectofinal.Proyecto.Final.UTEC.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,12 +17,22 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
+ * Configuración de seguridad web y CORS
+ * 
+ * CORS configurado para soportar:
+ * - Múltiples orígenes (local y ngrok)
+ * - Credenciales (cookies, Authorization headers)
+ * - Preflight requests (OPTIONS)
+ * 
  * @author Usuario
  */
 @EnableMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
 @Configuration
 public class WebSecurityConfig {
+
+    @Value("${cors.allowed.origins:http://localhost:3000}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -70,16 +81,29 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Configuración CORS global para todas las rutas /api/**
+     * 
+     * IMPORTANTE: Cuando se usa credentials: 'include' en el frontend,
+     * NO se puede usar allowedOrigins("*"). Se deben especificar los
+     * orígenes exactos en la propiedad cors.allowed.origins
+     * 
+     * Para ngrok, actualizar la propiedad con tu URL actual:
+     * cors.allowed.origins=http://localhost:3000,https://tu-url.ngrok-free.app
+     */
     @Bean
     public WebMvcConfigurer configurarCorsGlobal() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
+                String[] origins = allowedOrigins.split(",");
+                
                 registry.addMapping("/api/**")
-                        .allowedOrigins("*") // Para desarrollo, despues cambiar a dominios específicos
+                        .allowedOrigins(origins) // Orígenes específicos desde properties
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
-                        // .allowCredentials(true); // Comentado para desarrollo
+                        .allowedHeaders("*")
+                        .allowCredentials(true) // Necesario para enviar cookies y Authorization
+                        .maxAge(3600); // Cache preflight por 1 hora
             }
         };
     }

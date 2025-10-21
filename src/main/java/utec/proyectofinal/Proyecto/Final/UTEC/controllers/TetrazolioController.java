@@ -27,7 +27,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.TetrazolioService;
 
 @RestController
 @RequestMapping("/api/tetrazolios")
-@CrossOrigin(origins = "*")
 @Tag(name = "Tetrazolio", description = "API para gestión del análisis de tetrazolio")
 @SecurityRequirement(name = "bearerAuth")
 public class TetrazolioController {

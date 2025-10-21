@@ -19,7 +19,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ImportacionLegadoRes
  */
 @RestController
 @RequestMapping("/api/importacion")
-@CrossOrigin(origins = "*")
 @Tag(name = "Importación Legado", description = "API para importar datos históricos desde Excel")
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor

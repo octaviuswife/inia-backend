@@ -20,7 +20,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepGermService;
 
 @RestController
 @RequestMapping("/api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion")
-@CrossOrigin(origins = "*")
 @Tag(name = "Repeticiones de Germinación", description = "API para gestión de repeticiones dentro de las tablas de germinación")
 @SecurityRequirement(name = "bearerAuth")
 public class RepGermController {

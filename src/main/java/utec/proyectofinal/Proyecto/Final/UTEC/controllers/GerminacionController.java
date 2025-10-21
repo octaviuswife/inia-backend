@@ -35,7 +35,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
 
 @RestController
 @RequestMapping("/api/germinaciones")
-@CrossOrigin(origins = "*")
 @Tag(name = "Germinación", description = "API para gestión del análisis de germinación")
 @SecurityRequirement(name = "bearerAuth")
 public class GerminacionController {

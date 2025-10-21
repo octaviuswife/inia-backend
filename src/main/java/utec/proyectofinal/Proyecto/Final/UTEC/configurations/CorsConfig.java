@@ -7,21 +7,26 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
-@Configuration
+// DESHABILITADO: CORS configurado en WebSecurityConfig para evitar conflictos
+// @Configuration
 public class CorsConfig {
 
-    @Bean
+    // @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        // Permitir localhost y la IP local para acceso desde celular
-        config.setAllowedOrigins(List.of(
-            "http://localhost:3000",
-            "http://192.168.1.3:3000",
-            "http://192.168.1.3:8080"
-        )); // el front
+        // Permitir localhost, IPs locales y ngrok
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "http://192.168.*.*:*",
+            "https://*.ngrok-free.app",
+            "https://*.ngrok.io"
+        ));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

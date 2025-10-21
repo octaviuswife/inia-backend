@@ -27,7 +27,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.PurezaService;
 
 @RestController
 @RequestMapping("/api/purezas")
-@CrossOrigin(origins = "*")
 @Tag(name = "Pureza", description = "API para gestión del análisis de pureza")
 @SecurityRequirement(name = "bearerAuth")
 public class PurezaController {

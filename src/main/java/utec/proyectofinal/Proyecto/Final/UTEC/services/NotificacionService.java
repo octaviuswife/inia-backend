@@ -21,6 +21,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.AnalisisRepo
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.NotificacionRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.NotificacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PushNotificationRequest;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.NotificacionDTO;
 
 import static utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoNotificacion.*;
@@ -41,6 +42,9 @@ public class NotificacionService {
     @Autowired
     private AnalisisHistorialRepository analisisHistorialRepository;
 
+    @Autowired
+    private PushNotificationService pushNotificationService;
+
     // Crear notificación manual
     public NotificacionDTO crearNotificacion(NotificacionRequestDTO request) {
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId().intValue())
@@ -54,7 +58,41 @@ public class NotificacionService {
         notificacion.setTipo(request.getTipo());
 
         notificacion = notificacionRepository.save(notificacion);
+        
+        // Enviar push notification
+        enviarPushParaNotificacion(notificacion);
+        
         return convertToDTO(notificacion);
+    }
+    
+    /**
+     * Método auxiliar para enviar push notification cuando se crea una notificación
+     */
+    private void enviarPushParaNotificacion(Notificacion notificacion) {
+        try {
+            String url = "/notificaciones";
+            if (notificacion.getAnalisisId() != null) {
+                url = "/listado/analisis/" + notificacion.getAnalisisId();
+            }
+            
+            PushNotificationRequest pushRequest = PushNotificationRequest.builder()
+                .title(notificacion.getNombre())
+                .body(notificacion.getMensaje())
+                .url(url)
+                .tag("notif-" + notificacion.getId())
+                .notificationId(notificacion.getId())
+                .requireInteraction(false)
+                .build();
+            
+            pushNotificationService.sendPushNotificationToUser(
+                notificacion.getUsuario().getUsuarioID(),
+                pushRequest
+            );
+        } catch (Exception e) {
+            // No fallar si hay error en push notification
+            // Solo log del error
+            System.err.println("Error enviando push notification: " + e.getMessage());
+        }
     }
 
     // Notificación cuando se registra un nuevo usuario
@@ -76,7 +114,8 @@ public class NotificacionService {
             notificacion.setUsuario(admin);
             notificacion.setTipo(USUARIO_REGISTRO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarPushParaNotificacion(notificacion);
         }
     }
 
@@ -91,7 +130,8 @@ public class NotificacionService {
         notificacion.setUsuario(usuario);
         notificacion.setTipo(USUARIO_APROBADO);
         
-        notificacionRepository.save(notificacion);
+        notificacion = notificacionRepository.save(notificacion);
+        enviarPushParaNotificacion(notificacion);
     }
 
     // Notificación cuando se rechaza un usuario
@@ -128,7 +168,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_FINALIZADO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarPushParaNotificacion(notificacion);
         }
     }
 
@@ -154,7 +195,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_APROBADO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarPushParaNotificacion(notificacion);
         }
     }
 
@@ -180,7 +222,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_REPETIR);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarPushParaNotificacion(notificacion);
         }
     }
 
@@ -204,7 +247,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_FINALIZADO); // Reutilizamos el tipo existente
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarPushParaNotificacion(notificacion);
         }
     }
 

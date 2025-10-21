@@ -28,7 +28,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.TablaGermService;
 
 @RestController
 @RequestMapping("/api/germinacion/{germinacionId}/tabla")
-@CrossOrigin(origins = "*")
 @Tag(name = "Tabla de Germinación", description = "API para gestión de tablas dentro del análisis de germinación")
 @SecurityRequirement(name = "bearerAuth")
 public class TablaGermController {

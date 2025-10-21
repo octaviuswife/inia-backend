@@ -26,7 +26,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepPmsService;
 
 @RestController
 @RequestMapping("/api/pms/{pmsId}/repeticiones")
-@CrossOrigin(origins = "*")
 @Tag(name = "Repeticiones PMS", description = "API para gestión de repeticiones de análisis PMS")
 @SecurityRequirement(name = "bearerAuth")
 public class RepPmsController {

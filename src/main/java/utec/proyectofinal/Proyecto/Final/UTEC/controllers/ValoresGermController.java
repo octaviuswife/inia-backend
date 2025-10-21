@@ -26,7 +26,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
 
 @RestController
 @RequestMapping("/api/germinacion/{germinacionId}/tabla/{tablaId}/valores")
-@CrossOrigin(origins = "*")
 @Tag(name = "Valores Germinación", description = "API para gestión de valores de germinación")
 @SecurityRequirement(name = "bearerAuth")
 public class ValoresGermController {

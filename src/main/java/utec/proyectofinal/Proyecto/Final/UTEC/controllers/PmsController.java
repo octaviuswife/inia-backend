@@ -26,7 +26,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
 
 @RestController
 @RequestMapping("/api/pms")
-@CrossOrigin(origins = "*")
 @Tag(name = "PMS", description = "API para gestión del análisis de Peso de Mil Semillas")
 @SecurityRequirement(name = "bearerAuth")
 public class PmsController {

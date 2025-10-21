@@ -21,7 +21,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/exportaciones")
-@CrossOrigin(origins = "*")
 @Tag(name = "Exportaciones", description = "API para exportar datos de análisis de semillas")
 @SecurityRequirement(name = "bearerAuth")
 public class ExportacionController {

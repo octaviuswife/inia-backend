@@ -19,7 +19,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/legados")
-@CrossOrigin(origins = "*")
 @Tag(name = "Legados", description = "API para gestión de datos históricos legados")
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor

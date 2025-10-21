@@ -25,7 +25,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
 
 @RestController
 @RequestMapping("/api/tetrazolios/{tetrazolioId}/repeticiones")
-@CrossOrigin(origins = "*")
 @Tag(name = "Repeticiones Tetrazolio Viabilidad", description = "API para gestión de repeticiones de análisis de tetrazolio viabilidad")
 @SecurityRequirement(name = "bearerAuth")
 public class RepTetrazolioViabilidadController {

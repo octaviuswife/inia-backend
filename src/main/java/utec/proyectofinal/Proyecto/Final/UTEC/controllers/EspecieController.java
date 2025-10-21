@@ -25,7 +25,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.EspecieService;
 
 @RestController
 @RequestMapping("/api/especie")
-@CrossOrigin(origins = "*")
 @Tag(name = "Especies", description = "API para gestión de especies")
 @SecurityRequirement(name = "bearerAuth")
 public class EspecieController {

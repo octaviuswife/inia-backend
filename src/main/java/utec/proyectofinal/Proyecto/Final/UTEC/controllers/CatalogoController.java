@@ -26,7 +26,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
 
 @RestController
 @RequestMapping("/api/catalogo")
-@CrossOrigin(origins = "*")
 @Tag(name = "Catálogos", description = "API para gestión de catálogos del sistema")
 @SecurityRequirement(name = "bearerAuth")
 public class CatalogoController {

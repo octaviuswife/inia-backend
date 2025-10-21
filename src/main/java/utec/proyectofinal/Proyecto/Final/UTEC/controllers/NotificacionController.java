@@ -28,7 +28,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.NotificacionService;
 
 @RestController
 @RequestMapping("/api/notificaciones")
-@CrossOrigin(origins = "*")
 @Tag(name = "Notificaciones", description = "Gestión de notificaciones del sistema")
 public class NotificacionController {
 

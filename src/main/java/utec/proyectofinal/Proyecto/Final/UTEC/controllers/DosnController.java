@@ -19,7 +19,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.DosnService;
 
 @RestController
 @RequestMapping("/api/dosn")
-@CrossOrigin(origins = "*")
 @Tag(name = "Determinacion de Otras Semillas en Número (DOSN)", description = "API para gestión de DOSN")
 @SecurityRequirement(name = "bearerAuth")
 public class DosnController {

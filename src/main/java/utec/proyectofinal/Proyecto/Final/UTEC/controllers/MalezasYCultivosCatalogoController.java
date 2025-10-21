@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/malezas-cultivos")
-@CrossOrigin(origins = "*")
 @Tag(name = "Malezas y Cultivos", description = "API para gestión del catálogo de malezas y cultivos")
 @SecurityRequirement(name = "bearerAuth")
 public class MalezasYCultivosCatalogoController {

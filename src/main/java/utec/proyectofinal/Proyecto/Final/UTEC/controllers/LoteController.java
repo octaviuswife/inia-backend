@@ -30,7 +30,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.LoteService;
 
 @RestController
 @RequestMapping("/api/lotes")
-@CrossOrigin(origins = "*")
 @Tag(name = "Lotes", description = "API para gestión de lotes de semillas")
 @SecurityRequirement(name = "bearerAuth")
 public class LoteController {
