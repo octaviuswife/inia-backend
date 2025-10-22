@@ -124,11 +124,13 @@ public class AuthController {
 
     /**
      * Configura una cookie HttpOnly Secure para almacenar tokens JWT de forma segura.
+     * Con SameSite=None para permitir cookies cross-site (necesario para ngrok).
      */
     private void configurarCookieToken(HttpServletResponse response, String nombre, String valor, int maxAgeSegundos) {
         // Usar ResponseCookie (Spring Framework 5+) para mejor control de SameSite
+        // SameSite=None + Secure es requerido para cross-site (ngrok)
         String cookieValue = String.format(
-            "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax",
+            "%s=%s; Path=/; Max-Age=%d; HttpOnly; Secure; SameSite=None",
             nombre, valor, maxAgeSegundos
         );
         
