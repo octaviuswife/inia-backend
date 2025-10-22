@@ -39,7 +39,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "http://localhost:3000") // Ajusta el origen según tu configuración de frontend
 @Tag(name = "Autenticación y Gestión de Usuarios", description = "Endpoints para autenticación, registro y gestión de usuarios")
 public class AuthController {
 
