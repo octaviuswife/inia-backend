@@ -138,6 +138,16 @@ public class GerminacionService {
         }
     }
 
+    // Desactivar Germinacion (cambiar activo a false)
+    public void desactivarGerminacion(Long id) {
+        analisisService.desactivarAnalisis(id, germinacionRepository);
+    }
+
+    // Reactivar Germinacion (cambiar activo a true)
+    public GerminacionDTO reactivarGerminacion(Long id) {
+        return analisisService.reactivarAnalisis(id, germinacionRepository, this::mapearEntidadADTO);
+    }
+
     // Listar todas las Germinaciones activas
     public ResponseListadoGerminacion obtenerTodasGerminaciones() {
         List<Germinacion> germinacionesActivas = germinacionRepository.findByEstadoNot(Estado.INACTIVO);
@@ -153,6 +163,25 @@ public class GerminacionService {
     // Listar germinaciones con paginado (para listado)
     public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadas(Pageable pageable) {
         Page<Germinacion> germinacionesPage = germinacionRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return germinacionesPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar germinaciones con paginado y filtro de activo
+    public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Germinacion> germinacionesPage;
+        
+        switch (filtroActivo.toLowerCase()) {
+            case "activos":
+                germinacionesPage = germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+                break;
+            case "inactivos":
+                germinacionesPage = germinacionRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+                break;
+            default: // "todos"
+                germinacionesPage = germinacionRepository.findAllByOrderByFechaInicioDesc(pageable);
+                break;
+        }
+        
         return germinacionesPage.map(this::mapearEntidadAListadoDTO);
     }
 

@@ -7,31 +7,27 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pureza;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoPureza;
 
 @Service
@@ -117,6 +113,16 @@ public class PurezaService {
         purezaRepository.save(pureza);
     }
 
+    // Desactivar Pureza (cambiar activo a false)
+    public void desactivarPureza(Long id) {
+        analisisService.desactivarAnalisis(id, purezaRepository);
+    }
+
+    // Reactivar Pureza (cambiar activo a true)
+    public PurezaDTO reactivarPureza(Long id) {
+        return analisisService.reactivarAnalisis(id, purezaRepository, this::mapearEntidadADTO);
+    }
+
     // Listar todas las Purezas activas
     public ResponseListadoPureza obtenerTodasPurezasActivas() {
         List<PurezaDTO> purezaDTOs = purezaRepository.findByEstadoNot(Estado.INACTIVO)
@@ -147,6 +153,22 @@ public class PurezaService {
     // Listar Pureza con paginado (para listado)
     public Page<PurezaListadoDTO> obtenerPurezaPaginadas(Pageable pageable) {
         Page<Pureza> purezaPage = purezaRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return purezaPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar Pureza con paginado y filtro por activo
+    public Page<PurezaListadoDTO> obtenerPurezaPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Pureza> purezaPage;
+        
+        if ("activos".equalsIgnoreCase(filtroActivo)) {
+            purezaPage = purezaRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
+            purezaPage = purezaRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+        } else {
+            // "todos" o cualquier otro valor
+            purezaPage = purezaRepository.findAllByOrderByFechaInicioDesc(pageable);
+        }
+        
         return purezaPage.map(this::mapearEntidadAListadoDTO);
     }
 

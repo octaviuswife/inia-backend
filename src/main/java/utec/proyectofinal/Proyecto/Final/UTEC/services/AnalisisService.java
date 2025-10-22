@@ -292,4 +292,51 @@ public class AnalisisService {
         T analisisActualizado = repository.save(analisis);
         return mapper.apply(analisisActualizado);
     }
+
+    /**
+     * Desactiva un análisis (cambia activo a false)
+     * Método genérico que puede ser usado por cualquier tipo de análisis
+     * 
+     * @param <T> Tipo del análisis que extiende Analisis
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo de análisis
+     */
+    public <T extends Analisis> void desactivarAnalisis(
+            Long id,
+            JpaRepository<T, Long> repository) {
+        
+        T analisis = repository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
+        
+        analisis.setActivo(false);
+        repository.save(analisis);
+    }
+
+    /**
+     * Reactiva un análisis (cambia activo a true)
+     * Método genérico que puede ser usado por cualquier tipo de análisis
+     * 
+     * @param <T> Tipo del análisis que extiende Analisis
+     * @param <D> Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo de análisis
+     * @param mapper Función para mapear entidad a DTO
+     * @return DTO del análisis reactivado
+     */
+    public <T extends Analisis, D> D reactivarAnalisis(
+            Long id,
+            JpaRepository<T, Long> repository,
+            Function<T, D> mapper) {
+        
+        T analisis = repository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
+        
+        if (analisis.getActivo()) {
+            throw new RuntimeException("El análisis ya está activo");
+        }
+        
+        analisis.setActivo(true);
+        T analisisReactivado = repository.save(analisis);
+        return mapper.apply(analisisReactivado);
+    }
 }

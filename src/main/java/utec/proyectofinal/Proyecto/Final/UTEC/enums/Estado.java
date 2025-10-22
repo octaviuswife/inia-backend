@@ -5,6 +5,7 @@ public enum Estado {
     EN_PROCESO,
     PENDIENTE_APROBACION,
     APROBADO,
-    INACTIVO,
     A_REPETIR,
+    INACTIVO,
+
 }

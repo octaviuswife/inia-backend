@@ -157,6 +157,20 @@ public class LoteService {
         }
     }
 
+    // Reactivar Lote (cambiar activo a true)
+    public LoteDTO reactivarLote(Long id) {
+        Lote lote = loteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lote no encontrado con ID: " + id));
+        
+        if (lote.getActivo()) {
+            throw new RuntimeException("El lote ya está activo");
+        }
+        
+        lote.setActivo(true);
+        Lote loteReactivado = loteRepository.save(lote);
+        return mapearEntidadADTO(loteReactivado);
+    }
+
     // Listar todos los Lotes activos
     public ResponseListadoLoteSimple obtenerTodosLotesActivos() {
         List<Lote> lotes = loteRepository.findByActivoTrue();

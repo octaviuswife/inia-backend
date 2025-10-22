@@ -5,20 +5,21 @@ import org.springframework.stereotype.Service;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.DashboardStatsDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.AnalisisPendienteDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.AnalisisPorAprobarDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.CursorPageResponse;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.KeysetCursor;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.AnalisisRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.AnalisisPendienteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.AnalisisPorAprobarRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.projections.AnalisisPendienteProjection;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.projections.AnalisisPorAprobarProjection;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardService {
@@ -30,22 +31,13 @@ public class DashboardService {
     private AnalisisRepository analisisRepository;
     
     @Autowired
+    private AnalisisPendienteRepository analisisPendienteRepository;
+    
+    @Autowired
+    private AnalisisPorAprobarRepository analisisPorAprobarRepository;
+    
+    @Autowired
     private LoteService loteService;
-    
-    @Autowired
-    private PmsRepository pmsRepository;
-    
-    @Autowired
-    private GerminacionRepository germinacionRepository;
-    
-    @Autowired
-    private DosnRepository dosnRepository;
-    
-    @Autowired
-    private TetrazolioRepository tetrazolioRepository;
-    
-    @Autowired
-    private PurezaRepository purezaRepository;
 
     public DashboardStatsDTO obtenerEstadisticas() {
         DashboardStatsDTO stats = new DashboardStatsDTO();
@@ -65,161 +57,132 @@ public class DashboardService {
         return stats;
     }
     
-    public List<AnalisisPendienteDTO> listarAnalisisPendientes() {
-        List<AnalisisPendienteDTO> pendientes = new ArrayList<>();
-        List<Lote> lotesActivos = loteRepository.findByActivoTrue();
+    /**
+     * Keyset pagination para análisis pendientes.
+     * 
+     * @param encodedCursor Cursor Base64 (null para primera página)
+     * @param size Número de items por página
+     * @return Página con items y nextCursor encoded
+     */
+    public CursorPageResponse<AnalisisPendienteDTO> listarAnalisisPendientesKeyset(
+            String encodedCursor, int size) {
         
-        for (Lote lote : lotesActivos) {
-            if (lote.getTiposAnalisisAsignados() == null) continue;
+        List<AnalisisPendienteProjection> proyecciones;
+        
+        if (encodedCursor == null || encodedCursor.trim().isEmpty()) {
+            // Primera página
+            proyecciones = analisisPendienteRepository.findNextPageByCursor(
+                0L, "", size + 1);
+        } else {
+            // Decodificar cursor (lanza InvalidCursorException si es inválido)
+            KeysetCursor cursor = KeysetCursor.decode(encodedCursor);
             
-            for (TipoAnalisis tipo : lote.getTiposAnalisisAsignados()) {
-                // Verificar si el análisis no existe o todos están marcados como A_REPETIR
-                boolean pendiente = switch (tipo) {
-                    case PMS -> {
-                        // No existe ningún análisis
-                        if (!pmsRepository.existsByLoteLoteID(lote.getLoteID())) {
-                            yield true;
-                        }
-                        // Existen análisis, verificar si TODOS están en A_REPETIR
-                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms> analisis = 
-                            pmsRepository.findByLoteLoteID(lote.getLoteID());
-                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
-                    }
-                    case GERMINACION -> {
-                        if (!germinacionRepository.existsByLoteLoteID(lote.getLoteID())) {
-                            yield true;
-                        }
-                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion> analisis = 
-                            germinacionRepository.findByLoteLoteID(lote.getLoteID());
-                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
-                    }
-                    case DOSN -> {
-                        if (!dosnRepository.existsByLoteLoteID(lote.getLoteID())) {
-                            yield true;
-                        }
-                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Dosn> analisis = 
-                            dosnRepository.findByLoteLoteID(lote.getLoteID());
-                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
-                    }
-                    case TETRAZOLIO -> {
-                        if (!tetrazolioRepository.existsByLoteLoteID(lote.getLoteID())) {
-                            yield true;
-                        }
-                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio> analisis = 
-                            tetrazolioRepository.findByLoteLoteID(lote.getLoteID());
-                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
-                    }
-                    case PUREZA -> {
-                        if (!purezaRepository.existsByLoteLoteID(lote.getLoteID())) {
-                            yield true;
-                        }
-                        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pureza> analisis = 
-                            purezaRepository.findByLoteLoteID(lote.getLoteID());
-                        yield analisis.stream().allMatch(a -> a.getEstado() == Estado.A_REPETIR);
-                    }
-                    default -> false;
-                };
-                
-                if (pendiente) {
-                    // Crear DTO con información del lote y tipo de análisis
-                    AnalisisPendienteDTO dto = new AnalisisPendienteDTO();
-                    dto.setLoteID(lote.getLoteID());
-                    dto.setNomLote(lote.getNomLote());
-                    dto.setFicha(lote.getFicha());
-                    dto.setEspecieNombre(lote.getCultivar() != null && lote.getCultivar().getEspecie() != null 
-                        ? lote.getCultivar().getEspecie().getNombreComun() : "N/A");
-                    dto.setCultivarNombre(lote.getCultivar() != null 
-                        ? lote.getCultivar().getNombre() : "N/A");
-                    dto.setTipoAnalisis(tipo);
-                    
-                    pendientes.add(dto);
-                }
-            }
+            // Para analisis-pendientes, usamos lastId como loteId y lastFecha como tipo
+            Long lastLoteId = cursor.getLastId();
+            String lastTipo = cursor.getLastFecha() != null ? cursor.getLastFecha() : "";
+            
+            proyecciones = analisisPendienteRepository.findNextPageByCursor(
+                lastLoteId, lastTipo, size + 1);
         }
         
-        return pendientes;
+        // Convertir a DTOs
+        List<AnalisisPendienteDTO> items = proyecciones.stream()
+            .limit(size)
+            .map(p -> new AnalisisPendienteDTO(
+                p.getLoteID(),
+                p.getNomLote(),
+                p.getFicha(),
+                p.getEspecieNombre(),
+                p.getCultivarNombre(),
+                TipoAnalisis.valueOf(p.getTipoAnalisis())
+            ))
+            .collect(Collectors.toList());
+        
+        // Verificar si hay más resultados
+        boolean hasMore = proyecciones.size() > size;
+        
+        if (hasMore && !items.isEmpty()) {
+            AnalisisPendienteDTO lastItem = items.get(items.size() - 1);
+            KeysetCursor cursor = new KeysetCursor(
+                lastItem.getTipoAnalisis().name(),  // Guardar tipo como "fecha"
+                lastItem.getLoteID()
+            );
+            return CursorPageResponse.of(items, cursor, size);
+        } else {
+            return CursorPageResponse.lastPage(items, size);
+        }
     }
     
-    public List<AnalisisPorAprobarDTO> listarAnalisisPorAprobar() {
-        List<AnalisisPorAprobarDTO> porAprobar = new ArrayList<>();
+    /**
+     * Keyset pagination para análisis por aprobar.
+     * 
+     * @param encodedCursor Cursor Base64 (null para primera página)
+     * @param size Número de items por página
+     * @return Página con items y nextCursor encoded
+     */
+    public CursorPageResponse<AnalisisPorAprobarDTO> listarAnalisisPorAprobarKeyset(
+            String encodedCursor, int size) {
         
-        // Buscar en cada repositorio de análisis los que estén en estado PENDIENTE_APROBACION
+        List<AnalisisPorAprobarProjection> proyecciones;
         
-        // PMS
-        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms> pmsList = 
-            pmsRepository.findByEstado(Estado.PENDIENTE_APROBACION);
-        for (var pms : pmsList) {
-            AnalisisPorAprobarDTO dto = new AnalisisPorAprobarDTO();
-            dto.setTipo(TipoAnalisis.PMS);
-            dto.setAnalisisID(pms.getAnalisisID());
-            dto.setLoteID(pms.getLote().getLoteID());
-            dto.setNomLote(pms.getLote().getNomLote());
-            dto.setFicha(pms.getLote().getFicha());
-            dto.setFechaInicio(pms.getFechaInicio());
-            dto.setFechaFin(pms.getFechaFin());
-            porAprobar.add(dto);
+        if (encodedCursor == null || encodedCursor.trim().isEmpty()) {
+            // Primera página
+            proyecciones = analisisPorAprobarRepository.findNextPageByCursor(
+                "9999-12-31 23:59:59", Long.MAX_VALUE, size + 1);
+        } else {
+            // Decodificar cursor (lanza InvalidCursorException si es inválido)
+            KeysetCursor cursor = KeysetCursor.decode(encodedCursor);
+            
+            String lastFecha = cursor.getLastFecha();
+            Long lastId = cursor.getLastId();
+            
+            proyecciones = analisisPorAprobarRepository.findNextPageByCursor(
+                lastFecha, lastId, size + 1);
         }
         
-        // GERMINACION
-        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion> germinacionList = 
-            germinacionRepository.findByEstado(Estado.PENDIENTE_APROBACION);
-        for (var germinacion : germinacionList) {
-            AnalisisPorAprobarDTO dto = new AnalisisPorAprobarDTO();
-            dto.setTipo(TipoAnalisis.GERMINACION);
-            dto.setAnalisisID(germinacion.getAnalisisID());
-            dto.setLoteID(germinacion.getLote().getLoteID());
-            dto.setNomLote(germinacion.getLote().getNomLote());
-            dto.setFicha(germinacion.getLote().getFicha());
-            dto.setFechaInicio(germinacion.getFechaInicio());
-            dto.setFechaFin(germinacion.getFechaFin());
-            porAprobar.add(dto);
-        }
+        // Convertir a DTOs
+        List<AnalisisPorAprobarDTO> items = proyecciones.stream()
+            .limit(size)
+            .map(p -> {
+                AnalisisPorAprobarDTO dto = new AnalisisPorAprobarDTO();
+                dto.setAnalisisID(p.getAnalisisID());
+                dto.setTipo(TipoAnalisis.valueOf(p.getTipoAnalisis()));
+                dto.setLoteID(p.getLoteID());
+                dto.setNomLote(p.getNomLote());
+                dto.setFicha(p.getFicha());
+                
+                // Convertir fechas String a LocalDateTime
+                if (p.getFechaInicio() != null) {
+                    dto.setFechaInicio(LocalDateTime.parse(p.getFechaInicio(), 
+                        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                }
+                if (p.getFechaFin() != null) {
+                    dto.setFechaFin(LocalDateTime.parse(p.getFechaFin(), 
+                        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                }
+                
+                return dto;
+            })
+            .collect(Collectors.toList());
         
-        // DOSN
-        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Dosn> dosnList = 
-            dosnRepository.findByEstado(Estado.PENDIENTE_APROBACION);
-        for (var dosn : dosnList) {
-            AnalisisPorAprobarDTO dto = new AnalisisPorAprobarDTO();
-            dto.setTipo(TipoAnalisis.DOSN);
-            dto.setAnalisisID(dosn.getAnalisisID());
-            dto.setLoteID(dosn.getLote().getLoteID());
-            dto.setNomLote(dosn.getLote().getNomLote());
-            dto.setFicha(dosn.getLote().getFicha());
-            dto.setFechaInicio(dosn.getFechaInicio());
-            dto.setFechaFin(dosn.getFechaFin());
-            porAprobar.add(dto);
-        }
+        // Verificar si hay más resultados
+        boolean hasMore = proyecciones.size() > size;
         
-        // TETRAZOLIO
-        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio> tetrazolioList = 
-            tetrazolioRepository.findByEstado(Estado.PENDIENTE_APROBACION);
-        for (var tetrazolio : tetrazolioList) {
-            AnalisisPorAprobarDTO dto = new AnalisisPorAprobarDTO();
-            dto.setTipo(TipoAnalisis.TETRAZOLIO);
-            dto.setAnalisisID(tetrazolio.getAnalisisID());
-            dto.setLoteID(tetrazolio.getLote().getLoteID());
-            dto.setNomLote(tetrazolio.getLote().getNomLote());
-            dto.setFicha(tetrazolio.getLote().getFicha());
-            dto.setFechaInicio(tetrazolio.getFechaInicio());
-            dto.setFechaFin(tetrazolio.getFechaFin());
-            porAprobar.add(dto);
+        if (hasMore && !items.isEmpty()) {
+            AnalisisPorAprobarDTO lastItem = items.get(items.size() - 1);
+            
+            // Formatear fecha para cursor (mismo formato que en la query)
+            String fechaStr = lastItem.getFechaInicio() != null 
+                ? lastItem.getFechaInicio().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                : null;
+            
+            KeysetCursor cursor = new KeysetCursor(
+                fechaStr,
+                lastItem.getAnalisisID()
+            );
+            return CursorPageResponse.of(items, cursor, size);
+        } else {
+            return CursorPageResponse.lastPage(items, size);
         }
-        
-        // PUREZA
-        List<utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pureza> purezaList = 
-            purezaRepository.findByEstado(Estado.PENDIENTE_APROBACION);
-        for (var pureza : purezaList) {
-            AnalisisPorAprobarDTO dto = new AnalisisPorAprobarDTO();
-            dto.setTipo(TipoAnalisis.PUREZA);
-            dto.setAnalisisID(pureza.getAnalisisID());
-            dto.setLoteID(pureza.getLote().getLoteID());
-            dto.setNomLote(pureza.getLote().getNomLote());
-            dto.setFicha(pureza.getLote().getFicha());
-            dto.setFechaInicio(pureza.getFechaInicio());
-            dto.setFechaFin(pureza.getFechaFin());
-            porAprobar.add(dto);
-        }
-        
-        return porAprobar;
     }
 }

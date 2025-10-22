@@ -2,9 +2,6 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeadosRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
@@ -133,6 +133,42 @@ public class TetrazolioController {
         }
     }
 
+    // Desactivar Tetrazolio (soft delete)
+    @Operation(summary = "Desactivar análisis Tetrazolio", 
+              description = "Desactiva un análisis Tetrazolio (cambiar activo a false)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/desactivar")
+    public ResponseEntity<HttpStatus> desactivarTetrazolio(@PathVariable Long id) {
+        try {
+            tetrazolioService.desactivarTetrazolio(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Reactivar Tetrazolio
+    @Operation(summary = "Reactivar análisis Tetrazolio", 
+              description = "Reactiva un análisis Tetrazolio desactivado (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<?> reactivarTetrazolio(@PathVariable Long id) {
+        try {
+            TetrazolioDTO tetrazolioReactivado = tetrazolioService.reactivarTetrazolio(id);
+            return ResponseEntity.ok(tetrazolioReactivado);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     // Obtener Tetrazolios por Lote
     @Operation(summary = "Obtener tetrazolios por lote", 
               description = "Obtiene todos los análisis de tetrazolio asociados a un lote específico")
@@ -154,10 +190,11 @@ public class TetrazolioController {
     @GetMapping("/listado")
     public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO>> obtenerTetrazoliosPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "todos") String filtroActivo) {
         try {
             org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO> response = tetrazolioService.obtenerTetrazoliosPaginadas(pageable);
+            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO> response = tetrazolioService.obtenerTetrazoliosPaginadasConFiltro(pageable, filtroActivo);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

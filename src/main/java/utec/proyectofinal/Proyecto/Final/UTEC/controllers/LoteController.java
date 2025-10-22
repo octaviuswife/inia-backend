@@ -155,6 +155,25 @@ public class LoteController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Reactivar Lote (cambiar activo a true)
+    @PutMapping("/{id}/reactivar")
+    @Operation(summary = "Reactivar lote", description = "Reactiva un lote desactivado (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> reactivarLote(@PathVariable Long id) {
+        try {
+            LoteDTO loteReactivado = loteService.reactivarLote(id);
+            return ResponseEntity.ok(loteReactivado);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
     
     // Obtener lotes elegibles para un tipo de análisis específico
     @GetMapping("/elegibles/{tipoAnalisis}")

@@ -20,6 +20,11 @@ public interface GerminacionRepository extends JpaRepository<Germinacion, Long> 
     // Método con paginado para listado
     Page<Germinacion> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
     
+    // Filtrado por activo
+    Page<Germinacion> findByActivoTrueOrderByFechaInicioDesc(Pageable pageable);
+    Page<Germinacion> findByActivoFalseOrderByFechaInicioDesc(Pageable pageable);
+    Page<Germinacion> findAllByOrderByFechaInicioDesc(Pageable pageable);
+    
     @Query("SELECT g FROM Germinacion g WHERE g.lote.loteID = :idLote")
     List<Germinacion> findByIdLote(@Param("idLote") Long idLote);
     

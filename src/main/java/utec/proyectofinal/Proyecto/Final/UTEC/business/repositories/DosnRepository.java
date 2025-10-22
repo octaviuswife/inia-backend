@@ -26,5 +26,10 @@ public interface DosnRepository extends JpaRepository<Dosn, Long> {
 
     // Pageable
     Page<Dosn> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
+    
+    // Filtrado por activo
+    Page<Dosn> findByActivoTrueOrderByFechaInicioDesc(Pageable pageable);
+    Page<Dosn> findByActivoFalseOrderByFechaInicioDesc(Pageable pageable);
+    Page<Dosn> findAllByOrderByFechaInicioDesc(Pageable pageable);
 
 }

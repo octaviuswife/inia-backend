@@ -107,6 +107,16 @@ public class DosnService {
         dosnRepository.save(dosn);
     }
 
+    // Desactivar DOSN (cambiar activo a false)
+    public void desactivarDosn(Long id) {
+        analisisService.desactivarAnalisis(id, dosnRepository);
+    }
+
+    // Reactivar DOSN (cambiar activo a true)
+    public DosnDTO reactivarDosn(Long id) {
+        return analisisService.reactivarAnalisis(id, dosnRepository, this::mapearEntidadADTO);
+    }
+
     // Listar todas las Dosn activas
     public ResponseListadoDosn obtenerTodasDosnActivas() {
         List<DosnDTO> dosnDTOs = dosnRepository.findByEstadoNot(Estado.INACTIVO)
@@ -137,6 +147,25 @@ public class DosnService {
     // Listar Dosn con paginado (para listado)
     public Page<DosnListadoDTO> obtenerDosnPaginadas(Pageable pageable) {
         Page<Dosn> dosnPage = dosnRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return dosnPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar Dosn con paginado y filtro de activo
+    public Page<DosnListadoDTO> obtenerDosnPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Dosn> dosnPage;
+        
+        switch (filtroActivo.toLowerCase()) {
+            case "activos":
+                dosnPage = dosnRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+                break;
+            case "inactivos":
+                dosnPage = dosnRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+                break;
+            default: // "todos"
+                dosnPage = dosnRepository.findAllByOrderByFechaInicioDesc(pageable);
+                break;
+        }
+        
         return dosnPage.map(this::mapearEntidadAListadoDTO);
     }
 

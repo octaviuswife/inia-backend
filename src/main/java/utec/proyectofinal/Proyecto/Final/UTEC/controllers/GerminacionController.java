@@ -2,8 +2,6 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,9 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
@@ -95,10 +94,11 @@ public class GerminacionController {
     @GetMapping("/listado")
     public ResponseEntity<Page<GerminacionListadoDTO>> obtenerGerminacionesPaginadas(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "todos") String filtroActivo) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<GerminacionListadoDTO> response = germinacionService.obtenerGerminacionesPaginadas(pageable);
+            Page<GerminacionListadoDTO> response = germinacionService.obtenerGerminacionesPaginadasConFiltro(pageable, filtroActivo);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -160,6 +160,42 @@ public class GerminacionController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Desactivar Germinacion (soft delete)
+    @Operation(summary = "Desactivar análisis Germinación", 
+              description = "Desactiva un análisis de Germinación (cambiar activo a false)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/desactivar")
+    public ResponseEntity<HttpStatus> desactivarGerminacion(@PathVariable Long id) {
+        try {
+            germinacionService.desactivarGerminacion(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Reactivar Germinacion
+    @Operation(summary = "Reactivar análisis Germinación", 
+              description = "Reactiva un análisis de Germinación desactivado (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<?> reactivarGerminacion(@PathVariable Long id) {
+        try {
+            GerminacionDTO germinacionReactivada = germinacionService.reactivarGerminacion(id);
+            return ResponseEntity.ok(germinacionReactivada);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("no encontrada")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
         }
     }
 

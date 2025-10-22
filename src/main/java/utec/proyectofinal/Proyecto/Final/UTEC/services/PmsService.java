@@ -104,6 +104,16 @@ public class PmsService {
         }
     }
 
+    // Desactivar PMS (cambiar activo a false)
+    public void desactivarPms(Long id) {
+        analisisService.desactivarAnalisis(id, pmsRepository);
+    }
+
+    // Reactivar PMS (cambiar activo a true)
+    public PmsDTO reactivarPms(Long id) {
+        return analisisService.reactivarAnalisis(id, pmsRepository, this::mapearEntidadADTO);
+    }
+
     // Listar todos los Pms activos
     public List<PmsDTO> obtenerTodos() {
         List<Pms> activos = pmsRepository.findAll()
@@ -134,9 +144,28 @@ public class PmsService {
                 .collect(Collectors.toList());
     }
 
-    // Listar Pms con paginado (para listado)
+    // Listar PMS con paginado (para listado)
     public Page<PmsListadoDTO> obtenerPmsPaginadas(Pageable pageable) {
         Page<Pms> pmsPage = pmsRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        return pmsPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar PMS con paginado y filtro de activo
+    public Page<PmsListadoDTO> obtenerPmsPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Pms> pmsPage;
+        
+        switch (filtroActivo.toLowerCase()) {
+            case "activos":
+                pmsPage = pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+                break;
+            case "inactivos":
+                pmsPage = pmsRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+                break;
+            default: // "todos"
+                pmsPage = pmsRepository.findAllByOrderByFechaInicioDesc(pageable);
+                break;
+        }
+        
         return pmsPage.map(this::mapearEntidadAListadoDTO);
     }
 

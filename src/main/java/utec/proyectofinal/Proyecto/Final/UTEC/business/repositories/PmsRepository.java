@@ -25,5 +25,10 @@ public interface PmsRepository extends JpaRepository<Pms, Long> {
 
     // Pageable
     Page<Pms> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
+    
+    // Filtrado por activo
+    Page<Pms> findByActivoTrueOrderByFechaInicioDesc(Pageable pageable);
+    Page<Pms> findByActivoFalseOrderByFechaInicioDesc(Pageable pageable);
+    Page<Pms> findAllByOrderByFechaInicioDesc(Pageable pageable);
 
 }

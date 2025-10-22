@@ -25,6 +25,11 @@ public interface TetrazolioRepository extends JpaRepository<Tetrazolio, Long> {
     // Pageable
     Page<Tetrazolio> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
     
+    // Filtrado por activo
+    Page<Tetrazolio> findByActivoTrueOrderByFechaInicioDesc(Pageable pageable);
+    Page<Tetrazolio> findByActivoFalseOrderByFechaInicioDesc(Pageable pageable);
+    Page<Tetrazolio> findAllByOrderByFechaInicioDesc(Pageable pageable);
+    
     // Métodos eficientes para validaciones
     boolean existsByLoteLoteID(Long loteID);
     boolean existsByLoteLoteIDAndEstado(Long loteID, Estado estado);

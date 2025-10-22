@@ -86,10 +86,11 @@ public class PmsController {
     @GetMapping("/listado")
     public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO>> obtenerPmsPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "todos") String filtroActivo) {
         try {
             org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO> response = pmsService.obtenerPmsPaginadas(pageable);
+            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO> response = pmsService.obtenerPmsPaginadasConFiltro(pageable, filtroActivo);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -125,6 +126,42 @@ public class PmsController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Desactivar PMS (soft delete)
+    @Operation(summary = "Desactivar análisis PMS", 
+              description = "Desactiva un análisis PMS (cambiar activo a false)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/desactivar")
+    public ResponseEntity<HttpStatus> desactivarPms(@PathVariable Long id) {
+        try {
+            pmsService.desactivarPms(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Reactivar PMS
+    @Operation(summary = "Reactivar análisis PMS", 
+              description = "Reactiva un análisis PMS desactivado (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<?> reactivarPms(@PathVariable Long id) {
+        try {
+            PmsDTO pmsReactivado = pmsService.reactivarPms(id);
+            return ResponseEntity.ok(pmsReactivado);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
         }
     }
 

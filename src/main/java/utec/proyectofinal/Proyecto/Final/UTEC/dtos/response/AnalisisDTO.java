@@ -21,5 +21,7 @@ public abstract class AnalisisDTO {
 
     private String comentarios;
 
+    private Boolean activo;
+
     private List<AnalisisHistorialDTO> historial;
 }

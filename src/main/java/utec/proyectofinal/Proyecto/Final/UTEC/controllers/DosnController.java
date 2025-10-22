@@ -103,6 +103,42 @@ public class DosnController {
         }
     }
 
+    // Desactivar DOSN (soft delete)
+    @Operation(summary = "Desactivar análisis DOSN", 
+              description = "Desactiva un análisis DOSN (cambiar activo a false)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/desactivar")
+    public ResponseEntity<HttpStatus> desactivarDosn(@PathVariable Long id) {
+        try {
+            dosnService.desactivarDosn(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Reactivar DOSN
+    @Operation(summary = "Reactivar análisis DOSN", 
+              description = "Reactiva un análisis DOSN desactivado (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<?> reactivarDosn(@PathVariable Long id) {
+        try {
+            DosnDTO dosnReactivada = dosnService.reactivarDosn(id);
+            return ResponseEntity.ok(dosnReactivada);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("no encontrada")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     // Obtener Dosn por Lote
     @Operation(summary = "Obtener DOSN por ID de lote", 
               description = "Obtiene todos los DOSN asociados a un lote específico")
@@ -125,10 +161,11 @@ public class DosnController {
     @GetMapping("/listado")
     public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO>> obtenerDosnPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "todos") String filtroActivo) {
         try {
             org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO> response = dosnService.obtenerDosnPaginadas(pageable);
+            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO> response = dosnService.obtenerDosnPaginadasConFiltro(pageable, filtroActivo);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
