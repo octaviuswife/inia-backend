@@ -1,9 +1,7 @@
-
 package utec.proyectofinal.Proyecto.Final.UTEC.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,7 +14,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Usuario
@@ -28,9 +25,17 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        http
+                // IMPORTANTE: CORS debe ir primero
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                
+                // Deshabilitar CSRF (necesario para APIs REST con JWT)
                 .csrf(csrf -> csrf.disable())
+                
+                // Agregar filtro JWT
                 .addFilterBefore(new FiltroJWTAutorizacion(), UsernamePasswordAuthenticationFilter.class)
+                
+                // Configurar autorización
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos (sin autenticación)
                         .requestMatchers("/api/v1/auth/**").permitAll()
@@ -40,30 +45,10 @@ public class WebSecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-resources/**").permitAll()
                         .requestMatchers("/configuration/**").permitAll()
-
-                        /*
-                        // LECTURA - Todos los roles autenticados pueden ver
-                        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "ANALISTA", "OBSERVADOR")
-
-                        // CREACIÓN Y EDICIÓN - Solo ADMIN y ANALISTA
-                        .requestMatchers(HttpMethod.POST, "/api/germinacion/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.POST, "/api/tetrazolio/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.POST, "/api/pureza/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.PUT, "/api/germinacion/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.PUT, "/api/tetrazolio/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.PUT, "/api/pureza/**").hasAnyRole("ADMIN", "ANALISTA")
-
-                        // ELIMINACIÓN - Solo ADMIN
-                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
-
-                        // GESTIÓN DE USUARIOS - Solo ADMIN
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
-                        */
-                        // DESARROLLO: Cambiar a authenticated() para que funcione JWT
-                        .anyRequest().authenticated());
-
-
-
+                        
+                        // Resto de endpoints requieren autenticación
+                        .anyRequest().authenticated()
+                );
 
         return http.build();
     }
@@ -80,19 +65,39 @@ public class WebSecurityConfig {
         // Permitir localhost y cualquier subdominio de ngrok
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:*",
-            "https://*.ngrok-free.dev",
-            "https://*.ngrok.io"
+            "https://*.ngrok-free.app",  // Cambiado de ngrok-free.dev
+            "https://*.ngrok.io",
+            "https://*.ngrok.app"          // Agregado dominio adicional
         ));
         
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        // Métodos HTTP permitidos
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+        
+        // Permitir todos los headers
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization"));
-        configuration.setAllowCredentials(true); // CRÍTICO: permite cookies
+        
+        // Headers expuestos al cliente
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", 
+            "Set-Cookie", 
+            "Content-Type",
+            "X-Total-Count"
+        ));
+        
+        // CRÍTICO: permite cookies y credenciales
+        configuration.setAllowCredentials(true);
+        
+        // Cache de preflight requests (1 hora)
         configuration.setMaxAge(3600L);
         
+        // Registrar configuración CORS
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        
+        // IMPORTANTE: Aplicar a TODAS las rutas (no solo /api/**)
+        source.registerCorsConfiguration("/**", configuration);
+        
         return source;
     }
-
 }

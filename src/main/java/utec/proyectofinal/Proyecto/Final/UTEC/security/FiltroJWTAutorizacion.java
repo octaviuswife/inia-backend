@@ -25,35 +25,44 @@ public class FiltroJWTAutorizacion extends OncePerRequestFilter {
     private static final String ACCESS_TOKEN_COOKIE = "accessToken";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // CRÍTICO: Ignorar peticiones OPTIONS (preflight CORS) - dejar que pasen sin validación JWT
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
+        throws ServletException, IOException {
+    
+    // CRÍTICO: Ignorar peticiones OPTIONS (preflight CORS)
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        filterChain.doFilter(request, response);
+        return;
+    }
+    
+    try {
+        String token = extraerToken(request);
         
-        try {
-            String token = extraerToken(request);
-            if (token != null && !token.isEmpty()) {
-                Claims claims = validarToken(token);
-                if (claims.get("authorities") != null) {
-                    crearAutenticacion(claims);
-                } else {
-                    SecurityContextHolder.clearContext();
-                }
+        if (token != null && !token.isEmpty()) {
+            Claims claims = validarToken(token);
+            
+            if (claims != null && claims.get("authorities") != null) {
+                crearAutenticacion(claims);
             } else {
                 SecurityContextHolder.clearContext();
             }
-            filterChain.doFilter(request, response);
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException ex) {
-            // Log del error para debugging
-            System.err.println("Error JWT: " + ex.getMessage());
+        } else {
             SecurityContextHolder.clearContext();
-            // Continuar con el filtro para que Spring Security maneje la autenticación fallida
-            filterChain.doFilter(request, response);
-            return;
         }
+        
+    } catch (ExpiredJwtException ex) {
+        System.err.println("Token JWT expirado: " + ex.getMessage());
+        SecurityContextHolder.clearContext();
+    } catch (UnsupportedJwtException | MalformedJwtException ex) {
+        System.err.println("Token JWT inválido: " + ex.getMessage());
+        SecurityContextHolder.clearContext();
+    } catch (Exception ex) {
+        System.err.println("Error inesperado en JWT: " + ex.getMessage());
+        SecurityContextHolder.clearContext();
     }
+    
+    // IMPORTANTE: Siempre continuar la cadena de filtros
+    filterChain.doFilter(request, response);
+}
 
     private void crearAutenticacion(Claims claims) {
         @SuppressWarnings("unchecked")
