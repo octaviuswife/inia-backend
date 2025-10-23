@@ -45,10 +45,14 @@ public class AnalisisService {
      * @return El análisis actualizado
      */
     public Analisis finalizarAnalisis(Analisis analisis) {
-        //chequear si el estado del analisis no es APROBADO o INACTIVO o A_REPETIR
-
-        if (analisis.getEstado() == Estado.APROBADO || analisis.getEstado() == Estado.INACTIVO || analisis.getEstado() == Estado.A_REPETIR) {
-            throw new RuntimeException("El análisis ya está finalizado, inactivo o marcado para repetir");
+        // Validar que el análisis esté activo
+        if (!analisis.getActivo()) {
+            throw new RuntimeException("No se puede finalizar un análisis inactivo");
+        }
+        
+        // Chequear si el estado del análisis no es APROBADO o A_REPETIR
+        if (analisis.getEstado() == Estado.APROBADO || analisis.getEstado() == Estado.A_REPETIR) {
+            throw new RuntimeException("El análisis ya está finalizado o marcado para repetir");
         }
 
         if (esAnalista()) {
@@ -81,12 +85,12 @@ public class AnalisisService {
      * 
      * @param analisis El análisis a aprobar
      * @return El análisis actualizado
-     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está INACTIVO
+     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está inactivo
      */
     public Analisis aprobarAnalisis(Analisis analisis) {
-        // Validar que no esté inactivo
-        if (analisis.getEstado() == Estado.INACTIVO) {
-            throw new RuntimeException("No se puede aprobar un análisis que está en estado INACTIVO");
+        // Validar que el análisis esté activo
+        if (!analisis.getActivo()) {
+            throw new RuntimeException("No se puede aprobar un análisis inactivo");
         }
         
         // Validar que esté en estado PENDIENTE_APROBACION
@@ -122,11 +126,11 @@ public class AnalisisService {
      * 
      * @param analisis El análisis a marcar para repetir
      * @return El análisis actualizado
-     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está INACTIVO
+     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está inactivo
      */
     public Analisis marcarParaRepetir(Analisis analisis) {
-        // Validar que no esté inactivo
-        if (analisis.getEstado() == Estado.INACTIVO) {
+        // Validar que el análisis esté activo
+        if (!analisis.getActivo()) {
             throw new RuntimeException("No se puede marcar para repetir un análisis inactivo");
         }
         

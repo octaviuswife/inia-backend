@@ -125,13 +125,13 @@ public class GerminacionService {
         }
     }
 
-    // Eliminar Germinación (cambiar estado a INACTIVO)
+    // Eliminar Germinación (desactivar - cambiar activo a false)
     public void eliminarGerminacion(Long id) {
         Optional<Germinacion> germinacionExistente = germinacionRepository.findById(id);
         
         if (germinacionExistente.isPresent()) {
             Germinacion germinacion = germinacionExistente.get();
-            germinacion.setEstado(Estado.INACTIVO);
+            germinacion.setActivo(false);
             germinacionRepository.save(germinacion);
         } else {
             throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
@@ -150,7 +150,7 @@ public class GerminacionService {
 
     // Listar todas las Germinaciones activas
     public ResponseListadoGerminacion obtenerTodasGerminaciones() {
-        List<Germinacion> germinacionesActivas = germinacionRepository.findByEstadoNot(Estado.INACTIVO);
+        List<Germinacion> germinacionesActivas = germinacionRepository.findByActivoTrue();
         List<GerminacionDTO> germinacionesDTO = germinacionesActivas.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -162,7 +162,7 @@ public class GerminacionService {
 
     // Listar germinaciones con paginado (para listado)
     public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadas(Pageable pageable) {
-        Page<Germinacion> germinacionesPage = germinacionRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Germinacion> germinacionesPage = germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return germinacionesPage.map(this::mapearEntidadAListadoDTO);
     }
 

@@ -91,13 +91,13 @@ public class PmsService {
         }
     }
 
-    // Eliminar Pms (cambia estado a INACTIVO)
+    // Eliminar Pms (desactivar - cambia activo a false)
     public void eliminarPms(Long id) {
         Optional<Pms> existente = pmsRepository.findById(id);
 
         if (existente.isPresent()) {
             Pms pms = existente.get();
-            pms.setEstado(Estado.INACTIVO);
+            pms.setActivo(false);
             pmsRepository.save(pms);
         } else {
             throw new RuntimeException("Pms no encontrado con ID: " + id);
@@ -116,10 +116,7 @@ public class PmsService {
 
     // Listar todos los Pms activos
     public List<PmsDTO> obtenerTodos() {
-        List<Pms> activos = pmsRepository.findAll()
-                .stream()
-                .filter(p -> p.getEstado() != Estado.INACTIVO)
-                .collect(Collectors.toList());
+        List<Pms> activos = pmsRepository.findByActivoTrue();
 
         return activos.stream()
                 .map(this::mapearEntidadADTO)
@@ -146,7 +143,7 @@ public class PmsService {
 
     // Listar PMS con paginado (para listado)
     public Page<PmsListadoDTO> obtenerPmsPaginadas(Pageable pageable) {
-        Page<Pms> pmsPage = pmsRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Pms> pmsPage = pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return pmsPage.map(this::mapearEntidadAListadoDTO);
     }
 

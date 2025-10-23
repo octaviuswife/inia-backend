@@ -17,6 +17,9 @@ public interface PurezaRepository extends JpaRepository<Pureza, Long> {
     
     List<Pureza> findByEstado(Estado estado);
     
+    // Buscar por activo
+    List<Pureza> findByActivoTrue();
+    
     @Query("SELECT p FROM Pureza p WHERE p.lote.loteID = :idLote")
     List<Pureza> findByIdLote(@Param("idLote") Long idLote);
     

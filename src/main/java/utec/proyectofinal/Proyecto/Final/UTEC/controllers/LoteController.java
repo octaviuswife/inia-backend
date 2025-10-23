@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import utec.proyectofinal.Proyecto.Final.UTEC.business.dto.PageResponse;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
@@ -99,15 +100,28 @@ public class LoteController {
 
     // Obtener Lotes con paginado para listado
     @GetMapping("/listado")
-    @Operation(summary = "Obtener lotes paginadas", description = "Obtiene la lista paginada de lotes activos para el listado")
+    @Operation(summary = "Obtener lotes paginadas", description = "Obtiene la lista paginada de lotes (activos e inactivos) para el listado")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
-    public ResponseEntity<org.springframework.data.domain.Page<LoteSimpleDTO>> obtenerLotesPaginadas(
+    public ResponseEntity<PageResponse<LoteSimpleDTO>> obtenerLotesPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
         try {
             org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<LoteSimpleDTO> response = loteService.obtenerLotesSimplePaginadas(pageable);
+            PageResponse<LoteSimpleDTO> response = loteService.obtenerLotesSimplePaginadas(pageable);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // Obtener estadísticas de lotes
+    @GetMapping("/estadisticas")
+    @Operation(summary = "Obtener estadísticas de lotes", description = "Obtiene el conteo total de lotes, activos e inactivos")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
+    public ResponseEntity<java.util.Map<String, Long>> obtenerEstadisticasLotes() {
+        try {
+            java.util.Map<String, Long> stats = loteService.obtenerEstadisticasLotes();
+            return new ResponseEntity<>(stats, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

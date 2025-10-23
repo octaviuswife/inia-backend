@@ -98,12 +98,12 @@ public class DosnService {
         return mapearEntidadADTO(dosnActualizada);
     }
 
-    // Eliminar Dosn (estado INACTIVO)
+    // Eliminar Dosn (desactivar - cambiar activo a false)
     public void eliminarDosn(Long id) {
         Dosn dosn = dosnRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
 
-        dosn.setEstado(Estado.INACTIVO);
+        dosn.setActivo(false);
         dosnRepository.save(dosn);
     }
 
@@ -119,7 +119,7 @@ public class DosnService {
 
     // Listar todas las Dosn activas
     public ResponseListadoDosn obtenerTodasDosnActivas() {
-        List<DosnDTO> dosnDTOs = dosnRepository.findByEstadoNot(Estado.INACTIVO)
+        List<DosnDTO> dosnDTOs = dosnRepository.findByActivoTrue()
                 .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -146,7 +146,7 @@ public class DosnService {
 
     // Listar Dosn con paginado (para listado)
     public Page<DosnListadoDTO> obtenerDosnPaginadas(Pageable pageable) {
-        Page<Dosn> dosnPage = dosnRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Dosn> dosnPage = dosnRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return dosnPage.map(this::mapearEntidadAListadoDTO);
     }
 

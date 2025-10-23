@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import utec.proyectofinal.Proyecto.Final.UTEC.business.dto.PageResponse;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
@@ -211,9 +212,27 @@ public class LoteService {
     }
 
     // Listar Lotes Simple con paginado para listado
-    public Page<LoteSimpleDTO> obtenerLotesSimplePaginadas(Pageable pageable) {
-        Page<Lote> lotePage = loteRepository.findByActivo(true, pageable);
-        return lotePage.map(this::mapearEntidadASimpleDTO);
+    public PageResponse<LoteSimpleDTO> obtenerLotesSimplePaginadas(Pageable pageable) {
+        // Obtener TODOS los lotes (activos e inactivos) con paginación
+        Page<Lote> lotePage = loteRepository.findAll(pageable);
+        
+        // Mapear a DTOs
+        List<LoteSimpleDTO> content = lotePage.getContent().stream()
+                .map(this::mapearEntidadASimpleDTO)
+                .collect(Collectors.toList());
+        
+        // Crear el PageResponse con toda la metadata
+        PageResponse<LoteSimpleDTO> response = new PageResponse<>();
+        response.setContent(content);
+        response.setCurrentPage(lotePage.getNumber());
+        response.setPageSize(lotePage.getSize());
+        response.setTotalElements(lotePage.getTotalElements());
+        response.setTotalPages(lotePage.getTotalPages());
+        response.setFirst(lotePage.isFirst());
+        response.setLast(lotePage.isLast());
+        response.setEmpty(lotePage.isEmpty());
+        
+        return response;
     }
 
     private LoteListadoDTO mapearEntidadAListadoDTO(Lote lote) {
@@ -750,5 +769,19 @@ public class LoteService {
         }
         
         return totalPendientes;
+    }
+    
+    // Obtener estadísticas de lotes
+    public java.util.Map<String, Long> obtenerEstadisticasLotes() {
+        long total = loteRepository.count();
+        long activos = loteRepository.countLotesActivos();
+        long inactivos = loteRepository.countLotesInactivos();
+        
+        java.util.Map<String, Long> stats = new java.util.HashMap<>();
+        stats.put("total", total);
+        stats.put("activos", activos);
+        stats.put("inactivos", inactivos);
+        
+        return stats;
     }
 }

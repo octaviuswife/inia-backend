@@ -17,6 +17,9 @@ public interface TetrazolioRepository extends JpaRepository<Tetrazolio, Long> {
     
     List<Tetrazolio> findByEstado(Estado estado);
     
+    // Buscar por activo
+    List<Tetrazolio> findByActivoTrue();
+    
     @Query("SELECT t FROM Tetrazolio t WHERE t.lote.loteID = :idLote")
     List<Tetrazolio> findByIdLote(@Param("idLote") Long idLote);
     

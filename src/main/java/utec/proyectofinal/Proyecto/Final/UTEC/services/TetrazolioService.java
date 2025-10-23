@@ -92,14 +92,6 @@ public class TetrazolioService {
         return mapearEntidadADTO(tetrazolioActualizado);
     }
 
-    // Eliminar Tetrazolio (cambiar estado a INACTIVO)
-    public void eliminarTetrazolio(Long id) {
-        Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
-        
-        tetrazolio.setEstado(Estado.INACTIVO);
-        tetrazolioRepository.save(tetrazolio);
-    }
 
     // Desactivar Tetrazolio (cambiar activo a false)
     public void desactivarTetrazolio(Long id) {
@@ -113,7 +105,7 @@ public class TetrazolioService {
 
     // Listar todos los Tetrazolios activos usando ResponseListadoTetrazolio
     public ResponseListadoTetrazolio obtenerTodosTetrazolio() {
-        List<Tetrazolio> tetrazoliosActivos = tetrazolioRepository.findByEstadoNot(Estado.INACTIVO);
+        List<Tetrazolio> tetrazoliosActivos = tetrazolioRepository.findByActivoTrue();
         List<TetrazolioDTO> tetrazoliosDTO = tetrazoliosActivos.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -141,7 +133,7 @@ public class TetrazolioService {
 
     // Listar Tetrazolio con paginado (para listado)
     public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadas(Pageable pageable) {
-        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
     }
 

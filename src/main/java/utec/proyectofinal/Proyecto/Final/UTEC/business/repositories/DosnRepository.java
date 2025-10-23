@@ -14,6 +14,9 @@ public interface DosnRepository extends JpaRepository<Dosn, Long> {
 
     List<Dosn> findByEstadoNot(Estado estado);
     List<Dosn> findByEstado(Estado estado);
+    
+    // Buscar por activo
+    List<Dosn> findByActivoTrue();
 
     @Query("SELECT d FROM Dosn d WHERE d.lote.loteID = :idLote")
     List<Dosn> findByIdLote(@Param("idLote") Integer idLote);

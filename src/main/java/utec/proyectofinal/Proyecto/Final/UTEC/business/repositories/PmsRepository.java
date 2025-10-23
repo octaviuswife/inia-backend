@@ -13,6 +13,9 @@ import java.util.List;
 public interface PmsRepository extends JpaRepository<Pms, Long> {
     List<Pms> findByEstadoNot(Estado estado);
     List<Pms> findByEstado(Estado estado);
+    
+    // Buscar por activo
+    List<Pms> findByActivoTrue();
 
     @Query("SELECT p FROM Pms p WHERE p.lote.loteID = :idLote")
     List<Pms> findByIdLote(@Param("idLote") Integer idLote);

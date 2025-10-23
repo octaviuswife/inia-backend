@@ -17,6 +17,9 @@ public interface GerminacionRepository extends JpaRepository<Germinacion, Long> 
     
     List<Germinacion> findByEstado(Estado estado);
     
+    // Buscar por activo
+    List<Germinacion> findByActivoTrue();
+    
     // Método con paginado para listado
     Page<Germinacion> findByEstadoNotOrderByFechaInicioDesc(Estado estado, Pageable pageable);
     

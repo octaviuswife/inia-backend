@@ -104,12 +104,12 @@ public class PurezaService {
         return mapearEntidadADTO(purezaActualizada);
     }
 
-    // Eliminar Pureza (cambiar estado a INACTIVO)
+    // Eliminar Pureza (desactivar - cambiar activo a false)
     public void eliminarPureza(Long id) {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
 
-        pureza.setEstado(Estado.INACTIVO);
+        pureza.setActivo(false);
         purezaRepository.save(pureza);
     }
 
@@ -125,7 +125,7 @@ public class PurezaService {
 
     // Listar todas las Purezas activas
     public ResponseListadoPureza obtenerTodasPurezasActivas() {
-        List<PurezaDTO> purezaDTOs = purezaRepository.findByEstadoNot(Estado.INACTIVO)
+        List<PurezaDTO> purezaDTOs = purezaRepository.findByActivoTrue()
                 .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -152,7 +152,7 @@ public class PurezaService {
 
     // Listar Pureza con paginado (para listado)
     public Page<PurezaListadoDTO> obtenerPurezaPaginadas(Pageable pageable) {
-        Page<Pureza> purezaPage = purezaRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Pureza> purezaPage = purezaRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return purezaPage.map(this::mapearEntidadAListadoDTO);
     }
 

@@ -30,4 +30,8 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
     // Contar lotes activos
     @Query("SELECT COUNT(l) FROM Lote l WHERE l.activo = true")
     long countLotesActivos();
+    
+    // Contar lotes inactivos
+    @Query("SELECT COUNT(l) FROM Lote l WHERE l.activo = false")
+    long countLotesInactivos();
 }

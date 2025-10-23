@@ -124,7 +124,7 @@ public class TetrazolioController {
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarTetrazolio(@PathVariable Long id) {
         try {
-            tetrazolioService.eliminarTetrazolio(id);
+            tetrazolioService.desactivarTetrazolio(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
