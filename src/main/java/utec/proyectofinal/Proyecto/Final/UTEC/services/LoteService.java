@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import utec.proyectofinal.Proyecto.Final.UTEC.business.dto.PageResponse;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
@@ -212,27 +211,12 @@ public class LoteService {
     }
 
     // Listar Lotes Simple con paginado para listado
-    public PageResponse<LoteSimpleDTO> obtenerLotesSimplePaginadas(Pageable pageable) {
+    public Page<LoteSimpleDTO> obtenerLotesSimplePaginadas(Pageable pageable) {
         // Obtener TODOS los lotes (activos e inactivos) con paginación
         Page<Lote> lotePage = loteRepository.findAll(pageable);
         
-        // Mapear a DTOs
-        List<LoteSimpleDTO> content = lotePage.getContent().stream()
-                .map(this::mapearEntidadASimpleDTO)
-                .collect(Collectors.toList());
-        
-        // Crear el PageResponse con toda la metadata
-        PageResponse<LoteSimpleDTO> response = new PageResponse<>();
-        response.setContent(content);
-        response.setCurrentPage(lotePage.getNumber());
-        response.setPageSize(lotePage.getSize());
-        response.setTotalElements(lotePage.getTotalElements());
-        response.setTotalPages(lotePage.getTotalPages());
-        response.setFirst(lotePage.isFirst());
-        response.setLast(lotePage.isLast());
-        response.setEmpty(lotePage.isEmpty());
-        
-        return response;
+        // Mapear a DTOs usando Page.map() como en PurezaService
+        return lotePage.map(this::mapearEntidadASimpleDTO);
     }
 
     private LoteListadoDTO mapearEntidadAListadoDTO(Lote lote) {
