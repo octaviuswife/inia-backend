@@ -7,6 +7,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,8 +28,10 @@ public class WebSecurityConfig {
         http.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 // .addFilterBefore(new FiltroJWTAutorizacion(), UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // ← AGREGAR ESTO
+                )
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos (sin autenticación)
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/webjars/**").permitAll()
@@ -36,26 +39,6 @@ public class WebSecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-resources/**").permitAll()
                         .requestMatchers("/configuration/**").permitAll()
-
-                        /*
-                        // LECTURA - Todos los roles autenticados pueden ver
-                        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "ANALISTA", "OBSERVADOR")
-
-                        // CREACIÓN Y EDICIÓN - Solo ADMIN y ANALISTA
-                        .requestMatchers(HttpMethod.POST, "/api/germinacion/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.POST, "/api/tetrazolio/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.POST, "/api/pureza/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.PUT, "/api/germinacion/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.PUT, "/api/tetrazolio/**").hasAnyRole("ADMIN", "ANALISTA")
-                        .requestMatchers(HttpMethod.PUT, "/api/pureza/**").hasAnyRole("ADMIN", "ANALISTA")
-
-                        // ELIMINACIÓN - Solo ADMIN
-                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
-
-                        // GESTIÓN DE USUARIOS - Solo ADMIN
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
-                        */
-                        // DESARROLLO: Cambiar a authenticated() para que funcione JWT
                         .anyRequest().authenticated());
 
         return http.build();
