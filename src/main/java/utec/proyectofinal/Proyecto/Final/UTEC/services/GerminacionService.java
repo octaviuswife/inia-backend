@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.GerminacionSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
@@ -125,13 +127,13 @@ public class GerminacionService {
         }
     }
 
-    // Eliminar Germinación (cambiar estado a INACTIVO)
+    // Eliminar Germinación (desactivar - cambiar activo a false)
     public void eliminarGerminacion(Long id) {
         Optional<Germinacion> germinacionExistente = germinacionRepository.findById(id);
         
         if (germinacionExistente.isPresent()) {
             Germinacion germinacion = germinacionExistente.get();
-            germinacion.setEstado(Estado.INACTIVO);
+            germinacion.setActivo(false);
             germinacionRepository.save(germinacion);
         } else {
             throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
@@ -150,7 +152,7 @@ public class GerminacionService {
 
     // Listar todas las Germinaciones activas
     public ResponseListadoGerminacion obtenerTodasGerminaciones() {
-        List<Germinacion> germinacionesActivas = germinacionRepository.findByEstadoNot(Estado.INACTIVO);
+        List<Germinacion> germinacionesActivas = germinacionRepository.findByActivoTrue();
         List<GerminacionDTO> germinacionesDTO = germinacionesActivas.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -162,7 +164,7 @@ public class GerminacionService {
 
     // Listar germinaciones con paginado (para listado)
     public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadas(Pageable pageable) {
-        Page<Germinacion> germinacionesPage = germinacionRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Germinacion> germinacionesPage = germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return germinacionesPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -182,6 +184,18 @@ public class GerminacionService {
                 break;
         }
         
+        return germinacionesPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar germinaciones con paginado y filtros completos
+    public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        Specification<Germinacion> spec = GerminacionSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Germinacion> germinacionesPage = germinacionRepository.findAll(spec, pageable);
         return germinacionesPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -216,6 +230,17 @@ public class GerminacionService {
         }
         
         return true; // Todas las tablas están finalizadas
+    }
+
+    /**
+     * Validación completa para operaciones críticas de Germinación (finalizar y marcar para repetir)
+     * Verifica completitud de tablas
+     */
+    private void validarGerminacionParaOperacionCritica(Germinacion germinacion) {
+        // Validación específica de Germinación: completitud de tablas
+        if (!todasTablasFinalizadas(germinacion)) {
+            throw new RuntimeException("No se puede completar la operación. Hay tablas pendientes de completar.");
+        }
     }
 
     // Mapear de RequestDTO a Entity para creación
@@ -473,12 +498,7 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            germinacion -> {
-                // Validación específica de Germinación: completitud de tablas
-                if (!todasTablasFinalizadas(germinacion)) {
-                    throw new RuntimeException("No se puede finalizar el análisis. Hay tablas pendientes de completar.");
-                }
-            }
+            this::validarGerminacionParaOperacionCritica
         );
     }
 
@@ -490,7 +510,8 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para aprobar
+            this::validarGerminacionParaOperacionCritica, // Mismas validaciones que finalizar
+            germinacionRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -500,7 +521,7 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            this::validarGerminacionParaOperacionCritica // Mismas validaciones que finalizar
         );
     }
 }

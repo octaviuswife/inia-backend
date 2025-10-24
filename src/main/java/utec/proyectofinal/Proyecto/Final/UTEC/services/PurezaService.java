@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepos
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PurezaSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
@@ -104,12 +106,12 @@ public class PurezaService {
         return mapearEntidadADTO(purezaActualizada);
     }
 
-    // Eliminar Pureza (cambiar estado a INACTIVO)
+    // Eliminar Pureza (desactivar - cambiar activo a false)
     public void eliminarPureza(Long id) {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
 
-        pureza.setEstado(Estado.INACTIVO);
+        pureza.setActivo(false);
         purezaRepository.save(pureza);
     }
 
@@ -125,7 +127,7 @@ public class PurezaService {
 
     // Listar todas las Purezas activas
     public ResponseListadoPureza obtenerTodasPurezasActivas() {
-        List<PurezaDTO> purezaDTOs = purezaRepository.findByEstadoNot(Estado.INACTIVO)
+        List<PurezaDTO> purezaDTOs = purezaRepository.findByActivoTrue()
                 .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -152,7 +154,7 @@ public class PurezaService {
 
     // Listar Pureza con paginado (para listado)
     public Page<PurezaListadoDTO> obtenerPurezaPaginadas(Pageable pageable) {
-        Page<Pureza> purezaPage = purezaRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Pureza> purezaPage = purezaRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return purezaPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -169,6 +171,32 @@ public class PurezaService {
             purezaPage = purezaRepository.findAllByOrderByFechaInicioDesc(pageable);
         }
         
+        return purezaPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar Pureza con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @param estado Filtro por estado del análisis (opcional)
+     * @param loteId Filtro por ID del lote (opcional)
+     * @return Página de PurezaListadoDTO filtrados
+     */
+    public Page<PurezaListadoDTO> obtenerPurezaPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        // Crear la especificación con los filtros
+        Specification<Pureza> spec = PurezaSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        
+        // Obtener purezas filtradas y paginadas
+        Page<Pureza> purezaPage = purezaRepository.findAll(spec, pageable);
+        
+        // Mapear a DTOs
         return purezaPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -421,7 +449,7 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica
+            null // No hay validación específica para Pureza
         );
     }
 
@@ -433,7 +461,8 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica
+            null, // No hay validación específica para Pureza
+            purezaRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -445,7 +474,7 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            null // No hay validación específica para Pureza
         );
     }
 }

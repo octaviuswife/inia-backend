@@ -45,10 +45,14 @@ public class AnalisisService {
      * @return El análisis actualizado
      */
     public Analisis finalizarAnalisis(Analisis analisis) {
-        //chequear si el estado del analisis no es APROBADO o INACTIVO o A_REPETIR
-
-        if (analisis.getEstado() == Estado.APROBADO || analisis.getEstado() == Estado.INACTIVO || analisis.getEstado() == Estado.A_REPETIR) {
-            throw new RuntimeException("El análisis ya está finalizado, inactivo o marcado para repetir");
+        // Validar que el análisis esté activo
+        if (!analisis.getActivo()) {
+            throw new RuntimeException("No se puede finalizar un análisis inactivo");
+        }
+        
+        // Chequear si el estado del análisis no es APROBADO o A_REPETIR
+        if (analisis.getEstado() == Estado.APROBADO || analisis.getEstado() == Estado.A_REPETIR) {
+            throw new RuntimeException("El análisis ya está finalizado o marcado para repetir");
         }
 
         if (esAnalista()) {
@@ -77,21 +81,21 @@ public class AnalisisService {
     }
 
     /**
-     * Aprueba un análisis (verifica que esté en PENDIENTE_APROBACION)
+     * Aprueba un análisis (verifica que esté en PENDIENTE_APROBACION o A_REPETIR)
      * 
      * @param analisis El análisis a aprobar
      * @return El análisis actualizado
-     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está INACTIVO
+     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o A_REPETIR, o está inactivo
      */
     public Analisis aprobarAnalisis(Analisis analisis) {
-        // Validar que no esté inactivo
-        if (analisis.getEstado() == Estado.INACTIVO) {
-            throw new RuntimeException("No se puede aprobar un análisis que está en estado INACTIVO");
+        // Validar que el análisis esté activo
+        if (!analisis.getActivo()) {
+            throw new RuntimeException("No se puede aprobar un análisis inactivo");
         }
         
-        // Validar que esté en estado PENDIENTE_APROBACION
-        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION) {
-            throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION para ser aprobado");
+        // Validar que esté en estado PENDIENTE_APROBACION o A_REPETIR
+        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION && analisis.getEstado() != Estado.A_REPETIR) {
+            throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION o A_REPETIR para ser aprobado");
         }
         
         analisis.setEstado(Estado.APROBADO);
@@ -117,23 +121,21 @@ public class AnalisisService {
     
     /**
      * Marca un análisis para repetir (solo administradores)
-     * - Verifica que esté en estado PENDIENTE_APROBACION
+     * - Se permite marcar para repetir análisis APROBADOS o que cumplan validaciones
      * - Cambia estado a A_REPETIR
      * 
      * @param analisis El análisis a marcar para repetir
      * @return El análisis actualizado
-     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está INACTIVO
+     * @throws RuntimeException si el análisis está inactivo o no cumple las validaciones
      */
     public Analisis marcarParaRepetir(Analisis analisis) {
-        // Validar que no esté inactivo
-        if (analisis.getEstado() == Estado.INACTIVO) {
+        // Validar que el análisis esté activo
+        if (!analisis.getActivo()) {
             throw new RuntimeException("No se puede marcar para repetir un análisis inactivo");
         }
         
-        // Validar que esté en estado PENDIENTE_APROBACION o en APROBADO
-        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION && analisis.getEstado() != Estado.APROBADO) {
-            throw new RuntimeException("Solo se pueden marcar para repetir análisis en estado PENDIENTE_APROBACION");
-        }
+        // Se permite marcar para repetir análisis APROBADOS o que cumplan validaciones
+        // (El validador específico se encargará de verificar requisitos por tipo de análisis)
         
         analisis.setEstado(Estado.A_REPETIR);
         
@@ -235,16 +237,54 @@ public class AnalisisService {
      * @param repository Repositorio del tipo específico
      * @param mapper Función para mapear entidad a DTO
      * @param validator Validación específica opcional (puede ser null)
+     * @param buscarPorLote Función para buscar análisis por lote (puede ser null)
      * @return DTO del análisis aprobado
      */
     public <T extends Analisis, D> D aprobarAnalisisGenerico(
             Long id,
             JpaRepository<T, Long> repository,
             Function<T, D> mapper,
-            Consumer<T> validator) {
+            Consumer<T> validator,
+            Function<Long, java.util.List<T>> buscarPorLote) {
         
         T analisis = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
+        
+
+        // Si el análisis está marcado como A_REPETIR y tiene lote asociado
+        if (analisis.getEstado() == Estado.A_REPETIR && analisis.getLote() != null && buscarPorLote != null) {
+            System.out.println("  ✅ Análisis está en A_REPETIR, validando si existen otros análisis válidos...");
+            
+            // Buscar otros análisis del mismo tipo para el mismo lote
+            java.util.List<T> analisisDelMismoLote = buscarPorLote.apply(analisis.getLote().getLoteID());
+            
+            System.out.println("  - Total análisis del mismo tipo para este lote: " + analisisDelMismoLote.size());
+            
+            // Mostrar todos los análisis encontrados
+            analisisDelMismoLote.forEach(a -> {
+                System.out.println("    • ID: " + a.getAnalisisID() + 
+                                 ", Estado: " + a.getEstado() + 
+                                 ", Activo: " + a.getActivo() +
+                                 (a.getAnalisisID().equals(analisis.getAnalisisID()) ? " (ACTUAL)" : ""));
+            });
+            
+            // Verificar si existe algún análisis válido (estado diferente de A_REPETIR, no null, y activo)
+            boolean existeAnalisisValido = analisisDelMismoLote.stream()
+                .filter(a -> !a.getAnalisisID().equals(analisis.getAnalisisID())) // Excluir el análisis actual
+                .filter(a -> a.getActivo()) // Solo análisis activos
+                .filter(a -> a.getEstado() != null) // Excluir análisis sin estado asignado
+                .anyMatch(a -> a.getEstado() != Estado.A_REPETIR); // Estado diferente de A_REPETIR
+            
+            System.out.println("  - ¿Existe otro análisis válido (activo, con estado y no A_REPETIR)? " + existeAnalisisValido);
+            
+            if (existeAnalisisValido) {
+                System.out.println("  ❌ ERROR: Ya existe un análisis válido, cancelando aprobación");
+                throw new RuntimeException("Ya existe un análisis válido de este tipo para el lote " + 
+                    analisis.getLote().getFicha() + ". No se puede aprobar este análisis marcado para repetir.");
+            }
+            
+            System.out.println("  ✅ No existe otro análisis válido, procediendo con la aprobación...");
+        }
         
         // Ejecutar validación específica si existe
         if (validator != null) {
@@ -256,6 +296,8 @@ public class AnalisisService {
         
         // Guardar cambios
         T analisisActualizado = repository.save(analisis);
+        
+        System.out.println("  ✅ Análisis aprobado exitosamente, nuevo estado: " + analisisActualizado.getEstado());
         
         return mapper.apply(analisisActualizado);
     }

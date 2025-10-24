@@ -40,19 +40,8 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<TetrazolioDTO> crearTetrazolio(@RequestBody TetrazolioRequestDTO solicitud) {
-        try {
-            System.out.println("Creando tetrazolio con solicitud: " + solicitud);
-            TetrazolioDTO tetrazolioCreado = tetrazolioService.crearTetrazolio(solicitud);
-            return new ResponseEntity<>(tetrazolioCreado, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            System.err.println("Error al crear tetrazolio: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            System.err.println("Error interno al crear tetrazolio: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        TetrazolioDTO tetrazolioCreado = tetrazolioService.crearTetrazolio(solicitud);
+        return ResponseEntity.status(HttpStatus.CREATED).body(tetrazolioCreado);
     }
 
     // Obtener todos los Tetrazolios activos
@@ -61,12 +50,8 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoTetrazolio> obtenerTodosTetrazolio() {
-        try {
-            ResponseListadoTetrazolio response = tetrazolioService.obtenerTodosTetrazolio();
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ResponseListadoTetrazolio response = tetrazolioService.obtenerTodosTetrazolio();
+        return ResponseEntity.ok(response);
     }
 
     // Obtener Tetrazolio por ID
@@ -75,14 +60,8 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<TetrazolioDTO> obtenerTetrazolioPorId(@PathVariable Long id) {
-        try {
-            TetrazolioDTO tetrazolio = tetrazolioService.obtenerTetrazolioPorId(id);
-            return new ResponseEntity<>(tetrazolio, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        TetrazolioDTO tetrazolio = tetrazolioService.obtenerTetrazolioPorId(id);
+        return ResponseEntity.ok(tetrazolio);
     }
 
     // Actualizar Tetrazolio
@@ -91,14 +70,8 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<TetrazolioDTO> actualizarTetrazolio(@PathVariable Long id, @RequestBody TetrazolioRequestDTO solicitud) {
-        try {
-            TetrazolioDTO tetrazolioActualizado = tetrazolioService.actualizarTetrazolio(id, solicitud);
-            return new ResponseEntity<>(tetrazolioActualizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        TetrazolioDTO tetrazolioActualizado = tetrazolioService.actualizarTetrazolio(id, solicitud);
+        return ResponseEntity.ok(tetrazolioActualizado);
     }
 
     // Actualizar porcentajes redondeados (solo cuando todas las repeticiones estén completas)
@@ -106,31 +79,17 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/porcentajes")
     public ResponseEntity<TetrazolioDTO> actualizarPorcentajesRedondeados(@PathVariable Long id, @RequestBody PorcentajesRedondeadosRequestDTO solicitud) {
-        try {
-            TetrazolioDTO tetrazolioActualizado = tetrazolioService.actualizarPorcentajesRedondeados(id, solicitud);
-            return new ResponseEntity<>(tetrazolioActualizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            System.err.println("Error al actualizar porcentajes: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            System.err.println("Error interno al actualizar porcentajes: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        TetrazolioDTO tetrazolioActualizado = tetrazolioService.actualizarPorcentajesRedondeados(id, solicitud);
+        return ResponseEntity.ok(tetrazolioActualizado);
     }
 
     // Eliminar Tetrazolio (cambiar estado a INACTIVO)
     @Operation(summary = "Eliminar análisis de tetrazolio")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> eliminarTetrazolio(@PathVariable Long id) {
-        try {
-            tetrazolioService.eliminarTetrazolio(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> eliminarTetrazolio(@PathVariable Long id) {
+        tetrazolioService.desactivarTetrazolio(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Desactivar Tetrazolio (soft delete)
@@ -138,15 +97,9 @@ public class TetrazolioController {
               description = "Desactiva un análisis Tetrazolio (cambiar activo a false)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/desactivar")
-    public ResponseEntity<HttpStatus> desactivarTetrazolio(@PathVariable Long id) {
-        try {
-            tetrazolioService.desactivarTetrazolio(id);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> desactivarTetrazolio(@PathVariable Long id) {
+        tetrazolioService.desactivarTetrazolio(id);
+        return ResponseEntity.ok().build();
     }
 
     // Reactivar Tetrazolio
@@ -154,19 +107,9 @@ public class TetrazolioController {
               description = "Reactiva un análisis Tetrazolio desactivado (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
-    public ResponseEntity<?> reactivarTetrazolio(@PathVariable Long id) {
-        try {
-            TetrazolioDTO tetrazolioReactivado = tetrazolioService.reactivarTetrazolio(id);
-            return ResponseEntity.ok(tetrazolioReactivado);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("no encontrado")) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor");
-        }
+    public ResponseEntity<TetrazolioDTO> reactivarTetrazolio(@PathVariable Long id) {
+        TetrazolioDTO tetrazolioReactivado = tetrazolioService.reactivarTetrazolio(id);
+        return ResponseEntity.ok(tetrazolioReactivado);
     }
 
     // Obtener Tetrazolios por Lote
@@ -175,12 +118,8 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<TetrazolioDTO>> obtenerTetrazoliosPorIdLote(@PathVariable Long idLote) {
-        try {
-            List<TetrazolioDTO> tetrazolios = tetrazolioService.obtenerTetrazoliosPorIdLote(idLote);
-            return new ResponseEntity<>(tetrazolios, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<TetrazolioDTO> tetrazolios = tetrazolioService.obtenerTetrazoliosPorIdLote(idLote);
+        return ResponseEntity.ok(tetrazolios);
     }
 
     // Obtener Tetrazolios con paginado para listado
@@ -191,14 +130,13 @@ public class TetrazolioController {
     public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO>> obtenerTetrazoliosPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "todos") String filtroActivo) {
-        try {
-            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO> response = tetrazolioService.obtenerTetrazoliosPaginadasConFiltro(pageable, filtroActivo);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String search,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Boolean activo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String estado,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long loteId) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO> response = tetrazolioService.obtenerTetrazoliosPaginadasConFiltros(pageable, search, activo, estado, loteId);
+        return ResponseEntity.ok(response);
     }
 
     // Finalizar análisis de tetrazolio
@@ -207,14 +145,8 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<TetrazolioDTO> finalizarAnalisis(@PathVariable Long id) {
-        try {
-            TetrazolioDTO tetrazolioFinalizado = tetrazolioService.finalizarAnalisis(id);
-            return new ResponseEntity<>(tetrazolioFinalizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        TetrazolioDTO tetrazolioFinalizado = tetrazolioService.finalizarAnalisis(id);
+        return ResponseEntity.ok(tetrazolioFinalizado);
     }
 
     // Aprobar análisis (solo admin)
@@ -223,14 +155,8 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<TetrazolioDTO> aprobarAnalisis(@PathVariable Long id) {
-        try {
-            TetrazolioDTO tetrazolioAprobado = tetrazolioService.aprobarAnalisis(id);
-            return new ResponseEntity<>(tetrazolioAprobado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        TetrazolioDTO tetrazolioAprobado = tetrazolioService.aprobarAnalisis(id);
+        return ResponseEntity.ok(tetrazolioAprobado);
     }
 
     // Marcar análisis para repetir (solo admin)
@@ -239,13 +165,7 @@ public class TetrazolioController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
     public ResponseEntity<TetrazolioDTO> marcarParaRepetir(@PathVariable Long id) {
-        try {
-            TetrazolioDTO tetrazolioRepetir = tetrazolioService.marcarParaRepetir(id);
-            return new ResponseEntity<>(tetrazolioRepetir, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        TetrazolioDTO tetrazolioRepetir = tetrazolioService.marcarParaRepetir(id);
+        return ResponseEntity.ok(tetrazolioRepetir);
     }
-}
+    }

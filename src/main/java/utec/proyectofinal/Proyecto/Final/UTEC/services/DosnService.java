@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;   
 
@@ -20,6 +21,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnReposito
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.DosnSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DosnRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
@@ -98,12 +100,12 @@ public class DosnService {
         return mapearEntidadADTO(dosnActualizada);
     }
 
-    // Eliminar Dosn (estado INACTIVO)
+    // Eliminar Dosn (desactivar - cambiar activo a false)
     public void eliminarDosn(Long id) {
         Dosn dosn = dosnRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dosn no encontrada con id: " + id));
 
-        dosn.setEstado(Estado.INACTIVO);
+        dosn.setActivo(false);
         dosnRepository.save(dosn);
     }
 
@@ -119,7 +121,7 @@ public class DosnService {
 
     // Listar todas las Dosn activas
     public ResponseListadoDosn obtenerTodasDosnActivas() {
-        List<DosnDTO> dosnDTOs = dosnRepository.findByEstadoNot(Estado.INACTIVO)
+        List<DosnDTO> dosnDTOs = dosnRepository.findByActivoTrue()
                 .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -146,7 +148,7 @@ public class DosnService {
 
     // Listar Dosn con paginado (para listado)
     public Page<DosnListadoDTO> obtenerDosnPaginadas(Pageable pageable) {
-        Page<Dosn> dosnPage = dosnRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Dosn> dosnPage = dosnRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return dosnPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -166,6 +168,21 @@ public class DosnService {
                 break;
         }
         
+        return dosnPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar DOSN con paginado y filtros dinámicos
+     */
+    public Page<DosnListadoDTO> obtenerDosnPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Dosn> spec = DosnSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Dosn> dosnPage = dosnRepository.findAll(spec, pageable);
         return dosnPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -375,7 +392,8 @@ public class DosnService {
                 id,
                 dosnRepository,
                 this::mapearEntidadADTO,
-                null // No hay validación específica
+                this::validarAntesDeFinalizar, // Mismas validaciones que finalizar
+                (idLote) -> dosnRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote
         );
     }
 
@@ -387,7 +405,7 @@ public class DosnService {
                 id,
                 dosnRepository,
                 this::mapearEntidadADTO,
-                null // No hay validación específica para marcar a repetir
+                this::validarAntesDeFinalizar // Mismas validaciones que finalizar
         );
     }
 }

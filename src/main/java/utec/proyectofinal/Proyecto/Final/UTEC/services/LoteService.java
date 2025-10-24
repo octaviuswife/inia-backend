@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
@@ -24,6 +25,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteReposito
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.LoteSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosHumedadDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
@@ -212,7 +214,34 @@ public class LoteService {
 
     // Listar Lotes Simple con paginado para listado
     public Page<LoteSimpleDTO> obtenerLotesSimplePaginadas(Pageable pageable) {
-        Page<Lote> lotePage = loteRepository.findByActivo(true, pageable);
+        // Obtener TODOS los lotes (activos e inactivos) con paginación
+        Page<Lote> lotePage = loteRepository.findAll(pageable);
+        
+        // Mapear a DTOs usando Page.map() como en PurezaService
+        return lotePage.map(this::mapearEntidadASimpleDTO);
+    }
+
+    /**
+     * Listar Lotes Simple con paginado y filtros
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @param cultivarNombre Filtro por nombre de cultivar (opcional)
+     * @return Página de LoteSimpleDTO filtrados
+     */
+    public Page<LoteSimpleDTO> obtenerLotesSimplePaginadasConFiltros(
+            Pageable pageable, 
+            String searchTerm, 
+            Boolean activo, 
+            String cultivarNombre) {
+        
+        // Crear la especificación con los filtros
+        Specification<Lote> spec = LoteSpecification.conFiltros(searchTerm, activo, cultivarNombre);
+        
+        // Obtener lotes filtrados y paginados
+        Page<Lote> lotePage = loteRepository.findAll(spec, pageable);
+        
+        // Mapear a DTOs
         return lotePage.map(this::mapearEntidadASimpleDTO);
     }
 
@@ -750,5 +779,19 @@ public class LoteService {
         }
         
         return totalPendientes;
+    }
+    
+    // Obtener estadísticas de lotes
+    public java.util.Map<String, Long> obtenerEstadisticasLotes() {
+        long total = loteRepository.count();
+        long activos = loteRepository.countLotesActivos();
+        long inactivos = loteRepository.countLotesInactivos();
+        
+        java.util.Map<String, Long> stats = new java.util.HashMap<>();
+        stats.put("total", total);
+        stats.put("activos", activos);
+        stats.put("inactivos", inactivos);
+        
+        return stats;
     }
 }

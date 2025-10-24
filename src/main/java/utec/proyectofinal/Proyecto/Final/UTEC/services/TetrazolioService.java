@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazolioViabilidadRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.TetrazolioSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeadosRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
@@ -92,14 +94,6 @@ public class TetrazolioService {
         return mapearEntidadADTO(tetrazolioActualizado);
     }
 
-    // Eliminar Tetrazolio (cambiar estado a INACTIVO)
-    public void eliminarTetrazolio(Long id) {
-        Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
-        
-        tetrazolio.setEstado(Estado.INACTIVO);
-        tetrazolioRepository.save(tetrazolio);
-    }
 
     // Desactivar Tetrazolio (cambiar activo a false)
     public void desactivarTetrazolio(Long id) {
@@ -113,7 +107,7 @@ public class TetrazolioService {
 
     // Listar todos los Tetrazolios activos usando ResponseListadoTetrazolio
     public ResponseListadoTetrazolio obtenerTodosTetrazolio() {
-        List<Tetrazolio> tetrazoliosActivos = tetrazolioRepository.findByEstadoNot(Estado.INACTIVO);
+        List<Tetrazolio> tetrazoliosActivos = tetrazolioRepository.findByActivoTrue();
         List<TetrazolioDTO> tetrazoliosDTO = tetrazoliosActivos.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -141,7 +135,7 @@ public class TetrazolioService {
 
     // Listar Tetrazolio con paginado (para listado)
     public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadas(Pageable pageable) {
-        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -161,6 +155,21 @@ public class TetrazolioService {
                 break;
         }
         
+        return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar Tetrazolio con paginado y filtros dinámicos
+     */
+    public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Tetrazolio> spec = TetrazolioSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findAll(spec, pageable);
         return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -370,7 +379,8 @@ public class TetrazolioService {
             (tetrazolio) -> {
                 this.validarCompletitudRepeticiones(tetrazolio);
                 this.validarEvidenciaAntesDeFinalizar(tetrazolio);
-            }
+            },
+            tetrazolioRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -380,7 +390,11 @@ public class TetrazolioService {
             id,
             tetrazolioRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            (tetrazolio) -> {
+                // Mismas validaciones que finalizar: completitud y evidencia
+                this.validarCompletitudRepeticiones(tetrazolio);
+                this.validarEvidenciaAntesDeFinalizar(tetrazolio);
+            }
         );
     }
 }

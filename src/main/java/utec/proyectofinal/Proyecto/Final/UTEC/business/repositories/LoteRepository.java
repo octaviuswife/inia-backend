@@ -6,11 +6,12 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 
-public interface LoteRepository extends JpaRepository<Lote, Long> {
+public interface LoteRepository extends JpaRepository<Lote, Long>, JpaSpecificationExecutor<Lote> {
     
     List<Lote> findByActivoTrue();
     
@@ -30,4 +31,8 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
     // Contar lotes activos
     @Query("SELECT COUNT(l) FROM Lote l WHERE l.activo = true")
     long countLotesActivos();
+    
+    // Contar lotes inactivos
+    @Query("SELECT COUNT(l) FROM Lote l WHERE l.activo = false")
+    long countLotesInactivos();
 }

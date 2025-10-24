@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepPmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PmsSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EstadisticasTandaDTO;
@@ -91,13 +93,13 @@ public class PmsService {
         }
     }
 
-    // Eliminar Pms (cambia estado a INACTIVO)
+    // Eliminar Pms (desactivar - cambia activo a false)
     public void eliminarPms(Long id) {
         Optional<Pms> existente = pmsRepository.findById(id);
 
         if (existente.isPresent()) {
             Pms pms = existente.get();
-            pms.setEstado(Estado.INACTIVO);
+            pms.setActivo(false);
             pmsRepository.save(pms);
         } else {
             throw new RuntimeException("Pms no encontrado con ID: " + id);
@@ -116,10 +118,7 @@ public class PmsService {
 
     // Listar todos los Pms activos
     public List<PmsDTO> obtenerTodos() {
-        List<Pms> activos = pmsRepository.findAll()
-                .stream()
-                .filter(p -> p.getEstado() != Estado.INACTIVO)
-                .collect(Collectors.toList());
+        List<Pms> activos = pmsRepository.findByActivoTrue();
 
         return activos.stream()
                 .map(this::mapearEntidadADTO)
@@ -146,7 +145,7 @@ public class PmsService {
 
     // Listar PMS con paginado (para listado)
     public Page<PmsListadoDTO> obtenerPmsPaginadas(Pageable pageable) {
-        Page<Pms> pmsPage = pmsRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Pms> pmsPage = pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
         return pmsPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -166,6 +165,21 @@ public class PmsService {
                 break;
         }
         
+        return pmsPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar PMS con paginado y filtros dinámicos
+     */
+    public Page<PmsListadoDTO> obtenerPmsPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Pms> spec = PmsSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Pms> pmsPage = pmsRepository.findAll(spec, pageable);
         return pmsPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -538,22 +552,28 @@ public class PmsService {
         return false;
     }
 
+    /**
+     * Validación completa para operaciones críticas de PMS (finalizar y marcar para repetir)
+     * Verifica completitud de repeticiones y presencia de promedio con redondeo
+     */
+    private void validarPmsParaOperacionCritica(Pms pms) {
+        // Validación específica de PMS: completitud de repeticiones
+        if (!todasLasRepeticionesCompletas(pms)) {
+            throw new RuntimeException("No se puede completar la operación hasta completar todas las repeticiones válidas");
+        }
+        // Validación específica de PMS: debe tener promedio con redondeo ingresado
+        if (pms.getPmsconRedon() == null) {
+            throw new RuntimeException("Debe ingresar el promedio con redondeo (PMS con redondeo) antes de completar la operación");
+        }
+    }
+
     // Finalizar análisis PMS - cambia estado según rol del usuario
     public PmsDTO finalizarAnalisis(Long id) {
         return analisisService.finalizarAnalisisGenerico(
             id, 
             pmsRepository, 
             this::mapearEntidadADTO,
-            pms -> {
-                // Validación específica de PMS: completitud de repeticiones
-                if (!todasLasRepeticionesCompletas(pms)) {
-                    throw new RuntimeException("No se puede finalizar el análisis hasta completar todas las repeticiones válidas");
-                }
-                // Validación específica de PMS: debe tener promedio con redondeo ingresado
-                if (pms.getPmsconRedon() == null) {
-                    throw new RuntimeException("Debe ingresar el promedio con redondeo (PMS con redondeo) antes de finalizar el análisis");
-                }
-            }
+            this::validarPmsParaOperacionCritica
         );
     }
 
@@ -563,7 +583,8 @@ public class PmsService {
             id,
             pmsRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para aprobar
+            this::validarPmsParaOperacionCritica, // Mismas validaciones que finalizar
+            (idLote) -> pmsRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote
         );
     }
 
@@ -573,7 +594,7 @@ public class PmsService {
             id,
             pmsRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            this::validarPmsParaOperacionCritica // Mismas validaciones que finalizar
         );
     }
 }
