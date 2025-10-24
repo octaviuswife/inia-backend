@@ -40,19 +40,8 @@ public class PurezaController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PurezaDTO> crearPureza(@RequestBody PurezaRequestDTO solicitud) {
-        try {
-            System.out.println("Creando pureza con solicitud: " + solicitud);
-            PurezaDTO purezaCreada = purezaService.crearPureza(solicitud);
-            return new ResponseEntity<>(purezaCreada, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            System.err.println("Error al crear pureza: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            System.err.println("Error interno al crear pureza: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PurezaDTO purezaCreada = purezaService.crearPureza(solicitud);
+        return ResponseEntity.status(HttpStatus.CREATED).body(purezaCreada);
     }
 
     // Obtener todas las Purezas activas
@@ -61,12 +50,8 @@ public class PurezaController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoPureza> obtenerTodasPurezasActivas() {
-        try {
-            ResponseListadoPureza respuesta = purezaService.obtenerTodasPurezasActivas();
-            return new ResponseEntity<>(respuesta, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ResponseListadoPureza respuesta = purezaService.obtenerTodasPurezasActivas();
+        return ResponseEntity.ok(respuesta);
     }
 
     // Obtener Pureza por ID
@@ -75,14 +60,8 @@ public class PurezaController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<PurezaDTO> obtenerPurezaPorId(@PathVariable Long id) {
-        try {
-            PurezaDTO pureza = purezaService.obtenerPurezaPorId(id);
-            return new ResponseEntity<>(pureza, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PurezaDTO pureza = purezaService.obtenerPurezaPorId(id);
+        return ResponseEntity.ok(pureza);
     }
 
     // Actualizar Pureza
@@ -91,14 +70,8 @@ public class PurezaController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PurezaDTO> actualizarPureza(@PathVariable Long id, @RequestBody PurezaRequestDTO solicitud) {
-        try {
-            PurezaDTO purezaActualizada = purezaService.actualizarPureza(id, solicitud);
-            return new ResponseEntity<>(purezaActualizada, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PurezaDTO purezaActualizada = purezaService.actualizarPureza(id, solicitud);
+        return ResponseEntity.ok(purezaActualizada);
     }
 
     // Eliminar Pureza (cambiar estado a INACTIVO)
@@ -106,15 +79,9 @@ public class PurezaController {
               description = "Elimina un análisis de pureza cambiando su estado a INACTIVO")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> eliminarPureza(@PathVariable Long id) {
-        try {
-            purezaService.eliminarPureza(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> eliminarPureza(@PathVariable Long id) {
+        purezaService.eliminarPureza(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Desactivar Pureza (soft delete)
@@ -122,15 +89,9 @@ public class PurezaController {
               description = "Desactiva un análisis de pureza (cambiar activo a false)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/desactivar")
-    public ResponseEntity<HttpStatus> desactivarPureza(@PathVariable Long id) {
-        try {
-            purezaService.desactivarPureza(id);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> desactivarPureza(@PathVariable Long id) {
+        purezaService.desactivarPureza(id);
+        return ResponseEntity.ok().build();
     }
 
     // Reactivar Pureza
@@ -138,19 +99,9 @@ public class PurezaController {
               description = "Reactiva un análisis de pureza desactivado (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
-    public ResponseEntity<?> reactivarPureza(@PathVariable Long id) {
-        try {
-            PurezaDTO purezaReactivada = purezaService.reactivarPureza(id);
-            return ResponseEntity.ok(purezaReactivada);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("no encontrada")) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor");
-        }
+    public ResponseEntity<PurezaDTO> reactivarPureza(@PathVariable Long id) {
+        PurezaDTO purezaReactivada = purezaService.reactivarPureza(id);
+        return ResponseEntity.ok(purezaReactivada);
     }
 
     // Obtener Purezas por Lote
@@ -159,12 +110,8 @@ public class PurezaController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<PurezaDTO>> obtenerPurezasPorIdLote(@PathVariable Long idLote) {
-        try {
-            List<PurezaDTO> purezas = purezaService.obtenerPurezasPorIdLote(idLote);
-            return new ResponseEntity<>(purezas, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<PurezaDTO> purezas = purezaService.obtenerPurezasPorIdLote(idLote);
+        return ResponseEntity.ok(purezas);
     }
 
     // Obtener Purezas con paginado para listado
@@ -176,14 +123,10 @@ public class PurezaController {
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "todos") String filtroActivo) {
-        try {
-            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO> response = 
-                purezaService.obtenerPurezaPaginadasConFiltro(pageable, filtroActivo);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO> response = 
+            purezaService.obtenerPurezaPaginadasConFiltro(pageable, filtroActivo);
+        return ResponseEntity.ok(response);
     }
 
     // Obtener todos los catálogos para el select de otras semillas
@@ -192,12 +135,8 @@ public class PurezaController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/catalogos")
     public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerTodosCatalogos() {
-        try {
-            List<MalezasYCultivosCatalogoDTO> catalogos = purezaService.obtenerTodosCatalogos();
-            return new ResponseEntity<>(catalogos, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<MalezasYCultivosCatalogoDTO> catalogos = purezaService.obtenerTodosCatalogos();
+        return ResponseEntity.ok(catalogos);
     }
 
     // Finalizar análisis de pureza
@@ -206,14 +145,8 @@ public class PurezaController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<PurezaDTO> finalizarAnalisis(@PathVariable Long id) {
-        try {
-            PurezaDTO analisisFinalizado = purezaService.finalizarAnalisis(id);
-            return new ResponseEntity<>(analisisFinalizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PurezaDTO analisisFinalizado = purezaService.finalizarAnalisis(id);
+        return ResponseEntity.ok(analisisFinalizado);
     }
 
     // Aprobar análisis (solo admin)
@@ -221,15 +154,9 @@ public class PurezaController {
               description = "Aprueba un análisis de pureza, cambiando su estado a APROBADO (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
-    public ResponseEntity<?> aprobarAnalisis(@PathVariable Long id) {
-        try {
-            PurezaDTO analisisAprobado = purezaService.aprobarAnalisis(id);
-            return new ResponseEntity<>(analisisAprobado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
-        }
+    public ResponseEntity<PurezaDTO> aprobarAnalisis(@PathVariable Long id) {
+        PurezaDTO analisisAprobado = purezaService.aprobarAnalisis(id);
+        return ResponseEntity.ok(analisisAprobado);
     }
 
     // Marcar análisis para repetir (solo admin)
@@ -237,14 +164,9 @@ public class PurezaController {
               description = "Marca un análisis de pureza para repetir - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
-    public ResponseEntity<?> marcarParaRepetir(@PathVariable Long id) {
-        try {
-            PurezaDTO analisisRepetir = purezaService.marcarParaRepetir(id);
-            return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
-        }
+    public ResponseEntity<PurezaDTO> marcarParaRepetir(@PathVariable Long id) {
+        PurezaDTO analisisRepetir = purezaService.marcarParaRepetir(id);
+        return ResponseEntity.ok(analisisRepetir);
     }
-}
+    }
+

@@ -33,12 +33,8 @@ public class DosnController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PostMapping
     public ResponseEntity<DosnDTO> crearDosn(@RequestBody DosnRequestDTO solicitud) {
-        try {
-            DosnDTO dosnCreado = dosnService.crearDosn(solicitud);
-            return new ResponseEntity<>(dosnCreado, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        DosnDTO dosnCreado = dosnService.crearDosn(solicitud);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dosnCreado);
     }
 
     // Obtener todas las Dosn activas
@@ -47,12 +43,8 @@ public class DosnController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<ResponseListadoDosn> obtenerTodasDosnActivas() {
-        try {
-            ResponseListadoDosn respuesta = dosnService.obtenerTodasDosnActivas();
-            return new ResponseEntity<>(respuesta, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ResponseListadoDosn respuesta = dosnService.obtenerTodasDosnActivas();
+        return ResponseEntity.ok(respuesta);
     }
 
     // Obtener Dosn por ID
@@ -61,14 +53,8 @@ public class DosnController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<DosnDTO> obtenerDosnPorId(@PathVariable Long id) {
-        try {
-            DosnDTO dosn = dosnService.obtenerDosnPorId(id);
-            return new ResponseEntity<>(dosn, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        DosnDTO dosn = dosnService.obtenerDosnPorId(id);
+        return ResponseEntity.ok(dosn);
     }
 
     // Actualizar Dosn
@@ -77,14 +63,8 @@ public class DosnController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PutMapping("/{id}")
     public ResponseEntity<DosnDTO> actualizarDosn(@PathVariable Long id, @RequestBody DosnRequestDTO solicitud) {
-        try {
-            DosnDTO dosnActualizado = dosnService.actualizarDosn(id, solicitud);
-            return new ResponseEntity<>(dosnActualizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        DosnDTO dosnActualizado = dosnService.actualizarDosn(id, solicitud);
+        return ResponseEntity.ok(dosnActualizado);
     }
 
     // Eliminar Dosn (cambiar estado a INACTIVO)
@@ -92,15 +72,9 @@ public class DosnController {
               description = "Elimina una declaración de origen y sanidad (DOSN) cambiando su estado a INACTIVO")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> eliminarDosn(@PathVariable Long id) {
-        try {
-            dosnService.eliminarDosn(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> eliminarDosn(@PathVariable Long id) {
+        dosnService.eliminarDosn(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Desactivar DOSN (soft delete)
@@ -108,15 +82,9 @@ public class DosnController {
               description = "Desactiva un análisis DOSN (cambiar activo a false)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/desactivar")
-    public ResponseEntity<HttpStatus> desactivarDosn(@PathVariable Long id) {
-        try {
-            dosnService.desactivarDosn(id);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> desactivarDosn(@PathVariable Long id) {
+        dosnService.desactivarDosn(id);
+        return ResponseEntity.ok().build();
     }
 
     // Reactivar DOSN
@@ -124,19 +92,9 @@ public class DosnController {
               description = "Reactiva un análisis DOSN desactivado (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
-    public ResponseEntity<?> reactivarDosn(@PathVariable Long id) {
-        try {
-            DosnDTO dosnReactivada = dosnService.reactivarDosn(id);
-            return ResponseEntity.ok(dosnReactivada);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("no encontrada")) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor");
-        }
+    public ResponseEntity<DosnDTO> reactivarDosn(@PathVariable Long id) {
+        DosnDTO dosnReactivada = dosnService.reactivarDosn(id);
+        return ResponseEntity.ok(dosnReactivada);
     }
 
     // Obtener Dosn por Lote
@@ -145,12 +103,8 @@ public class DosnController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<DosnDTO>> obtenerDosnPorIdLote(@PathVariable Integer idLote) {
-        try {
-            List<DosnDTO> dosn = dosnService.obtenerDosnPorIdLote(idLote);
-            return new ResponseEntity<>(dosn, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<DosnDTO> dosn = dosnService.obtenerDosnPorIdLote(idLote);
+        return ResponseEntity.ok(dosn);
     }
 
 
@@ -163,13 +117,9 @@ public class DosnController {
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "todos") String filtroActivo) {
-        try {
-            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO> response = dosnService.obtenerDosnPaginadasConFiltro(pageable, filtroActivo);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO> response = dosnService.obtenerDosnPaginadasConFiltro(pageable, filtroActivo);
+        return ResponseEntity.ok(response);
     }
 
     // Finalizar análisis de DOSN
@@ -178,14 +128,8 @@ public class DosnController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<DosnDTO> finalizarAnalisis(@PathVariable Long id) {
-        try {
-            DosnDTO dosnFinalizada = dosnService.finalizarAnalisis(id);
-            return new ResponseEntity<>(dosnFinalizada, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        DosnDTO dosnFinalizada = dosnService.finalizarAnalisis(id);
+        return ResponseEntity.ok(dosnFinalizada);
     }
 
     // Aprobar análisis de DOSN (solo admin)
@@ -193,15 +137,9 @@ public class DosnController {
               description = "Aprueba un DOSN - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
-    public ResponseEntity<?> aprobarAnalisis(@PathVariable Long id) {
-        try {
-            DosnDTO dosnAprobada = dosnService.aprobarAnalisis(id);
-            return new ResponseEntity<>(dosnAprobada, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
-        }
+    public ResponseEntity<DosnDTO> aprobarAnalisis(@PathVariable Long id) {
+        DosnDTO dosnAprobada = dosnService.aprobarAnalisis(id);
+        return ResponseEntity.ok(dosnAprobada);
     }
 
     // Marcar análisis para repetir (solo admin)
@@ -209,14 +147,9 @@ public class DosnController {
               description = "Marca un DOSN para repetir - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
-    public ResponseEntity<?> marcarParaRepetir(@PathVariable Long id) {
-        try {
-            DosnDTO dosnRepetir = dosnService.marcarParaRepetir(id);
-            return new ResponseEntity<>(dosnRepetir, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
-        }
+    public ResponseEntity<DosnDTO> marcarParaRepetir(@PathVariable Long id) {
+        DosnDTO dosnRepetir = dosnService.marcarParaRepetir(id);
+        return ResponseEntity.ok(dosnRepetir);
     }
-}
+    }
+
