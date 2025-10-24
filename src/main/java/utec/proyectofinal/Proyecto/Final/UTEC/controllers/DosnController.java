@@ -193,14 +193,14 @@ public class DosnController {
               description = "Aprueba un DOSN - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
-    public ResponseEntity<DosnDTO> aprobarAnalisis(@PathVariable Long id) {
+    public ResponseEntity<?> aprobarAnalisis(@PathVariable Long id) {
         try {
             DosnDTO dosnAprobada = dosnService.aprobarAnalisis(id);
             return new ResponseEntity<>(dosnAprobada, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 
@@ -209,14 +209,14 @@ public class DosnController {
               description = "Marca un DOSN para repetir - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
-    public ResponseEntity<DosnDTO> marcarParaRepetir(@PathVariable Long id) {
+    public ResponseEntity<?> marcarParaRepetir(@PathVariable Long id) {
         try {
             DosnDTO dosnRepetir = dosnService.marcarParaRepetir(id);
             return new ResponseEntity<>(dosnRepetir, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 }

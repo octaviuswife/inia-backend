@@ -218,6 +218,17 @@ public class GerminacionService {
         return true; // Todas las tablas están finalizadas
     }
 
+    /**
+     * Validación completa para operaciones críticas de Germinación (finalizar y marcar para repetir)
+     * Verifica completitud de tablas
+     */
+    private void validarGerminacionParaOperacionCritica(Germinacion germinacion) {
+        // Validación específica de Germinación: completitud de tablas
+        if (!todasTablasFinalizadas(germinacion)) {
+            throw new RuntimeException("No se puede completar la operación. Hay tablas pendientes de completar.");
+        }
+    }
+
     // Mapear de RequestDTO a Entity para creación
     private Germinacion mapearSolicitudAEntidad(GerminacionRequestDTO solicitud) {
         System.out.println("Mapeando solicitud a entidad germinación");
@@ -473,12 +484,7 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            germinacion -> {
-                // Validación específica de Germinación: completitud de tablas
-                if (!todasTablasFinalizadas(germinacion)) {
-                    throw new RuntimeException("No se puede finalizar el análisis. Hay tablas pendientes de completar.");
-                }
-            }
+            this::validarGerminacionParaOperacionCritica
         );
     }
 
@@ -490,7 +496,8 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para aprobar
+            this::validarGerminacionParaOperacionCritica, // Mismas validaciones que finalizar
+            germinacionRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -500,7 +507,7 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            this::validarGerminacionParaOperacionCritica // Mismas validaciones que finalizar
         );
     }
 }

@@ -535,22 +535,28 @@ public class PmsService {
         return false;
     }
 
+    /**
+     * Validación completa para operaciones críticas de PMS (finalizar y marcar para repetir)
+     * Verifica completitud de repeticiones y presencia de promedio con redondeo
+     */
+    private void validarPmsParaOperacionCritica(Pms pms) {
+        // Validación específica de PMS: completitud de repeticiones
+        if (!todasLasRepeticionesCompletas(pms)) {
+            throw new RuntimeException("No se puede completar la operación hasta completar todas las repeticiones válidas");
+        }
+        // Validación específica de PMS: debe tener promedio con redondeo ingresado
+        if (pms.getPmsconRedon() == null) {
+            throw new RuntimeException("Debe ingresar el promedio con redondeo (PMS con redondeo) antes de completar la operación");
+        }
+    }
+
     // Finalizar análisis PMS - cambia estado según rol del usuario
     public PmsDTO finalizarAnalisis(Long id) {
         return analisisService.finalizarAnalisisGenerico(
             id, 
             pmsRepository, 
             this::mapearEntidadADTO,
-            pms -> {
-                // Validación específica de PMS: completitud de repeticiones
-                if (!todasLasRepeticionesCompletas(pms)) {
-                    throw new RuntimeException("No se puede finalizar el análisis hasta completar todas las repeticiones válidas");
-                }
-                // Validación específica de PMS: debe tener promedio con redondeo ingresado
-                if (pms.getPmsconRedon() == null) {
-                    throw new RuntimeException("Debe ingresar el promedio con redondeo (PMS con redondeo) antes de finalizar el análisis");
-                }
-            }
+            this::validarPmsParaOperacionCritica
         );
     }
 
@@ -560,7 +566,8 @@ public class PmsService {
             id,
             pmsRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para aprobar
+            this::validarPmsParaOperacionCritica, // Mismas validaciones que finalizar
+            (idLote) -> pmsRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote
         );
     }
 
@@ -570,7 +577,7 @@ public class PmsService {
             id,
             pmsRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            this::validarPmsParaOperacionCritica // Mismas validaciones que finalizar
         );
     }
 }

@@ -236,14 +236,14 @@ public class GerminacionController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
-    public ResponseEntity<GerminacionDTO> aprobarAnalisis(@PathVariable Long id) {
+    public ResponseEntity<?> aprobarAnalisis(@PathVariable Long id) {
         try {
             GerminacionDTO analisisAprobado = germinacionService.aprobarAnalisis(id);
             return new ResponseEntity<>(analisisAprobado, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 
@@ -252,14 +252,14 @@ public class GerminacionController {
               description = "Marca un análisis de germinación para repetir - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
-    public ResponseEntity<GerminacionDTO> marcarParaRepetir(@PathVariable Long id) {
+    public ResponseEntity<?> marcarParaRepetir(@PathVariable Long id) {
         try {
             GerminacionDTO analisisRepetir = germinacionService.marcarParaRepetir(id);
             return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 }

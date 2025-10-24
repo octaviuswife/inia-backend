@@ -216,14 +216,14 @@ public class PmsController {
               description = "Aprueba un análisis de peso de mil semillas (PMS) - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
-    public ResponseEntity<PmsDTO> aprobarAnalisis(@PathVariable Long id) {
+    public ResponseEntity<?> aprobarAnalisis(@PathVariable Long id) {
         try {
             PmsDTO analisisAprobado = pmsService.aprobarAnalisis(id);
             return new ResponseEntity<>(analisisAprobado, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 
@@ -232,14 +232,14 @@ public class PmsController {
               description = "Marca un análisis de peso de mil semillas (PMS) para repetir - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
-    public ResponseEntity<PmsDTO> marcarParaRepetir(@PathVariable Long id) {
+    public ResponseEntity<?> marcarParaRepetir(@PathVariable Long id) {
         try {
             PmsDTO analisisRepetir = pmsService.marcarParaRepetir(id);
             return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 

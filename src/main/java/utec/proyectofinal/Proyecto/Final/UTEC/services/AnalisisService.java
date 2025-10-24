@@ -121,12 +121,12 @@ public class AnalisisService {
     
     /**
      * Marca un análisis para repetir (solo administradores)
-     * - Verifica que esté en estado PENDIENTE_APROBACION
+     * - Se permite marcar para repetir análisis APROBADOS o que cumplan validaciones
      * - Cambia estado a A_REPETIR
      * 
      * @param analisis El análisis a marcar para repetir
      * @return El análisis actualizado
-     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está inactivo
+     * @throws RuntimeException si el análisis está inactivo o no cumple las validaciones
      */
     public Analisis marcarParaRepetir(Analisis analisis) {
         // Validar que el análisis esté activo
@@ -134,10 +134,8 @@ public class AnalisisService {
             throw new RuntimeException("No se puede marcar para repetir un análisis inactivo");
         }
         
-        // Validar que esté en estado PENDIENTE_APROBACION o en APROBADO
-        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION && analisis.getEstado() != Estado.APROBADO) {
-            throw new RuntimeException("Solo se pueden marcar para repetir análisis en estado PENDIENTE_APROBACION");
-        }
+        // Se permite marcar para repetir análisis APROBADOS o que cumplan validaciones
+        // (El validador específico se encargará de verificar requisitos por tipo de análisis)
         
         analisis.setEstado(Estado.A_REPETIR);
         
@@ -239,16 +237,35 @@ public class AnalisisService {
      * @param repository Repositorio del tipo específico
      * @param mapper Función para mapear entidad a DTO
      * @param validator Validación específica opcional (puede ser null)
+     * @param buscarPorLote Función para buscar análisis por lote (puede ser null)
      * @return DTO del análisis aprobado
      */
     public <T extends Analisis, D> D aprobarAnalisisGenerico(
             Long id,
             JpaRepository<T, Long> repository,
             Function<T, D> mapper,
-            Consumer<T> validator) {
+            Consumer<T> validator,
+            Function<Long, java.util.List<T>> buscarPorLote) {
         
         T analisis = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
+        
+        // Si el análisis está marcado como A_REPETIR y tiene lote asociado
+        if (analisis.getEstado() == Estado.A_REPETIR && analisis.getLote() != null && buscarPorLote != null) {
+            // Buscar otros análisis del mismo tipo para el mismo lote
+            java.util.List<T> analisisDelMismoLote = buscarPorLote.apply(analisis.getLote().getLoteID());
+            
+            // Verificar si existe algún análisis válido (estado diferente de A_REPETIR y activo)
+            boolean existeAnalisisValido = analisisDelMismoLote.stream()
+                .filter(a -> !a.getAnalisisID().equals(analisis.getAnalisisID())) // Excluir el análisis actual
+                .filter(a -> a.getActivo()) // Solo análisis activos
+                .anyMatch(a -> a.getEstado() != Estado.A_REPETIR); // Estado diferente de A_REPETIR
+            
+            if (existeAnalisisValido) {
+                throw new RuntimeException("Ya existe un análisis válido de este tipo para el lote " + 
+                    analisis.getLote().getFicha() + ". No se puede aprobar este análisis marcado para repetir.");
+            }
+        }
         
         // Ejecutar validación específica si existe
         if (validator != null) {

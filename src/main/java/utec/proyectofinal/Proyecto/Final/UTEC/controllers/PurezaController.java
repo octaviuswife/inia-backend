@@ -221,14 +221,14 @@ public class PurezaController {
               description = "Aprueba un análisis de pureza, cambiando su estado a APROBADO (solo administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
-    public ResponseEntity<PurezaDTO> aprobarAnalisis(@PathVariable Long id) {
+    public ResponseEntity<?> aprobarAnalisis(@PathVariable Long id) {
         try {
             PurezaDTO analisisAprobado = purezaService.aprobarAnalisis(id);
             return new ResponseEntity<>(analisisAprobado, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 
@@ -237,14 +237,14 @@ public class PurezaController {
               description = "Marca un análisis de pureza para repetir - solo administradores")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
-    public ResponseEntity<PurezaDTO> marcarParaRepetir(@PathVariable Long id) {
+    public ResponseEntity<?> marcarParaRepetir(@PathVariable Long id) {
         try {
             PurezaDTO analisisRepetir = purezaService.marcarParaRepetir(id);
             return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 }

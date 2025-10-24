@@ -375,7 +375,8 @@ public class DosnService {
                 id,
                 dosnRepository,
                 this::mapearEntidadADTO,
-                null // No hay validación específica
+                this::validarAntesDeFinalizar, // Mismas validaciones que finalizar
+                (idLote) -> dosnRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote
         );
     }
 
@@ -387,7 +388,7 @@ public class DosnService {
                 id,
                 dosnRepository,
                 this::mapearEntidadADTO,
-                null // No hay validación específica para marcar a repetir
+                this::validarAntesDeFinalizar // Mismas validaciones que finalizar
         );
     }
 }

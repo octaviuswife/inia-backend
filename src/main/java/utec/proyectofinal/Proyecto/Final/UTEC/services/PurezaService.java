@@ -421,7 +421,7 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica
+            null // No hay validación específica para Pureza
         );
     }
 
@@ -433,7 +433,8 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica
+            null, // No hay validación específica para Pureza
+            purezaRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -445,7 +446,7 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            null // No hay validación específica para Pureza
         );
     }
 }

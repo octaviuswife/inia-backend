@@ -362,7 +362,8 @@ public class TetrazolioService {
             (tetrazolio) -> {
                 this.validarCompletitudRepeticiones(tetrazolio);
                 this.validarEvidenciaAntesDeFinalizar(tetrazolio);
-            }
+            },
+            tetrazolioRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -372,7 +373,11 @@ public class TetrazolioService {
             id,
             tetrazolioRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            (tetrazolio) -> {
+                // Mismas validaciones que finalizar: completitud y evidencia
+                this.validarCompletitudRepeticiones(tetrazolio);
+                this.validarEvidenciaAntesDeFinalizar(tetrazolio);
+            }
         );
     }
 }
