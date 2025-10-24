@@ -1,4 +1,3 @@
-
 package utec.proyectofinal.Proyecto.Final.UTEC.security;
 
 import org.springframework.context.annotation.Bean;
@@ -27,7 +26,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-                .addFilterBefore(new FiltroJWTAutorizacion(), UsernamePasswordAuthenticationFilter.class)
+                // .addFilterBefore(new FiltroJWTAutorizacion(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos (sin autenticación)
                         .requestMatchers("/api/v1/auth/**").permitAll()
@@ -59,9 +58,6 @@ public class WebSecurityConfig {
                         // DESARROLLO: Cambiar a authenticated() para que funcione JWT
                         .anyRequest().authenticated());
 
-
-
-
         return http.build();
     }
 
@@ -76,10 +72,14 @@ public class WebSecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("*") // Para desarrollo, despues cambiar a dominios específicos
+                        .allowedOrigins(
+                                "http://localhost:3000",
+                                "http://18.217.163.43",
+                                "http://3.139.78.169"
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
-                        // .allowCredentials(true); // Comentado para desarrollo
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }
