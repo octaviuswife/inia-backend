@@ -81,11 +81,11 @@ public class AnalisisService {
     }
 
     /**
-     * Aprueba un análisis (verifica que esté en PENDIENTE_APROBACION)
+     * Aprueba un análisis (verifica que esté en PENDIENTE_APROBACION o A_REPETIR)
      * 
      * @param analisis El análisis a aprobar
      * @return El análisis actualizado
-     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o está inactivo
+     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o A_REPETIR, o está inactivo
      */
     public Analisis aprobarAnalisis(Analisis analisis) {
         // Validar que el análisis esté activo
@@ -93,9 +93,9 @@ public class AnalisisService {
             throw new RuntimeException("No se puede aprobar un análisis inactivo");
         }
         
-        // Validar que esté en estado PENDIENTE_APROBACION
-        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION) {
-            throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION para ser aprobado");
+        // Validar que esté en estado PENDIENTE_APROBACION o A_REPETIR
+        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION && analisis.getEstado() != Estado.A_REPETIR) {
+            throw new RuntimeException("El análisis debe estar en estado PENDIENTE_APROBACION o A_REPETIR para ser aprobado");
         }
         
         analisis.setEstado(Estado.APROBADO);
@@ -250,21 +250,40 @@ public class AnalisisService {
         T analisis = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Análisis no encontrado con ID: " + id));
         
+
         // Si el análisis está marcado como A_REPETIR y tiene lote asociado
         if (analisis.getEstado() == Estado.A_REPETIR && analisis.getLote() != null && buscarPorLote != null) {
+            System.out.println("  ✅ Análisis está en A_REPETIR, validando si existen otros análisis válidos...");
+            
             // Buscar otros análisis del mismo tipo para el mismo lote
             java.util.List<T> analisisDelMismoLote = buscarPorLote.apply(analisis.getLote().getLoteID());
             
-            // Verificar si existe algún análisis válido (estado diferente de A_REPETIR y activo)
+            System.out.println("  - Total análisis del mismo tipo para este lote: " + analisisDelMismoLote.size());
+            
+            // Mostrar todos los análisis encontrados
+            analisisDelMismoLote.forEach(a -> {
+                System.out.println("    • ID: " + a.getAnalisisID() + 
+                                 ", Estado: " + a.getEstado() + 
+                                 ", Activo: " + a.getActivo() +
+                                 (a.getAnalisisID().equals(analisis.getAnalisisID()) ? " (ACTUAL)" : ""));
+            });
+            
+            // Verificar si existe algún análisis válido (estado diferente de A_REPETIR, no null, y activo)
             boolean existeAnalisisValido = analisisDelMismoLote.stream()
                 .filter(a -> !a.getAnalisisID().equals(analisis.getAnalisisID())) // Excluir el análisis actual
                 .filter(a -> a.getActivo()) // Solo análisis activos
+                .filter(a -> a.getEstado() != null) // Excluir análisis sin estado asignado
                 .anyMatch(a -> a.getEstado() != Estado.A_REPETIR); // Estado diferente de A_REPETIR
             
+            System.out.println("  - ¿Existe otro análisis válido (activo, con estado y no A_REPETIR)? " + existeAnalisisValido);
+            
             if (existeAnalisisValido) {
+                System.out.println("  ❌ ERROR: Ya existe un análisis válido, cancelando aprobación");
                 throw new RuntimeException("Ya existe un análisis válido de este tipo para el lote " + 
                     analisis.getLote().getFicha() + ". No se puede aprobar este análisis marcado para repetir.");
             }
+            
+            System.out.println("  ✅ No existe otro análisis válido, procediendo con la aprobación...");
         }
         
         // Ejecutar validación específica si existe
@@ -277,6 +296,8 @@ public class AnalisisService {
         
         // Guardar cambios
         T analisisActualizado = repository.save(analisis);
+        
+        System.out.println("  ✅ Análisis aprobado exitosamente, nuevo estado: " + analisisActualizado.getEstado());
         
         return mapper.apply(analisisActualizado);
     }
