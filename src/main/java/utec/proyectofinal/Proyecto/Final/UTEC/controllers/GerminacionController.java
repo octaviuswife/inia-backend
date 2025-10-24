@@ -82,9 +82,12 @@ public class GerminacionController {
     public ResponseEntity<Page<GerminacionListadoDTO>> obtenerGerminacionesPaginadas(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "todos") String filtroActivo) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) Long loteId) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<GerminacionListadoDTO> response = germinacionService.obtenerGerminacionesPaginadasConFiltro(pageable, filtroActivo);
+        Page<GerminacionListadoDTO> response = germinacionService.obtenerGerminacionesPaginadasConFiltros(pageable, search, activo, estado, loteId);
         return ResponseEntity.ok(response);
     }
 

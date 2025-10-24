@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazolioViabilidadRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.TetrazolioSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeadosRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
@@ -153,6 +155,21 @@ public class TetrazolioService {
                 break;
         }
         
+        return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar Tetrazolio con paginado y filtros dinámicos
+     */
+    public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Tetrazolio> spec = TetrazolioSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findAll(spec, pageable);
         return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
     }
 

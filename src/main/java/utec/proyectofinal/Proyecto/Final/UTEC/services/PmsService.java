@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepPmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PmsSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EstadisticasTandaDTO;
@@ -163,6 +165,21 @@ public class PmsService {
                 break;
         }
         
+        return pmsPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar PMS con paginado y filtros dinámicos
+     */
+    public Page<PmsListadoDTO> obtenerPmsPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Pms> spec = PmsSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Pms> pmsPage = pmsRepository.findAll(spec, pageable);
         return pmsPage.map(this::mapearEntidadAListadoDTO);
     }
 

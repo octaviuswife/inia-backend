@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;   
 
@@ -20,6 +21,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnReposito
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.DosnSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DosnRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
@@ -166,6 +168,21 @@ public class DosnService {
                 break;
         }
         
+        return dosnPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar DOSN con paginado y filtros dinámicos
+     */
+    public Page<DosnListadoDTO> obtenerDosnPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Dosn> spec = DosnSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Dosn> dosnPage = dosnRepository.findAll(spec, pageable);
         return dosnPage.map(this::mapearEntidadAListadoDTO);
     }
 

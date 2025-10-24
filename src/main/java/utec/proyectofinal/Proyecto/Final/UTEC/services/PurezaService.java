@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepos
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PurezaSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
@@ -169,6 +171,32 @@ public class PurezaService {
             purezaPage = purezaRepository.findAllByOrderByFechaInicioDesc(pageable);
         }
         
+        return purezaPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar Pureza con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @param estado Filtro por estado del análisis (opcional)
+     * @param loteId Filtro por ID del lote (opcional)
+     * @return Página de PurezaListadoDTO filtrados
+     */
+    public Page<PurezaListadoDTO> obtenerPurezaPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        // Crear la especificación con los filtros
+        Specification<Pureza> spec = PurezaSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        
+        // Obtener purezas filtradas y paginadas
+        Page<Pureza> purezaPage = purezaRepository.findAll(spec, pageable);
+        
+        // Mapear a DTOs
         return purezaPage.map(this::mapearEntidadAListadoDTO);
     }
 

@@ -71,9 +71,12 @@ public class PmsController {
     public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO>> obtenerPmsPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "todos") String filtroActivo) {
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String search,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Boolean activo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String estado,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long loteId) {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-        org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO> response = pmsService.obtenerPmsPaginadasConFiltro(pageable, filtroActivo);
+        org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO> response = pmsService.obtenerPmsPaginadasConFiltros(pageable, search, activo, estado, loteId);
         return ResponseEntity.ok(response);
     }
 

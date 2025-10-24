@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.GerminacionSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
@@ -182,6 +184,18 @@ public class GerminacionService {
                 break;
         }
         
+        return germinacionesPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar germinaciones con paginado y filtros completos
+    public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        Specification<Germinacion> spec = GerminacionSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Germinacion> germinacionesPage = germinacionRepository.findAll(spec, pageable);
         return germinacionesPage.map(this::mapearEntidadAListadoDTO);
     }
 
