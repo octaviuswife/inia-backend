@@ -26,14 +26,9 @@ public class PurezaSpecification {
             if (searchTerm != null && !searchTerm.trim().isEmpty()) {
                 String searchPattern = "%" + searchTerm.toLowerCase() + "%";
                 
-                // Buscar por ID (si es numérico)
-                Predicate idPredicate = null;
-                try {
-                    Long id = Long.parseLong(searchTerm.trim());
-                    idPredicate = criteriaBuilder.equal(root.get("analisisID"), id);
-                } catch (NumberFormatException e) {
-                    // No es un número, ignorar búsqueda por ID
-                }
+                // Buscar por ID parcial (permite encontrar 1001, 1002, etc. al buscar "100")
+                Predicate idPredicate = criteriaBuilder.like(
+                    criteriaBuilder.lower(criteriaBuilder.toString(root.get("analisisID"))), searchPattern);
                 
                 // Buscar por ficha del lote
                 Predicate fichaPredicate = criteriaBuilder.like(
@@ -43,11 +38,7 @@ public class PurezaSpecification {
                 Predicate nomLotePredicate = criteriaBuilder.like(
                     criteriaBuilder.lower(root.get("lote").get("nomLote")), searchPattern);
                 
-                if (idPredicate != null) {
-                    predicates.add(criteriaBuilder.or(idPredicate, fichaPredicate, nomLotePredicate));
-                } else {
-                    predicates.add(criteriaBuilder.or(fichaPredicate, nomLotePredicate));
-                }
+                predicates.add(criteriaBuilder.or(idPredicate, fichaPredicate, nomLotePredicate));
             }
 
             // Filtro por estado activo
