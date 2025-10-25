@@ -207,10 +207,23 @@ public class PurezaService {
         dto.setEstado(pureza.getEstado());
         dto.setFechaInicio(pureza.getFechaInicio());
         dto.setFechaFin(pureza.getFechaFin());
+        dto.setActivo(pureza.getActivo());
+        
+        // Datos de pureza
+        dto.setRedonSemillaPura(pureza.getRedonSemillaPura());
+        dto.setInasePura(pureza.getInasePura());
+        
         if (pureza.getLote() != null) {
             dto.setIdLote(pureza.getLote().getLoteID());
-            dto.setLote(pureza.getLote().getFicha());
+            dto.setLote(pureza.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (pureza.getLote().getCultivar() != null && pureza.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
+        
         if (pureza.getAnalisisID() != null) {
             var historial = analisisHistorialService.obtenerHistorialAnalisis(pureza.getAnalisisID());
             if (!historial.isEmpty()) {

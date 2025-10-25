@@ -193,10 +193,22 @@ public class DosnService {
         dto.setEstado(dosn.getEstado());
         dto.setFechaInicio(dosn.getFechaInicio());
         dto.setFechaFin(dosn.getFechaFin());
+        dto.setActivo(dosn.getActivo());
+        
+        // Campo específico de DOSN
+        dto.setCumpleEstandar(dosn.getCumpleEstandar());
+        
         if (dosn.getLote() != null) {
             dto.setIdLote(dosn.getLote().getLoteID());
-            dto.setLote(dosn.getLote().getFicha());
+            dto.setLote(dosn.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (dosn.getLote().getCultivar() != null && dosn.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = dosn.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
+        
         if (dosn.getAnalisisID() != null) {
             var historial = analisisHistorialService.obtenerHistorialAnalisis(dosn.getAnalisisID());
             if (!historial.isEmpty()) {

@@ -190,10 +190,23 @@ public class PmsService {
         dto.setEstado(pms.getEstado());
         dto.setFechaInicio(pms.getFechaInicio());
         dto.setFechaFin(pms.getFechaFin());
+        dto.setActivo(pms.getActivo());
+        
+        // Campos específicos de PMS
+        dto.setPms_g(pms.getPmsconRedon());
+        dto.setCoeficienteVariacion(pms.getCoefVariacion());
+        
         if (pms.getLote() != null) {
             dto.setIdLote(pms.getLote().getLoteID());
-            dto.setLote(pms.getLote().getFicha());
+            dto.setLote(pms.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (pms.getLote().getCultivar() != null && pms.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
+        
         if (pms.getAnalisisID() != null) {
             var historial = analisisHistorialService.obtenerHistorialAnalisis(pms.getAnalisisID());
             if (!historial.isEmpty()) {

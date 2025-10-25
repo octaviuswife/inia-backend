@@ -456,11 +456,18 @@ public class GerminacionService {
         dto.setEstado(germinacion.getEstado());
         dto.setFechaInicio(germinacion.getFechaInicio());
         dto.setFechaFin(germinacion.getFechaFin());
+        dto.setActivo(germinacion.getActivo());
         
         // Datos del lote
         if (germinacion.getLote() != null) {
             dto.setIdLote(germinacion.getLote().getLoteID());
-            dto.setLote(germinacion.getLote().getFicha());
+            dto.setLote(germinacion.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (germinacion.getLote().getCultivar() != null && germinacion.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = germinacion.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
         
         // Datos específicos de germinación

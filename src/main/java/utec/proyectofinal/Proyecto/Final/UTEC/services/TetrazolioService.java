@@ -180,10 +180,23 @@ public class TetrazolioService {
         dto.setEstado(tetrazolio.getEstado());
         dto.setFechaInicio(tetrazolio.getFechaInicio());
         dto.setFechaFin(tetrazolio.getFechaFin());
+        dto.setActivo(tetrazolio.getActivo());
+        dto.setFecha(tetrazolio.getFecha());
+        
+        // Viabilidad con redondeo (Viabilidad INIA %)
+        dto.setViabilidadConRedondeo(tetrazolio.getPorcViablesRedondeo());
+        
         if (tetrazolio.getLote() != null) {
             dto.setIdLote(tetrazolio.getLote().getLoteID());
-            dto.setLote(tetrazolio.getLote().getFicha());
+            dto.setLote(tetrazolio.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (tetrazolio.getLote().getCultivar() != null && tetrazolio.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
+        
         if (tetrazolio.getAnalisisID() != null) {
             var historial = analisisHistorialService.obtenerHistorialAnalisis(tetrazolio.getAnalisisID());
             if (!historial.isEmpty()) {
