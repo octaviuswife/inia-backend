@@ -39,10 +39,14 @@ public class PurezaSpecification {
                 Predicate fichaPredicate = criteriaBuilder.like(
                     criteriaBuilder.lower(root.get("lote").get("ficha")), searchPattern);
                 
+                // Buscar por nombre del lote
+                Predicate nomLotePredicate = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("lote").get("nomLote")), searchPattern);
+                
                 if (idPredicate != null) {
-                    predicates.add(criteriaBuilder.or(idPredicate, fichaPredicate));
+                    predicates.add(criteriaBuilder.or(idPredicate, fichaPredicate, nomLotePredicate));
                 } else {
-                    predicates.add(fichaPredicate);
+                    predicates.add(criteriaBuilder.or(fichaPredicate, nomLotePredicate));
                 }
             }
 
