@@ -175,16 +175,8 @@ public class LegadoService {
         
         // Tipo de semilla y tratamiento
         dto.setTipoSemilla(legado.getTipoSemilla());
-        dto.setTratada(legado.getTratada());
         dto.setTipoTratGerm(legado.getTipoTratGerm());
-        
-        // Precios y montos
-        dto.setPrecioUnit(legado.getPrecioUnit());
-        dto.setUnidad(legado.getUnidad());
-        dto.setMoneda(legado.getMoneda());
-        dto.setImporteMN(legado.getImporteMN());
-        dto.setImporteMO(legado.getImporteMO());
-        
+
         // Datos de germinación
         dto.setGermC(legado.getGermC());
         dto.setGermSC(legado.getGermSC());
@@ -209,15 +201,7 @@ public class LegadoService {
         dto.setPesoHEC(legado.getPesoHEC());
         dto.setNroTrans(legado.getNroTrans());
         dto.setCtaMov(legado.getCtaMov());
-        dto.setCaCC(legado.getCaCC());
-        dto.setFf(legado.getFf());
-        dto.setTitular(legado.getTitular());
-        dto.setCtaArt(legado.getCtaArt());
-        dto.setProveedor(legado.getProveedor());
-        dto.setDocAfect(legado.getDocAfect());
-        dto.setNroAfect(legado.getNroAfect());
         dto.setStk(legado.getStk());
-        dto.setReferencia(legado.getReferencia());
         
         // Fechas adicionales
         dto.setFechaSC_I(legado.getFechaSC_I());
@@ -226,7 +210,6 @@ public class LegadoService {
         dto.setGermTotalC_I(legado.getGermTotalC_I());
         
         // Observaciones
-        dto.setObsTrans(legado.getObsTrans());
         dto.setOtrasSemillasObser(legado.getOtrasSemillasObser());
         dto.setSemillaPura(legado.getSemillaPura());
         dto.setSemillaOtrosCultivos(legado.getSemillaOtrosCultivos());

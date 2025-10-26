@@ -169,10 +169,9 @@ public class ImportacionLegadoService {
         Especie especie = obtenerOCrearEspecie(getCellValueAsString(row, COL_ESPECIE));
         Cultivar cultivar = obtenerOCrearCultivar(getCellValueAsString(row, COL_VARIEDAD), especie);
         Catalogo origen = obtenerOCrearCatalogo(TipoCatalogo.ORIGEN, getCellValueAsString(row, COL_ORIGEN));
-        Catalogo articulo = obtenerOCrearCatalogo(TipoCatalogo.ARTICULO, getCellValueAsString(row, COL_CTA_ART));
 
         // 2. Crear o actualizar Lote
-        Lote lote = crearLote(row, empresa, cultivar, deposito, origen, articulo);
+        Lote lote = crearLote(row, empresa, cultivar, deposito, origen);
         lote = loteRepository.save(lote);
 
         // 3. Crear registro Legado con el resto de la información
@@ -292,7 +291,7 @@ public class ImportacionLegadoService {
      * Crea un Lote con los datos extraídos
      */
     private Lote crearLote(Row row, Contacto empresa, Cultivar cultivar, 
-                           Catalogo deposito, Catalogo origen, Catalogo articulo) {
+                           Catalogo deposito, Catalogo origen) {
         
         String ficha = getCellValueAsString(row, COL_NRO_FICHA);
         
@@ -308,11 +307,6 @@ public class ImportacionLegadoService {
         lote.setEmpresa(empresa);
         lote.setDeposito(deposito);
         lote.setOrigen(origen);
-        lote.setNumeroArticulo(articulo);
-        
-        // Parsear código FF y CC
-        lote.setCodigoFF(parsearCodigo(getCellValueAsString(row, COL_FF)));
-        lote.setCodigoCC(parsearCodigo(getCellValueAsString(row, COL_CA_CC)));
         
         // Kilos limpios
         BigDecimal cantidad = getCellValueAsBigDecimal(row, COL_CANTIDAD);
@@ -347,16 +341,9 @@ public class ImportacionLegadoService {
         
         // Tipo de semilla y tratamiento
         legado.setTipoSemilla(getCellValueAsString(row, COL_TIPO_SEMILLA));
-        legado.setTratada(getCellValueAsString(row, COL_TRATADA));
         legado.setTipoTratGerm(getCellValueAsString(row, COL_TIPO_TRAT_GERM));
         
-        // Precios y montos
-        legado.setPrecioUnit(getCellValueAsBigDecimal(row, COL_PRECIO_UNIT));
-        legado.setUnidad(getCellValueAsString(row, COL_UNIDAD));
-        legado.setMoneda(getCellValueAsString(row, COL_MONEDA));
-        legado.setImporteMN(getCellValueAsBigDecimal(row, COL_IMPORTE_MN));
-        legado.setImporteMO(getCellValueAsBigDecimal(row, COL_IMPORTE_MO));
-        
+
         // Datos de germinación
         legado.setGermC(getCellValueAsInteger(row, COL_GERM_C));
         legado.setGermSC(getCellValueAsInteger(row, COL_GERM_SC));
@@ -383,17 +370,9 @@ public class ImportacionLegadoService {
         // Datos de transacción
         legado.setNroTrans(getCellValueAsString(row, COL_NRO_TRANS));
         legado.setCtaMov(getCellValueAsString(row, COL_CTA_MOV));
-        legado.setCaCC(getCellValueAsString(row, COL_CA_CC));
-        legado.setFf(getCellValueAsString(row, COL_FF));
-        legado.setTitular(getCellValueAsString(row, COL_TITULAR));
-        legado.setCtaArt(getCellValueAsString(row, COL_CTA_ART));
-        legado.setProveedor(getCellValueAsString(row, COL_PROVEEDOR));
-        legado.setDocAfect(getCellValueAsString(row, COL_DOC_AFECT));
-        legado.setNroAfect(getCellValueAsString(row, COL_NRO_AFECT));
         
-        // Stock y referencia
+        // Stock
         legado.setStk(getCellValueAsBigDecimal(row, COL_STK));
-        legado.setReferencia(getCellValueAsString(row, COL_REFERENCIA));
         
         // Fechas adicionales
         legado.setFechaSC_I(getCellValueAsDate(row, COL_FECHA_SC_I));
@@ -404,7 +383,6 @@ public class ImportacionLegadoService {
         legado.setGermTotalC_I(getCellValueAsInteger(row, COL_GERM_TOTAL_C_I));
         
         // Observaciones
-        legado.setObsTrans(getCellValueAsString(row, COL_OBS_TRANS));
         legado.setOtrasSemillasObser(getCellValueAsString(row, COL_OTRAS_SEMILLAS_OBSER));
         
         // Análisis de semillas

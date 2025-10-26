@@ -33,15 +33,7 @@ public class Legado {
 
     // Información del tipo de semilla y tratamiento
     private String tipoSemilla;
-    private String tratada;
     private String tipoTratGerm;
-
-    // Precios y montos
-    private BigDecimal precioUnit;
-    private String unidad;
-    private String moneda;
-    private BigDecimal importeMN;
-    private BigDecimal importeMO;
 
     // Datos de germinación
     private Integer germC;
@@ -69,17 +61,9 @@ public class Legado {
     // Datos de transacción
     private String nroTrans;
     private String ctaMov;
-    private String caCC;
-    private String ff;
-    private String titular;
-    private String ctaArt;
-    private String proveedor;
-    private String docAfect;
-    private String nroAfect;
 
-    // Stock y referencia
+    // Stock
     private BigDecimal stk;
-    private String referencia;
 
     // Fechas adicionales
     private LocalDate fechaSC_I;
@@ -90,9 +74,6 @@ public class Legado {
     private Integer germTotalC_I;
 
     // Observaciones y detalles
-    @Column(length = 1000)
-    private String obsTrans;
-
     @Column(length = 1000)
     private String otrasSemillasObser;
 

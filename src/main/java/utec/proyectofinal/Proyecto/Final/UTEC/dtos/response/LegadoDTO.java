@@ -20,15 +20,8 @@ public class LegadoDTO {
     
     // Información del tipo de semilla y tratamiento
     private String tipoSemilla;
-    private String tratada;
     private String tipoTratGerm;
-    
-    // Precios y montos
-    private BigDecimal precioUnit;
-    private String unidad;
-    private String moneda;
-    private BigDecimal importeMN;
-    private BigDecimal importeMO;
+
     
     // Datos de germinación
     private Integer germC;
@@ -54,15 +47,7 @@ public class LegadoDTO {
     private BigDecimal pesoHEC;
     private String nroTrans;
     private String ctaMov;
-    private String caCC;
-    private String ff;
-    private String titular;
-    private String ctaArt;
-    private String proveedor;
-    private String docAfect;
-    private String nroAfect;
     private BigDecimal stk;
-    private String referencia;
     
     // Fechas adicionales
     private LocalDate fechaSC_I;
@@ -71,7 +56,6 @@ public class LegadoDTO {
     private Integer germTotalC_I;
     
     // Observaciones
-    private String obsTrans;
     private String otrasSemillasObser;
     private String semillaPura;
     private String semillaOtrosCultivos;
