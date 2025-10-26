@@ -30,6 +30,9 @@ public class RepPmsService {
     @Autowired
     private AnalisisService analisisService;
 
+    @Autowired
+    private AnalisisHistorialService analisisHistorialService;
+
     // Crear nueva repetición asociada a un Pms
     public RepPmsDTO crearRepeticion(Long pmsId, RepPmsRequestDTO solicitud) {
         Optional<Pms> pmsOpt = pmsRepository.findById(pmsId);
@@ -90,6 +93,9 @@ public class RepPmsService {
             return mapearEntidadADTO(repeticionActualizada);
         }
 
+        // Registrar modificación en el historial del análisis PMS
+        analisisHistorialService.registrarModificacion(pms);
+
         return mapearEntidadADTO(guardada);
     }
 
@@ -142,6 +148,9 @@ public class RepPmsService {
             RepPms repeticionActualizada = repPmsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Error al recargar repetición actualizada"));
             
+            // Registrar modificación en el historial del análisis PMS
+            analisisHistorialService.registrarModificacion(pms);
+            
             return mapearEntidadADTO(repeticionActualizada);
         } else {
             throw new RuntimeException("Repetición PMS no encontrada con ID: " + id);
@@ -184,6 +193,9 @@ public class RepPmsService {
                 repPmsRepository.saveAll(repeticionesRestantes);
                 pmsService.actualizarEstadisticasPms(pms.getAnalisisID());
             }
+            
+            // Registrar modificación en el historial del análisis PMS
+            analisisHistorialService.registrarModificacion(pms);
         } else {
             throw new RuntimeException("Repetición PMS no encontrada con ID: " + id);
         }
