@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface LegadoRepository extends JpaRepository<Legado, Long> {
+public interface LegadoRepository extends JpaRepository<Legado, Long>, JpaSpecificationExecutor<Legado> {
     
     // Buscar por lote
     List<Legado> findByLote_LoteID(Long loteID);

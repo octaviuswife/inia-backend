@@ -1,14 +1,20 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Legado;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LegadoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.LegadoSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoSimpleDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,6 +76,66 @@ public class LegadoService {
         
         legado.setActivo(false);
         legadoRepository.save(legado);
+    }
+
+    /**
+     * Obtener legados paginados con filtros
+     */
+    @Transactional(readOnly = true)
+    public Page<LegadoListadoDTO> obtenerLegadosPaginadas(
+            Pageable pageable,
+            String searchTerm,
+            String especie,
+            LocalDate fechaReciboInicio,
+            LocalDate fechaReciboFin) {
+        
+        Specification<Legado> spec = LegadoSpecification.conFiltros(
+            searchTerm, especie, fechaReciboInicio, fechaReciboFin);
+        Page<Legado> legadoPage = legadoRepository.findAll(spec, pageable);
+        return legadoPage.map(this::convertirAListadoDTO);
+    }
+
+    /**
+     * Obtener todas las especies únicas de los legados activos
+     */
+    @Transactional(readOnly = true)
+    public List<String> obtenerEspeciesUnicas() {
+        return legadoRepository.findByActivoTrue().stream()
+                .map(legado -> legado.getLote() != null && legado.getLote().getCultivar() != null 
+                    ? legado.getLote().getCultivar().getNombre() 
+                    : null)
+                .filter(especie -> especie != null && !especie.isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Convertir entidad a DTO de listado
+     */
+    private LegadoListadoDTO convertirAListadoDTO(Legado legado) {
+        LegadoListadoDTO dto = new LegadoListadoDTO();
+        dto.setLegadoID(legado.getLegadoID());
+        
+        // Obtener datos del lote
+        if (legado.getLote() != null) {
+            dto.setFicha(legado.getLote().getFicha());
+            dto.setFechaRecibo(legado.getLote().getFechaRecibo());
+            
+            // Obtener nombre del cultivar (especie)
+            if (legado.getLote().getCultivar() != null) {
+                dto.setEspecie(legado.getLote().getCultivar().getNombre());
+            }
+        }
+        
+        // Datos de germinación y pureza
+        dto.setGermC(legado.getGermC());
+        dto.setGermSC(legado.getGermSC());
+        dto.setPeso1000(legado.getPeso1000());
+        dto.setPura(legado.getPura());
+        dto.setPuraI(legado.getPuraI());
+        
+        return dto;
     }
 
     /**
