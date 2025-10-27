@@ -47,8 +47,9 @@ public class TetrazolioService {
     @Transactional
     public TetrazolioDTO crearTetrazolio(TetrazolioRequestDTO solicitud) {
         try {
-            System.out.println("Iniciando creación de tetrazolio con solicitud: " + solicitud);
-            
+        //    if (solicitud.getViabilidadInase() == null || solicitud.getViabilidadInase().compareTo(BigDecimal.ZERO) < 0) {
+          //      throw new IllegalArgumentException("El campo viabilidadInase debe ser un valor positivo.");
+           // }
             Tetrazolio tetrazolio = mapearSolicitudAEntidad(solicitud);
             tetrazolio.setEstado(Estado.REGISTRADO);
             
@@ -60,11 +61,8 @@ public class TetrazolioService {
             // Registrar automáticamente en el historial
             analisisHistorialService.registrarCreacion(tetrazolioGuardado);
             
-            System.out.println("Tetrazolio creado exitosamente con ID: " + tetrazolioGuardado.getAnalisisID());
-            
             return mapearEntidadADTO(tetrazolioGuardado);
         } catch (Exception e) {
-            System.err.println("Error al crear tetrazolio: " + e.getMessage());
             throw new RuntimeException("Error al crear el análisis de tetrazolio: " + e.getMessage());
         }
     }
@@ -85,7 +83,9 @@ public class TetrazolioService {
         // Si es ADMIN editando análisis APROBADO, mantiene el estado APROBADO
         // Para otros estados se mantiene igual
         
+        // Actualizar los campos del tetrazolio con los datos de la solicitud
         actualizarEntidadDesdeSolicitud(tetrazolio, solicitud);
+        
         Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
         
         // Registrar automáticamente en el historial
@@ -250,6 +250,8 @@ public class TetrazolioService {
         tetrazolio.setTincionTemp(solicitud.getTincionTemp());
         tetrazolio.setFecha(solicitud.getFecha());
         tetrazolio.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());
+        tetrazolio.setViabilidadInase(solicitud.getViabilidadInase());
+        System.out.println("Viabilidad INASE asignada: " + solicitud.getViabilidadInase());
         
         System.out.println("Tetrazolio mapeado exitosamente");
         return tetrazolio;
@@ -279,6 +281,7 @@ public class TetrazolioService {
         tetrazolio.setTincionHs(solicitud.getTincionHs());
         tetrazolio.setTincionTemp(solicitud.getTincionTemp());
         tetrazolio.setFecha(solicitud.getFecha());
+        tetrazolio.setViabilidadInase(solicitud.getViabilidadInase());
         // El número de repeticiones esperadas NO se puede editar una vez creado
         
         System.out.println("Tetrazolio actualizado exitosamente");
@@ -312,7 +315,7 @@ public class TetrazolioService {
         dto.setPorcViablesRedondeo(tetrazolio.getPorcViablesRedondeo());
         dto.setPorcNoViablesRedondeo(tetrazolio.getPorcNoViablesRedondeo());
         dto.setPorcDurasRedondeo(tetrazolio.getPorcDurasRedondeo());
-        
+        dto.setViabilidadInase(tetrazolio.getViabilidadInase());
         // Mapear historial de análisis
         dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(tetrazolio.getAnalisisID()));
         
