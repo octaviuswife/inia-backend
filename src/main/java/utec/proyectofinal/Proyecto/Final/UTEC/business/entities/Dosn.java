@@ -26,9 +26,8 @@ public class Dosn extends Analisis {
     @ElementCollection
     private List<TipoDOSN> tipoINASE;
 
-    private BigDecimal cuscuta_g;
-    private Integer cuscutaNum;
-    private LocalDate fechaCuscuta;
+    @OneToMany(mappedBy = "dosn", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CuscutaRegistro> cuscutaRegistros;
 
     @OneToMany(mappedBy = "dosn", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Listado> listados;

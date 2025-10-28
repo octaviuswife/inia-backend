@@ -2,84 +2,74 @@ package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.MalezasYCultivosCatalogoRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoMYCCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.MalezasCatalogoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class MalezasYCultivosCatalogoService {
+public class MalezasCatalogoService {
 
     @Autowired
-    private MalezasYCultivosCatalogoRepository repository;
+    private MalezasCatalogoRepository repository;
 
     // Obtener todos activos
-    public List<MalezasYCultivosCatalogoDTO> obtenerTodos() {
+    public List<MalezasCatalogoDTO> obtenerTodos() {
         return repository.findByActivoTrue().stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
 
     // Obtener inactivos
-    public List<MalezasYCultivosCatalogoDTO> obtenerInactivos() {
+    public List<MalezasCatalogoDTO> obtenerInactivos() {
         return repository.findByActivoFalse().stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
 
-    // Filtrar por tipo de especie
-    public List<MalezasYCultivosCatalogoDTO> obtenerPorTipo(TipoMYCCatalogo tipoMYCCatalogo) {
-        return repository.findByTipoMYCCatalogoAndActivoTrue(tipoMYCCatalogo).stream()
-                .map(this::mapearEntidadADTO)
-                .collect(Collectors.toList());
-    }
-
     // Buscar por nombre común
-    public List<MalezasYCultivosCatalogoDTO> buscarPorNombreComun(String nombre) {
+    public List<MalezasCatalogoDTO> buscarPorNombreComun(String nombre) {
         return repository.findByNombreComunContainingIgnoreCaseAndActivoTrue(nombre).stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar por nombre científico
-    public List<MalezasYCultivosCatalogoDTO> buscarPorNombreCientifico(String nombre) {
+    public List<MalezasCatalogoDTO> buscarPorNombreCientifico(String nombre) {
         return repository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(nombre).stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
     }
 
     // Obtener por ID
-    public MalezasYCultivosCatalogoDTO obtenerPorId(Long id) {
+    public MalezasCatalogoDTO obtenerPorId(Long id) {
         return repository.findById(id)
                 .map(this::mapearEntidadADTO)
                 .orElse(null);
     }
 
     // Crear
-    public MalezasYCultivosCatalogoDTO crear(MalezasYCultivosCatalogoRequestDTO solicitud) {
-        MalezasYCultivosCatalogo catalogo = new MalezasYCultivosCatalogo();
+    public MalezasCatalogoDTO crear(MalezasCatalogoRequestDTO solicitud) {
+        MalezasCatalogo catalogo = new MalezasCatalogo();
         catalogo.setNombreComun(solicitud.getNombreComun());
         catalogo.setNombreCientifico(solicitud.getNombreCientifico());
-        catalogo.setTipoMYCCatalogo(solicitud.getTipoMYCCatalogo());
         catalogo.setActivo(true);
 
-        MalezasYCultivosCatalogo guardado = repository.save(catalogo);
+        MalezasCatalogo guardado = repository.save(catalogo);
         return mapearEntidadADTO(guardado);
     }
 
     // Actualizar
-    public MalezasYCultivosCatalogoDTO actualizar(Long id, MalezasYCultivosCatalogoRequestDTO solicitud) {
+    public MalezasCatalogoDTO actualizar(Long id, MalezasCatalogoRequestDTO solicitud) {
         return repository.findById(id)
                 .map(catalogo -> {
                     catalogo.setNombreComun(solicitud.getNombreComun());
                     catalogo.setNombreCientifico(solicitud.getNombreCientifico());
-                    catalogo.setTipoMYCCatalogo(solicitud.getTipoMYCCatalogo());
 
-                    MalezasYCultivosCatalogo actualizado = repository.save(catalogo);
+                    MalezasCatalogo actualizado = repository.save(catalogo);
                     return mapearEntidadADTO(actualizado);
                 })
                 .orElse(null);
@@ -95,29 +85,28 @@ public class MalezasYCultivosCatalogoService {
     }
 
     // Reactivar
-    public MalezasYCultivosCatalogoDTO reactivar(Long id) {
+    public MalezasCatalogoDTO reactivar(Long id) {
         return repository.findById(id)
                 .map(catalogo -> {
                     catalogo.setActivo(true);
-                    MalezasYCultivosCatalogo reactivado = repository.save(catalogo);
+                    MalezasCatalogo reactivado = repository.save(catalogo);
                     return mapearEntidadADTO(reactivado);
                 })
                 .orElse(null);
     }
 
     // Mapeo
-    private MalezasYCultivosCatalogoDTO mapearEntidadADTO(MalezasYCultivosCatalogo catalogo) {
-        MalezasYCultivosCatalogoDTO dto = new MalezasYCultivosCatalogoDTO();
+    private MalezasCatalogoDTO mapearEntidadADTO(MalezasCatalogo catalogo) {
+        MalezasCatalogoDTO dto = new MalezasCatalogoDTO();
         dto.setCatalogoID(catalogo.getCatalogoID());
         dto.setNombreComun(catalogo.getNombreComun());
         dto.setNombreCientifico(catalogo.getNombreCientifico());
-        dto.setTipoMYCCatalogo(catalogo.getTipoMYCCatalogo());
         // Campo activo removido del DTO - no necesario en responses
         return dto;
     }
 
     // Obtener entidad para uso interno
-    public MalezasYCultivosCatalogo obtenerEntidadPorId(Long id) {
+    public MalezasCatalogo obtenerEntidadPorId(Long id) {
         return repository.findById(id).orElse(null);
     }
 }

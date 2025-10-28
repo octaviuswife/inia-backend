@@ -22,9 +22,7 @@ public class DosnRequestDTO {
     private BigDecimal gramosAnalizadosINASE;
     private List<TipoDOSN> tipoINASE;
 
-    private BigDecimal cuscuta_g;
-    private Integer cuscutaNum;
-    private LocalDate fechaCuscuta;
+    private List<CuscutaRegistroRequestDTO> cuscutaRegistros;
 
     private List<ListadoRequestDTO> listados;
 }

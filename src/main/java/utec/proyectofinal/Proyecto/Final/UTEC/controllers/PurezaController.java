@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoPureza;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.PurezaService;
@@ -137,8 +137,8 @@ public class PurezaController {
               description = "Obtiene todos los catálogos necesarios para el análisis de pureza")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/catalogos")
-    public ResponseEntity<List<MalezasYCultivosCatalogoDTO>> obtenerTodosCatalogos() {
-        List<MalezasYCultivosCatalogoDTO> catalogos = purezaService.obtenerTodosCatalogos();
+    public ResponseEntity<List<MalezasCatalogoDTO>> obtenerTodosCatalogos() {
+        List<MalezasCatalogoDTO> catalogos = purezaService.obtenerTodosCatalogos();
         return ResponseEntity.ok(catalogos);
     }
 

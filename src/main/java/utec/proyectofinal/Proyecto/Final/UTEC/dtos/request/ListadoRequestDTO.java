@@ -9,5 +9,6 @@ public class ListadoRequestDTO {
     private TipoListado listadoTipo;
     private Instituto listadoInsti;
     private Integer listadoNum;
-    private Long idCatalogo;  // Para seleccionar del catálogo precargado
+    private Long idCatalogo;  // Para malezas (catálogo precargado)
+    private Long idEspecie;   // Para otros cultivos (especies)
 }

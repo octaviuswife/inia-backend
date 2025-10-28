@@ -26,8 +26,14 @@ public class Listado {
     @JoinColumn(name = "dosn_id", referencedColumnName = "analisisID")
     private Dosn dosn;
 
+    // Relación con MalezasCatalogo (para malezas)
     @ManyToOne
     @JoinColumn(name = "catalogo_id", referencedColumnName = "catalogoID")
-    private MalezasYCultivosCatalogo catalogo;
+    private MalezasCatalogo catalogo;
+
+    // Relación con Especie (para otros cultivos)
+    @ManyToOne
+    @JoinColumn(name = "especie_id", referencedColumnName = "especieID")
+    private Especie especie;
 }
 
