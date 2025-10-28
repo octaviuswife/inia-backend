@@ -319,7 +319,6 @@ public class LoteService {
                 Catalogo numeroArticulo = catalogoService.obtenerEntidadPorId(solicitud.getNumeroArticuloID());
                 lote.setNumeroArticulo(numeroArticulo);
             }
-            lote.setCantidad(solicitud.getCantidad());
             
             // Mapear origen
             if (solicitud.getOrigenID() != null) {
@@ -482,7 +481,6 @@ public class LoteService {
         } else {
             lote.setNumeroArticulo(null);
         }
-        lote.setCantidad(solicitud.getCantidad());
         
         // Actualizar origen
         if (solicitud.getOrigenID() != null) {
@@ -599,7 +597,6 @@ public class LoteService {
             dto.setNumeroArticuloID(lote.getNumeroArticulo().getId());
             dto.setNumeroArticuloValor(lote.getNumeroArticulo().getValor());
         }
-        dto.setCantidad(lote.getCantidad());
         dto.setFechaCosecha(lote.getFechaCosecha());
         dto.setActivo(lote.getActivo());
 

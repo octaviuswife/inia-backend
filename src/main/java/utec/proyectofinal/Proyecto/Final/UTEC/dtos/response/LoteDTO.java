@@ -36,7 +36,6 @@ public class LoteDTO {
     private Long numeroArticuloID;
     private String numeroArticuloValor;
     
-    private Double cantidad;
     private Long origenID;
     private String origenValor;
     private Long estadoID;

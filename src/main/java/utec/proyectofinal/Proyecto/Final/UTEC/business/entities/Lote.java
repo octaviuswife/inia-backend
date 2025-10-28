@@ -21,7 +21,7 @@ public class Lote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long loteID;
 
-
+    @Column(unique = true)
     private String ficha;
 
 
@@ -68,8 +68,6 @@ public class Lote {
     @ManyToOne
     @JoinColumn(name = "numeroArticuloID")
     private Catalogo numeroArticulo;
-    
-    private Double cantidad;
 
     @ManyToOne
     @JoinColumn(name = "origenID")
