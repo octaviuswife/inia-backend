@@ -20,13 +20,14 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.EspecieRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PurezaSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
@@ -45,7 +46,10 @@ public class PurezaService {
     private CatalogoRepository catalogoRepository;
 
     @Autowired
-    private MalezasYCultivosCatalogoRepository malezasYCultivosCatalogoRepository;
+    private MalezasCatalogoRepository malezasCatalogoRepository;
+
+    @Autowired
+    private EspecieRepository especieRepository;
 
     @Autowired
     private LoteRepository loteRepository;
@@ -224,8 +228,8 @@ public class PurezaService {
     }
 
     // Obtener todos los catálogos
-    public List<MalezasYCultivosCatalogoDTO> obtenerTodosCatalogos() {
-        return catalogoRepository.findAll()
+    public List<MalezasCatalogoDTO> obtenerTodosCatalogos() {
+        return malezasCatalogoRepository.findAll()
                 .stream()
                 .map(MappingUtils::toCatalogoDTO)
                 .collect(Collectors.toList());
@@ -398,7 +402,7 @@ public class PurezaService {
     }
 
     private Listado crearListadoDesdeSolicitud(ListadoRequestDTO solicitud, Pureza pureza) {
-        Listado listado = MappingUtils.fromListadoRequest(solicitud, malezasYCultivosCatalogoRepository);
+        Listado listado = MappingUtils.fromListadoRequest(solicitud, malezasCatalogoRepository, especieRepository);
         listado.setPureza(pureza);
         return listado;
     }

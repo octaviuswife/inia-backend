@@ -9,7 +9,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.*;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.*;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosExportacionExcelDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ExportacionRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoMYCCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoListado;
 
@@ -538,16 +537,26 @@ public class ExportacionExcelService {
                 StringBuilder descripcionMateriaTotal = new StringBuilder();
                 
                 for (Listado listado : pureza.getListados()) {
+                    String nombre = null;
+                    boolean esMaleza = false;
+                    boolean esCultivo = false;
+                    
+                    // Determinar si es maleza (tiene catalogo) o cultivo (tiene especie)
                     if (listado.getCatalogo() != null) {
-                        String nombre = listado.getCatalogo().getNombreComun();
-                        TipoMYCCatalogo tipo = listado.getCatalogo().getTipoMYCCatalogo();
+                        nombre = listado.getCatalogo().getNombreComun();
+                        esMaleza = true;
+                    } else if (listado.getEspecie() != null) {
+                        nombre = listado.getEspecie().getNombreComun();
+                        esCultivo = true;
+                    }
+                    
+                    if (nombre != null) {
+                        System.out.println("Procesando listado - Nombre: " + nombre + ", Es Maleza: " + esMaleza + ", Es Cultivo: " + esCultivo);
                         
-                        System.out.println("Procesando listado - Nombre: " + nombre + ", Tipo: " + tipo);
-                        
-                        if (TipoMYCCatalogo.MALEZA.equals(tipo)) {
+                        if (esMaleza) {
                             if (descripcionMalezas.length() > 0) descripcionMalezas.append(", ");
                             descripcionMalezas.append(nombre);
-                        } else if (TipoMYCCatalogo.CULTIVO.equals(tipo)) {
+                        } else if (esCultivo) {
                             if (descripcionOtrosCultivos.length() > 0) descripcionOtrosCultivos.append(", ");
                             descripcionOtrosCultivos.append(nombre);
                         }
@@ -653,9 +662,20 @@ public class ExportacionExcelService {
                 StringBuilder dosnInaseBrassica = new StringBuilder();
                 
                 for (Listado listado : dosn.getListados()) {
+                    String nombre = null;
+                    boolean esMaleza = false;
+                    boolean esCultivo = false;
+                    
+                    // Determinar si es maleza (tiene catalogo) o cultivo (tiene especie)
                     if (listado.getCatalogo() != null) {
-                        String nombre = listado.getCatalogo().getNombreComun();
-                        TipoMYCCatalogo tipo = listado.getCatalogo().getTipoMYCCatalogo();
+                        nombre = listado.getCatalogo().getNombreComun();
+                        esMaleza = true;
+                    } else if (listado.getEspecie() != null) {
+                        nombre = listado.getEspecie().getNombreComun();
+                        esCultivo = true;
+                    }
+                    
+                    if (nombre != null) {
                         TipoListado tipoListado = listado.getListadoTipo();
                         Instituto instituto = listado.getListadoInsti();
                         
@@ -668,7 +688,7 @@ public class ExportacionExcelService {
                             } else if (tipoListado == TipoListado.BRASSICA) {
                                 if (dosnBrassica.length() > 0) dosnBrassica.append(", ");
                                 dosnBrassica.append(nombre);
-                            } else if (TipoMYCCatalogo.MALEZA.equals(tipo)) {
+                            } else if (esMaleza) {
                                 if (tipoListado == TipoListado.MAL_TOLERANCIA) {
                                     if (dosnMalezasToleradas.length() > 0) dosnMalezasToleradas.append(", ");
                                     dosnMalezasToleradas.append(nombre);
@@ -676,7 +696,7 @@ public class ExportacionExcelService {
                                     if (dosnMalezas.length() > 0) dosnMalezas.append(", ");
                                     dosnMalezas.append(nombre);
                                 }
-                            } else if (TipoMYCCatalogo.CULTIVO.equals(tipo)) {
+                            } else if (esCultivo) {
                                 if (dosnOtrosCultivos.length() > 0) dosnOtrosCultivos.append(", ");
                                 dosnOtrosCultivos.append(nombre);
                             }
@@ -688,7 +708,7 @@ public class ExportacionExcelService {
                             } else if (tipoListado == TipoListado.BRASSICA) {
                                 if (dosnInaseBrassica.length() > 0) dosnInaseBrassica.append(", ");
                                 dosnInaseBrassica.append(nombre);
-                            } else if (TipoMYCCatalogo.MALEZA.equals(tipo)) {
+                            } else if (esMaleza) {
                                 if (tipoListado == TipoListado.MAL_TOLERANCIA) {
                                     if (dosnInaseMalezasToleradas.length() > 0) dosnInaseMalezasToleradas.append(", ");
                                     dosnInaseMalezasToleradas.append(nombre);
@@ -696,7 +716,7 @@ public class ExportacionExcelService {
                                     if (dosnInaseMalezas.length() > 0) dosnInaseMalezas.append(", ");
                                     dosnInaseMalezas.append(nombre);
                                 }
-                            } else if (TipoMYCCatalogo.CULTIVO.equals(tipo)) {
+                            } else if (esCultivo) {
                                 if (dosnInaseOtrosCultivos.length() > 0) dosnInaseOtrosCultivos.append(", ");
                                 dosnInaseOtrosCultivos.append(nombre);
                             }

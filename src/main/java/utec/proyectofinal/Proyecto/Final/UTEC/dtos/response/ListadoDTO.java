@@ -11,5 +11,6 @@ public class ListadoDTO {
     private TipoListado listadoTipo;
     private Instituto listadoInsti;
     private Integer listadoNum;
-    private MalezasYCultivosCatalogoDTO catalogo;
+    private MalezasCatalogoDTO catalogo;  // Para malezas
+    private EspecieDTO especie;  // Para otros cultivos
 }
