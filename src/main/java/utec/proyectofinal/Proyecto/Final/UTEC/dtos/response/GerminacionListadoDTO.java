@@ -1,6 +1,5 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -15,12 +14,9 @@ public class GerminacionListadoDTO {
     private Long idLote;
     private String especie; // Nombre de la especie del lote
     private Boolean activo;
-    private LocalDate fechaInicioGerm;
-    private LocalDate fechaUltConteo;
-    private String numDias;
     
-    // Campos para mostrar en listado - Germinación no necesita campos adicionales por ahora
-    // pero se pueden agregar según necesidad
+    // Campos para mostrar en listado - Germinación ahora es solo un contenedor
+    // Los detalles de fechas están en TablaGerm
     
     private String usuarioCreador;
     private String usuarioModificador;

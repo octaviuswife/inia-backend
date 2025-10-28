@@ -44,11 +44,11 @@ public class RepGermService {
             TablaGerm tablaGerm = tablaGermOpt.get();
             
             //validar numero de repeticiones permitidas
-            if (tablaGerm.getGerminacion() != null && tablaGerm.getGerminacion().getNumeroRepeticiones() != null) {
+            if (tablaGerm != null && tablaGerm.getNumeroRepeticiones() != null) {
                 Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);
-                if (repeticionesExistentes >= tablaGerm.getGerminacion().getNumeroRepeticiones()) {
+                if (repeticionesExistentes >= tablaGerm.getNumeroRepeticiones()) {
                     throw new RuntimeException("No se pueden agregar más repeticiones. El número máximo de repeticiones permitidas es: " + 
-                        tablaGerm.getGerminacion().getNumeroRepeticiones());
+                        tablaGerm.getNumeroRepeticiones());
                 }
             }
 
@@ -107,8 +107,6 @@ public class RepGermService {
         Optional<RepGerm> repGermExistente = repGermRepository.findById(id);
         
         if (repGermExistente.isPresent()) {
-            RepGerm repGerm = repGermExistente.get();
-            
             repGermRepository.deleteById(id);
             
             System.out.println("Repetición eliminada con ID: " + id);
@@ -141,9 +139,9 @@ public class RepGermService {
         Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGerm.getTablaGermID());
         repGerm.setNumRep(repeticionesExistentes.intValue() + 1);
         
-        // Inicializar lista normales con el número de conteos definido en la germinación
-        Integer numeroConteos = (tablaGerm.getGerminacion() != null && tablaGerm.getGerminacion().getNumeroConteos() != null) 
-            ? tablaGerm.getGerminacion().getNumeroConteos() 
+        // Inicializar lista normales con el número de conteos definido en la tabla
+        Integer numeroConteos = (tablaGerm != null && tablaGerm.getNumeroConteos() != null) 
+            ? tablaGerm.getNumeroConteos() 
             : 1; // valor por defecto
             
         List<Integer> normalesInicializadas = new ArrayList<>(Collections.nCopies(numeroConteos, 0));
@@ -271,9 +269,9 @@ public class RepGermService {
         // numRep NO se actualiza, es generado automáticamente y es inmutable
         
         // Gestionar la lista normales preservando el tamaño según numeroConteos
-        Integer numeroConteos = (repGerm.getTablaGerm().getGerminacion() != null && 
-                               repGerm.getTablaGerm().getGerminacion().getNumeroConteos() != null) 
-            ? repGerm.getTablaGerm().getGerminacion().getNumeroConteos() 
+        Integer numeroConteos = (repGerm.getTablaGerm() != null && 
+                               repGerm.getTablaGerm().getNumeroConteos() != null) 
+            ? repGerm.getTablaGerm().getNumeroConteos() 
             : 1;
         
         List<Integer> normalesActualizadas = new ArrayList<>(Collections.nCopies(numeroConteos, 0));
@@ -358,12 +356,12 @@ public class RepGermService {
     
     // Verificar si todas las repeticiones están completas
     private boolean todasLasRepeticionesCompletas(TablaGerm tablaGerm, List<RepGerm> repeticiones) {
-        if (tablaGerm.getGerminacion() == null || tablaGerm.getGerminacion().getNumeroRepeticiones() == null) {
+        if (tablaGerm == null || tablaGerm.getNumeroRepeticiones() == null) {
             return false;
         }
         
         // Verificar que tenemos el número esperado de repeticiones
-        if (repeticiones.size() < tablaGerm.getGerminacion().getNumeroRepeticiones()) {
+        if (repeticiones.size() < tablaGerm.getNumeroRepeticiones()) {
             return false;
         }
         
@@ -435,9 +433,8 @@ public class RepGermService {
         int numRepeticiones = repeticiones.size();
         List<BigDecimal> promediosPorConteo = new ArrayList<>();
         
-        // Obtener el número de conteos desde la germinación
-        Integer numConteos = tablaGerm.getGerminacion() != null ? 
-            tablaGerm.getGerminacion().getNumeroConteos() : null;
+        // Obtener el número de conteos desde la tabla
+        Integer numConteos = tablaGerm != null ? tablaGerm.getNumeroConteos() : null;
             
         if (numConteos != null && numConteos > 0) {
             // Calcular promedio para cada conteo de normales por separado
