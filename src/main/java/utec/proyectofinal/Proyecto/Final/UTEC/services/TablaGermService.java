@@ -258,11 +258,36 @@ public class TablaGermService {
         if (tablaGermExistente.isPresent()) {
             TablaGerm tablaGerm = tablaGermExistente.get();
             
+            System.out.println("📋 Actualizando tabla ID: " + id);
+            System.out.println("  Fecha último conteo anterior: " + tablaGerm.getFechaUltConteo());
+            System.out.println("  Fecha último conteo nueva: " + solicitud.getFechaUltConteo());
+            
+            // Verificar si necesitamos reiniciar campos del último conteo ANTES de actualizar
+            boolean debeReiniciarCamposUltimoConteo = false;
+            if (solicitud.getFechaUltConteo() != null && tablaGerm.getFechaUltConteo() != null) {
+                java.time.LocalDate hoy = java.time.LocalDate.now();
+                boolean fechaAnteriorEsPresenteOPasada = !tablaGerm.getFechaUltConteo().isAfter(hoy);
+                boolean fechaNuevaEsFutura = solicitud.getFechaUltConteo().isAfter(hoy);
+                
+                System.out.println("  Fecha anterior es presente/pasada: " + fechaAnteriorEsPresenteOPasada);
+                System.out.println("  Fecha nueva es futura: " + fechaNuevaEsFutura);
+                
+                if (fechaAnteriorEsPresenteOPasada && fechaNuevaEsFutura) {
+                    debeReiniciarCamposUltimoConteo = true;
+                    System.out.println("  ⚠️ Se detectó cambio de fecha último conteo a futuro - se reiniciarán campos");
+                }
+            }
+            
             // Manejar edición de análisis finalizado según el rol del usuario
             analisisService.manejarEdicionAnalisisFinalizado(tablaGerm.getGerminacion());
             
             // Validar datos de la solicitud
             validarDatosTablaGerm(solicitud, tablaGerm.getGerminacion());
+            
+            // Si necesitamos reiniciar campos, hacerlo ANTES de actualizar la entidad
+            if (debeReiniciarCamposUltimoConteo) {
+                reiniciarCamposUltimoConteo(tablaGerm);
+            }
             
             actualizarEntidadDesdeSolicitud(tablaGerm, solicitud);
             
@@ -622,9 +647,11 @@ public class TablaGermService {
         if (solicitud.getFechaInicioGerm() != null) {
             tablaGerm.setFechaInicioGerm(solicitud.getFechaInicioGerm());
         }
+        
         if (solicitud.getFechaUltConteo() != null) {
             tablaGerm.setFechaUltConteo(solicitud.getFechaUltConteo());
         }
+        
         if (solicitud.getNumDias() != null) {
             tablaGerm.setNumDias(solicitud.getNumDias());
         }
@@ -650,6 +677,45 @@ public class TablaGermService {
                 }
             }
         }
+    }
+    
+    /**
+     * Reiniciar campos del último conteo (anormales, duras, frescas, muertas) cuando 
+     * la fecha de último conteo cambia de presente/pasada a futura
+     */
+    private void reiniciarCamposUltimoConteo(TablaGerm tablaGerm) {
+        System.out.println("🔄 Reiniciando campos del último conteo para tabla ID: " + tablaGerm.getTablaGermID());
+        
+        // Cargar repeticiones explícitamente desde la base de datos
+        List<RepGerm> repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());
+        
+        System.out.println("  📊 Repeticiones encontradas: " + repeticiones.size());
+        
+        if (repeticiones != null && !repeticiones.isEmpty()) {
+            for (RepGerm rep : repeticiones) {
+                System.out.println("  📝 Limpiando repetición " + rep.getNumRep() + 
+                    " (ID: " + rep.getRepGermID() + ")" +
+                    " - Valores anteriores: anormales=" + rep.getAnormales() + 
+                    ", duras=" + rep.getDuras() + 
+                    ", frescas=" + rep.getFrescas() + 
+                    ", muertas=" + rep.getMuertas());
+                
+                // Establecer todos los campos del último conteo a 0
+                rep.setAnormales(0);
+                rep.setDuras(0);
+                rep.setFrescas(0);
+                rep.setMuertas(0);
+                
+                RepGerm repGuardada = repGermRepository.save(rep);
+                System.out.println("  ✅ Repetición " + rep.getNumRep() + " limpiada - Nuevos valores: anormales=" + 
+                    repGuardada.getAnormales() + ", duras=" + repGuardada.getDuras() + 
+                    ", frescas=" + repGuardada.getFrescas() + ", muertas=" + repGuardada.getMuertas());
+            }
+        } else {
+            System.out.println("  ⚠️ No se encontraron repeticiones para limpiar");
+        }
+        
+        System.out.println("✅ Campos del último conteo reiniciados completamente");
     }
     
     /**
