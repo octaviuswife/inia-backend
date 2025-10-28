@@ -1,6 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -96,6 +97,27 @@ public class TablaGermService {
      * Validar datos de la tabla de germinación
      */
     private void validarDatosTablaGerm(TablaGermRequestDTO solicitud, Germinacion germinacion) {
+        // Validar campos obligatorios
+        if (solicitud.getFechaFinal() == null) {
+            throw new RuntimeException("La fecha final es obligatoria");
+        }
+        
+        if (solicitud.getTratamiento() == null || solicitud.getTratamiento().trim().isEmpty()) {
+            throw new RuntimeException("El tratamiento es obligatorio");
+        }
+        
+        if (solicitud.getMetodo() == null || solicitud.getMetodo().trim().isEmpty()) {
+            throw new RuntimeException("El método es obligatorio");
+        }
+        
+        if (solicitud.getNumSemillasPRep() == null || solicitud.getNumSemillasPRep() <= 0) {
+            throw new RuntimeException("El número de semillas por repetición es obligatorio y debe ser mayor a 0");
+        }
+        
+        if (solicitud.getTemperatura() == null || solicitud.getTemperatura().trim().isEmpty()) {
+            throw new RuntimeException("La temperatura es obligatoria");
+        }
+        
         // Validar fechas de germinación
         if (solicitud.getFechaInicioGerm() == null) {
             throw new RuntimeException("La fecha de inicio de germinación es obligatoria");
@@ -110,13 +132,30 @@ public class TablaGermService {
             throw new RuntimeException("La fecha de último conteo debe ser posterior a la fecha de inicio de germinación");
         }
         
+        // Validar fechaFinal (debe estar entre fechaInicioGerm y fechaUltConteo, o después)
+        if (solicitud.getFechaFinal().isBefore(solicitud.getFechaInicioGerm())) {
+            throw new RuntimeException("La fecha final debe ser posterior o igual a la fecha de inicio de germinación");
+        }
+        
+        if (solicitud.getFechaFinal().isBefore(solicitud.getFechaUltConteo())) {
+            throw new RuntimeException("La fecha final debe ser igual o posterior a la fecha de último conteo");
+        }
+        
         // Validar parámetros de repeticiones y conteos
         if (solicitud.getNumeroRepeticiones() == null || solicitud.getNumeroRepeticiones() <= 0) {
             throw new RuntimeException("Debe especificar un número válido de repeticiones (mayor a 0)");
         }
         
+        if (solicitud.getNumeroRepeticiones() < 1 || solicitud.getNumeroRepeticiones() > 20) {
+            throw new RuntimeException("El número de repeticiones debe estar entre 1 y 20");
+        }
+        
         if (solicitud.getNumeroConteos() == null || solicitud.getNumeroConteos() <= 0) {
             throw new RuntimeException("Debe especificar un número válido de conteos (mayor a 0)");
+        }
+        
+        if (solicitud.getNumeroConteos() < 1 || solicitud.getNumeroConteos() > 15) {
+            throw new RuntimeException("El número de conteos debe estar entre 1 y 15");
         }
         
         // Validar fechas de conteos
@@ -175,10 +214,10 @@ public class TablaGermService {
                     " debe estar entre la fecha de inicio y la fecha de último conteo");
             }
             
-            // Validar orden cronológico
-            if (i > 0 && !fechaConteo.isAfter(solicitud.getFechaConteos().get(i - 1))) {
+            // Validar orden cronológico - debe ser igual o posterior al anterior
+            if (i > 0 && fechaConteo.isBefore(solicitud.getFechaConteos().get(i - 1))) {
                 throw new RuntimeException("La fecha de conteo " + (i + 1) + 
-                    " debe ser posterior a la fecha de conteo " + i);
+                    " debe ser igual o posterior a la fecha de conteo " + i);
             }
         }
     }
@@ -381,6 +420,9 @@ public class TablaGermService {
                 throw new RuntimeException("No se puede finalizar la tabla. Faltan repeticiones por completar.");
             }
             
+            // Validar que todas las repeticiones cumplan con el rango de tolerancia del 5%
+            validarRangoToleranciaRepeticiones(tabla);
+            
             // Validar que los campos de porcentaje con redondeo estén ingresados
             if (!camposPorcentajeCompletos(tabla)) {
                 throw new RuntimeException("No se puede finalizar la tabla. Debe ingresar todos los porcentajes con redondeo.");
@@ -394,6 +436,38 @@ public class TablaGermService {
             return mapearEntidadADTO(tablaActualizada);
         } else {
             throw new RuntimeException("Tabla no encontrada con ID: " + tablaId);
+        }
+    }
+    
+    /**
+     * Validar que todas las repeticiones estén dentro del rango de tolerancia del 5%
+     */
+    private void validarRangoToleranciaRepeticiones(TablaGerm tabla) {
+        if (tabla.getRepGerm() == null || tabla.getRepGerm().isEmpty()) {
+            return;
+        }
+        
+        Integer numSemillasPRep = tabla.getNumSemillasPRep();
+        if (numSemillasPRep == null) {
+            return;
+        }
+        
+        int limiteMinimo = (int) Math.floor(numSemillasPRep * 0.95);
+        int limiteMaximo = (int) Math.ceil(numSemillasPRep * 1.05);
+        
+        List<String> repeticionesFueraDeRango = new ArrayList<>();
+        
+        for (RepGerm rep : tabla.getRepGerm()) {
+            Integer total = rep.getTotal();
+            if (total != null && (total < limiteMinimo || total > limiteMaximo)) {
+                repeticionesFueraDeRango.add("Repetición " + rep.getNumRep() + " (total: " + total + ")");
+            }
+        }
+        
+        if (!repeticionesFueraDeRango.isEmpty()) {
+            throw new RuntimeException("No se puede finalizar la tabla. Las siguientes repeticiones están fuera del rango de tolerancia del 5% (" + 
+                limiteMinimo + "-" + limiteMaximo + " semillas): " + String.join(", ", repeticionesFueraDeRango) + 
+                ". Se perdió más del 5% de las semillas o hay un exceso.");
         }
     }
 

@@ -35,7 +35,7 @@ public class TablaGermDTO {
     private String productoYDosis;
     private Integer numSemillasPRep;
     private String metodo;
-    private Double temperatura;
+    private String temperatura;
     
     // Campos de prefrío (boolean + descripción + días)
     private Boolean tienePrefrio;
