@@ -466,8 +466,48 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para Pureza
+            this::validarAntesDeFinalizar
         );
+    }
+
+    /**
+     * Validación básica previa a la finalización de un análisis de Pureza.
+     * Requiere al menos una forma de evidencia: datos de pesos registrados (semilla pura, materia inerte, etc.),
+     * datos INASE o listados no vacíos. Si no hay evidencia lanza RuntimeException.
+     */
+    private void validarAntesDeFinalizar(Pureza pureza) {
+        // Verificar si tiene datos de pesos registrados (campos Redon)
+        boolean tieneDatosRedon = pureza.getRedonSemillaPura() != null
+                || pureza.getRedonMateriaInerte() != null
+                || pureza.getRedonOtrosCultivos() != null
+                || pureza.getRedonMalezas() != null
+                || pureza.getRedonMalezasToleradas() != null
+                || pureza.getRedonMalezasTolCero() != null;
+
+        // Verificar si tiene datos INASE
+        boolean tieneDatosINASE = (pureza.getInaseFecha() != null)
+                && (pureza.getInasePura() != null
+                    || pureza.getInaseMateriaInerte() != null
+                    || pureza.getInaseOtrosCultivos() != null
+                    || pureza.getInaseMalezas() != null
+                    || pureza.getInaseMalezasToleradas() != null
+                    || pureza.getInaseMalezasTolCero() != null);
+
+        // Verificar si tiene listados
+        boolean tieneListados = pureza.getListados() != null && !pureza.getListados().isEmpty();
+
+        // Validar que tenga al menos una forma de evidencia
+        if (!tieneDatosRedon && !tieneDatosINASE && !tieneListados) {
+            throw new RuntimeException("No se puede finalizar: el análisis de Pureza carece de evidencia. Agregue datos de pesos (Redon), datos INASE o listados antes de finalizar.");
+        }
+
+        // Validaciones adicionales de pesos si están presentes
+        if (pureza.getPesoInicial_g() != null && pureza.getPesoInicial_g().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El peso inicial debe ser mayor que 0");
+        }
+        if (pureza.getPesoTotal_g() != null && pureza.getPesoTotal_g().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El peso total debe ser mayor que 0");
+        }
     }
 
     /**
@@ -478,7 +518,7 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null, // No hay validación específica para Pureza
+            this::validarAntesDeFinalizar,
             purezaRepository::findByIdLote // Función para buscar por lote
         );
     }
@@ -491,7 +531,7 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para Pureza
+            this::validarAntesDeFinalizar
         );
     }
 }
