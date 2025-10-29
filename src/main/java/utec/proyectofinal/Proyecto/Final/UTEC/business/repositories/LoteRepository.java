@@ -38,4 +38,11 @@ public interface LoteRepository extends JpaRepository<Lote, Long>, JpaSpecificat
     long countLotesInactivos();
 
     Optional<Lote> findByNomLote(String nomLote);
+    
+    // Buscar lote por ID con cultivar y especie cargados (JOIN FETCH)
+    @Query("SELECT l FROM Lote l " +
+           "LEFT JOIN FETCH l.cultivar c " +
+           "LEFT JOIN FETCH c.especie " +
+           "WHERE l.loteID = :id")
+    Optional<Lote> findByIdWithCultivarAndEspecie(Long id);
 }

@@ -135,6 +135,9 @@ public class RepGermService {
         
         RepGerm repGerm = new RepGerm();
         
+        // Asignar la tabla asociada
+        repGerm.setTablaGerm(tablaGerm);
+        
         // Generar numRep automáticamente (siguiente número disponible)
         Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGerm.getTablaGermID());
         repGerm.setNumRep(repeticionesExistentes.intValue() + 1);

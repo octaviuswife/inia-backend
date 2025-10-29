@@ -218,7 +218,8 @@ public class LoteService {
 
     // Obtener Lote por ID (completo)
     public LoteDTO obtenerLotePorId(Long id) {
-        Optional<Lote> lote = loteRepository.findById(id);
+        // Usar JOIN FETCH para cargar cultivar y especie en una sola query
+        Optional<Lote> lote = loteRepository.findByIdWithCultivarAndEspecie(id);
         if (lote.isPresent()) {
             return mapearEntidadADTO(lote.get());
         }
@@ -623,6 +624,11 @@ public class LoteService {
         if (lote.getCultivar() != null) {
             dto.setCultivarID(lote.getCultivar().getCultivarID());
             dto.setCultivarNombre(lote.getCultivar().getNombre());
+            
+            // Mapear especie del cultivar
+            if (lote.getCultivar().getEspecie() != null) {
+                dto.setEspecieNombre(lote.getCultivar().getEspecie().getNombreComun());
+            }
         }
 
         if (lote.getCliente() != null) {

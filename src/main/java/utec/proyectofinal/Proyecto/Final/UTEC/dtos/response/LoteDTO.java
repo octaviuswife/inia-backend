@@ -13,6 +13,7 @@ public class LoteDTO {
     private String nomLote;
     private Long cultivarID;
     private String cultivarNombre;
+    private String especieNombre;
     private String tipo;
     private Long empresaID;
     private String empresaNombre;

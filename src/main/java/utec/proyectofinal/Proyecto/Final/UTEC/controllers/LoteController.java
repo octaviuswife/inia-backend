@@ -90,12 +90,10 @@ public class LoteController {
     @Operation(summary = "Obtener lotes paginadas con filtros", description = "Obtiene la lista paginada de lotes con soporte para búsqueda y filtros")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<org.springframework.data.domain.Page<LoteSimpleDTO>> obtenerLotesPaginadas(
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
+            org.springframework.data.domain.Pageable pageable,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String search,
             @org.springframework.web.bind.annotation.RequestParam(required = false) Boolean activo,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String cultivar) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
         org.springframework.data.domain.Page<LoteSimpleDTO> response = loteService.obtenerLotesSimplePaginadasConFiltros(pageable, search, activo, cultivar);
         return ResponseEntity.ok(response);
     }

@@ -53,16 +53,12 @@ public class FiltroJWTAutorizacion extends OncePerRequestFilter {
         @SuppressWarnings("unchecked")
         List<String> autorizaciones = (List<String>) claims.get("authorities");
         
-        // Debug: Ver qué roles vienen en el JWT
-        System.out.println("🔑 [FiltroJWT] Usuario del token: " + claims.getSubject());
-        System.out.println("🔑 [FiltroJWT] Roles en JWT: " + autorizaciones);
         
         // Agregar prefijo ROLE_ para que funcione con hasRole()
         List<SimpleGrantedAuthority> authorities = autorizaciones.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
         
-        System.out.println("🔑 [FiltroJWT] Authorities con prefijo: " + authorities);
         
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
@@ -72,32 +68,25 @@ public class FiltroJWTAutorizacion extends OncePerRequestFilter {
      * Extrae el token JWT desde cookies (preferible) o desde el header Authorization (fallback).
      */
     private String extraerToken(HttpServletRequest request) {
-        System.out.println("🔍 [FiltroJWT] Extrayendo token de request: " + request.getRequestURI());
         
         // 1) Intentar obtener desde cookie HttpOnly (método seguro)
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
-            System.out.println("🍪 [FiltroJWT] Cookies encontradas: " + cookies.length);
             for (Cookie cookie : cookies) {
-                System.out.println("   - Cookie: " + cookie.getName() + " = " + (cookie.getValue().length() > 20 ? cookie.getValue().substring(0, 20) + "..." : cookie.getValue()));
                 if (ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {
-                    System.out.println("✅ [FiltroJWT] Token encontrado en cookie accessToken");
                     return cookie.getValue();
                 }
             }
-            System.out.println("⚠️ [FiltroJWT] No se encontró cookie accessToken");
         } else {
-            System.out.println("⚠️ [FiltroJWT] No hay cookies en la petición");
+            System.out.println("No se encontraron cookies en la solicitud.");
         }
         
         // 2) Fallback: obtener desde header Authorization (compatibilidad temporal)
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            System.out.println("✅ [FiltroJWT] Token encontrado en header Authorization (fallback)");
             return authHeader.replace("Bearer ", "");
         }
         
-        System.out.println("❌ [FiltroJWT] No se encontró token en cookies ni en header");
         return null;
     }
 
