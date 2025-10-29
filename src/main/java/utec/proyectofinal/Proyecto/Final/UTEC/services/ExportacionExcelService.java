@@ -253,7 +253,7 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getPurezaOtrosCultivos(), style);
         crearCelda(row, col++, datos.getPurezaMalezas(), style);
         crearCelda(row, col++, datos.getPurezaMalezasToleradas(), style);
-        crearCelda(row, col++, datos.getPurezaMateriaTotal(), style);
+        crearCelda(row, col++, datos.getPurezaMalezasToleranciaC(), style);
         
         // P-U: Pureza INASE (índices 15-20) - 6 columnas
         crearCelda(row, col++, datos.getPurezaInaseSemillaPura(), style);
@@ -261,13 +261,13 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getPurezaInaseOtrosCultivos(), style);
         crearCelda(row, col++, datos.getPurezaInaseMalezas(), style);
         crearCelda(row, col++, datos.getPurezaInaseMalezasToleradas(), style);
-        crearCelda(row, col++, datos.getPurezaInaseMateriaTotal(), style);
+        crearCelda(row, col++, datos.getPurezaInaseMalezasToleranciaC(), style);
         
         // V-Y: Descripción (índices 21-24) - 4 columnas
         crearCelda(row, col++, datos.getDescripcionMalezas(), style);
         crearCelda(row, col++, datos.getDescripcionOtrosCultivos(), style);
         crearCelda(row, col++, datos.getDescripcionMalezasToleradas(), style);
-        crearCelda(row, col++, datos.getDescripcionMateriaTotal(), style);
+        crearCelda(row, col++, datos.getDescripcionMalezasToleranciaC(), style);
         
         // Z-AD: DOSN (índices 25-29) - 5 columnas
         crearCelda(row, col++, datos.getDosnMalezasToleranciaC(), style);  // MTC
@@ -331,6 +331,21 @@ public class ExportacionExcelService {
         }
         
         cell.setCellStyle(style);
+    }
+
+    private String combinarDescripciones(String descripcionInia, String descripcionInase) {
+        boolean tieneInia = descripcionInia != null && !descripcionInia.trim().isEmpty();
+        boolean tieneInase = descripcionInase != null && !descripcionInase.trim().isEmpty();
+        
+        if (tieneInia && tieneInase) {
+            return descripcionInia + " | " + descripcionInase;
+        } else if (tieneInia) {
+            return descripcionInia;
+        } else if (tieneInase) {
+            return descripcionInase;
+        } else {
+            return "";
+        }
     }
 
     private List<DatosExportacionExcelDTO> obtenerDatosParaExportacion(List<Long> loteIds) {
@@ -513,8 +528,7 @@ public class ExportacionExcelService {
             dto.setPurezaOtrosCultivos(pureza.getRedonOtrosCultivos());
             dto.setPurezaMalezas(pureza.getRedonMalezas());
             dto.setPurezaMalezasToleradas(pureza.getRedonMalezasToleradas());
-            // TODO: Campo 'redonMateriaTotal' no existe en entidad Pureza
-            dto.setPurezaMateriaTotal(null);
+            dto.setPurezaMalezasToleranciaC(pureza.getRedonMalezasTolCero());
             
             // Datos INASE
             dto.setPurezaInaseSemillaPura(pureza.getInasePura());
@@ -522,8 +536,7 @@ public class ExportacionExcelService {
             dto.setPurezaInaseOtrosCultivos(pureza.getInaseOtrosCultivos());
             dto.setPurezaInaseMalezas(pureza.getInaseMalezas());
             dto.setPurezaInaseMalezasToleradas(pureza.getInaseMalezasToleradas());
-            // TODO: Campo 'inaseMateriaTotal' no existe en entidad Pureza
-            dto.setPurezaInaseMateriaTotal(null);
+            dto.setPurezaInaseMalezasToleranciaC(pureza.getInaseMalezasTolCero());
             
             if (pureza.getFecha() != null) {
                 dto.setFechaAnalisis(pureza.getFecha());
@@ -532,10 +545,18 @@ public class ExportacionExcelService {
             // Mapear descripción de malezas y otros cultivos desde listados
             if (pureza.getListados() != null && !pureza.getListados().isEmpty()) {
                 System.out.println("Listados encontrados: " + pureza.getListados().size());
+                
+                // Variables para INIA
                 StringBuilder descripcionMalezas = new StringBuilder();
                 StringBuilder descripcionOtrosCultivos = new StringBuilder();
                 StringBuilder descripcionMalezasToleradas = new StringBuilder();
-                StringBuilder descripcionMateriaTotal = new StringBuilder();
+                StringBuilder descripcionMalezasToleranciaC = new StringBuilder();
+                
+                // Variables para INASE
+                StringBuilder descripcionInaseMalezas = new StringBuilder();
+                StringBuilder descripcionInaseOtrosCultivos = new StringBuilder();
+                StringBuilder descripcionInaseMalezasToleradas = new StringBuilder();
+                StringBuilder descripcionInaseMalezasToleranciaC = new StringBuilder();
                 
                 for (Listado listado : pureza.getListados()) {
                     String nombre = null;
@@ -552,24 +573,73 @@ public class ExportacionExcelService {
                     }
                     
                     if (nombre != null) {
-                        System.out.println("Procesando listado - Nombre: " + nombre + ", Es Maleza: " + esMaleza + ", Es Cultivo: " + esCultivo);
+                        TipoListado tipoListado = listado.getListadoTipo();
+                        Instituto instituto = listado.getListadoInsti();
                         
-                        if (esMaleza) {
-                            if (descripcionMalezas.length() > 0) descripcionMalezas.append(", ");
-                            descripcionMalezas.append(nombre);
-                        } else if (esCultivo) {
-                            if (descripcionOtrosCultivos.length() > 0) descripcionOtrosCultivos.append(", ");
-                            descripcionOtrosCultivos.append(nombre);
+                        System.out.println("Procesando listado - Nombre: " + nombre + ", Tipo: " + tipoListado + ", Instituto: " + instituto);
+                        
+                        // Procesar según el tipo de listado y el instituto
+                        if (instituto == Instituto.INIA) {
+                            // PUREZA INIA
+                            if (tipoListado == TipoListado.MAL_TOLERANCIA_CERO) {
+                                if (descripcionMalezasToleranciaC.length() > 0) descripcionMalezasToleranciaC.append(", ");
+                                descripcionMalezasToleranciaC.append(nombre);
+                            } else if (esMaleza) {
+                                if (tipoListado == TipoListado.MAL_TOLERANCIA) {
+                                    if (descripcionMalezasToleradas.length() > 0) descripcionMalezasToleradas.append(", ");
+                                    descripcionMalezasToleradas.append(nombre);
+                                } else {
+                                    if (descripcionMalezas.length() > 0) descripcionMalezas.append(", ");
+                                    descripcionMalezas.append(nombre);
+                                }
+                            } else if (esCultivo) {
+                                if (descripcionOtrosCultivos.length() > 0) descripcionOtrosCultivos.append(", ");
+                                descripcionOtrosCultivos.append(nombre);
+                            }
+                        } else if (instituto == Instituto.INASE) {
+                            // PUREZA INASE
+                            if (tipoListado == TipoListado.MAL_TOLERANCIA_CERO) {
+                                if (descripcionInaseMalezasToleranciaC.length() > 0) descripcionInaseMalezasToleranciaC.append(", ");
+                                descripcionInaseMalezasToleranciaC.append(nombre);
+                            } else if (esMaleza) {
+                                if (tipoListado == TipoListado.MAL_TOLERANCIA) {
+                                    if (descripcionInaseMalezasToleradas.length() > 0) descripcionInaseMalezasToleradas.append(", ");
+                                    descripcionInaseMalezasToleradas.append(nombre);
+                                } else {
+                                    if (descripcionInaseMalezas.length() > 0) descripcionInaseMalezas.append(", ");
+                                    descripcionInaseMalezas.append(nombre);
+                                }
+                            } else if (esCultivo) {
+                                if (descripcionInaseOtrosCultivos.length() > 0) descripcionInaseOtrosCultivos.append(", ");
+                                descripcionInaseOtrosCultivos.append(nombre);
+                            }
                         }
                     }
                 }
                 
-                dto.setDescripcionMalezas(descripcionMalezas.toString());
-                dto.setDescripcionOtrosCultivos(descripcionOtrosCultivos.toString());
-                dto.setDescripcionMalezasToleradas(descripcionMalezasToleradas.toString());
-                dto.setDescripcionMateriaTotal(descripcionMateriaTotal.toString());
+                // Combinar descripciones de INIA e INASE en las mismas columnas (V-Y)
+                // Si hay datos de ambos institutos, se separan con " | "
                 
-                System.out.println("Descripciones - Malezas: " + dto.getDescripcionMalezas() + ", Otros cultivos: " + dto.getDescripcionOtrosCultivos());
+                String malezasFinales = combinarDescripciones(descripcionMalezas.toString(), descripcionInaseMalezas.toString());
+                String cultivosFinales = combinarDescripciones(descripcionOtrosCultivos.toString(), descripcionInaseOtrosCultivos.toString());
+                String toleradasFinales = combinarDescripciones(descripcionMalezasToleradas.toString(), descripcionInaseMalezasToleradas.toString());
+                String tolCeroFinales = combinarDescripciones(descripcionMalezasToleranciaC.toString(), descripcionInaseMalezasToleranciaC.toString());
+                
+                dto.setDescripcionMalezas(malezasFinales);
+                dto.setDescripcionOtrosCultivos(cultivosFinales);
+                dto.setDescripcionMalezasToleradas(toleradasFinales);
+                dto.setDescripcionMalezasToleranciaC(tolCeroFinales);
+                
+                // Guardar también las versiones separadas por instituto (para uso futuro si se necesitan columnas separadas)
+                dto.setDescripcionInaseMalezas(descripcionInaseMalezas.toString());
+                dto.setDescripcionInaseOtrosCultivos(descripcionInaseOtrosCultivos.toString());
+                dto.setDescripcionInaseMalezasToleradas(descripcionInaseMalezasToleradas.toString());
+                dto.setDescripcionInaseMalezasToleranciaC(descripcionInaseMalezasToleranciaC.toString());
+                
+                System.out.println("Descripciones Finales - Malezas: " + malezasFinales + 
+                                   ", Toleradas: " + toleradasFinales + 
+                                   ", Tol. Cero: " + tolCeroFinales + 
+                                   ", Otros cultivos: " + cultivosFinales);
             } else {
                 System.out.println("No se encontraron listados para este análisis de pureza");
             }
