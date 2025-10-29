@@ -191,7 +191,7 @@ public class ExportacionExcelService {
         Row row1 = sheet.createRow(1);
         String[] subEncabezados = {
             // A-I: Datos básicos (índices 0-8)
-            "Especie", "Variedad", "Lote", "Deposito", "N° de articulo", "N° análisis", "Nro. Ficha", "Kilos", "H%",
+            "Especie", "Variedad", "Ficha", "Deposito", "N° de articulo", "N° análisis", "Lote", "Kilos", "H%",
             // J-O: Pureza INIA (índices 9-14)
             "SP%", "MI%", "OC%", "M%", "MT.%", "M.T.C%",
             // P-U: Pureza INASE (índices 15-20)
@@ -243,7 +243,7 @@ public class ExportacionExcelService {
         crearCelda(row, col++, datos.getDeposito(), style);
         crearCelda(row, col++, datos.getNumeroArticulo(), style);
         crearCelda(row, col++, datos.getNumeroAnalisis(), style);
-        crearCelda(row, col++, datos.getNumeroFicha(), style);
+        crearCelda(row, col++, datos.getNombreLote(), style);  // Nombre del lote en lugar de número de ficha
         crearCelda(row, col++, datos.getKilos(), style);
         crearCelda(row, col++, datos.getHumedad(), style);
         
@@ -473,6 +473,7 @@ public class ExportacionExcelService {
         
         // Datos del lote
         dto.setLote(lote.getFicha());
+        dto.setNombreLote(lote.getNomLote());  // ✅ NUEVO: Nombre del lote
         dto.setKilos(lote.getKilosLimpios() != null ? lote.getKilosLimpios().toString() : "");
         
         // Número de análisis (usando el ID del lote como referencia temporal)
@@ -632,11 +633,11 @@ public class ExportacionExcelService {
         if (!analisisTetrazolio.isEmpty()) {
             Tetrazolio tetrazolio = analisisTetrazolio.get(0);
             
-            // Datos de viabilidad INIA
+            // Datos de viabilidad INIA (columna AY)
             dto.setViabilidadPorcentaje(tetrazolio.getPorcViablesRedondeo());
             
-            // Para INASE, por ahora usar el mismo valor (podrías tener campos separados)
-            dto.setViabilidadInasePorcentaje(tetrazolio.getPorcViablesRedondeo());
+            // ✅ Datos de viabilidad INASE (columna AZ) - usar el campo viabilidadInase
+            dto.setViabilidadInasePorcentaje(tetrazolio.getViabilidadInase());
         }
     }
 
