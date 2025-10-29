@@ -27,10 +27,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaReposi
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.LoteSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DatosHumedadDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteListadoDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ValidacionLoteDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.*;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
@@ -42,8 +40,29 @@ public class LoteService {
     @Autowired
     private LoteRepository loteRepository;
     
+    // Método para validar campos únicos
+    public ValidacionLoteResponseDTO validarCamposUnicos(ValidacionLoteDTO solicitud) {
+        ValidacionLoteResponseDTO resultado = new ValidacionLoteResponseDTO();
+        
+        // Verificar ficha
+        if (solicitud.getFicha() != null && !solicitud.getFicha().isEmpty()) {
+            boolean fichaExiste = loteRepository.findByFicha(solicitud.getFicha())
+                .stream()
+                .anyMatch(lote -> !lote.getLoteID().equals(solicitud.getLoteID()));
+            resultado.setFichaExiste(fichaExiste);
+        }
+        
+        // Verificar nombre del lote
+        if (solicitud.getNomLote() != null && !solicitud.getNomLote().isEmpty()) {
+            boolean nomLoteExiste = loteRepository.findByNomLote(solicitud.getNomLote())
+                .stream()
+                .anyMatch(lote -> !lote.getLoteID().equals(solicitud.getLoteID()));
+            resultado.setNomLoteExiste(nomLoteExiste);
+        }
+        
+        return resultado;
+    }
 
-    
     @Autowired
     private CultivarRepository cultivarRepository;
     

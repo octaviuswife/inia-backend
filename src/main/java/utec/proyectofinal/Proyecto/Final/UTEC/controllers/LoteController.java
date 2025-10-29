@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ValidacionLoteDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ValidacionLoteResponseDTO;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,6 +39,15 @@ public class LoteController {
 
     @Autowired
     private LoteService loteService;
+
+    // Validar campos únicos
+    @PostMapping("/validar-campos")
+    @Operation(summary = "Validar campos únicos", description = "Valida si la ficha y nombre de lote ya existen")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA')")
+    public ResponseEntity<ValidacionLoteResponseDTO> validarCamposUnicos(@RequestBody ValidacionLoteDTO solicitud) {
+        ValidacionLoteResponseDTO resultado = loteService.validarCamposUnicos(solicitud);
+        return ResponseEntity.ok(resultado);
+    }
 
     // Crear nuevo Lote
     @PostMapping

@@ -1,5 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,4 +36,6 @@ public interface LoteRepository extends JpaRepository<Lote, Long>, JpaSpecificat
     // Contar lotes inactivos
     @Query("SELECT COUNT(l) FROM Lote l WHERE l.activo = false")
     long countLotesInactivos();
+
+    Optional<Lote> findByNomLote(String nomLote);
 }
