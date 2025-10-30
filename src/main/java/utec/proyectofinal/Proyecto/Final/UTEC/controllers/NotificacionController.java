@@ -8,7 +8,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,9 +25,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.NotificacionRequestDT
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.NotificacionDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.NotificacionService;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/notificaciones")
-@CrossOrigin(origins = "*")
 @Tag(name = "Notificaciones", description = "Gestión de notificaciones del sistema")
 public class NotificacionController {
 

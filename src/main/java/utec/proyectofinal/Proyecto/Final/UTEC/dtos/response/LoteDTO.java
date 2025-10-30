@@ -10,8 +10,10 @@ import java.util.List;
 public class LoteDTO {
     private Long loteID;
     private String ficha;
+    private String nomLote;
     private Long cultivarID;
     private String cultivarNombre;
+    private String especieNombre;
     private String tipo;
     private Long empresaID;
     private String empresaNombre;
@@ -35,7 +37,6 @@ public class LoteDTO {
     private Long numeroArticuloID;
     private String numeroArticuloValor;
     
-    private Double cantidad;
     private Long origenID;
     private String origenValor;
     private Long estadoID;

@@ -20,5 +20,8 @@ public class Especie {
 
     @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Cultivar> cultivares;
+
+    @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Listado> listados;
 }
 

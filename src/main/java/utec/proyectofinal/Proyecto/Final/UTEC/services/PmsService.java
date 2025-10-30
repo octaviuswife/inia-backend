@@ -4,9 +4,11 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepPmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PmsSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EstadisticasTandaDTO;
@@ -91,25 +94,32 @@ public class PmsService {
         }
     }
 
-    // Eliminar Pms (cambia estado a INACTIVO)
+    // Eliminar Pms (desactivar - cambia activo a false)
     public void eliminarPms(Long id) {
         Optional<Pms> existente = pmsRepository.findById(id);
 
         if (existente.isPresent()) {
             Pms pms = existente.get();
-            pms.setEstado(Estado.INACTIVO);
+            pms.setActivo(false);
             pmsRepository.save(pms);
         } else {
             throw new RuntimeException("Pms no encontrado con ID: " + id);
         }
     }
 
+    // Desactivar PMS (cambiar activo a false)
+    public void desactivarPms(Long id) {
+        analisisService.desactivarAnalisis(id, pmsRepository);
+    }
+
+    // Reactivar PMS (cambiar activo a true)
+    public PmsDTO reactivarPms(Long id) {
+        return analisisService.reactivarAnalisis(id, pmsRepository, this::mapearEntidadADTO);
+    }
+
     // Listar todos los Pms activos
     public List<PmsDTO> obtenerTodos() {
-        List<Pms> activos = pmsRepository.findAll()
-                .stream()
-                .filter(p -> p.getEstado() != Estado.INACTIVO)
-                .collect(Collectors.toList());
+        List<Pms> activos = pmsRepository.findByActivoTrue();
 
         return activos.stream()
                 .map(this::mapearEntidadADTO)
@@ -134,9 +144,43 @@ public class PmsService {
                 .collect(Collectors.toList());
     }
 
-    // Listar Pms con paginado (para listado)
+    // Listar PMS con paginado (para listado)
     public Page<PmsListadoDTO> obtenerPmsPaginadas(Pageable pageable) {
-        Page<Pms> pmsPage = pmsRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Pms> pmsPage = pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+        return pmsPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar PMS con paginado y filtro de activo
+    public Page<PmsListadoDTO> obtenerPmsPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Pms> pmsPage;
+        
+        switch (filtroActivo.toLowerCase()) {
+            case "activos":
+                pmsPage = pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+                break;
+            case "inactivos":
+                pmsPage = pmsRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+                break;
+            default: // "todos"
+                pmsPage = pmsRepository.findAllByOrderByFechaInicioDesc(pageable);
+                break;
+        }
+        
+        return pmsPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar PMS con paginado y filtros dinámicos
+     */
+    public Page<PmsListadoDTO> obtenerPmsPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Pms> spec = PmsSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Pms> pmsPage = pmsRepository.findAll(spec, pageable);
         return pmsPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -146,10 +190,23 @@ public class PmsService {
         dto.setEstado(pms.getEstado());
         dto.setFechaInicio(pms.getFechaInicio());
         dto.setFechaFin(pms.getFechaFin());
+        dto.setActivo(pms.getActivo());
+        
+        // Campos específicos de PMS
+        dto.setPms_g(pms.getPmsconRedon());
+        dto.setCoeficienteVariacion(pms.getCoefVariacion());
+        
         if (pms.getLote() != null) {
             dto.setIdLote(pms.getLote().getLoteID());
-            dto.setLote(pms.getLote().getFicha());
+            dto.setLote(pms.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (pms.getLote().getCultivar() != null && pms.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
+        
         if (pms.getAnalisisID() != null) {
             var historial = analisisHistorialService.obtenerHistorialAnalisis(pms.getAnalisisID());
             if (!historial.isEmpty()) {
@@ -219,61 +276,163 @@ public class PmsService {
             return;
         }
         
-        // PASO 1: Calcular estadísticas con TODAS las repeticiones de la tanda
-        EstadisticasTandaDTO estadisticasIniciales = calcularEstadisticasTanda(repeticionesTanda);
+        // PASO 1: Obtener TODAS las repeticiones del PMS para calcular estadísticas globales
+        List<RepPms> todasLasRepeticiones = repPmsRepository.findByPmsId(pmsId);
         
-        // PASO 2: Identificar y marcar outliers (±2σ de la media)
-        BigDecimal media = estadisticasIniciales.getPromedio();
-        BigDecimal desviacion = estadisticasIniciales.getDesviacion();
+        // PASO 2: Calcular estadísticas con TODAS las repeticiones del PMS (no solo de esta tanda)
+        EstadisticasTandaDTO estadisticasGlobales = calcularEstadisticasTanda(todasLasRepeticiones);
+        
+        // PASO 3: Identificar y marcar outliers (±2σ de la media GLOBAL)
+        BigDecimal media = estadisticasGlobales.getPromedio();
+        BigDecimal desviacion = estadisticasGlobales.getDesviacion();
         BigDecimal umbralInferior = media.subtract(desviacion.multiply(new BigDecimal("2")));
         BigDecimal umbralSuperior = media.add(desviacion.multiply(new BigDecimal("2")));
         
-        // Marcar repeticiones como válidas o inválidas según ±2σ
+        System.out.println("📊 ESTADÍSTICAS GLOBALES DEL PMS (todas las repeticiones):");
+        System.out.println("  Total repeticiones: " + todasLasRepeticiones.size());
+        System.out.println("  Media (μ): " + media);
+        System.out.println("  Desviación (σ): " + desviacion);
+        System.out.println("  Umbral inferior (μ - 2σ): " + umbralInferior);
+        System.out.println("  Umbral superior (μ + 2σ): " + umbralSuperior);
+        System.out.println("📊 VALIDACIÓN DE TANDA " + numTanda + ":");
+        
+        // PASO 4: Marcar repeticiones de esta tanda como válidas o inválidas según ±2σ GLOBAL
         for (RepPms rep : repeticionesTanda) {
             boolean esValida = rep.getPeso().compareTo(umbralInferior) >= 0 && 
                               rep.getPeso().compareTo(umbralSuperior) <= 0;
             rep.setValido(esValida);
+            System.out.println("    Rep #" + rep.getNumRep() + " (Tanda " + numTanda + "): " + rep.getPeso() + "g -> " + 
+                (esValida ? "✅ VÁLIDA" : "❌ INVÁLIDA") +
+                " (comparación: " + rep.getPeso() + " vs [" + umbralInferior + ", " + umbralSuperior + "])");
         }
         repPmsRepository.saveAll(repeticionesTanda);
+        System.out.println("  ✅ Validaciones guardadas en BD");
         
-        // PASO 3: Filtrar solo repeticiones válidas y recalcular estadísticas
+        // PASO 5: Filtrar solo repeticiones válidas de esta tanda y recalcular estadísticas
         List<RepPms> repeticionesValidas = repeticionesTanda.stream()
             .filter(rep -> Boolean.TRUE.equals(rep.getValido()))
             .collect(Collectors.toList());
         
         if (repeticionesValidas.isEmpty()) {
-            // Si no hay repeticiones válidas, incrementar tandas si es posible
+            // Si no hay repeticiones válidas en esta tanda, incrementar tandas si es posible
             if (puedeIncrementarTandas(pms)) {
                 pms.setNumTandas(pms.getNumTandas() + 1);
-                System.out.println("No hay repeticiones válidas. Se incrementa el número de tandas a: " + pms.getNumTandas());
+                System.out.println("No hay repeticiones válidas en tanda " + numTanda + ". Se incrementa el número de tandas a: " + pms.getNumTandas());
             }
             actualizarEstadisticasGenerales(pms);
             pmsRepository.save(pms);
             return;
         }
         
-        // PASO 4: Calcular estadísticas finales solo con repeticiones válidas
-        EstadisticasTandaDTO estadisticasFinales = calcularEstadisticasTanda(repeticionesValidas);
+        // PASO 6: Calcular estadísticas DE LA TANDA con solo repeticiones válidas
+        EstadisticasTandaDTO estadisticasTanda = calcularEstadisticasTanda(repeticionesValidas);
         
-        // PASO 5: Evaluar CV según tipo de semilla
+        // PASO 7: Evaluar CV de la tanda según tipo de semilla
         BigDecimal umbralCV = pms.getEsSemillaBrozosa() ? 
             new BigDecimal("6.0") : new BigDecimal("4.0");
         
-        if (estadisticasFinales.getCoeficienteVariacion().compareTo(umbralCV) > 0) {
+        System.out.println("  CV de la tanda " + numTanda + ": " + estadisticasTanda.getCoeficienteVariacion() + " (umbral: " + umbralCV + ")");
+        
+        if (estadisticasTanda.getCoeficienteVariacion().compareTo(umbralCV) > 0) {
             // CV no aceptable - incrementar tandas si es posible
             if (puedeIncrementarTandas(pms)) {
                 pms.setNumTandas(pms.getNumTandas() + 1);
-                System.out.println("CV no aceptable (" + estadisticasFinales.getCoeficienteVariacion() + " > " + umbralCV + "). Se incrementa el número de tandas a: " + pms.getNumTandas());
+                System.out.println("  ⚠️ CV no aceptable. Se incrementa el número de tandas a: " + pms.getNumTandas());
             } else {
-                System.out.println("CV no aceptable pero se alcanzó el límite máximo de 16 repeticiones. No se pueden agregar más tandas.");
+                System.out.println("  ⚠️ CV no aceptable pero se alcanzó el límite máximo de 16 repeticiones.");
             }
+        } else {
+            System.out.println("  ✅ CV aceptable para la tanda " + numTanda);
         }
-        // Si CV es aceptable, no hacer nada automático - el usuario debe finalizar manualmente
         
-        // PASO 6: Actualizar estadísticas generales del PMS
+        // PASO 8: Actualizar estadísticas generales del PMS
         actualizarEstadisticasGenerales(pms);
         
         pmsRepository.save(pms);
+    }
+    
+    /**
+     * Valida TODAS las repeticiones del PMS usando estadísticas globales (±2σ).
+     * Se ejecuta cada vez que se crea, edita o elimina una repetición.
+     * No considera tandas - simplemente valida todas las repeticiones contra la media global.
+     */
+    @Transactional
+    public void validarTodasLasRepeticiones(Long pmsId) {
+        System.out.println("🔄 VALIDANDO TODAS LAS REPETICIONES del PMS ID: " + pmsId);
+        
+        Pms pms = pmsRepository.findById(pmsId)
+            .orElseThrow(() -> new RuntimeException("PMS no encontrado con ID: " + pmsId));
+        
+        // Obtener todas las repeticiones del PMS
+        List<RepPms> todasLasRepeticiones = repPmsRepository.findByPmsId(pmsId);
+        
+        if (todasLasRepeticiones.isEmpty()) {
+            System.out.println("  No hay repeticiones para validar");
+            return;
+        }
+        
+        // Si hay menos del mínimo esperado, no validar aún
+        if (todasLasRepeticiones.size() < pms.getNumRepeticionesEsperadas()) {
+            System.out.println("  Repeticiones insuficientes (" + todasLasRepeticiones.size() + " < " + pms.getNumRepeticionesEsperadas() + "), marcando todas como indeterminadas");
+            for (RepPms rep : todasLasRepeticiones) {
+                rep.setValido(null);
+            }
+            repPmsRepository.saveAll(todasLasRepeticiones);
+            actualizarEstadisticasGenerales(pms);
+            pmsRepository.save(pms);
+            return;
+        }
+        
+        // Calcular estadísticas globales con TODAS las repeticiones
+        EstadisticasTandaDTO estadisticasGlobales = calcularEstadisticasTanda(todasLasRepeticiones);
+        BigDecimal media = estadisticasGlobales.getPromedio();
+        BigDecimal desviacion = estadisticasGlobales.getDesviacion();
+        BigDecimal umbralInferior = media.subtract(desviacion.multiply(new BigDecimal("2")));
+        BigDecimal umbralSuperior = media.add(desviacion.multiply(new BigDecimal("2")));
+        
+        System.out.println("📊 ESTADÍSTICAS GLOBALES:");
+        System.out.println("  Total repeticiones: " + todasLasRepeticiones.size());
+        System.out.println("  Media (μ): " + media);
+        System.out.println("  Desviación (σ): " + desviacion);
+        System.out.println("  Umbral inferior (μ - 2σ): " + umbralInferior);
+        System.out.println("  Umbral superior (μ + 2σ): " + umbralSuperior);
+        System.out.println("  Validación:");
+        
+        // Validar TODAS las repeticiones
+        for (RepPms rep : todasLasRepeticiones) {
+            boolean esValida = rep.getPeso().compareTo(umbralInferior) >= 0 && 
+                              rep.getPeso().compareTo(umbralSuperior) <= 0;
+            rep.setValido(esValida);
+            System.out.println("    Rep #" + rep.getNumRep() + " (Tanda " + rep.getNumTanda() + "): " + 
+                rep.getPeso() + "g -> " + (esValida ? "✅ VÁLIDA" : "❌ INVÁLIDA"));
+        }
+        
+        // Guardar todas las validaciones
+        repPmsRepository.saveAll(todasLasRepeticiones);
+        System.out.println("  ✅ Validaciones guardadas");
+        
+        // Verificar CV con repeticiones válidas
+        List<RepPms> repeticionesValidas = todasLasRepeticiones.stream()
+            .filter(rep -> Boolean.TRUE.equals(rep.getValido()))
+            .collect(Collectors.toList());
+        
+        if (repeticionesValidas.size() >= pms.getNumRepeticionesEsperadas()) {
+            EstadisticasTandaDTO estadisticasValidas = calcularEstadisticasTanda(repeticionesValidas);
+            BigDecimal umbralCV = pms.getEsSemillaBrozosa() ? new BigDecimal("6.0") : new BigDecimal("4.0");
+            
+            System.out.println("  CV con repeticiones válidas: " + estadisticasValidas.getCoeficienteVariacion() + " (umbral: " + umbralCV + ")");
+            
+            if (estadisticasValidas.getCoeficienteVariacion().compareTo(umbralCV) > 0 && puedeIncrementarTandas(pms)) {
+                pms.setNumTandas(pms.getNumTandas() + 1);
+                System.out.println("  ⚠️ CV no aceptable. Se incrementa número de tandas a: " + pms.getNumTandas());
+            }
+        }
+        
+        // Actualizar estadísticas generales del PMS
+        actualizarEstadisticasGenerales(pms);
+        pmsRepository.save(pms);
+        
+        System.out.println("✅ Validación completada");
     }
     
     // Método público para actualizar estadísticas generales desde servicios externos
@@ -509,22 +668,28 @@ public class PmsService {
         return false;
     }
 
+    /**
+     * Validación completa para operaciones críticas de PMS (finalizar y marcar para repetir)
+     * Verifica completitud de repeticiones y presencia de promedio con redondeo
+     */
+    private void validarPmsParaOperacionCritica(Pms pms) {
+        // Validación específica de PMS: completitud de repeticiones
+        if (!todasLasRepeticionesCompletas(pms)) {
+            throw new RuntimeException("No se puede completar la operación hasta completar todas las repeticiones válidas");
+        }
+        // Validación específica de PMS: debe tener promedio con redondeo ingresado
+        if (pms.getPmsconRedon() == null) {
+            throw new RuntimeException("Debe ingresar el promedio con redondeo (PMS con redondeo) antes de completar la operación");
+        }
+    }
+
     // Finalizar análisis PMS - cambia estado según rol del usuario
     public PmsDTO finalizarAnalisis(Long id) {
         return analisisService.finalizarAnalisisGenerico(
             id, 
             pmsRepository, 
             this::mapearEntidadADTO,
-            pms -> {
-                // Validación específica de PMS: completitud de repeticiones
-                if (!todasLasRepeticionesCompletas(pms)) {
-                    throw new RuntimeException("No se puede finalizar el análisis hasta completar todas las repeticiones válidas");
-                }
-                // Validación específica de PMS: debe tener promedio con redondeo ingresado
-                if (pms.getPmsconRedon() == null) {
-                    throw new RuntimeException("Debe ingresar el promedio con redondeo (PMS con redondeo) antes de finalizar el análisis");
-                }
-            }
+            this::validarPmsParaOperacionCritica
         );
     }
 
@@ -534,7 +699,8 @@ public class PmsService {
             id,
             pmsRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para aprobar
+            this::validarPmsParaOperacionCritica, // Mismas validaciones que finalizar
+            (idLote) -> pmsRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote
         );
     }
 
@@ -544,7 +710,7 @@ public class PmsService {
             id,
             pmsRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            this::validarPmsParaOperacionCritica // Mismas validaciones que finalizar
         );
     }
 }

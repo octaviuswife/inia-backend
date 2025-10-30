@@ -15,7 +15,8 @@ public class DatosExportacionExcelDTO {
     private String deposito;
     private String numeroArticulo;
     private String numeroAnalisis;
-    private String numeroFicha;
+    private String numeroFicha;  // Mantener por compatibilidad
+    private String nombreLote;    // ✅ NUEVO: Nombre del lote
     private String kilos;
     
     // Datos de humedad
@@ -27,7 +28,7 @@ public class DatosExportacionExcelDTO {
     private BigDecimal purezaOtrosCultivos;
     private BigDecimal purezaMalezas;
     private BigDecimal purezaMalezasToleradas;
-    private BigDecimal purezaMateriaTotal;
+    private BigDecimal purezaMalezasToleranciaC;
     
     // Datos de Pureza INASE
     private BigDecimal purezaInaseSemillaPura;
@@ -35,13 +36,19 @@ public class DatosExportacionExcelDTO {
     private BigDecimal purezaInaseOtrosCultivos;
     private BigDecimal purezaInaseMalezas;
     private BigDecimal purezaInaseMalezasToleradas;
-    private BigDecimal purezaInaseMateriaTotal;
+    private BigDecimal purezaInaseMalezasToleranciaC;
     
-    // Descripción de malezas y otros cultivos
+    // Descripción de malezas y otros cultivos (INIA)
     private String descripcionMalezas;
     private String descripcionOtrosCultivos;
     private String descripcionMalezasToleradas;
-    private String descripcionMateriaTotal;
+    private String descripcionMalezasToleranciaC;
+    
+    // Descripción de malezas y otros cultivos (INASE)
+    private String descripcionInaseMalezas;
+    private String descripcionInaseOtrosCultivos;
+    private String descripcionInaseMalezasToleradas;
+    private String descripcionInaseMalezasToleranciaC;
     
     // DOSN (INIA)
     private String dosnOtrosCultivos;           // OC

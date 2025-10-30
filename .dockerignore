@@ -1,0 +1,51 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+# Build files
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea
+*.iml
+*.ipr
+*.iws
+.vscode
+.settings
+.project
+.classpath
+
+# Logs
+*.log
+
+# Testing
+.nyc_output
+coverage
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+docs
+*.md
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Otros
+tmp
+temp
+*.tmp

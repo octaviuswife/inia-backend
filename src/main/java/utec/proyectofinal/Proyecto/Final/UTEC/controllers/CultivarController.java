@@ -15,9 +15,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CultivarService;
 
 import java.util.List;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/cultivar")
-@CrossOrigin(origins = "*")
 @Tag(name = "Cultivares", description = "API para gestión de cultivares")
 @SecurityRequirement(name = "bearerAuth")
 public class CultivarController {
@@ -26,12 +26,13 @@ public class CultivarController {
     private CultivarService cultivarService;
 
     // Obtener todos activos
-    @Operation(summary = "Listar todos los cultivares activos", 
-              description = "Obtiene todos los cultivares que están activos en el sistema")
+    @Operation(summary = "Listar todos los cultivares", 
+              description = "Obtiene todos los cultivares con filtro opcional de estado (activo/inactivo)")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
-    public ResponseEntity<List<CultivarDTO>> obtenerTodos() {
-        List<CultivarDTO> cultivares = cultivarService.obtenerTodos();
+    public ResponseEntity<List<CultivarDTO>> obtenerTodos(
+            @RequestParam(required = false) Boolean activo) {
+        List<CultivarDTO> cultivares = cultivarService.obtenerTodos(activo);
         return ResponseEntity.ok(cultivares);
     }
 

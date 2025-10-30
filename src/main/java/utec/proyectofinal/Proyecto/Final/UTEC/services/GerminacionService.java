@@ -1,7 +1,5 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -9,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +16,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.GerminacionSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
@@ -125,22 +125,32 @@ public class GerminacionService {
         }
     }
 
-    // Eliminar Germinación (cambiar estado a INACTIVO)
+    // Eliminar Germinación (desactivar - cambiar activo a false)
     public void eliminarGerminacion(Long id) {
         Optional<Germinacion> germinacionExistente = germinacionRepository.findById(id);
         
         if (germinacionExistente.isPresent()) {
             Germinacion germinacion = germinacionExistente.get();
-            germinacion.setEstado(Estado.INACTIVO);
+            germinacion.setActivo(false);
             germinacionRepository.save(germinacion);
         } else {
             throw new RuntimeException("Análisis de germinación no encontrado con ID: " + id);
         }
     }
 
+    // Desactivar Germinacion (cambiar activo a false)
+    public void desactivarGerminacion(Long id) {
+        analisisService.desactivarAnalisis(id, germinacionRepository);
+    }
+
+    // Reactivar Germinacion (cambiar activo a true)
+    public GerminacionDTO reactivarGerminacion(Long id) {
+        return analisisService.reactivarAnalisis(id, germinacionRepository, this::mapearEntidadADTO);
+    }
+
     // Listar todas las Germinaciones activas
     public ResponseListadoGerminacion obtenerTodasGerminaciones() {
-        List<Germinacion> germinacionesActivas = germinacionRepository.findByEstadoNot(Estado.INACTIVO);
+        List<Germinacion> germinacionesActivas = germinacionRepository.findByActivoTrue();
         List<GerminacionDTO> germinacionesDTO = germinacionesActivas.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -152,7 +162,38 @@ public class GerminacionService {
 
     // Listar germinaciones con paginado (para listado)
     public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadas(Pageable pageable) {
-        Page<Germinacion> germinacionesPage = germinacionRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Germinacion> germinacionesPage = germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+        return germinacionesPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar germinaciones con paginado y filtro de activo
+    public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Germinacion> germinacionesPage;
+        
+        switch (filtroActivo.toLowerCase()) {
+            case "activos":
+                germinacionesPage = germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+                break;
+            case "inactivos":
+                germinacionesPage = germinacionRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+                break;
+            default: // "todos"
+                germinacionesPage = germinacionRepository.findAllByOrderByFechaInicioDesc(pageable);
+                break;
+        }
+        
+        return germinacionesPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar germinaciones con paginado y filtros completos
+    public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        Specification<Germinacion> spec = GerminacionSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Germinacion> germinacionesPage = germinacionRepository.findAll(spec, pageable);
         return germinacionesPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -189,14 +230,22 @@ public class GerminacionService {
         return true; // Todas las tablas están finalizadas
     }
 
+    /**
+     * Validación completa para operaciones críticas de Germinación (finalizar y marcar para repetir)
+     * Verifica completitud de tablas
+     */
+    private void validarGerminacionParaOperacionCritica(Germinacion germinacion) {
+        // Validación específica de Germinación: completitud de tablas
+        if (!todasTablasFinalizadas(germinacion)) {
+            throw new RuntimeException("No se puede completar la operación. Hay tablas pendientes de completar.");
+        }
+    }
+
     // Mapear de RequestDTO a Entity para creación
     private Germinacion mapearSolicitudAEntidad(GerminacionRequestDTO solicitud) {
         System.out.println("Mapeando solicitud a entidad germinación");
         
         Germinacion germinacion = new Germinacion();
-        
-        // Validaciones de fechas
-        validarFechasGerminacion(solicitud);
         
         // Datos del análisis base (fechaInicio y fechaFin son automáticas, no del request)
         germinacion.setComentarios(solicitud.getComentarios());
@@ -214,108 +263,8 @@ public class GerminacionService {
             }
         }
         
-        // Datos específicos de Germinación
-        germinacion.setFechaInicioGerm(solicitud.getFechaInicioGerm());
-        germinacion.setFechaUltConteo(solicitud.getFechaUltConteo());
-        germinacion.setNumDias(solicitud.getNumDias()); // Se recibe desde el frontend
-        
-        
-
-        // Validaciones de repeticiones y conteos
-        validarParametrosGerminacion(solicitud);
-        
-        germinacion.setNumeroRepeticiones(solicitud.getNumeroRepeticiones());
-        germinacion.setNumeroConteos(solicitud.getNumeroConteos());
-        
-        // Validar y establecer fechas de conteos
-        validarFechasConteos(solicitud);
-        
-        // Solo guardar fechaConteos no-null (las ingresadas por el usuario)
-        List<java.time.LocalDate> fechaConteos = new ArrayList<>();
-        if (solicitud.getFechaConteos() != null) {
-            // Solo agregar fechas que no sean null
-            for (LocalDate fecha : solicitud.getFechaConteos()) {
-                if (fecha != null) {
-                    fechaConteos.add(fecha);
-                }
-            }
-        }
-        
-        germinacion.setFechaConteos(fechaConteos);
-        
         System.out.println("Germinación mapeada exitosamente");
         return germinacion;
-    }
-    
-    /**
-     * Validar fechas de germinación
-     */
-    private void validarFechasGerminacion(GerminacionRequestDTO solicitud) {
-        if (solicitud.getFechaInicioGerm() == null) {
-            throw new RuntimeException("La fecha de inicio de germinación es obligatoria");
-        }
-        
-        if (solicitud.getFechaUltConteo() == null) {
-            throw new RuntimeException("La fecha de último conteo es obligatoria");
-        }
-        
-        // Validar que la fecha de último conteo sea posterior a la de inicio
-        if (!solicitud.getFechaUltConteo().isAfter(solicitud.getFechaInicioGerm())) {
-            throw new RuntimeException("La fecha de último conteo debe ser posterior a la fecha de inicio de germinación");
-        }
-        
-        // Validar que haya al menos 1 día de diferencia
-        long diasDiferencia = solicitud.getFechaInicioGerm().until(solicitud.getFechaUltConteo(), java.time.temporal.ChronoUnit.DAYS);
-        if (diasDiferencia < 1) {
-            throw new RuntimeException("Debe haber al menos 1 día de diferencia entre la fecha de inicio y la fecha de último conteo");
-        }
-    }
-    
-    /**
-     * Validar parámetros de repeticiones y conteos
-     */
-    private void validarParametrosGerminacion(GerminacionRequestDTO solicitud) {
-        //Nuevos campos de control con validación
-        if (solicitud.getNumeroRepeticiones() == null ) {
-            throw new RuntimeException("El número de repeticiones es obligatorio");
-        }
-
-        if (solicitud.getNumeroConteos() == null ) {
-            throw new RuntimeException("El número de conteos es obligatorio");
-        }
-        
-        if (solicitud.getNumeroRepeticiones() == null || solicitud.getNumeroRepeticiones() <= 0) {
-            throw new RuntimeException("Debe especificar un número válido de repeticiones (mayor a 0).");
-        }
-        
-        if (solicitud.getNumeroConteos() == null || solicitud.getNumeroConteos() <= 0) {
-            throw new RuntimeException("Debe especificar un número válido de conteos (mayor a 0).");
-        }
-    }
-    
-    /**
-     * Validar fechas de conteos
-     */
-    private void validarFechasConteos(GerminacionRequestDTO solicitud) {
-        if (solicitud.getFechaConteos() != null && !solicitud.getFechaConteos().isEmpty()) {
-            LocalDate fechaInicio = solicitud.getFechaInicioGerm();
-            LocalDate fechaFin = solicitud.getFechaUltConteo();
-            
-            for (int i = 0; i < solicitud.getFechaConteos().size(); i++) {
-                LocalDate fechaConteo = solicitud.getFechaConteos().get(i);
-                if (fechaConteo != null) {
-                    // Validar que esté dentro del rango permitido
-                    if (fechaConteo.isBefore(fechaInicio) || fechaConteo.isAfter(fechaFin)) {
-                        throw new RuntimeException("La fecha de conteo " + (i + 1) + " debe estar entre la fecha de inicio y la fecha de último conteo");
-                    }
-                }
-            }
-            
-            // Validar que el número de fechas coincida con el número de conteos
-            if (solicitud.getFechaConteos().size() != solicitud.getNumeroConteos()) {
-                throw new RuntimeException("El número de fechas de conteos debe coincidir con el número de conteos definido");
-            }
-        }
     }
 
     // Actualizar Entity desde RequestDTO para edición
@@ -323,7 +272,6 @@ public class GerminacionService {
         System.out.println("Actualizando germinación desde solicitud");
         
         // Datos del análisis base
-
         germinacion.setComentarios(solicitud.getComentarios());
         
         // Validar y establecer lote si se proporciona
@@ -333,27 +281,6 @@ public class GerminacionService {
                 germinacion.setLote(loteOpt.get());
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
-            }
-        }
-
-        germinacion.setNumDias(solicitud.getNumDias()); // Se recibe desde el frontend
-        
-        // Actualizar campos de control si se proporcionan
-        // NO se pueden editar una vez creado el análisis (como en Tetrazolio)
-        // Los campos numeroRepeticiones y numeroConteos son de solo lectura en edición
-        
-        // NO PERMITIR edición de fechas una vez creado el análisis
-        // Las fechas son inmutables después de la creación para mantener integridad de datos
-        if (solicitud.getFechaConteos() != null && !solicitud.getFechaConteos().isEmpty()) {
-            // Verificar si las fechas son diferentes a las existentes
-            List<LocalDate> fechasExistentes = germinacion.getFechaConteos();
-            List<LocalDate> fechasNuevas = solicitud.getFechaConteos().stream()
-                .filter(fecha -> fecha != null)
-                .collect(java.util.stream.Collectors.toList());
-            
-            // Si las fechas son diferentes, rechazar la actualización
-            if (!fechasExistentes.equals(fechasNuevas)) {
-                throw new RuntimeException("No se pueden modificar las fechas de conteo una vez creado el análisis de germinación");
             }
         }
 
@@ -377,16 +304,6 @@ public class GerminacionService {
             dto.setLote(germinacion.getLote().getFicha());
         }
         
-        // Datos específicos de Germinación con campos propios
-        dto.setFechaInicioGerm(germinacion.getFechaInicioGerm());
-        dto.setFechaUltConteo(germinacion.getFechaUltConteo());
-        dto.setFechaConteos(germinacion.getFechaConteos());
-        dto.setNumDias(germinacion.getNumDias());
-        
-        // Nuevos campos de control
-        dto.setNumeroRepeticiones(germinacion.getNumeroRepeticiones());
-        dto.setNumeroConteos(germinacion.getNumeroConteos());
-        
         // Mapear historial de análisis
         dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(germinacion.getAnalisisID()));
         
@@ -402,17 +319,19 @@ public class GerminacionService {
         dto.setEstado(germinacion.getEstado());
         dto.setFechaInicio(germinacion.getFechaInicio());
         dto.setFechaFin(germinacion.getFechaFin());
+        dto.setActivo(germinacion.getActivo());
         
         // Datos del lote
         if (germinacion.getLote() != null) {
             dto.setIdLote(germinacion.getLote().getLoteID());
-            dto.setLote(germinacion.getLote().getFicha());
+            dto.setLote(germinacion.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (germinacion.getLote().getCultivar() != null && germinacion.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = germinacion.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
-        
-        // Datos específicos de germinación
-        dto.setFechaInicioGerm(germinacion.getFechaInicioGerm());
-        dto.setFechaUltConteo(germinacion.getFechaUltConteo());
-        dto.setNumDias(germinacion.getNumDias());
         
         // Cumple norma: true si NO está "A REPETIR"
         dto.setCumpleNorma(germinacion.getEstado() != Estado.A_REPETIR);
@@ -444,12 +363,7 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            germinacion -> {
-                // Validación específica de Germinación: completitud de tablas
-                if (!todasTablasFinalizadas(germinacion)) {
-                    throw new RuntimeException("No se puede finalizar el análisis. Hay tablas pendientes de completar.");
-                }
-            }
+            this::validarGerminacionParaOperacionCritica
         );
     }
 
@@ -461,7 +375,8 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para aprobar
+            this::validarGerminacionParaOperacionCritica, // Mismas validaciones que finalizar
+            germinacionRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -471,7 +386,7 @@ public class GerminacionService {
             id,
             germinacionRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            this::validarGerminacionParaOperacionCritica // Mismas validaciones que finalizar
         );
     }
 }

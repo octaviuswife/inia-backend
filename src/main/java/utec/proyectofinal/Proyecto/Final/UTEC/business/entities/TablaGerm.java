@@ -56,9 +56,33 @@ public class TablaGerm {
     private String productoYDosis;
     private Integer numSemillasPRep;
     private String metodo;
-    private Double temperatura;
-    private String prefrio;
-    private String pretratamiento;
+    private String temperatura;
+    
+    // Campos de prefrío (boolean + descripción + días)
+    private Boolean tienePrefrio;
+    private String descripcionPrefrio;
+    
+    // Campos de pretratamiento (boolean + descripción + días)
+    private Boolean tienePretratamiento;
+    private String descripcionPretratamiento;
+
+    // Campos de fechas y control de conteos movidos desde Germinacion
+    private LocalDate fechaInicioGerm;
+
+    @ElementCollection
+    private List<LocalDate> fechaConteos;
+
+    private LocalDate fechaUltConteo;
+
+    private String numDias;
+    
+    // Campos de control
+    private Integer numeroRepeticiones;
+    private Integer numeroConteos;
+    
+    // Nuevos campos para días de prefrío y pretratamiento
+    private Integer diasPrefrio;
+    private Integer diasPretratamiento;
 
     @ManyToOne
     @JoinColumn(name = "germinacionID")

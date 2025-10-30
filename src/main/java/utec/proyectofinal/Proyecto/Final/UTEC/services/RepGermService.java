@@ -44,11 +44,11 @@ public class RepGermService {
             TablaGerm tablaGerm = tablaGermOpt.get();
             
             //validar numero de repeticiones permitidas
-            if (tablaGerm.getGerminacion() != null && tablaGerm.getGerminacion().getNumeroRepeticiones() != null) {
+            if (tablaGerm != null && tablaGerm.getNumeroRepeticiones() != null) {
                 Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);
-                if (repeticionesExistentes >= tablaGerm.getGerminacion().getNumeroRepeticiones()) {
+                if (repeticionesExistentes >= tablaGerm.getNumeroRepeticiones()) {
                     throw new RuntimeException("No se pueden agregar más repeticiones. El número máximo de repeticiones permitidas es: " + 
-                        tablaGerm.getGerminacion().getNumeroRepeticiones());
+                        tablaGerm.getNumeroRepeticiones());
                 }
             }
 
@@ -107,8 +107,6 @@ public class RepGermService {
         Optional<RepGerm> repGermExistente = repGermRepository.findById(id);
         
         if (repGermExistente.isPresent()) {
-            RepGerm repGerm = repGermExistente.get();
-            
             repGermRepository.deleteById(id);
             
             System.out.println("Repetición eliminada con ID: " + id);
@@ -137,13 +135,16 @@ public class RepGermService {
         
         RepGerm repGerm = new RepGerm();
         
+        // Asignar la tabla asociada
+        repGerm.setTablaGerm(tablaGerm);
+        
         // Generar numRep automáticamente (siguiente número disponible)
         Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGerm.getTablaGermID());
         repGerm.setNumRep(repeticionesExistentes.intValue() + 1);
         
-        // Inicializar lista normales con el número de conteos definido en la germinación
-        Integer numeroConteos = (tablaGerm.getGerminacion() != null && tablaGerm.getGerminacion().getNumeroConteos() != null) 
-            ? tablaGerm.getGerminacion().getNumeroConteos() 
+        // Inicializar lista normales con el número de conteos definido en la tabla
+        Integer numeroConteos = (tablaGerm != null && tablaGerm.getNumeroConteos() != null) 
+            ? tablaGerm.getNumeroConteos() 
             : 1; // valor por defecto
             
         List<Integer> normalesInicializadas = new ArrayList<>(Collections.nCopies(numeroConteos, 0));
@@ -169,17 +170,24 @@ public class RepGermService {
                                              repGerm.getDuras(), repGerm.getFrescas(), repGerm.getMuertas());
         repGerm.setTotal(totalCalculado);
         
-        repGerm.setTablaGerm(tablaGerm);
+        repGerm.setTotal(totalCalculado);
         
         // Validar que haya al menos un valor
         if (totalCalculado == 0) {
             throw new RuntimeException("Debe ingresar al menos un valor");
         }
         
-        // Validar que el total no supere numSemillasPRep
-        if (tablaGerm.getNumSemillasPRep() != null && totalCalculado > tablaGerm.getNumSemillasPRep()) {
-            throw new RuntimeException("El total de la repetición (" + totalCalculado + 
-                ") no puede superar el número de semillas por repetición (" + tablaGerm.getNumSemillasPRep() + ")");
+        // Validar solo el límite máximo
+        // El mínimo no se valida aquí para permitir guardar repeticiones incompletas
+        // (se validará al finalizar la tabla)
+        if (tablaGerm.getNumSemillasPRep() != null) {
+            int limiteMaximo = (int) Math.ceil(tablaGerm.getNumSemillasPRep() * 1.05);
+            
+            if (totalCalculado > limiteMaximo) {
+                throw new RuntimeException("El total de la repetición (" + totalCalculado + 
+                    ") excede el límite máximo permitido (" + limiteMaximo + 
+                    " - con 5% de tolerancia sobre " + tablaGerm.getNumSemillasPRep() + " semillas)");
+            }
         }
         
         return repGerm;
@@ -271,9 +279,9 @@ public class RepGermService {
         // numRep NO se actualiza, es generado automáticamente y es inmutable
         
         // Gestionar la lista normales preservando el tamaño según numeroConteos
-        Integer numeroConteos = (repGerm.getTablaGerm().getGerminacion() != null && 
-                               repGerm.getTablaGerm().getGerminacion().getNumeroConteos() != null) 
-            ? repGerm.getTablaGerm().getGerminacion().getNumeroConteos() 
+        Integer numeroConteos = (repGerm.getTablaGerm() != null && 
+                               repGerm.getTablaGerm().getNumeroConteos() != null) 
+            ? repGerm.getTablaGerm().getNumeroConteos() 
             : 1;
         
         List<Integer> normalesActualizadas = new ArrayList<>(Collections.nCopies(numeroConteos, 0));
@@ -304,10 +312,17 @@ public class RepGermService {
         }
         repGerm.setTotal(totalCalculado);
         
-        // Validar que el total no supere numSemillasPRep
-        if (repGerm.getTablaGerm().getNumSemillasPRep() != null && totalCalculado > repGerm.getTablaGerm().getNumSemillasPRep()) {
-            throw new RuntimeException("El total de la repetición (" + totalCalculado + 
-                ") no puede superar el número de semillas por repetición (" + repGerm.getTablaGerm().getNumSemillasPRep() + ")");
+        // Validar solo el límite máximo
+        // El mínimo no se valida aquí para permitir guardar repeticiones incompletas
+        // (se validará al finalizar la tabla)
+        if (repGerm.getTablaGerm().getNumSemillasPRep() != null) {
+            int limiteMaximo = (int) Math.ceil(repGerm.getTablaGerm().getNumSemillasPRep() * 1.05);
+            
+            if (totalCalculado > limiteMaximo) {
+                throw new RuntimeException("El total de la repetición (" + totalCalculado + 
+                    ") excede el límite máximo permitido (" + limiteMaximo + 
+                    " - con 5% de tolerancia sobre " + repGerm.getTablaGerm().getNumSemillasPRep() + " semillas)");
+            }
         }
         
         // El total se calcula automáticamente, no se toma del DTO
@@ -358,12 +373,12 @@ public class RepGermService {
     
     // Verificar si todas las repeticiones están completas
     private boolean todasLasRepeticionesCompletas(TablaGerm tablaGerm, List<RepGerm> repeticiones) {
-        if (tablaGerm.getGerminacion() == null || tablaGerm.getGerminacion().getNumeroRepeticiones() == null) {
+        if (tablaGerm == null || tablaGerm.getNumeroRepeticiones() == null) {
             return false;
         }
         
         // Verificar que tenemos el número esperado de repeticiones
-        if (repeticiones.size() < tablaGerm.getGerminacion().getNumeroRepeticiones()) {
+        if (repeticiones.size() < tablaGerm.getNumeroRepeticiones()) {
             return false;
         }
         
@@ -435,9 +450,8 @@ public class RepGermService {
         int numRepeticiones = repeticiones.size();
         List<BigDecimal> promediosPorConteo = new ArrayList<>();
         
-        // Obtener el número de conteos desde la germinación
-        Integer numConteos = tablaGerm.getGerminacion() != null ? 
-            tablaGerm.getGerminacion().getNumeroConteos() : null;
+        // Obtener el número de conteos desde la tabla
+        Integer numConteos = tablaGerm != null ? tablaGerm.getNumeroConteos() : null;
             
         if (numConteos != null && numConteos > 0) {
             // Calcular promedio para cada conteo de normales por separado

@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazolioViabilidadRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.TetrazolioSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeadosRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
@@ -45,8 +47,9 @@ public class TetrazolioService {
     @Transactional
     public TetrazolioDTO crearTetrazolio(TetrazolioRequestDTO solicitud) {
         try {
-            System.out.println("Iniciando creación de tetrazolio con solicitud: " + solicitud);
-            
+        //    if (solicitud.getViabilidadInase() == null || solicitud.getViabilidadInase().compareTo(BigDecimal.ZERO) < 0) {
+          //      throw new IllegalArgumentException("El campo viabilidadInase debe ser un valor positivo.");
+           // }
             Tetrazolio tetrazolio = mapearSolicitudAEntidad(solicitud);
             tetrazolio.setEstado(Estado.REGISTRADO);
             
@@ -58,11 +61,8 @@ public class TetrazolioService {
             // Registrar automáticamente en el historial
             analisisHistorialService.registrarCreacion(tetrazolioGuardado);
             
-            System.out.println("Tetrazolio creado exitosamente con ID: " + tetrazolioGuardado.getAnalisisID());
-            
             return mapearEntidadADTO(tetrazolioGuardado);
         } catch (Exception e) {
-            System.err.println("Error al crear tetrazolio: " + e.getMessage());
             throw new RuntimeException("Error al crear el análisis de tetrazolio: " + e.getMessage());
         }
     }
@@ -83,7 +83,9 @@ public class TetrazolioService {
         // Si es ADMIN editando análisis APROBADO, mantiene el estado APROBADO
         // Para otros estados se mantiene igual
         
+        // Actualizar los campos del tetrazolio con los datos de la solicitud
         actualizarEntidadDesdeSolicitud(tetrazolio, solicitud);
+        
         Tetrazolio tetrazolioActualizado = tetrazolioRepository.save(tetrazolio);
         
         // Registrar automáticamente en el historial
@@ -92,18 +94,20 @@ public class TetrazolioService {
         return mapearEntidadADTO(tetrazolioActualizado);
     }
 
-    // Eliminar Tetrazolio (cambiar estado a INACTIVO)
-    public void eliminarTetrazolio(Long id) {
-        Tetrazolio tetrazolio = tetrazolioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Análisis de tetrazolio no encontrado con ID: " + id));
-        
-        tetrazolio.setEstado(Estado.INACTIVO);
-        tetrazolioRepository.save(tetrazolio);
+
+    // Desactivar Tetrazolio (cambiar activo a false)
+    public void desactivarTetrazolio(Long id) {
+        analisisService.desactivarAnalisis(id, tetrazolioRepository);
+    }
+
+    // Reactivar Tetrazolio (cambiar activo a true)
+    public TetrazolioDTO reactivarTetrazolio(Long id) {
+        return analisisService.reactivarAnalisis(id, tetrazolioRepository, this::mapearEntidadADTO);
     }
 
     // Listar todos los Tetrazolios activos usando ResponseListadoTetrazolio
     public ResponseListadoTetrazolio obtenerTodosTetrazolio() {
-        List<Tetrazolio> tetrazoliosActivos = tetrazolioRepository.findByEstadoNot(Estado.INACTIVO);
+        List<Tetrazolio> tetrazoliosActivos = tetrazolioRepository.findByActivoTrue();
         List<TetrazolioDTO> tetrazoliosDTO = tetrazoliosActivos.stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -131,7 +135,41 @@ public class TetrazolioService {
 
     // Listar Tetrazolio con paginado (para listado)
     public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadas(Pageable pageable) {
-        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+        return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar Tetrazolio con paginado y filtro de activo
+    public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Tetrazolio> tetrazolioPage;
+        
+        switch (filtroActivo.toLowerCase()) {
+            case "activos":
+                tetrazolioPage = tetrazolioRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+                break;
+            case "inactivos":
+                tetrazolioPage = tetrazolioRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+                break;
+            default: // "todos"
+                tetrazolioPage = tetrazolioRepository.findAllByOrderByFechaInicioDesc(pageable);
+                break;
+        }
+        
+        return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar Tetrazolio con paginado y filtros dinámicos
+     */
+    public Page<TetrazolioListadoDTO> obtenerTetrazoliosPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        Specification<Tetrazolio> spec = TetrazolioSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        Page<Tetrazolio> tetrazolioPage = tetrazolioRepository.findAll(spec, pageable);
         return tetrazolioPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -142,10 +180,23 @@ public class TetrazolioService {
         dto.setEstado(tetrazolio.getEstado());
         dto.setFechaInicio(tetrazolio.getFechaInicio());
         dto.setFechaFin(tetrazolio.getFechaFin());
+        dto.setActivo(tetrazolio.getActivo());
+        dto.setFecha(tetrazolio.getFecha());
+        
+        // Viabilidad con redondeo (Viabilidad INIA %)
+        dto.setViabilidadConRedondeo(tetrazolio.getPorcViablesRedondeo());
+        
         if (tetrazolio.getLote() != null) {
             dto.setIdLote(tetrazolio.getLote().getLoteID());
-            dto.setLote(tetrazolio.getLote().getFicha());
+            dto.setLote(tetrazolio.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (tetrazolio.getLote().getCultivar() != null && tetrazolio.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
+        
         if (tetrazolio.getAnalisisID() != null) {
             var historial = analisisHistorialService.obtenerHistorialAnalisis(tetrazolio.getAnalisisID());
             if (!historial.isEmpty()) {
@@ -212,6 +263,8 @@ public class TetrazolioService {
         tetrazolio.setTincionTemp(solicitud.getTincionTemp());
         tetrazolio.setFecha(solicitud.getFecha());
         tetrazolio.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());
+        tetrazolio.setViabilidadInase(solicitud.getViabilidadInase());
+        System.out.println("Viabilidad INASE asignada: " + solicitud.getViabilidadInase());
         
         System.out.println("Tetrazolio mapeado exitosamente");
         return tetrazolio;
@@ -241,6 +294,7 @@ public class TetrazolioService {
         tetrazolio.setTincionHs(solicitud.getTincionHs());
         tetrazolio.setTincionTemp(solicitud.getTincionTemp());
         tetrazolio.setFecha(solicitud.getFecha());
+        tetrazolio.setViabilidadInase(solicitud.getViabilidadInase());
         // El número de repeticiones esperadas NO se puede editar una vez creado
         
         System.out.println("Tetrazolio actualizado exitosamente");
@@ -274,7 +328,7 @@ public class TetrazolioService {
         dto.setPorcViablesRedondeo(tetrazolio.getPorcViablesRedondeo());
         dto.setPorcNoViablesRedondeo(tetrazolio.getPorcNoViablesRedondeo());
         dto.setPorcDurasRedondeo(tetrazolio.getPorcDurasRedondeo());
-        
+        dto.setViabilidadInase(tetrazolio.getViabilidadInase());
         // Mapear historial de análisis
         dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(tetrazolio.getAnalisisID()));
         
@@ -341,7 +395,8 @@ public class TetrazolioService {
             (tetrazolio) -> {
                 this.validarCompletitudRepeticiones(tetrazolio);
                 this.validarEvidenciaAntesDeFinalizar(tetrazolio);
-            }
+            },
+            tetrazolioRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -351,7 +406,11 @@ public class TetrazolioService {
             id,
             tetrazolioRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            (tetrazolio) -> {
+                // Mismas validaciones que finalizar: completitud y evidencia
+                this.validarCompletitudRepeticiones(tetrazolio);
+                this.validarEvidenciaAntesDeFinalizar(tetrazolio);
+            }
         );
     }
 }

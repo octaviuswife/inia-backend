@@ -6,6 +6,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CultivarRepository extends JpaRepository<Cultivar, Long> {
@@ -19,4 +20,6 @@ public interface CultivarRepository extends JpaRepository<Cultivar, Long> {
     List<Cultivar> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
     
     List<Cultivar> findByEspecieEspecieIDAndActivoTrue(Long especieID);
+    
+    Optional<Cultivar> findByNombreAndEspecie_EspecieID(String nombre, Long especieID);
 }

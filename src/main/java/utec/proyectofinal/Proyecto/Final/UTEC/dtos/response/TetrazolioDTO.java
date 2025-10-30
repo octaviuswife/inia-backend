@@ -20,4 +20,5 @@ public class TetrazolioDTO extends AnalisisDTO {
     private BigDecimal porcViablesRedondeo;
     private BigDecimal porcNoViablesRedondeo;
     private BigDecimal porcDurasRedondeo;
+    private BigDecimal viabilidadInase;
 }

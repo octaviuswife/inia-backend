@@ -16,6 +16,9 @@ public interface CatalogoCrudRepository extends JpaRepository<Catalogo, Long> {
     // Buscar por tipo y activos
     List<Catalogo> findByTipoAndActivoTrue(TipoCatalogo tipo);
     
+    // Buscar por tipo y inactivos
+    List<Catalogo> findByTipoAndActivoFalse(TipoCatalogo tipo);
+    
     // Buscar por tipo (incluyendo inactivos)
     List<Catalogo> findByTipo(TipoCatalogo tipo);
     

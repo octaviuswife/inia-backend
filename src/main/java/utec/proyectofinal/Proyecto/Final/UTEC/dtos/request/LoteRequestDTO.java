@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 public class LoteRequestDTO {
     private String ficha;
+    private String nomLote;
     private Long cultivarID;
     private String tipo;
     private Long empresaID;
@@ -29,7 +30,6 @@ public class LoteRequestDTO {
     // Número de artículo - ID del catálogo seleccionado
     private Long numeroArticuloID;
     
-    private Double cantidad;
     private Long origenID;
     private Long estadoID;
     private LocalDate fechaCosecha;

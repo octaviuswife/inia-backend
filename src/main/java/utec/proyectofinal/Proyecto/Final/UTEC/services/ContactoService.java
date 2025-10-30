@@ -33,14 +33,45 @@ public class ContactoService {
                 .collect(Collectors.toList());
     }
 
+    // Obtener contactos por tipo con filtro de estado opcional
+    public List<ContactoDTO> obtenerContactosPorTipo(TipoContacto tipo, Boolean activo) {
+        if (activo == null) {
+            // Devolver todos (activos e inactivos)
+            return contactoRepository.findByTipo(tipo)
+                    .stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        } else if (activo) {
+            return contactoRepository.findByTipoAndActivoTrue(tipo)
+                    .stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        } else {
+            return contactoRepository.findByTipoAndActivoFalse(tipo)
+                    .stream()
+                    .map(this::mapearEntidadADTO)
+                    .collect(Collectors.toList());
+        }
+    }
+
     // Obtener solo clientes activos
     public List<ContactoDTO> obtenerClientes() {
         return obtenerContactosPorTipo(TipoContacto.CLIENTE);
     }
 
+    // Obtener clientes con filtro de estado opcional
+    public List<ContactoDTO> obtenerClientes(Boolean activo) {
+        return obtenerContactosPorTipo(TipoContacto.CLIENTE, activo);
+    }
+
     // Obtener solo empresas activas
     public List<ContactoDTO> obtenerEmpresas() {
         return obtenerContactosPorTipo(TipoContacto.EMPRESA);
+    }
+
+    // Obtener empresas con filtro de estado opcional
+    public List<ContactoDTO> obtenerEmpresas(Boolean activo) {
+        return obtenerContactosPorTipo(TipoContacto.EMPRESA, activo);
     }
 
     // Obtener contacto por ID

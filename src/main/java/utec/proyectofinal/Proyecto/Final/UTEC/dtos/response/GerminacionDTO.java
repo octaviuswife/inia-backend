@@ -1,19 +1,11 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
 import lombok.Data;
-
-import java.time.LocalDate;
-import java.util.List;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class GerminacionDTO extends AnalisisDTO{
-    // Campos específicos de Germinación
-    private LocalDate fechaInicioGerm; // Fecha de inicio específica de germinación
-    private List<LocalDate> fechaConteos;
-    private LocalDate fechaUltConteo; // Fecha del último conteo
-    private String numDias;
-    
-    // Nuevos campos de control
-    private Integer numeroRepeticiones;
-    private Integer numeroConteos;
+    // La entidad Germinación ahora es solo un contenedor de TablaGerm
+    // Los campos específicos se manejan a nivel de TablaGerm
 }

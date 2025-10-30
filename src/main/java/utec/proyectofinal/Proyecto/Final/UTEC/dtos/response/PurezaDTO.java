@@ -16,6 +16,7 @@ public class PurezaDTO extends AnalisisDTO {
     private BigDecimal otrosCultivos_g;
     private BigDecimal malezas_g;
     private BigDecimal malezasToleradas_g;
+    private BigDecimal malezasTolCero_g;
     private BigDecimal pesoTotal_g;
 
     private BigDecimal redonSemillaPura;
@@ -23,6 +24,7 @@ public class PurezaDTO extends AnalisisDTO {
     private BigDecimal redonOtrosCultivos;
     private BigDecimal redonMalezas;
     private BigDecimal redonMalezasToleradas;
+    private BigDecimal redonMalezasTolCero;
     private BigDecimal redonPesoTotal;
 
     private BigDecimal inasePura;
@@ -30,6 +32,7 @@ public class PurezaDTO extends AnalisisDTO {
     private BigDecimal inaseOtrosCultivos;
     private BigDecimal inaseMalezas;
     private BigDecimal inaseMalezasToleradas;
+    private BigDecimal inaseMalezasTolCero;
     private LocalDate inaseFecha;
 
     private List<ListadoDTO> otrasSemillas;

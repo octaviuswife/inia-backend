@@ -1,10 +1,15 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ActualizarPerfilRequestDTO;
@@ -14,10 +19,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RegistroUsuarioReques
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService {
@@ -30,6 +31,13 @@ public class UsuarioService {
 
     @Autowired
     private NotificacionService notificacionService;
+
+    /**
+     * Buscar usuario por ID
+     */
+    public Optional<Usuario> buscarPorId(Integer id) {
+        return usuarioRepository.findById(id);
+    }
 
     /**
      * Registrar nueva solicitud de usuario

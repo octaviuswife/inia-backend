@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,9 +23,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
 
+// CORS configurado globalmente en WebSecurityConfig
 @RestController
 @RequestMapping("/api/pms")
-@CrossOrigin(origins = "*")
 @Tag(name = "PMS", description = "API para gestión del análisis de Peso de Mil Semillas")
 @SecurityRequirement(name = "bearerAuth")
 public class PmsController {
@@ -40,14 +39,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PmsDTO> crearPms(@RequestBody PmsRequestDTO solicitud) {
-        try {
-            PmsDTO creado = pmsService.crearPms(solicitud);
-            return new ResponseEntity<>(creado, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PmsDTO creado = pmsService.crearPms(solicitud);
+        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     // Obtener todos los Pms activos
@@ -56,12 +49,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<PmsDTO>> obtenerTodos() {
-        try {
-            List<PmsDTO> lista = pmsService.obtenerTodos();
-            return new ResponseEntity<>(lista, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<PmsDTO> lista = pmsService.obtenerTodos();
+        return ResponseEntity.ok(lista);
     }
 
     // Obtener Pms por ID
@@ -70,14 +59,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<PmsDTO> obtenerPorId(@PathVariable Long id) {
-        try {
-            PmsDTO dto = pmsService.obtenerPorId(id);
-            return new ResponseEntity<>(dto, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PmsDTO dto = pmsService.obtenerPorId(id);
+        return ResponseEntity.ok(dto);
     }
     
     // Obtener PMS con paginado para listado
@@ -87,14 +70,14 @@ public class PmsController {
     @GetMapping("/listado")
     public ResponseEntity<org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO>> obtenerPmsPaginadas(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
-        try {
-            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO> response = pmsService.obtenerPmsPaginadas(pageable);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String search,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Boolean activo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String estado,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long loteId) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO> response = pmsService.obtenerPmsPaginadasConFiltros(pageable, search, activo, estado, loteId);
+        return ResponseEntity.ok(response);
     }
 
     // Actualizar Pms
@@ -103,14 +86,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PmsDTO> actualizarPms(@PathVariable Long id, @RequestBody PmsRequestDTO solicitud) {
-        try {
-            PmsDTO actualizado = pmsService.actualizarPms(id, solicitud);
-            return new ResponseEntity<>(actualizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PmsDTO actualizado = pmsService.actualizarPms(id, solicitud);
+        return ResponseEntity.ok(actualizado);
     }
 
     // Eliminar Pms (cambiar estado a INACTIVO)
@@ -118,15 +95,29 @@ public class PmsController {
               description = "Elimina (cambia a inactivo) un análisis de peso de mil semillas (PMS) existente")
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> eliminarPms(@PathVariable Long id) {
-        try {
-            pmsService.eliminarPms(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> eliminarPms(@PathVariable Long id) {
+        pmsService.eliminarPms(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Desactivar PMS (soft delete)
+    @Operation(summary = "Desactivar análisis PMS", 
+              description = "Desactiva un análisis PMS (cambiar activo a false)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/desactivar")
+    public ResponseEntity<Void> desactivarPms(@PathVariable Long id) {
+        pmsService.desactivarPms(id);
+        return ResponseEntity.ok().build();
+    }
+
+    // Reactivar PMS
+    @Operation(summary = "Reactivar análisis PMS", 
+              description = "Reactiva un análisis PMS desactivado (solo administradores)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<PmsDTO> reactivarPms(@PathVariable Long id) {
+        PmsDTO pmsReactivado = pmsService.reactivarPms(id);
+        return ResponseEntity.ok(pmsReactivado);
     }
 
     // Obtener Pms por Lote
@@ -135,12 +126,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
     @GetMapping("/lote/{idLote}")
     public ResponseEntity<List<PmsDTO>> obtenerPmsPorIdLote(@PathVariable Long idLote) {
-        try {
-            List<PmsDTO> lista = pmsService.obtenerPmsPorIdLote(idLote);
-            return new ResponseEntity<>(lista, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<PmsDTO> lista = pmsService.obtenerPmsPorIdLote(idLote);
+        return ResponseEntity.ok(lista);
     }
 
     // Actualizar PMS con valor redondeado (solo cuando todas las repeticiones estén completas)
@@ -149,14 +136,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/redondeo")
     public ResponseEntity<PmsDTO> actualizarPmsConRedondeo(@PathVariable Long id, @RequestBody PmsRedondeoRequestDTO solicitud) {
-        try {
-            PmsDTO actualizado = pmsService.actualizarPmsConRedondeo(id, solicitud);
-            return new ResponseEntity<>(actualizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PmsDTO actualizado = pmsService.actualizarPmsConRedondeo(id, solicitud);
+        return ResponseEntity.ok(actualizado);
     }
 
     // Finalizar análisis PMS
@@ -165,14 +146,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<PmsDTO> finalizarAnalisis(@PathVariable Long id) {
-        try {
-            PmsDTO analisisFinalizado = pmsService.finalizarAnalisis(id);
-            return new ResponseEntity<>(analisisFinalizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PmsDTO analisisFinalizado = pmsService.finalizarAnalisis(id);
+        return ResponseEntity.ok(analisisFinalizado);
     }
 
     // Aprobar análisis (solo admin)
@@ -181,14 +156,8 @@ public class PmsController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/aprobar")
     public ResponseEntity<PmsDTO> aprobarAnalisis(@PathVariable Long id) {
-        try {
-            PmsDTO analisisAprobado = pmsService.aprobarAnalisis(id);
-            return new ResponseEntity<>(analisisAprobado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PmsDTO analisisAprobado = pmsService.aprobarAnalisis(id);
+        return ResponseEntity.ok(analisisAprobado);
     }
 
     // Marcar análisis para repetir (solo admin)
@@ -197,14 +166,9 @@ public class PmsController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/repetir")
     public ResponseEntity<PmsDTO> marcarParaRepetir(@PathVariable Long id) {
-        try {
-            PmsDTO analisisRepetir = pmsService.marcarParaRepetir(id);
-            return new ResponseEntity<>(analisisRepetir, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        PmsDTO analisisRepetir = pmsService.marcarParaRepetir(id);
+        return ResponseEntity.ok(analisisRepetir);
+    }
     }
 
-}
+

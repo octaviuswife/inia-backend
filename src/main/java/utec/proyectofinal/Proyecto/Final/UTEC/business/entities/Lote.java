@@ -21,7 +21,12 @@ public class Lote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long loteID;
 
+    @Column(unique = true)
     private String ficha;
+
+
+    @Column(unique = true)
+    private String nomLote;
 
     @ManyToOne
     @JoinColumn(name = "cultivarID")
@@ -56,11 +61,13 @@ public class Lote {
     @OneToMany(mappedBy = "lote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DatosHumedad> datosHumedad;
     
+    // Relación con datos legados importados
+    @OneToMany(mappedBy = "lote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Legado> datosLegados;
+    
     @ManyToOne
     @JoinColumn(name = "numeroArticuloID")
     private Catalogo numeroArticulo;
-    
-    private Double cantidad;
 
     @ManyToOne
     @JoinColumn(name = "origenID")

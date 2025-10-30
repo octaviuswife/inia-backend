@@ -26,4 +26,7 @@ public class Tetrazolio extends Analisis {
     private BigDecimal porcViablesRedondeo;
     private BigDecimal porcNoViablesRedondeo;
     private BigDecimal porcDurasRedondeo;
+
+    @Column(name = "viabilidad_inase")
+    private BigDecimal viabilidadInase;
 }

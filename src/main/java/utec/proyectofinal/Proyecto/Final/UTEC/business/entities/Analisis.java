@@ -29,6 +29,9 @@ public abstract class Analisis {
     @Column(columnDefinition = "TEXT")
     private String comentarios;
 
+    @Column(nullable = false)
+    private Boolean activo = true;
+
     @OneToMany(mappedBy = "analisis", cascade = CascadeType.ALL)
     private List<AnalisisHistorial> historial;
 

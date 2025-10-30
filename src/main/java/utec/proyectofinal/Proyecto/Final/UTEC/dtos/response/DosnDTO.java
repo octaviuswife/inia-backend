@@ -20,9 +20,7 @@ public class DosnDTO extends AnalisisDTO {
 
     private List<TipoDOSN> tipoINASE;
 
-    private BigDecimal cuscuta_g;
-    private Integer cuscutaNum;
-    private LocalDate fechaCuscuta;
+    private List<CuscutaRegistroDTO> cuscutaRegistros;
 
     private List<ListadoDTO> listados;
 }

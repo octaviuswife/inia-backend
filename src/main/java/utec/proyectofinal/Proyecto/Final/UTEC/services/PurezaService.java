@@ -7,31 +7,30 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pureza;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasYCultivosCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ListadoRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasYCultivosCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.EspecieRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PurezaSpecification;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasYCultivosCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.mappers.MappingUtils;
 import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoPureza;
 
 @Service
@@ -47,7 +46,10 @@ public class PurezaService {
     private CatalogoRepository catalogoRepository;
 
     @Autowired
-    private MalezasYCultivosCatalogoRepository malezasYCultivosCatalogoRepository;
+    private MalezasCatalogoRepository malezasCatalogoRepository;
+
+    @Autowired
+    private EspecieRepository especieRepository;
 
     @Autowired
     private LoteRepository loteRepository;
@@ -108,18 +110,28 @@ public class PurezaService {
         return mapearEntidadADTO(purezaActualizada);
     }
 
-    // Eliminar Pureza (cambiar estado a INACTIVO)
+    // Eliminar Pureza (desactivar - cambiar activo a false)
     public void eliminarPureza(Long id) {
         Pureza pureza = purezaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
 
-        pureza.setEstado(Estado.INACTIVO);
+        pureza.setActivo(false);
         purezaRepository.save(pureza);
+    }
+
+    // Desactivar Pureza (cambiar activo a false)
+    public void desactivarPureza(Long id) {
+        analisisService.desactivarAnalisis(id, purezaRepository);
+    }
+
+    // Reactivar Pureza (cambiar activo a true)
+    public PurezaDTO reactivarPureza(Long id) {
+        return analisisService.reactivarAnalisis(id, purezaRepository, this::mapearEntidadADTO);
     }
 
     // Listar todas las Purezas activas
     public ResponseListadoPureza obtenerTodasPurezasActivas() {
-        List<PurezaDTO> purezaDTOs = purezaRepository.findByEstadoNot(Estado.INACTIVO)
+        List<PurezaDTO> purezaDTOs = purezaRepository.findByActivoTrue()
                 .stream()
                 .map(this::mapearEntidadADTO)
                 .collect(Collectors.toList());
@@ -146,7 +158,49 @@ public class PurezaService {
 
     // Listar Pureza con paginado (para listado)
     public Page<PurezaListadoDTO> obtenerPurezaPaginadas(Pageable pageable) {
-        Page<Pureza> purezaPage = purezaRepository.findByEstadoNotOrderByFechaInicioDesc(Estado.INACTIVO, pageable);
+        Page<Pureza> purezaPage = purezaRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+        return purezaPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    // Listar Pureza con paginado y filtro por activo
+    public Page<PurezaListadoDTO> obtenerPurezaPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Pureza> purezaPage;
+        
+        if ("activos".equalsIgnoreCase(filtroActivo)) {
+            purezaPage = purezaRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
+        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
+            purezaPage = purezaRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
+        } else {
+            // "todos" o cualquier otro valor
+            purezaPage = purezaRepository.findAllByOrderByFechaInicioDesc(pageable);
+        }
+        
+        return purezaPage.map(this::mapearEntidadAListadoDTO);
+    }
+
+    /**
+     * Listar Pureza con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @param estado Filtro por estado del análisis (opcional)
+     * @param loteId Filtro por ID del lote (opcional)
+     * @return Página de PurezaListadoDTO filtrados
+     */
+    public Page<PurezaListadoDTO> obtenerPurezaPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+        // Crear la especificación con los filtros
+        Specification<Pureza> spec = PurezaSpecification.conFiltros(searchTerm, activo, estado, loteId);
+        
+        // Obtener purezas filtradas y paginadas
+        Page<Pureza> purezaPage = purezaRepository.findAll(spec, pageable);
+        
+        // Mapear a DTOs
         return purezaPage.map(this::mapearEntidadAListadoDTO);
     }
 
@@ -157,10 +211,23 @@ public class PurezaService {
         dto.setEstado(pureza.getEstado());
         dto.setFechaInicio(pureza.getFechaInicio());
         dto.setFechaFin(pureza.getFechaFin());
+        dto.setActivo(pureza.getActivo());
+        
+        // Datos de pureza
+        dto.setRedonSemillaPura(pureza.getRedonSemillaPura());
+        dto.setInasePura(pureza.getInasePura());
+        
         if (pureza.getLote() != null) {
             dto.setIdLote(pureza.getLote().getLoteID());
-            dto.setLote(pureza.getLote().getFicha());
+            dto.setLote(pureza.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            
+            // Obtener especie del lote
+            if (pureza.getLote().getCultivar() != null && pureza.getLote().getCultivar().getEspecie() != null) {
+                String nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreCientifico();
+                dto.setEspecie(nombreEspecie);
+            }
         }
+        
         if (pureza.getAnalisisID() != null) {
             var historial = analisisHistorialService.obtenerHistorialAnalisis(pureza.getAnalisisID());
             if (!historial.isEmpty()) {
@@ -174,8 +241,8 @@ public class PurezaService {
     }
 
     // Obtener todos los catálogos
-    public List<MalezasYCultivosCatalogoDTO> obtenerTodosCatalogos() {
-        return catalogoRepository.findAll()
+    public List<MalezasCatalogoDTO> obtenerTodosCatalogos() {
+        return malezasCatalogoRepository.findAll()
                 .stream()
                 .map(MappingUtils::toCatalogoDTO)
                 .collect(Collectors.toList());
@@ -207,6 +274,7 @@ public class PurezaService {
         pureza.setOtrosCultivos_g(solicitud.getOtrosCultivos_g());
         pureza.setMalezas_g(solicitud.getMalezas_g());
         pureza.setMalezasToleradas_g(solicitud.getMalezasToleradas_g());
+        pureza.setMalezasTolCero_g(solicitud.getMalezasTolCero_g());
         pureza.setPesoTotal_g(solicitud.getPesoTotal_g());
 
         pureza.setRedonSemillaPura(solicitud.getRedonSemillaPura());
@@ -214,6 +282,7 @@ public class PurezaService {
         pureza.setRedonOtrosCultivos(solicitud.getRedonOtrosCultivos());
         pureza.setRedonMalezas(solicitud.getRedonMalezas());
         pureza.setRedonMalezasToleradas(solicitud.getRedonMalezasToleradas());
+        pureza.setRedonMalezasTolCero(solicitud.getRedonMalezasTolCero());
         pureza.setRedonPesoTotal(solicitud.getRedonPesoTotal());
 
         pureza.setInasePura(solicitud.getInasePura());
@@ -221,6 +290,7 @@ public class PurezaService {
         pureza.setInaseOtrosCultivos(solicitud.getInaseOtrosCultivos());
         pureza.setInaseMalezas(solicitud.getInaseMalezas());
         pureza.setInaseMalezasToleradas(solicitud.getInaseMalezasToleradas());
+        pureza.setInaseMalezasTolCero(solicitud.getInaseMalezasTolCero());
         pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null && !solicitud.getOtrasSemillas().isEmpty()) {
@@ -254,6 +324,7 @@ public class PurezaService {
         if (solicitud.getOtrosCultivos_g() != null) pureza.setOtrosCultivos_g(solicitud.getOtrosCultivos_g());
         if (solicitud.getMalezas_g() != null) pureza.setMalezas_g(solicitud.getMalezas_g());
         if (solicitud.getMalezasToleradas_g() != null) pureza.setMalezasToleradas_g(solicitud.getMalezasToleradas_g());
+        if (solicitud.getMalezasTolCero_g() != null) pureza.setMalezasTolCero_g(solicitud.getMalezasTolCero_g());
         if (solicitud.getPesoTotal_g() != null) pureza.setPesoTotal_g(solicitud.getPesoTotal_g());
 
         if (solicitud.getRedonSemillaPura() != null) pureza.setRedonSemillaPura(solicitud.getRedonSemillaPura());
@@ -261,6 +332,7 @@ public class PurezaService {
         if (solicitud.getRedonOtrosCultivos() != null) pureza.setRedonOtrosCultivos(solicitud.getRedonOtrosCultivos());
         if (solicitud.getRedonMalezas() != null) pureza.setRedonMalezas(solicitud.getRedonMalezas());
         if (solicitud.getRedonMalezasToleradas() != null) pureza.setRedonMalezasToleradas(solicitud.getRedonMalezasToleradas());
+        if (solicitud.getRedonMalezasTolCero() != null) pureza.setRedonMalezasTolCero(solicitud.getRedonMalezasTolCero());
         if (solicitud.getRedonPesoTotal() != null) pureza.setRedonPesoTotal(solicitud.getRedonPesoTotal());
 
         if (solicitud.getInasePura() != null) pureza.setInasePura(solicitud.getInasePura());
@@ -268,6 +340,7 @@ public class PurezaService {
         if (solicitud.getInaseOtrosCultivos() != null) pureza.setInaseOtrosCultivos(solicitud.getInaseOtrosCultivos());
         if (solicitud.getInaseMalezas() != null) pureza.setInaseMalezas(solicitud.getInaseMalezas());
         if (solicitud.getInaseMalezasToleradas() != null) pureza.setInaseMalezasToleradas(solicitud.getInaseMalezasToleradas());
+        if (solicitud.getInaseMalezasTolCero() != null) pureza.setInaseMalezasTolCero(solicitud.getInaseMalezasTolCero());
         if (solicitud.getInaseFecha() != null) pureza.setInaseFecha(solicitud.getInaseFecha());
 
         if (solicitud.getOtrasSemillas() != null) {
@@ -309,6 +382,7 @@ public class PurezaService {
         dto.setOtrosCultivos_g(pureza.getOtrosCultivos_g());
         dto.setMalezas_g(pureza.getMalezas_g());
         dto.setMalezasToleradas_g(pureza.getMalezasToleradas_g());
+        dto.setMalezasTolCero_g(pureza.getMalezasTolCero_g());
         dto.setPesoTotal_g(pureza.getPesoTotal_g());
 
         dto.setRedonSemillaPura(pureza.getRedonSemillaPura());
@@ -316,6 +390,7 @@ public class PurezaService {
         dto.setRedonOtrosCultivos(pureza.getRedonOtrosCultivos());
         dto.setRedonMalezas(pureza.getRedonMalezas());
         dto.setRedonMalezasToleradas(pureza.getRedonMalezasToleradas());
+        dto.setRedonMalezasTolCero(pureza.getRedonMalezasTolCero());
         dto.setRedonPesoTotal(pureza.getRedonPesoTotal());
 
         dto.setInasePura(pureza.getInasePura());
@@ -323,6 +398,7 @@ public class PurezaService {
         dto.setInaseOtrosCultivos(pureza.getInaseOtrosCultivos());
         dto.setInaseMalezas(pureza.getInaseMalezas());
         dto.setInaseMalezasToleradas(pureza.getInaseMalezasToleradas());
+        dto.setInaseMalezasTolCero(pureza.getInaseMalezasTolCero());
         dto.setInaseFecha(pureza.getInaseFecha());
 
         if (pureza.getListados() != null) {
@@ -339,7 +415,7 @@ public class PurezaService {
     }
 
     private Listado crearListadoDesdeSolicitud(ListadoRequestDTO solicitud, Pureza pureza) {
-        Listado listado = MappingUtils.fromListadoRequest(solicitud, malezasYCultivosCatalogoRepository);
+        Listado listado = MappingUtils.fromListadoRequest(solicitud, malezasCatalogoRepository, especieRepository);
         listado.setPureza(pureza);
         return listado;
     }
@@ -390,8 +466,48 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica
+            this::validarAntesDeFinalizar
         );
+    }
+
+    /**
+     * Validación básica previa a la finalización de un análisis de Pureza.
+     * Requiere al menos una forma de evidencia: datos de pesos registrados (semilla pura, materia inerte, etc.),
+     * datos INASE o listados no vacíos. Si no hay evidencia lanza RuntimeException.
+     */
+    private void validarAntesDeFinalizar(Pureza pureza) {
+        // Verificar si tiene datos de pesos registrados (campos Redon)
+        boolean tieneDatosRedon = pureza.getRedonSemillaPura() != null
+                || pureza.getRedonMateriaInerte() != null
+                || pureza.getRedonOtrosCultivos() != null
+                || pureza.getRedonMalezas() != null
+                || pureza.getRedonMalezasToleradas() != null
+                || pureza.getRedonMalezasTolCero() != null;
+
+        // Verificar si tiene datos INASE
+        boolean tieneDatosINASE = (pureza.getInaseFecha() != null)
+                && (pureza.getInasePura() != null
+                    || pureza.getInaseMateriaInerte() != null
+                    || pureza.getInaseOtrosCultivos() != null
+                    || pureza.getInaseMalezas() != null
+                    || pureza.getInaseMalezasToleradas() != null
+                    || pureza.getInaseMalezasTolCero() != null);
+
+        // Verificar si tiene listados
+        boolean tieneListados = pureza.getListados() != null && !pureza.getListados().isEmpty();
+
+        // Validar que tenga al menos una forma de evidencia
+        if (!tieneDatosRedon && !tieneDatosINASE && !tieneListados) {
+            throw new RuntimeException("No se puede finalizar: el análisis de Pureza carece de evidencia. Agregue datos de pesos (Redon), datos INASE o listados antes de finalizar.");
+        }
+
+        // Validaciones adicionales de pesos si están presentes
+        if (pureza.getPesoInicial_g() != null && pureza.getPesoInicial_g().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El peso inicial debe ser mayor que 0");
+        }
+        if (pureza.getPesoTotal_g() != null && pureza.getPesoTotal_g().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El peso total debe ser mayor que 0");
+        }
     }
 
     /**
@@ -402,7 +518,8 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica
+            this::validarAntesDeFinalizar,
+            purezaRepository::findByIdLote // Función para buscar por lote
         );
     }
 
@@ -414,7 +531,7 @@ public class PurezaService {
             id,
             purezaRepository,
             this::mapearEntidadADTO,
-            null // No hay validación específica para marcar a repetir
+            this::validarAntesDeFinalizar
         );
     }
 }
