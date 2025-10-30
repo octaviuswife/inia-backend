@@ -22,7 +22,7 @@ public class FiltroJWTAutorizacion extends OncePerRequestFilter {
 
     private final String CLAVE = "@Z9@vQ3!pL8#wX7^tR2&nG6*yM4$eB1(dF0)sH5%kJ3&uY8*rE4#wQ1@zX6^nM9$";
     private final SecretKey secretKey = Keys.hmacShaKeyFor(CLAVE.getBytes(StandardCharsets.UTF_8));
-    private static final String ACCESS_TOKEN_COOKIE = "accessToken";
+    private static final String ACCESS_TOKEN_COOKIE = "JSESSIONID";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
