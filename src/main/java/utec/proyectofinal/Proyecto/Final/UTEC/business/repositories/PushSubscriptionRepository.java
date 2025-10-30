@@ -9,12 +9,30 @@ import java.util.Optional;
 
 @Repository
 public interface PushSubscriptionRepository extends JpaRepository<PushSubscription, Long> {
-    
-    List<PushSubscription> findByUsuarioUsuarioIDAndIsActiveTrue(Integer usuarioId);
-    
-    Optional<PushSubscription> findByEndpoint(String endpoint);
-    
-    void deleteByUsuarioUsuarioID(Integer usuarioId);
-    
+
+    /**
+     * Buscar todas las suscripciones activas
+     */
     List<PushSubscription> findAllByIsActiveTrue();
+
+    /**
+     * Buscar suscripciones activas de un usuario específico
+     */
+    List<PushSubscription> findByUsuarioUsuarioIDAndIsActiveTrue(Integer usuarioId);
+
+    /**
+     * Eliminar todas las suscripciones de un usuario
+     */
+    void deleteByUsuarioUsuarioID(Integer usuarioId);
+
+    /**
+     * Buscar suscripción por endpoint
+     * Útil para evitar duplicados y para desuscripciones sin autenticación
+     */
+    Optional<PushSubscription> findByEndpoint(String endpoint);
+
+    /**
+     * Contar suscripciones activas
+     */
+    long countByIsActiveTrue();
 }

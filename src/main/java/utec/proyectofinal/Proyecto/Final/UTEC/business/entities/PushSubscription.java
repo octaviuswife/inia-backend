@@ -2,9 +2,9 @@ package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -13,43 +13,38 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class PushSubscription {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
+    // ⚠️ IMPORTANTE: Usuario es NULLABLE para soportar suscripciones sin autenticación
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "usuario_id", nullable = true) // ← nullable = true
     private Usuario usuario;
-    
-    @Column(nullable = false, length = 500, unique = true)
+
+    @Column(nullable = false, unique = true, length = 500)
     private String endpoint;
-    
-    @Column(name = "p256dh_key", nullable = false)
-    private String p256dhKey;
-    
-    @Column(name = "auth_key", nullable = false)
-    private String authKey;
-    
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-    
-    @Column(name = "last_used_at")
-    private LocalDateTime lastUsedAt;
-    
-    @Column(name = "is_active")
-    @Builder.Default
+
+    @Column(nullable = false, length = 100)
+    private String p256dh;
+
+    @Column(nullable = false, length = 50)
+    private String auth;
+
+    @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
-    
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        if (lastUsedAt == null) {
-            lastUsedAt = LocalDateTime.now();
-        }
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
