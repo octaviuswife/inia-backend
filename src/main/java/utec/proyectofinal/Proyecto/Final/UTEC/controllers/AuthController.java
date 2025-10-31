@@ -68,14 +68,15 @@ public class AuthController {
             securityContext.setAuthentication(authentication);
             SecurityContextHolder.setContext(securityContext);
 
-            // CRÍTICO: Guardar en sesión HTTP
+            // CRÍTICO: Crear la sesión SOLO en el login con getSession(true)
+            // Con SessionCreationPolicy.NEVER, esta es la ÚNICA forma de crear una sesión
             HttpSession session = httpRequest.getSession(true);
             session.setAttribute(
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     securityContext
             );
 
-            System.out.println("🔑 [LOGIN] Sesión creada: " + session.getId());
+            System.out.println("🔑 [LOGIN] Sesión creada explícitamente: " + session.getId());
 
             // Obtener roles del usuario autenticado
             List<String> roles = authentication.getAuthorities().stream()
@@ -110,11 +111,17 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "Cerrar sesión", description = "Invalida la sesión del usuario")
     public ResponseEntity<?> logout(HttpServletRequest request) {
+        // Obtener la sesión sin crearla (false)
         HttpSession session = request.getSession(false);
         if (session != null) {
+            System.out.println("🚪 [LOGOUT] Invalidando sesión: " + session.getId());
             session.invalidate();
-            System.out.println("✅ [LOGOUT] Sesión invalidada");
+            System.out.println("✅ [LOGOUT] Sesión invalidada correctamente");
+        } else {
+            System.out.println("⚠️ [LOGOUT] No había sesión activa para invalidar");
         }
+        
+        // Limpiar el contexto de seguridad
         SecurityContextHolder.clearContext();
 
         return ResponseEntity.ok(Map.of("mensaje", "Logout exitoso"));

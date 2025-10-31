@@ -37,7 +37,9 @@ public class WebSecurityConfig {
                 )
 
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        // NEVER = no crear sesiones automáticamente, solo usar si ya existen
+                        // En el login creamos explícitamente la sesión con getSession(true)
+                        .sessionCreationPolicy(SessionCreationPolicy.NEVER)
                         .maximumSessions(10)
                         .maxSessionsPreventsLogin(false)
                 )
