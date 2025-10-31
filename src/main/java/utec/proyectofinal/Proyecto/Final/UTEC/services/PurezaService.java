@@ -60,14 +60,14 @@ public class PurezaService {
     @Autowired
     private AnalisisService analisisService;
 
-    // Crear Pureza con estado REGISTRADO
+    // Crear Pureza con estado EN_PROCESO
     @Transactional
     public PurezaDTO crearPureza(PurezaRequestDTO solicitud) {
         // Validar pesos antes de crear
         validarPesos(solicitud.getPesoInicial_g(), solicitud.getPesoTotal_g());
         
         Pureza pureza = mapearSolicitudAEntidad(solicitud);
-        pureza.setEstado(Estado.REGISTRADO);
+        pureza.setEstado(Estado.EN_PROCESO);
         
         // Establecer fecha de inicio automáticamente
         analisisService.establecerFechaInicio(pureza);
@@ -94,7 +94,7 @@ public class PurezaService {
             pureza.setEstado(Estado.PENDIENTE_APROBACION);
         }
         // Si es ADMIN editando análisis APROBADO o FINALIZADO, mantiene su estado
-        // Para otros estados (REGISTRADO, PENDIENTE_APROBACION) se mantiene igual
+        // Para otros estados (EN_PROCESO, PENDIENTE_APROBACION) se mantiene igual
 
         // Validar pesos antes de actualizar
         BigDecimal pesoInicial = solicitud.getPesoInicial_g() != null ? solicitud.getPesoInicial_g() : pureza.getPesoInicial_g();

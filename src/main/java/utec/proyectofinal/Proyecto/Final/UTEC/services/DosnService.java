@@ -62,11 +62,11 @@ public class DosnService {
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
 
-    // Crear Dosn
+    // Crear Dosn con estado EN_PROCESO (no tiene repeticiones)
     @Transactional
     public DosnDTO crearDosn(DosnRequestDTO solicitud) {
         Dosn dosn = mapearSolicitudAEntidad(solicitud);
-        dosn.setEstado(Estado.REGISTRADO);
+        dosn.setEstado(Estado.EN_PROCESO);
 
         // Establecer fecha de inicio automáticamente
         analisisService.establecerFechaInicio(dosn);

@@ -13,6 +13,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazoli
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepTetrazolioViabilidadRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepTetrazolioViabilidadDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 @Service
 public class RepTetrazolioViabilidadService {
@@ -42,6 +43,13 @@ public class RepTetrazolioViabilidadService {
             // Crear la repetición
             RepTetrazolioViabilidad repeticion = mapearSolicitudAEntidad(solicitud, tetrazolio);
             RepTetrazolioViabilidad repeticionGuardada = repeticionRepository.save(repeticion);
+            
+            // Cambiar estado a EN_PROCESO si es la primera repetición
+            if (tetrazolio.getEstado() == Estado.REGISTRADO) {
+                tetrazolio.setEstado(Estado.EN_PROCESO);
+                tetrazolioRepository.save(tetrazolio);
+                System.out.println("Estado de Tetrazolio cambiado a EN_PROCESO al agregar primera repetición");
+            }
             
             System.out.println("Repetición creada exitosamente con ID: " + repeticionGuardada.getRepTetrazolioViabID());
             return mapearEntidadADTO(repeticionGuardada);
