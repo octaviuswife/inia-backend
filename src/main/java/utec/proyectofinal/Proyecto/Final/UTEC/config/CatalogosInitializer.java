@@ -46,47 +46,47 @@ public class CatalogosInitializer implements CommandLineRunner {
 
             System.out.println("📋 Inicializando catálogo de Malezas...");
 
-            // Lista de malezas prioritarias
-            List<MalezaData> malezasPrioritarias = Arrays.asList(
-                new MalezaData("Coleostephus myconis", "margarita de piria"),
-                new MalezaData("Cuscuta spp.", "cúscuta"),
-                new MalezaData("Eragrostis plana", "capin annoni"),
-                new MalezaData("Senecio madagascariensis", "senecio"),
-                new MalezaData("Sorghum halepense", "sorgo de Alepo"),
-                new MalezaData("Xanthium spp.", "abrojo")
+            // Lista de malezas tol cero
+            List<MalezaData> malezasTolCero = Arrays.asList(
+                new MalezaData("Coleostephus myconis", "Margarita de piria"),
+                new MalezaData("Cuscuta spp.", "Cúscuta"),
+                new MalezaData("Eragrostis plana", "Capin annoni"),
+                new MalezaData("Senecio madagascariensis", "Senecio"),
+                new MalezaData("Sorghum halepense", "Sorgo de Alepo"),
+                new MalezaData("Xanthium spp.", "Abrojo")
             );
 
-            // Lista de otras malezas
-            List<MalezaData> otrasMalezas = Arrays.asList(
-                new MalezaData("Ammi majus", "biznaguilla"),
-                new MalezaData("Ammi visnaga", "biznaga"),
-                new MalezaData("Anthemis cotula", "manzanilla"),
-                new MalezaData("Avena fatua", "balango"),
-                new MalezaData("Brassica spp.", "nabo"),
-                new MalezaData("Carduus spp.", "cardos"),
-                new MalezaData("Carthamus lanatus", "cardo de la cruz"),
-                new MalezaData("Centaurea spp.", "abrepuño"),
-                new MalezaData("Cirsium vulgare", "cardo negro"),
-                new MalezaData("Convolvulus spp.", "corrigüela"),
-                new MalezaData("Cyclospermum leptophyllum", "apio cimarrón"),
-                new MalezaData("Cynara cardunculus", "cardo de castilla"),
-                new MalezaData("Cyperus rotundus", "pasto bolita"),
-                new MalezaData("Echium plantagineum", "flor morada"),
-                new MalezaData("Lolium temulentum", "joyo"),
-                new MalezaData("Melilotus indicus", "trébol de olor"),
-                new MalezaData("Phalaris paradoxa", "alpistillo"),
-                new MalezaData("Plantago lanceolata", "llantén"),
-                new MalezaData("Polygonum convolvulus", "enredadera anual"),
-                new MalezaData("Raphanus spp.", "rábano"),
-                new MalezaData("Rapistrum rugosum", "mostacilla"),
-                new MalezaData("Rumex spp.", "lengua de vaca"),
-                new MalezaData("Sylibum marianum", "cardo asnal")
+            // Lista de malezas tolerancia
+            List<MalezaData> malezasToleradas = Arrays.asList(
+                new MalezaData("Ammi majus", "Biznaguilla"),
+                new MalezaData("Ammi visnaga", "Biznaga"),
+                new MalezaData("Anthemis cotula", "Manzanilla"),
+                new MalezaData("Avena fatua", "Balango"),
+                new MalezaData("Brassica spp.", "Nabo"),
+                new MalezaData("Carduus spp.", "Cardos"),
+                new MalezaData("Carthamus lanatus", "Cardo de la cruz"),
+                new MalezaData("Centaurea spp.", "Abrepuño"),
+                new MalezaData("Cirsium vulgare", "Cardo negro"),
+                new MalezaData("Convolvulus spp.", "Corrigüela"),
+                new MalezaData("Cyclospermum leptophyllum", "Apio cimarrón"),
+                new MalezaData("Cynara cardunculus", "Cardo de castilla"),
+                new MalezaData("Cyperus rotundus", "Pasto bolita"),
+                new MalezaData("Echium plantagineum", "Flor morada"),
+                new MalezaData("Lolium temulentum", "Joyo"),
+                new MalezaData("Melilotus indicus", "Trébol de olor"),
+                new MalezaData("Phalaris paradoxa", "Alpistillo"),
+                new MalezaData("Plantago lanceolata", "Llantén"),
+                new MalezaData("Polygonum convolvulus", "Enredadera anual"),
+                new MalezaData("Raphanus spp.", "Rábano"),
+                new MalezaData("Rapistrum rugosum", "Mostacilla"),
+                new MalezaData("Rumex spp.", "Lengua de vaca"),
+                new MalezaData("Sylibum marianum", "Cardo asnal")
             );
 
             int count_inserted = 0;
-            
-            // Insertar malezas prioritarias
-            for (MalezaData data : malezasPrioritarias) {
+
+            // Insertar malezas tolerancia cero
+            for (MalezaData data : malezasTolCero) {
                 MalezasCatalogo maleza = new MalezasCatalogo();
                 maleza.setNombreCientifico(data.nombreCientifico);
                 maleza.setNombreComun(data.nombreComun);
@@ -95,8 +95,8 @@ public class CatalogosInitializer implements CommandLineRunner {
                 count_inserted++;
             }
 
-            // Insertar otras malezas
-            for (MalezaData data : otrasMalezas) {
+            // Insertar malezas con tolerancia
+            for (MalezaData data : malezasToleradas) {
                 MalezasCatalogo maleza = new MalezasCatalogo();
                 maleza.setNombreCientifico(data.nombreCientifico);
                 maleza.setNombreComun(data.nombreComun);
