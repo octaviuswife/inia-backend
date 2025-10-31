@@ -56,6 +56,10 @@ public class WebSecurityConfig {
                         .requestMatchers("/swagger-resources/**").permitAll()
                         .requestMatchers("/configuration/**").permitAll()
 
+                        // 🔥 NUEVO: Permitir endpoint SSE de notificaciones (requiere autenticación pero se maneja internamente)
+                        // SSE necesita autenticación pero Spring Security lo maneja automáticamente
+                        .requestMatchers("/v1/notifications/stream").authenticated()
+
                         // Requiere autenticación para todo lo demás
                         .anyRequest().authenticated()
                 );
