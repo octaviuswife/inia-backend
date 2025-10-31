@@ -20,7 +20,7 @@ import java.io.IOException;
  * Controlador para Server-Sent Events (SSE) de notificaciones en tiempo real
  */
 @RestController
-@RequestMapping("/v1/notifications")
+@RequestMapping("/api/v1/notifications")
 @CrossOrigin(origins = {"http://localhost:3000", "https://inia.duckdns.org"}, allowCredentials = "true")
 public class NotificationStreamController {
 
