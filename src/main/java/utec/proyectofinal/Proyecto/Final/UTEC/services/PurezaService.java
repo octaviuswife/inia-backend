@@ -221,9 +221,13 @@ public class PurezaService {
             dto.setIdLote(pureza.getLote().getLoteID());
             dto.setLote(pureza.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (pureza.getLote().getCultivar() != null && pureza.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }

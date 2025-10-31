@@ -208,9 +208,13 @@ public class DosnService {
             dto.setIdLote(dosn.getLote().getLoteID());
             dto.setLote(dosn.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (dosn.getLote().getCultivar() != null && dosn.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = dosn.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = dosn.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = dosn.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }

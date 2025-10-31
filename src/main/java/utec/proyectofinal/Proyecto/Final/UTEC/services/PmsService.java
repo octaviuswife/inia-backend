@@ -200,9 +200,13 @@ public class PmsService {
             dto.setIdLote(pms.getLote().getLoteID());
             dto.setLote(pms.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (pms.getLote().getCultivar() != null && pms.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }

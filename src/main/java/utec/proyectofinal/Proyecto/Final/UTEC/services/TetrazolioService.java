@@ -190,9 +190,13 @@ public class TetrazolioService {
             dto.setIdLote(tetrazolio.getLote().getLoteID());
             dto.setLote(tetrazolio.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (tetrazolio.getLote().getCultivar() != null && tetrazolio.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }
