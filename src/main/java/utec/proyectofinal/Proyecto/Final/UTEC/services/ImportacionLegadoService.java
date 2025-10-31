@@ -234,7 +234,7 @@ public class ImportacionLegadoService {
     }
 
     /**
-     * Obtiene o crea una especie
+     * Obtiene o crea una especie con búsqueda inteligente para evitar duplicados
      */
     private Especie obtenerOCrearEspecie(String nombreCompletoEspecie) {
         if (nombreCompletoEspecie == null || nombreCompletoEspecie.trim().isEmpty()) {
@@ -244,20 +244,61 @@ public class ImportacionLegadoService {
         // Parsear el nombre (quitar código, ej: "1517 - RAIGRAS" -> "RAIGRAS")
         String nombreComun = parsearValorCatalogo(nombreCompletoEspecie);
         
-        // Buscar si ya existe por nombre común
-        Optional<Especie> existente = especieRepository.findByNombreComun(nombreComun);
+        // Normalizar el nombre (trim y quitar espacios múltiples)
+        nombreComun = nombreComun.trim().replaceAll("\\s+", " ");
         
+        // 1. Intentar búsqueda exacta (case-insensitive)
+        Optional<Especie> existente = especieRepository.findByNombreComunIgnoreCase(nombreComun);
         if (existente.isPresent()) {
+            log.debug("Especie encontrada (búsqueda exacta): {}", nombreComun);
             return existente.get();
         }
         
-        // Crear nueva especie
+        // 2. Búsqueda flexible: el nombre de la BD puede contener el nombre buscado
+        // Ejemplo: buscamos "Avena blanca" y en BD está "Avena blanca / Avena amarilla"
+        List<Especie> coincidencias = especieRepository.buscarPorNombreComunInicio(nombreComun);
+        if (!coincidencias.isEmpty()) {
+            log.debug("Especie encontrada (búsqueda por inicio): {} -> {}", nombreComun, coincidencias.get(0).getNombreComun());
+            return coincidencias.get(0);
+        }
+        
+        // 3. Búsqueda aún más flexible: buscar por palabras clave
+        // Si buscamos "RAIGRAS" debería encontrar "Raigrás"
+        String nombreSinAcentos = removerAcentos(nombreComun);
+        for (Especie especie : especieRepository.findByActivoTrue()) {
+            String nombreBD = removerAcentos(especie.getNombreComun());
+            
+            // Verificar si el nombre buscado está contenido en el nombre de la BD
+            if (nombreBD.toLowerCase().contains(nombreSinAcentos.toLowerCase())) {
+                log.debug("Especie encontrada (búsqueda flexible): {} -> {}", nombreComun, especie.getNombreComun());
+                return especie;
+            }
+            
+            // Verificar si el nombre de la BD está contenido en el nombre buscado
+            if (nombreSinAcentos.toLowerCase().contains(nombreBD.toLowerCase())) {
+                log.debug("Especie encontrada (búsqueda inversa): {} -> {}", nombreComun, especie.getNombreComun());
+                return especie;
+            }
+        }
+        
+        // 4. Si no existe, crear nueva especie
+        log.info("Creando nueva especie: {}", nombreComun);
         Especie especie = new Especie();
         especie.setNombreComun(nombreComun);
         especie.setNombreCientifico(""); // Vacío por ahora
         especie.setActivo(true);
         
         return especieRepository.save(especie);
+    }
+    
+    /**
+     * Remueve acentos de un texto para búsqueda flexible
+     */
+    private String removerAcentos(String texto) {
+        if (texto == null) return "";
+        
+        String normalized = java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
 
     /**
