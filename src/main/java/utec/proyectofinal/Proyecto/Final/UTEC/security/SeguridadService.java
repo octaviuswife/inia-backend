@@ -20,8 +20,14 @@ public class SeguridadService {
     @Autowired
     private PasswordService passwordService;
 
-    public Optional<Usuario> autenticarUsuario(String usuario, String password) {
-        Optional<Usuario> objUsuario = usuarioRepository.findByNombreIgnoreCase(usuario);
+    public Optional<Usuario> autenticarUsuario(String usuarioOrEmail, String password) {
+        // Intentar buscar por nombre de usuario primero
+        Optional<Usuario> objUsuario = usuarioRepository.findByNombreIgnoreCase(usuarioOrEmail);
+        
+        // Si no se encuentra por nombre, intentar por email
+        if (objUsuario.isEmpty()) {
+            objUsuario = usuarioRepository.findByEmailIgnoreCase(usuarioOrEmail);
+        }
 
         if (objUsuario.isEmpty()) {
             throw new RuntimeException("USUARIO_INCORRECTO");

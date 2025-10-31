@@ -110,11 +110,11 @@ public class AuthController {
             e.printStackTrace();
             
             String mensaje = switch (e.getMessage()) {
-                case "USUARIO_INCORRECTO" -> "Usuario no encontrado";
-                case "USUARIO_INACTIVO" -> "Usuario inactivo";
-                case "USUARIO_PENDIENTE_APROBACION" -> "Usuario pendiente de aprobación por el administrador";
-                case "USUARIO_SIN_ROL" -> "Usuario sin rol asignado. Contacte al administrador";
-                case "CONTRASENIA_INCORRECTA" -> "Contraseña incorrecta";
+                case "USUARIO_INCORRECTO" -> "Credenciales incorrectas";
+                case "USUARIO_INACTIVO" -> "No se puede iniciar sesión. Contacte al administrador";
+                case "USUARIO_PENDIENTE_APROBACION" -> "Cuenta pendiente de aprobación. Contacte al administrador";
+                case "USUARIO_SIN_ROL" -> "No se puede iniciar sesión. Contacte al administrador";
+                case "CONTRASENIA_INCORRECTA" -> "Credenciales incorrectas";
                 default -> "Error de autenticación";
             };
             
