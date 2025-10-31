@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +23,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.AnalisisRepo
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.NotificacionRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.NotificacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PushNotificationRequest;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.NotificacionDTO;
 
 import static utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoNotificacion.*;
@@ -28,6 +31,8 @@ import static utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoNotificacion.*;
 @Service
 @Transactional
 public class NotificacionService {
+
+    private static final Logger logger = LoggerFactory.getLogger(NotificacionService.class);
 
     @Autowired
     private NotificacionRepository notificacionRepository;
@@ -40,6 +45,9 @@ public class NotificacionService {
 
     @Autowired
     private AnalisisHistorialRepository analisisHistorialRepository;
+    
+    @Autowired
+    private PushNotificationService pushNotificationService;
 
     // Crear notificación manual
     public NotificacionDTO crearNotificacion(NotificacionRequestDTO request) {
@@ -54,6 +62,10 @@ public class NotificacionService {
         notificacion.setTipo(request.getTipo());
 
         notificacion = notificacionRepository.save(notificacion);
+        
+        // Enviar notificación push
+        enviarNotificacionPush(notificacion);
+        
         return convertToDTO(notificacion);
     }
 
@@ -76,7 +88,8 @@ public class NotificacionService {
             notificacion.setUsuario(admin);
             notificacion.setTipo(USUARIO_REGISTRO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarNotificacionPush(notificacion);
         }
     }
 
@@ -91,7 +104,8 @@ public class NotificacionService {
         notificacion.setUsuario(usuario);
         notificacion.setTipo(USUARIO_APROBADO);
         
-        notificacionRepository.save(notificacion);
+        notificacion = notificacionRepository.save(notificacion);
+        enviarNotificacionPush(notificacion);
     }
 
     // Notificación cuando se rechaza un usuario
@@ -105,7 +119,8 @@ public class NotificacionService {
         notificacion.setUsuario(usuario);
         notificacion.setTipo(USUARIO_RECHAZADO);
         
-        notificacionRepository.save(notificacion);
+        notificacion = notificacionRepository.save(notificacion);
+        enviarNotificacionPush(notificacion);
     }
 
     // Notificación cuando se finaliza un análisis
@@ -128,7 +143,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_FINALIZADO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarNotificacionPush(notificacion);
         }
     }
 
@@ -154,7 +170,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_APROBADO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarNotificacionPush(notificacion);
         }
     }
 
@@ -180,7 +197,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_REPETIR);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarNotificacionPush(notificacion);
         }
     }
 
@@ -204,7 +222,8 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_FINALIZADO); // Reutilizamos el tipo existente
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            enviarNotificacionPush(notificacion);
         }
     }
 
@@ -353,5 +372,37 @@ public class NotificacionService {
         dto.setAnalisisId(notificacion.getAnalisisId());
         dto.setTipo(notificacion.getTipo());
         return dto;
+    }
+    
+    /**
+     * Método helper para enviar notificación push cuando se crea una notificación
+     */
+    private void enviarNotificacionPush(Notificacion notificacion) {
+        try {
+            PushNotificationRequest pushRequest = new PushNotificationRequest();
+            pushRequest.setTitle(notificacion.getNombre());
+            pushRequest.setBody(notificacion.getMensaje());
+            pushRequest.setIcon("/icons/icon-192x192.png");
+            pushRequest.setBadge("/icons/badge-72x72.png");
+            
+            // Determinar la URL según el tipo de notificación
+            if (notificacion.getAnalisisId() != null) {
+                pushRequest.setUrl("/listado");
+                pushRequest.setAnalisisId(notificacion.getAnalisisId());
+            } else if (notificacion.getTipo() == USUARIO_REGISTRO) {
+                pushRequest.setUrl("/administracion/usuario");
+            } else {
+                pushRequest.setUrl("/notificaciones");
+            }
+            
+            // Enviar la notificación push al usuario específico
+            pushNotificationService.enviarNotificacionAUsuario(
+                notificacion.getUsuario().getUsuarioID(), 
+                pushRequest
+            );
+        } catch (Exception e) {
+            // No fallar si hay error en push notification, solo registrar el error
+            logger.error("Error al enviar notificación push: {}", e.getMessage());
+        }
     }
 }
