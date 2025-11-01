@@ -378,13 +378,27 @@ public class PurezaService {
         PurezaDTO dto = new PurezaDTO();
 
         dto.setAnalisisID(pureza.getAnalisisID());
-        dto.setIdLote(pureza.getLote() != null ? pureza.getLote().getLoteID() : null);
-        dto.setLote(pureza.getLote() != null ? pureza.getLote().getFicha() : null);
         dto.setEstado(pureza.getEstado());
         dto.setFechaInicio(pureza.getFechaInicio());
         dto.setFechaFin(pureza.getFechaFin());
         dto.setCumpleEstandar(pureza.getCumpleEstandar());
         dto.setComentarios(pureza.getComentarios());
+        
+        // Datos completos del lote si existe
+        if (pureza.getLote() != null) {
+            dto.setIdLote(pureza.getLote().getLoteID());
+            dto.setLote(pureza.getLote().getNomLote());
+            dto.setFicha(pureza.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (pureza.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(pureza.getLote().getCultivar().getNombre());
+                
+                if (pureza.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(pureza.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
+        }
 
         dto.setFecha(pureza.getFecha());
         dto.setPesoInicial_g(pureza.getPesoInicial_g());

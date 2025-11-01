@@ -511,9 +511,20 @@ public class PmsService {
         dto.setFechaFin(pms.getFechaFin());
         dto.setComentarios(pms.getComentarios());
 
+        // Datos completos del lote si existe
         if (pms.getLote() != null) {
             dto.setIdLote(pms.getLote().getLoteID());
-            dto.setLote(pms.getLote().getFicha());
+            dto.setLote(pms.getLote().getNomLote());
+            dto.setFicha(pms.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (pms.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(pms.getLote().getCultivar().getNombre());
+                
+                if (pms.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(pms.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
         }
 
         // Campos específicos de PMS de configuración

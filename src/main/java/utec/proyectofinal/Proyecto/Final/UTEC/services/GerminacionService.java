@@ -305,10 +305,20 @@ public class GerminacionService {
         dto.setFechaFin(germinacion.getFechaFin());
         dto.setComentarios(germinacion.getComentarios());
         
-        // Datos del lote si existe
+        // Datos completos del lote si existe
         if (germinacion.getLote() != null) {
             dto.setIdLote(germinacion.getLote().getLoteID());
-            dto.setLote(germinacion.getLote().getFicha());
+            dto.setLote(germinacion.getLote().getNomLote());
+            dto.setFicha(germinacion.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (germinacion.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(germinacion.getLote().getCultivar().getNombre());
+                
+                if (germinacion.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(germinacion.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
         }
         
         // Mapear historial de análisis

@@ -354,8 +354,22 @@ public class DosnService {
         dto.setFechaFin(dosn.getFechaFin());
         dto.setCumpleEstandar(dosn.getCumpleEstandar());
         dto.setComentarios(dosn.getComentarios());
-        dto.setIdLote(dosn.getLote() != null ? dosn.getLote().getLoteID() : null);
-        dto.setLote(dosn.getLote() != null ? dosn.getLote().getFicha() : null);
+        
+        // Datos completos del lote si existe
+        if (dosn.getLote() != null) {
+            dto.setIdLote(dosn.getLote().getLoteID());
+            dto.setLote(dosn.getLote().getNomLote());
+            dto.setFicha(dosn.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (dosn.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(dosn.getLote().getCultivar().getNombre());
+                
+                if (dosn.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(dosn.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
+        }
 
         dto.setFechaINIA(dosn.getFechaINIA());
         dto.setGramosAnalizadosINIA(dosn.getGramosAnalizadosINIA());

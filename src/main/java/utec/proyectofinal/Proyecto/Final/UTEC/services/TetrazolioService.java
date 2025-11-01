@@ -321,10 +321,20 @@ public class TetrazolioService {
         dto.setFechaFin(tetrazolio.getFechaFin());
         dto.setComentarios(tetrazolio.getComentarios());
         
-        // Datos del lote si existe
+        // Datos completos del lote si existe
         if (tetrazolio.getLote() != null) {
             dto.setIdLote(tetrazolio.getLote().getLoteID());
-            dto.setLote(tetrazolio.getLote().getFicha());
+            dto.setLote(tetrazolio.getLote().getNomLote());
+            dto.setFicha(tetrazolio.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (tetrazolio.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(tetrazolio.getLote().getCultivar().getNombre());
+                
+                if (tetrazolio.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(tetrazolio.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
         }
         
         // Datos específicos de Tetrazolio
