@@ -1,5 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -38,4 +40,11 @@ public interface MalezasCatalogoRepository extends JpaRepository<MalezasCatalogo
      */
     @Query("SELECT m FROM MalezasCatalogo m WHERE LOWER(m.nombreComun) LIKE LOWER(CONCAT(:nombreComun, '%')) AND m.activo = true")
     List<MalezasCatalogo> buscarPorNombreComunInicio(@Param("nombreComun") String nombreComun);
+    
+    // Métodos paginados para listado
+    Page<MalezasCatalogo> findByActivoTrueOrderByNombreComunAsc(Pageable pageable);
+    
+    Page<MalezasCatalogo> findByActivoFalseOrderByNombreComunAsc(Pageable pageable);
+    
+    Page<MalezasCatalogo> findAllByOrderByNombreComunAsc(Pageable pageable);
 }

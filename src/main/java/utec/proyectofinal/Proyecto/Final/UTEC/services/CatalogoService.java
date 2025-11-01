@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
@@ -142,5 +144,122 @@ public class CatalogoService {
     // Obtener catálogo por ID para uso interno
     public Catalogo obtenerEntidadPorId(Long id) {
         return catalogoRepository.findById(id).orElse(null);
+    }
+
+    // Listar Catálogos con paginado (para listado)
+    public Page<CatalogoDTO> obtenerCatalogosPaginados(Pageable pageable) {
+        Page<Catalogo> catalogoPage = catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable);
+        return catalogoPage.map(this::mapearEntidadADTO);
+    }
+
+    // Listar Catálogos con paginado y filtro por activo
+    public Page<CatalogoDTO> obtenerCatalogosPaginadosConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Catalogo> catalogoPage;
+        
+        if ("activos".equalsIgnoreCase(filtroActivo)) {
+            catalogoPage = catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable);
+        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
+            catalogoPage = catalogoRepository.findByActivoFalseOrderByTipoAscValorAsc(pageable);
+        } else {
+            // "todos" o cualquier otro valor
+            catalogoPage = catalogoRepository.findAllByOrderByTipoAscValorAsc(pageable);
+        }
+        
+        return catalogoPage.map(this::mapearEntidadADTO);
+    }
+
+    /**
+     * Listar Catálogos con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @param tipo Filtro por tipo de catálogo (opcional)
+     * @return Página de CatalogoDTO filtrados
+     */
+    public Page<CatalogoDTO> obtenerCatalogosPaginadosConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String tipo) {
+        
+        Page<Catalogo> catalogoPage;
+        
+        // Si hay tipo específico
+        if (tipo != null && !tipo.trim().isEmpty()) {
+            try {
+                TipoCatalogo tipoCatalogo = TipoCatalogo.valueOf(tipo.toUpperCase());
+                
+                // Si hay búsqueda
+                if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                    List<Catalogo> catalogos;
+                    if (activo == null) {
+                        catalogos = catalogoRepository.findByTipo(tipoCatalogo);
+                    } else if (activo) {
+                        catalogos = catalogoRepository.findByTipoAndActivoTrue(tipoCatalogo);
+                    } else {
+                        catalogos = catalogoRepository.findByTipoAndActivoFalse(tipoCatalogo);
+                    }
+                    
+                    // Filtrar por término de búsqueda
+                    catalogos = catalogos.stream()
+                        .filter(c -> c.getValor() != null && c.getValor().toLowerCase().contains(searchTerm.toLowerCase()))
+                        .collect(Collectors.toList());
+                    
+                    // Convertir lista a página
+                    int start = (int) pageable.getOffset();
+                    int end = Math.min(start + pageable.getPageSize(), catalogos.size());
+                    List<Catalogo> pageContent = catalogos.subList(start, end);
+                    catalogoPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, catalogos.size());
+                } else {
+                    // Sin búsqueda, solo filtro de activo y tipo
+                    if (activo == null) {
+                        catalogoPage = catalogoRepository.findByTipoOrderByValorAsc(tipoCatalogo, pageable);
+                    } else if (activo) {
+                        catalogoPage = catalogoRepository.findByTipoAndActivoTrueOrderByValorAsc(tipoCatalogo, pageable);
+                    } else {
+                        catalogoPage = catalogoRepository.findByTipoAndActivoFalseOrderByValorAsc(tipoCatalogo, pageable);
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                // Tipo inválido, devolver página vacía
+                catalogoPage = Page.empty(pageable);
+            }
+        } else {
+            // Sin tipo específico
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                List<Catalogo> catalogos;
+                if (activo == null) {
+                    catalogos = catalogoRepository.findAll();
+                } else if (activo) {
+                    catalogos = catalogoRepository.findByActivoTrue();
+                } else {
+                    catalogos = catalogoRepository.findAll().stream()
+                        .filter(c -> !c.getActivo())
+                        .collect(Collectors.toList());
+                }
+                
+                // Filtrar por término de búsqueda
+                catalogos = catalogos.stream()
+                    .filter(c -> c.getValor() != null && c.getValor().toLowerCase().contains(searchTerm.toLowerCase()))
+                    .collect(Collectors.toList());
+                
+                // Convertir lista a página
+                int start = (int) pageable.getOffset();
+                int end = Math.min(start + pageable.getPageSize(), catalogos.size());
+                List<Catalogo> pageContent = catalogos.subList(start, end);
+                catalogoPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, catalogos.size());
+            } else {
+                // Sin búsqueda ni tipo, solo filtro de activo
+                if (activo == null) {
+                    catalogoPage = catalogoRepository.findAllByOrderByTipoAscValorAsc(pageable);
+                } else if (activo) {
+                    catalogoPage = catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable);
+                } else {
+                    catalogoPage = catalogoRepository.findByActivoFalseOrderByTipoAscValorAsc(pageable);
+                }
+            }
+        }
+        
+        return catalogoPage.map(this::mapearEntidadADTO);
     }
 }

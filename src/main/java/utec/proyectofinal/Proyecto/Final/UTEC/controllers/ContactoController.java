@@ -1,6 +1,9 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -197,5 +200,29 @@ public class ContactoController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    // Obtener Contactos con paginado para listado
+    @Operation(summary = "Obtener contactos paginados", 
+              description = "Obtiene la lista paginada de contactos para el listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<Page<ContactoDTO>> obtenerContactosPaginados(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) String tipo) {
+        Pageable pageable = PageRequest.of(page, size);
+        TipoContacto tipoContacto = null;
+        if (tipo != null && !tipo.trim().isEmpty()) {
+            try {
+                tipoContacto = TipoContacto.valueOf(tipo.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Tipo inválido, se ignorará
+            }
+        }
+        Page<ContactoDTO> response = contactoService.obtenerContactosPaginadosConFiltros(pageable, search, activo, tipoContacto);
+        return ResponseEntity.ok(response);
     }
 }

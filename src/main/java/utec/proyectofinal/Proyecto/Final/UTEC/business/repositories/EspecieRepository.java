@@ -1,5 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,4 +42,11 @@ public interface EspecieRepository extends JpaRepository<Especie, Long> {
      */
     @Query("SELECT e FROM Especie e WHERE LOWER(e.nombreComun) LIKE LOWER(CONCAT(:nombreComun, '%')) AND e.activo = true")
     List<Especie> buscarPorNombreComunInicio(@Param("nombreComun") String nombreComun);
+    
+    // Métodos paginados para listado
+    Page<Especie> findByActivoTrueOrderByNombreComunAsc(Pageable pageable);
+    
+    Page<Especie> findByActivoFalseOrderByNombreComunAsc(Pageable pageable);
+    
+    Page<Especie> findAllByOrderByNombreComunAsc(Pageable pageable);
 }

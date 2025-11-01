@@ -210,7 +210,7 @@ public class UsuarioService {
         // Actualizar nombre de usuario (username) si se proporciona
         if (solicitud.getNombre() != null && !solicitud.getNombre().trim().isEmpty() 
             && !solicitud.getNombre().equalsIgnoreCase(usuario.getNombre())) {
-            // Verificar que el nuevo nombre de usuario no exista (case-insensitive)
+            // Verificar que el nuevo nombre de usuario no exista
             Optional<Usuario> usuarioExistente = usuarioRepository.findByNombreIgnoreCase(solicitud.getNombre());
             if (usuarioExistente.isPresent() && !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {
                 throw new RuntimeException("El nombre de usuario ya está en uso por otro usuario");

@@ -1,6 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasCatalogoRepository;
@@ -101,12 +103,96 @@ public class MalezasCatalogoService {
         dto.setCatalogoID(catalogo.getCatalogoID());
         dto.setNombreComun(catalogo.getNombreComun());
         dto.setNombreCientifico(catalogo.getNombreCientifico());
-        // Campo activo removido del DTO - no necesario en responses
+        dto.setActivo(catalogo.getActivo()); // Mapear campo activo
         return dto;
     }
 
     // Obtener entidad para uso interno
     public MalezasCatalogo obtenerEntidadPorId(Long id) {
         return repository.findById(id).orElse(null);
+    }
+
+    // Listar Malezas con paginado (para listado)
+    public Page<MalezasCatalogoDTO> obtenerMalezasPaginadas(Pageable pageable) {
+        Page<MalezasCatalogo> malezasPage = repository.findByActivoTrueOrderByNombreComunAsc(pageable);
+        return malezasPage.map(this::mapearEntidadADTO);
+    }
+
+    // Listar Malezas con paginado y filtro por activo
+    public Page<MalezasCatalogoDTO> obtenerMalezasPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<MalezasCatalogo> malezasPage;
+        
+        if ("activos".equalsIgnoreCase(filtroActivo)) {
+            malezasPage = repository.findByActivoTrueOrderByNombreComunAsc(pageable);
+        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
+            malezasPage = repository.findByActivoFalseOrderByNombreComunAsc(pageable);
+        } else {
+            // "todos" o cualquier otro valor
+            malezasPage = repository.findAllByOrderByNombreComunAsc(pageable);
+        }
+        
+        return malezasPage.map(this::mapearEntidadADTO);
+    }
+
+    /**
+     * Listar Malezas con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @return Página de MalezasCatalogoDTO filtrados
+     */
+    public Page<MalezasCatalogoDTO> obtenerMalezasPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo) {
+        
+        Page<MalezasCatalogo> malezasPage;
+        
+        // Si hay término de búsqueda, buscar en nombre común y científico
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            List<MalezasCatalogo> malezas;
+            if (activo == null) {
+                // Buscar en todas (activas e inactivas)
+                malezas = repository.findAll().stream()
+                    .filter(m -> 
+                        (m.getNombreComun() != null && m.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||
+                        (m.getNombreCientifico() != null && m.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase()))
+                    )
+                    .collect(Collectors.toList());
+            } else if (activo) {
+                // Buscar solo en activas
+                List<MalezasCatalogo> porComun = repository.findByNombreComunContainingIgnoreCaseAndActivoTrue(searchTerm);
+                List<MalezasCatalogo> porCientifico = repository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(searchTerm);
+                malezas = new java.util.ArrayList<>(porComun);
+                porCientifico.forEach(m -> {
+                    if (!malezas.contains(m)) malezas.add(m);
+                });
+            } else {
+                // Buscar solo en inactivas
+                malezas = repository.findAll().stream()
+                    .filter(m -> !m.getActivo() &&
+                        ((m.getNombreComun() != null && m.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||
+                         (m.getNombreCientifico() != null && m.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase())))
+                    )
+                    .collect(Collectors.toList());
+            }
+            
+            // Convertir lista a página
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), malezas.size());
+            List<MalezasCatalogo> pageContent = malezas.subList(start, end);
+            malezasPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, malezas.size());
+        } else {
+            // Sin término de búsqueda, aplicar solo filtro de activo
+            if (activo == null) {
+                malezasPage = repository.findAllByOrderByNombreComunAsc(pageable);
+            } else if (activo) {
+                malezasPage = repository.findByActivoTrueOrderByNombreComunAsc(pageable);
+            } else {
+                malezasPage = repository.findByActivoFalseOrderByNombreComunAsc(pageable);
+            }
+        }
+        
+        return malezasPage.map(this::mapearEntidadADTO);
     }
 }
