@@ -1,5 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,4 +48,17 @@ public interface ContactoRepository extends JpaRepository<Contacto, Long> {
     
     // Buscar por nombre exacto, tipo y activo
     Optional<Contacto> findByNombreAndTipoAndActivoTrue(String nombre, TipoContacto tipo);
+    
+    // Métodos paginados para listado
+    Page<Contacto> findByActivoTrueOrderByNombreAsc(Pageable pageable);
+    
+    Page<Contacto> findByActivoFalseOrderByNombreAsc(Pageable pageable);
+    
+    Page<Contacto> findAllByOrderByNombreAsc(Pageable pageable);
+    
+    Page<Contacto> findByTipoAndActivoTrueOrderByNombreAsc(TipoContacto tipo, Pageable pageable);
+    
+    Page<Contacto> findByTipoAndActivoFalseOrderByNombreAsc(TipoContacto tipo, Pageable pageable);
+    
+    Page<Contacto> findByTipoOrderByNombreAsc(TipoContacto tipo, Pageable pageable);
 }

@@ -1,5 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -21,4 +23,12 @@ public class GerminacionListadoDTO {
     private String usuarioCreador;
     private String usuarioModificador;
     private Boolean cumpleNorma; // true si NO está "A REPETIR"
+    
+    // Nuevos campos de TablaGerm para listado
+    private BigDecimal valorGerminacionINIA;
+    private BigDecimal valorGerminacionINASE;
+    private LocalDate fechaInicioGerm;
+    private LocalDate fechaFinal;
+    private Boolean tienePrefrio;
+    private Boolean tienePretratamiento;
 }

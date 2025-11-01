@@ -1,5 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
@@ -22,4 +24,11 @@ public interface CultivarRepository extends JpaRepository<Cultivar, Long> {
     List<Cultivar> findByEspecieEspecieIDAndActivoTrue(Long especieID);
     
     Optional<Cultivar> findByNombreAndEspecie_EspecieID(String nombre, Long especieID);
+    
+    // Métodos paginados para listado
+    Page<Cultivar> findByActivoTrueOrderByNombreAsc(Pageable pageable);
+    
+    Page<Cultivar> findByActivoFalseOrderByNombreAsc(Pageable pageable);
+    
+    Page<Cultivar> findAllByOrderByNombreAsc(Pageable pageable);
 }

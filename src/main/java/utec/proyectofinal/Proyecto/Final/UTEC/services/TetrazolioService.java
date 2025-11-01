@@ -190,9 +190,13 @@ public class TetrazolioService {
             dto.setIdLote(tetrazolio.getLote().getLoteID());
             dto.setLote(tetrazolio.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (tetrazolio.getLote().getCultivar() != null && tetrazolio.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = tetrazolio.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }
@@ -248,6 +252,12 @@ public class TetrazolioService {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
                 Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
                 tetrazolio.setLote(lote);
                 System.out.println("Lote encontrado y asignado: " + lote.getLoteID());
             } else {
@@ -311,10 +321,20 @@ public class TetrazolioService {
         dto.setFechaFin(tetrazolio.getFechaFin());
         dto.setComentarios(tetrazolio.getComentarios());
         
-        // Datos del lote si existe
+        // Datos completos del lote si existe
         if (tetrazolio.getLote() != null) {
             dto.setIdLote(tetrazolio.getLote().getLoteID());
-            dto.setLote(tetrazolio.getLote().getFicha());
+            dto.setLote(tetrazolio.getLote().getNomLote());
+            dto.setFicha(tetrazolio.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (tetrazolio.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(tetrazolio.getLote().getCultivar().getNombre());
+                
+                if (tetrazolio.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(tetrazolio.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
         }
         
         // Datos específicos de Tetrazolio

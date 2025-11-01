@@ -207,18 +207,30 @@ public class UsuarioService {
             usuario.setContrasenia(passwordEncoder.encode(solicitud.getContraseniaNueva()));
         }
 
+        // Actualizar nombre de usuario (username) si se proporciona
+        if (solicitud.getNombre() != null && !solicitud.getNombre().trim().isEmpty() 
+            && !solicitud.getNombre().equalsIgnoreCase(usuario.getNombre())) {
+            // Verificar que el nuevo nombre de usuario no exista
+            Optional<Usuario> usuarioExistente = usuarioRepository.findByNombreIgnoreCase(solicitud.getNombre());
+            if (usuarioExistente.isPresent() && !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {
+                throw new RuntimeException("El nombre de usuario ya está en uso por otro usuario");
+            }
+            usuario.setNombre(solicitud.getNombre());
+        }
+
         // Actualizar datos del perfil
-        if (solicitud.getNombres() != null) {
+        if (solicitud.getNombres() != null && !solicitud.getNombres().trim().isEmpty()) {
             usuario.setNombres(solicitud.getNombres());
         }
         
-        if (solicitud.getApellidos() != null) {
+        if (solicitud.getApellidos() != null && !solicitud.getApellidos().trim().isEmpty()) {
             usuario.setApellidos(solicitud.getApellidos());
         }
         
-        if (solicitud.getEmail() != null && !solicitud.getEmail().equals(usuario.getEmail())) {
-            // Verificar que el nuevo email no exista
-            Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(solicitud.getEmail());
+        if (solicitud.getEmail() != null && !solicitud.getEmail().trim().isEmpty() 
+            && !solicitud.getEmail().equalsIgnoreCase(usuario.getEmail())) {
+            // Verificar que el nuevo email no exista (case-insensitive)
+            Optional<Usuario> usuarioExistente = usuarioRepository.findByEmailIgnoreCase(solicitud.getEmail());
             if (usuarioExistente.isPresent() && !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {
                 throw new RuntimeException("El email ya está en uso por otro usuario");
             }

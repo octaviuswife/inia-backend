@@ -1,6 +1,9 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -131,5 +134,20 @@ public class CultivarController {
             return ResponseEntity.ok(reactivado);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    // Obtener Cultivares con paginado para listado
+    @Operation(summary = "Obtener cultivares paginados", 
+              description = "Obtiene la lista paginada de cultivares para el listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<Page<CultivarDTO>> obtenerCultivaresPaginados(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CultivarDTO> response = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, search, activo);
+        return ResponseEntity.ok(response);
     }
 }

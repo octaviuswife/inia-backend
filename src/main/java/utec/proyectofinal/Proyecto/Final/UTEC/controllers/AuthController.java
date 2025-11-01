@@ -110,11 +110,11 @@ public class AuthController {
             e.printStackTrace();
             
             String mensaje = switch (e.getMessage()) {
-                case "USUARIO_INCORRECTO" -> "Usuario no encontrado";
-                case "USUARIO_INACTIVO" -> "Usuario inactivo";
-                case "USUARIO_PENDIENTE_APROBACION" -> "Usuario pendiente de aprobación por el administrador";
-                case "USUARIO_SIN_ROL" -> "Usuario sin rol asignado. Contacte al administrador";
-                case "CONTRASENIA_INCORRECTA" -> "Contraseña incorrecta";
+                case "USUARIO_INCORRECTO" -> "Credenciales incorrectas";
+                case "USUARIO_INACTIVO" -> "No se puede iniciar sesión. Contacte al administrador";
+                case "USUARIO_PENDIENTE_APROBACION" -> "Cuenta pendiente de aprobación. Contacte al administrador";
+                case "USUARIO_SIN_ROL" -> "No se puede iniciar sesión. Contacte al administrador";
+                case "CONTRASENIA_INCORRECTA" -> "Credenciales incorrectas";
                 default -> "Error de autenticación";
             };
             
@@ -336,9 +336,28 @@ public class AuthController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @Operation(summary = "Actualizar perfil", description = "Actualiza el perfil del usuario autenticado")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<?> actualizarPerfil(@RequestBody ActualizarPerfilRequestDTO solicitud) {
+    public ResponseEntity<?> actualizarPerfil(@RequestBody ActualizarPerfilRequestDTO solicitud, HttpServletResponse response) {
         try {
             UsuarioDTO perfilActualizado = usuarioService.actualizarPerfil(solicitud);
+            
+            // Buscar el usuario completo para regenerar el token
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(perfilActualizado.getUsuarioID());
+            
+            if (usuarioOpt.isPresent()) {
+                Usuario usuario = usuarioOpt.get();
+                String[] roles = seguridadService.listarRolesPorUsuario(usuario);
+                
+                // Generar nuevos tokens con la información actualizada
+                String nuevoAccessToken = jwtUtil.generarToken(usuario, java.util.Arrays.asList(roles));
+                String nuevoRefreshToken = jwtUtil.generarRefreshToken(usuario);
+                
+                // Actualizar cookies con los nuevos tokens
+                configurarCookieToken(response, "accessToken", nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));
+                configurarCookieToken(response, "refreshToken", nuevoRefreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));
+                
+                System.out.println("✅ [PERFIL] Tokens actualizados después de modificar perfil para usuario: " + usuario.getNombre());
+            }
+            
             return ResponseEntity.ok(Map.of(
                 "mensaje", "Perfil actualizado exitosamente",
                 "usuario", perfilActualizado

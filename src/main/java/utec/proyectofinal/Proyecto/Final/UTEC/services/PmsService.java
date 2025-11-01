@@ -200,9 +200,13 @@ public class PmsService {
             dto.setIdLote(pms.getLote().getLoteID());
             dto.setLote(pms.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (pms.getLote().getCultivar() != null && pms.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }
@@ -458,7 +462,14 @@ public class PmsService {
         if (solicitud.getIdLote() != null) {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
-                pms.setLote(loteOpt.get());
+                Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
+                pms.setLote(lote);
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }
@@ -500,9 +511,20 @@ public class PmsService {
         dto.setFechaFin(pms.getFechaFin());
         dto.setComentarios(pms.getComentarios());
 
+        // Datos completos del lote si existe
         if (pms.getLote() != null) {
             dto.setIdLote(pms.getLote().getLoteID());
-            dto.setLote(pms.getLote().getFicha());
+            dto.setLote(pms.getLote().getNomLote());
+            dto.setFicha(pms.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (pms.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(pms.getLote().getCultivar().getNombre());
+                
+                if (pms.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(pms.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
         }
 
         // Campos específicos de PMS de configuración

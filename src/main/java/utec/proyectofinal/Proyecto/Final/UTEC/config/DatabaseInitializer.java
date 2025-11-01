@@ -2,12 +2,18 @@ package utec.proyectofinal.Proyecto.Final.UTEC.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 
+/**
+ * Inicializador de datos base del sistema.
+ * Crea el usuario administrador predeterminado si no existe.
+ */
 @Component
+@Order(1) // Se ejecuta primero
 public class DatabaseInitializer implements CommandLineRunner {
 
     @Autowired

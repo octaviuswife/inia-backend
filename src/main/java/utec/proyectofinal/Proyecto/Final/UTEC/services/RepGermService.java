@@ -181,7 +181,7 @@ public class RepGermService {
         // El mínimo no se valida aquí para permitir guardar repeticiones incompletas
         // (se validará al finalizar la tabla)
         if (tablaGerm.getNumSemillasPRep() != null) {
-            int limiteMaximo = (int) Math.ceil(tablaGerm.getNumSemillasPRep() * 1.05);
+            int limiteMaximo = (int) Math.floor(tablaGerm.getNumSemillasPRep() * 1.05);
             
             if (totalCalculado > limiteMaximo) {
                 throw new RuntimeException("El total de la repetición (" + totalCalculado + 
@@ -316,7 +316,7 @@ public class RepGermService {
         // El mínimo no se valida aquí para permitir guardar repeticiones incompletas
         // (se validará al finalizar la tabla)
         if (repGerm.getTablaGerm().getNumSemillasPRep() != null) {
-            int limiteMaximo = (int) Math.ceil(repGerm.getTablaGerm().getNumSemillasPRep() * 1.05);
+            int limiteMaximo = (int) Math.floor(repGerm.getTablaGerm().getNumSemillasPRep() * 1.05);
             
             if (totalCalculado > limiteMaximo) {
                 throw new RuntimeException("El total de la repetición (" + totalCalculado + 
