@@ -48,9 +48,6 @@ public class NotificacionService {
     
     @Autowired
     private PushNotificationService pushNotificationService;
-    
-    @Autowired
-    private NotificationStreamService notificationStreamService;
 
     // Crear notificación manual
     public NotificacionDTO crearNotificacion(NotificacionRequestDTO request) {
@@ -404,16 +401,9 @@ public class NotificacionService {
                 pushRequest
             );
             
-            // 🔥 NUEVO: Enviar notificación en tiempo real via SSE
-            notificationStreamService.sendNotificationToUser(
-                notificacion.getUsuario().getUsuarioID(),
-                convertToDTO(notificacion)
-            );
-            logger.info("📡 Notificación SSE enviada al usuario {}", notificacion.getUsuario().getUsuarioID());
-            
         } catch (Exception e) {
             // No fallar si hay error en push notification, solo registrar el error
-            logger.error("Error al enviar notificación push/SSE: {}", e.getMessage());
+            logger.error("Error al enviar notificación push: {}", e.getMessage());
         }
     }
 }
