@@ -121,7 +121,7 @@ public interface AnalisisPorAprobarRepository extends JpaRepository<Lote, Long> 
             AND a.activo = true
             AND l.activo = true
         ) AS combined
-        WHERE (fecha_orden, analisisID) < (:lastFecha::timestamp, :lastId)
+        WHERE (fecha_orden, analisisID) < (CAST(:lastFecha AS timestamp), :lastId)
         ORDER BY fecha_orden DESC NULLS LAST, analisisID DESC
         LIMIT :size
         """,
