@@ -260,7 +260,14 @@ public class PurezaService {
         if (solicitud.getIdLote() != null) {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
-                pureza.setLote(loteOpt.get());
+                Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
+                pureza.setLote(lote);
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }

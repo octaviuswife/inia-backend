@@ -252,6 +252,12 @@ public class TetrazolioService {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
                 Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
                 tetrazolio.setLote(lote);
                 System.out.println("Lote encontrado y asignado: " + lote.getLoteID());
             } else {

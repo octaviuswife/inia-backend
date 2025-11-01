@@ -62,7 +62,7 @@ public class DosnService {
     @Autowired
     private AnalisisHistorialService analisisHistorialService;
 
-    // Crear Dosn con estado EN_PROCESO (no tiene repeticiones)
+    // Crear Dosn
     @Transactional
     public DosnDTO crearDosn(DosnRequestDTO solicitud) {
         Dosn dosn = mapearSolicitudAEntidad(solicitud);
@@ -239,7 +239,14 @@ public class DosnService {
         if (solicitud.getIdLote() != null) {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
-                dosn.setLote(loteOpt.get());
+                Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
+                dosn.setLote(lote);
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }
