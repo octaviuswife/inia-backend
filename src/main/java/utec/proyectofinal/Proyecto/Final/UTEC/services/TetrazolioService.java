@@ -186,6 +186,9 @@ public class TetrazolioService {
         // Viabilidad con redondeo (Viabilidad INIA %)
         dto.setViabilidadConRedondeo(tetrazolio.getPorcViablesRedondeo());
         
+        // Viabilidad INASE %
+        dto.setViabilidadInase(tetrazolio.getViabilidadInase());
+        
         if (tetrazolio.getLote() != null) {
             dto.setIdLote(tetrazolio.getLote().getLoteID());
             dto.setLote(tetrazolio.getLote().getNomLote()); // Usar nomLote en lugar de ficha

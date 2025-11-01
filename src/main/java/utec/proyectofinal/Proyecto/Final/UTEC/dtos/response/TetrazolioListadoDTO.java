@@ -22,6 +22,9 @@ public class TetrazolioListadoDTO {
     // Viabilidad con redondeo (Viabilidad INIA %)
     private BigDecimal viabilidadConRedondeo;
     
+    // Viabilidad INASE %
+    private BigDecimal viabilidadInase;
+    
     private String usuarioCreador;
     private String usuarioModificador;
 }
