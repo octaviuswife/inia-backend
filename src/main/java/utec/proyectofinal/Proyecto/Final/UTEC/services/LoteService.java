@@ -113,10 +113,15 @@ public class LoteService {
     public LoteDTO actualizarLote(Long id, LoteRequestDTO solicitud) {
         Optional<Lote> loteExistente = loteRepository.findById(id);
         if (loteExistente.isPresent()) {
+            Lote lote = loteExistente.get();
+            
+            // Validar que el lote esté activo antes de permitir edición
+            if (!lote.getActivo()) {
+                throw new RuntimeException("No se puede editar un lote inactivo. Debe reactivarlo primero.");
+            }
+            
             // Validar fechaRecibo no sea posterior a la fecha actual
             validarFechaRecibo(solicitud.getFechaRecibo());
-            
-            Lote lote = loteExistente.get();
             
             // Validar cambios en tipos de análisis antes de actualizar
             if (solicitud.getTiposAnalisisAsignados() != null) {
@@ -695,6 +700,11 @@ public class LoteService {
         }
         
         Lote lote = loteOpt.get();
+        
+        // 0. Verificar que el lote esté activo
+        if (!lote.getActivo()) {
+            return false;
+        }
         
         // 1. Verificar que el lote tenga ese tipo de análisis asignado
         if (lote.getTiposAnalisisAsignados() == null || 

@@ -7,5 +7,5 @@ public class MalezasCatalogoDTO {
     private Long catalogoID;
     private String nombreComun;
     private String nombreCientifico;
-    // Campo activo removido intencionalmente - no necesario en responses
+    private Boolean activo; // Campo activo agregado para consistencia con otros DTOs
 }

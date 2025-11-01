@@ -4,6 +4,9 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -130,5 +133,20 @@ public class EspecieController {
             return ResponseEntity.ok(reactivada);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    // Obtener Especies con paginado para listado
+    @Operation(summary = "Obtener especies paginadas", 
+              description = "Obtiene la lista paginada de especies para el listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<Page<EspecieDTO>> obtenerEspeciesPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<EspecieDTO> response = especieService.obtenerEspeciesPaginadasConFiltros(pageable, search, activo);
+        return ResponseEntity.ok(response);
     }
 }

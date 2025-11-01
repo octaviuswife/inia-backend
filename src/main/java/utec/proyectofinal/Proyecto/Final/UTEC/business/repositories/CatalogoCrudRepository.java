@@ -1,5 +1,7 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.business.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -31,4 +33,17 @@ public interface CatalogoCrudRepository extends JpaRepository<Catalogo, Long> {
     // Buscar por valor (para validar duplicados)
     @Query("SELECT c FROM Catalogo c WHERE c.tipo = :tipo AND c.valor = :valor")
     Optional<Catalogo> findByTipoAndValor(@Param("tipo") TipoCatalogo tipo, @Param("valor") String valor);
+    
+    // Métodos paginados para listado
+    Page<Catalogo> findByActivoTrueOrderByTipoAscValorAsc(Pageable pageable);
+    
+    Page<Catalogo> findByActivoFalseOrderByTipoAscValorAsc(Pageable pageable);
+    
+    Page<Catalogo> findAllByOrderByTipoAscValorAsc(Pageable pageable);
+    
+    Page<Catalogo> findByTipoAndActivoTrueOrderByValorAsc(TipoCatalogo tipo, Pageable pageable);
+    
+    Page<Catalogo> findByTipoAndActivoFalseOrderByValorAsc(TipoCatalogo tipo, Pageable pageable);
+    
+    Page<Catalogo> findByTipoOrderByValorAsc(TipoCatalogo tipo, Pageable pageable);
 }

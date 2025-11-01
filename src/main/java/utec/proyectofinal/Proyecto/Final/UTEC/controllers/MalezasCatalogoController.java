@@ -2,6 +2,9 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -85,5 +88,20 @@ public class MalezasCatalogoController {
     public ResponseEntity<MalezasCatalogoDTO> reactivar(@PathVariable Long id) {
         MalezasCatalogoDTO reactivado = service.reactivar(id);
         return reactivado != null ? ResponseEntity.ok(reactivado) : ResponseEntity.notFound().build();
+    }
+
+    // Obtener Malezas con paginado para listado
+    @GetMapping("/listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @Operation(summary = "Obtener malezas paginadas", 
+              description = "Obtiene la lista paginada de malezas para el listado")
+    public ResponseEntity<Page<MalezasCatalogoDTO>> obtenerMalezasPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MalezasCatalogoDTO> response = service.obtenerMalezasPaginadasConFiltros(pageable, search, activo);
+        return ResponseEntity.ok(response);
     }
 }

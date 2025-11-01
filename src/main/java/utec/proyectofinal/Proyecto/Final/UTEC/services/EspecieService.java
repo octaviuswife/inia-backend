@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
@@ -144,5 +146,89 @@ public class EspecieService {
     // Obtener entidad para uso interno
     public Especie obtenerEntidadPorId(Long id) {
         return especieRepository.findById(id).orElse(null);
+    }
+
+    // Listar Especies con paginado (para listado)
+    public Page<EspecieDTO> obtenerEspeciesPaginadas(Pageable pageable) {
+        Page<Especie> especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);
+        return especiePage.map(this::mapearEntidadADTO);
+    }
+
+    // Listar Especies con paginado y filtro por activo
+    public Page<EspecieDTO> obtenerEspeciesPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Especie> especiePage;
+        
+        if ("activos".equalsIgnoreCase(filtroActivo)) {
+            especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);
+        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
+            especiePage = especieRepository.findByActivoFalseOrderByNombreComunAsc(pageable);
+        } else {
+            // "todos" o cualquier otro valor
+            especiePage = especieRepository.findAllByOrderByNombreComunAsc(pageable);
+        }
+        
+        return especiePage.map(this::mapearEntidadADTO);
+    }
+
+    /**
+     * Listar Especies con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @return Página de EspecieDTO filtrados
+     */
+    public Page<EspecieDTO> obtenerEspeciesPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo) {
+        
+        Page<Especie> especiePage;
+        
+        // Si hay término de búsqueda, buscar en nombre común y científico
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            List<Especie> especies;
+            if (activo == null) {
+                // Buscar en todas (activas e inactivas)
+                especies = especieRepository.findAll().stream()
+                    .filter(e -> 
+                        (e.getNombreComun() != null && e.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||
+                        (e.getNombreCientifico() != null && e.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase()))
+                    )
+                    .collect(Collectors.toList());
+            } else if (activo) {
+                // Buscar solo en activas
+                List<Especie> porComun = especieRepository.findByNombreComunContainingIgnoreCaseAndActivoTrue(searchTerm);
+                List<Especie> porCientifico = especieRepository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(searchTerm);
+                especies = new java.util.ArrayList<>(porComun);
+                porCientifico.forEach(e -> {
+                    if (!especies.contains(e)) especies.add(e);
+                });
+            } else {
+                // Buscar solo en inactivas
+                especies = especieRepository.findAll().stream()
+                    .filter(e -> !e.getActivo() &&
+                        ((e.getNombreComun() != null && e.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||
+                         (e.getNombreCientifico() != null && e.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase())))
+                    )
+                    .collect(Collectors.toList());
+            }
+            
+            // Convertir lista a página
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), especies.size());
+            List<Especie> pageContent = especies.subList(start, end);
+            especiePage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, especies.size());
+        } else {
+            // Sin término de búsqueda, aplicar solo filtro de activo
+            if (activo == null) {
+                especiePage = especieRepository.findAllByOrderByNombreComunAsc(pageable);
+            } else if (activo) {
+                especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);
+            } else {
+                especiePage = especieRepository.findByActivoFalseOrderByNombreComunAsc(pageable);
+            }
+        }
+        
+        return especiePage.map(this::mapearEntidadADTO);
     }
 }

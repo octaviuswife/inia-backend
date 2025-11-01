@@ -60,14 +60,14 @@ public class PurezaService {
     @Autowired
     private AnalisisService analisisService;
 
-    // Crear Pureza con estado REGISTRADO
+    // Crear Pureza con estado EN_PROCESO
     @Transactional
     public PurezaDTO crearPureza(PurezaRequestDTO solicitud) {
         // Validar pesos antes de crear
         validarPesos(solicitud.getPesoInicial_g(), solicitud.getPesoTotal_g());
         
         Pureza pureza = mapearSolicitudAEntidad(solicitud);
-        pureza.setEstado(Estado.REGISTRADO);
+        pureza.setEstado(Estado.EN_PROCESO);
         
         // Establecer fecha de inicio automáticamente
         analisisService.establecerFechaInicio(pureza);
@@ -94,7 +94,7 @@ public class PurezaService {
             pureza.setEstado(Estado.PENDIENTE_APROBACION);
         }
         // Si es ADMIN editando análisis APROBADO o FINALIZADO, mantiene su estado
-        // Para otros estados (REGISTRADO, PENDIENTE_APROBACION) se mantiene igual
+        // Para otros estados (EN_PROCESO, PENDIENTE_APROBACION) se mantiene igual
 
         // Validar pesos antes de actualizar
         BigDecimal pesoInicial = solicitud.getPesoInicial_g() != null ? solicitud.getPesoInicial_g() : pureza.getPesoInicial_g();
@@ -221,9 +221,13 @@ public class PurezaService {
             dto.setIdLote(pureza.getLote().getLoteID());
             dto.setLote(pureza.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (pureza.getLote().getCultivar() != null && pureza.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = pureza.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }
@@ -256,7 +260,14 @@ public class PurezaService {
         if (solicitud.getIdLote() != null) {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
-                pureza.setLote(loteOpt.get());
+                Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
+                pureza.setLote(lote);
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }
@@ -367,13 +378,27 @@ public class PurezaService {
         PurezaDTO dto = new PurezaDTO();
 
         dto.setAnalisisID(pureza.getAnalisisID());
-        dto.setIdLote(pureza.getLote() != null ? pureza.getLote().getLoteID() : null);
-        dto.setLote(pureza.getLote() != null ? pureza.getLote().getFicha() : null);
         dto.setEstado(pureza.getEstado());
         dto.setFechaInicio(pureza.getFechaInicio());
         dto.setFechaFin(pureza.getFechaFin());
         dto.setCumpleEstandar(pureza.getCumpleEstandar());
         dto.setComentarios(pureza.getComentarios());
+        
+        // Datos completos del lote si existe
+        if (pureza.getLote() != null) {
+            dto.setIdLote(pureza.getLote().getLoteID());
+            dto.setLote(pureza.getLote().getNomLote());
+            dto.setFicha(pureza.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (pureza.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(pureza.getLote().getCultivar().getNombre());
+                
+                if (pureza.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(pureza.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
+        }
 
         dto.setFecha(pureza.getFecha());
         dto.setPesoInicial_g(pureza.getPesoInicial_g());

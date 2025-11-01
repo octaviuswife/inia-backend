@@ -66,7 +66,7 @@ public class DosnService {
     @Transactional
     public DosnDTO crearDosn(DosnRequestDTO solicitud) {
         Dosn dosn = mapearSolicitudAEntidad(solicitud);
-        dosn.setEstado(Estado.REGISTRADO);
+        dosn.setEstado(Estado.EN_PROCESO);
 
         // Establecer fecha de inicio automáticamente
         analisisService.establecerFechaInicio(dosn);
@@ -208,9 +208,13 @@ public class DosnService {
             dto.setIdLote(dosn.getLote().getLoteID());
             dto.setLote(dosn.getLote().getNomLote()); // Usar nomLote en lugar de ficha
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
             if (dosn.getLote().getCultivar() != null && dosn.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = dosn.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = dosn.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = dosn.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }
@@ -235,7 +239,14 @@ public class DosnService {
         if (solicitud.getIdLote() != null) {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
-                dosn.setLote(loteOpt.get());
+                Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
+                dosn.setLote(lote);
             } else {
                 throw new RuntimeException("Lote no encontrado con ID: " + solicitud.getIdLote());
             }
@@ -343,8 +354,22 @@ public class DosnService {
         dto.setFechaFin(dosn.getFechaFin());
         dto.setCumpleEstandar(dosn.getCumpleEstandar());
         dto.setComentarios(dosn.getComentarios());
-        dto.setIdLote(dosn.getLote() != null ? dosn.getLote().getLoteID() : null);
-        dto.setLote(dosn.getLote() != null ? dosn.getLote().getFicha() : null);
+        
+        // Datos completos del lote si existe
+        if (dosn.getLote() != null) {
+            dto.setIdLote(dosn.getLote().getLoteID());
+            dto.setLote(dosn.getLote().getNomLote());
+            dto.setFicha(dosn.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (dosn.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(dosn.getLote().getCultivar().getNombre());
+                
+                if (dosn.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(dosn.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
+        }
 
         dto.setFechaINIA(dosn.getFechaINIA());
         dto.setGramosAnalizadosINIA(dosn.getGramosAnalizadosINIA());

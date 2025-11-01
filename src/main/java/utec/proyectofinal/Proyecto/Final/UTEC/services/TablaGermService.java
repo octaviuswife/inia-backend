@@ -453,7 +453,7 @@ public class TablaGermService {
         }
         
         int limiteMinimo = (int) Math.floor(numSemillasPRep * 0.95);
-        int limiteMaximo = (int) Math.ceil(numSemillasPRep * 1.05);
+        int limiteMaximo = (int) Math.floor(numSemillasPRep * 1.05);
         
         List<String> repeticionesFueraDeRango = new ArrayList<>();
         

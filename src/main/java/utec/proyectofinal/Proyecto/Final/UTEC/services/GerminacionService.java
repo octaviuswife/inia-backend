@@ -186,6 +186,7 @@ public class GerminacionService {
     }
 
     // Listar germinaciones con paginado y filtros completos
+    @Transactional(readOnly = true)
     public Page<GerminacionListadoDTO> obtenerGerminacionesPaginadasConFiltros(
             Pageable pageable,
             String searchTerm,
@@ -256,6 +257,12 @@ public class GerminacionService {
             Optional<Lote> loteOpt = loteRepository.findById(solicitud.getIdLote());
             if (loteOpt.isPresent()) {
                 Lote lote = loteOpt.get();
+                
+                // Validar que el lote esté activo
+                if (!lote.getActivo()) {
+                    throw new RuntimeException("No se puede crear un análisis para un lote inactivo");
+                }
+                
                 germinacion.setLote(lote);
                 System.out.println("Lote encontrado y asignado: " + lote.getLoteID());
             } else {
@@ -298,10 +305,20 @@ public class GerminacionService {
         dto.setFechaFin(germinacion.getFechaFin());
         dto.setComentarios(germinacion.getComentarios());
         
-        // Datos del lote si existe
+        // Datos completos del lote si existe
         if (germinacion.getLote() != null) {
             dto.setIdLote(germinacion.getLote().getLoteID());
-            dto.setLote(germinacion.getLote().getFicha());
+            dto.setLote(germinacion.getLote().getNomLote());
+            dto.setFicha(germinacion.getLote().getFicha());
+            
+            // Información del cultivar y especie
+            if (germinacion.getLote().getCultivar() != null) {
+                dto.setCultivarNombre(germinacion.getLote().getCultivar().getNombre());
+                
+                if (germinacion.getLote().getCultivar().getEspecie() != null) {
+                    dto.setEspecieNombre(germinacion.getLote().getCultivar().getEspecie().getNombreComun());
+                }
+            }
         }
         
         // Mapear historial de análisis
@@ -324,17 +341,47 @@ public class GerminacionService {
         // Datos del lote
         if (germinacion.getLote() != null) {
             dto.setIdLote(germinacion.getLote().getLoteID());
-            dto.setLote(germinacion.getLote().getNomLote()); // Usar nomLote en lugar de ficha
+            dto.setLote(germinacion.getLote().getNomLote());
             
-            // Obtener especie del lote
+            // Obtener especie del lote - Usar nombreComun como hace LoteService
             if (germinacion.getLote().getCultivar() != null && germinacion.getLote().getCultivar().getEspecie() != null) {
-                String nombreEspecie = germinacion.getLote().getCultivar().getEspecie().getNombreCientifico();
+                String nombreEspecie = germinacion.getLote().getCultivar().getEspecie().getNombreComun();
+                // Si nombreComun está vacío, intentar con nombreCientifico
+                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {
+                    nombreEspecie = germinacion.getLote().getCultivar().getEspecie().getNombreCientifico();
+                }
                 dto.setEspecie(nombreEspecie);
             }
         }
         
         // Cumple norma: true si NO está "A REPETIR"
         dto.setCumpleNorma(germinacion.getEstado() != Estado.A_REPETIR);
+        
+        // Obtener datos de TablaGerm si existe
+        if (germinacion.getTablaGerm() != null && !germinacion.getTablaGerm().isEmpty()) {
+            TablaGerm tablaGerm = germinacion.getTablaGerm().get(0);
+            
+            // Fechas de germinación
+            dto.setFechaInicioGerm(tablaGerm.getFechaInicioGerm());
+            dto.setFechaFinal(tablaGerm.getFechaFinal());
+            
+            // Booleanos de prefrío y pretratamiento
+            dto.setTienePrefrio(tablaGerm.getTienePrefrio());
+            dto.setTienePretratamiento(tablaGerm.getTienePretratamiento());
+            
+            // Obtener valores de germinación INIA e INASE
+            if (tablaGerm.getValoresGerm() != null && !tablaGerm.getValoresGerm().isEmpty()) {
+                for (var valorGerm : tablaGerm.getValoresGerm()) {
+                    if (valorGerm.getInstituto() != null) {
+                        if (valorGerm.getInstituto().toString().equals("INIA")) {
+                            dto.setValorGerminacionINIA(valorGerm.getGerminacion());
+                        } else if (valorGerm.getInstituto().toString().equals("INASE")) {
+                            dto.setValorGerminacionINASE(valorGerm.getGerminacion());
+                        }
+                    }
+                }
+            }
+        }
         
         // Obtener información del historial para usuarios
         if (germinacion.getAnalisisID() != null) {

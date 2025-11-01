@@ -1,6 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ContactoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ContactoDTO;
@@ -207,5 +209,117 @@ public class ContactoService {
     // Obtener entidad por ID para uso interno
     public Contacto obtenerEntidadPorId(Long contactoID) {
         return contactoRepository.findByContactoIDAndActivoTrue(contactoID).orElse(null);
+    }
+
+    // Listar Contactos con paginado (para listado)
+    public Page<ContactoDTO> obtenerContactosPaginados(Pageable pageable) {
+        Page<Contacto> contactoPage = contactoRepository.findByActivoTrueOrderByNombreAsc(pageable);
+        return contactoPage.map(this::mapearEntidadADTO);
+    }
+
+    // Listar Contactos con paginado y filtro por activo
+    public Page<ContactoDTO> obtenerContactosPaginadosConFiltro(Pageable pageable, String filtroActivo) {
+        Page<Contacto> contactoPage;
+        
+        if ("activos".equalsIgnoreCase(filtroActivo)) {
+            contactoPage = contactoRepository.findByActivoTrueOrderByNombreAsc(pageable);
+        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
+            contactoPage = contactoRepository.findByActivoFalseOrderByNombreAsc(pageable);
+        } else {
+            // "todos" o cualquier otro valor
+            contactoPage = contactoRepository.findAllByOrderByNombreAsc(pageable);
+        }
+        
+        return contactoPage.map(this::mapearEntidadADTO);
+    }
+
+    /**
+     * Listar Contactos con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @param tipo Filtro por tipo de contacto (opcional)
+     * @return Página de ContactoDTO filtrados
+     */
+    public Page<ContactoDTO> obtenerContactosPaginadosConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            TipoContacto tipo) {
+        
+        Page<Contacto> contactoPage;
+        
+        // Si hay tipo específico
+        if (tipo != null) {
+            // Si hay búsqueda
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                List<Contacto> contactos;
+                if (activo == null) {
+                    contactos = contactoRepository.findByTipo(tipo);
+                } else if (activo) {
+                    contactos = contactoRepository.findByTipoAndActivoTrue(tipo);
+                } else {
+                    contactos = contactoRepository.findByTipoAndActivoFalse(tipo);
+                }
+                
+                // Filtrar por término de búsqueda
+                contactos = contactos.stream()
+                    .filter(c -> (c.getNombre() != null && c.getNombre().toLowerCase().contains(searchTerm.toLowerCase())) ||
+                                 (c.getContacto() != null && c.getContacto().toLowerCase().contains(searchTerm.toLowerCase())))
+                    .collect(Collectors.toList());
+                
+                // Convertir lista a página
+                int start = (int) pageable.getOffset();
+                int end = Math.min(start + pageable.getPageSize(), contactos.size());
+                List<Contacto> pageContent = contactos.subList(start, end);
+                contactoPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, contactos.size());
+            } else {
+                // Sin búsqueda, solo filtro de activo y tipo
+                if (activo == null) {
+                    contactoPage = contactoRepository.findByTipoOrderByNombreAsc(tipo, pageable);
+                } else if (activo) {
+                    contactoPage = contactoRepository.findByTipoAndActivoTrueOrderByNombreAsc(tipo, pageable);
+                } else {
+                    contactoPage = contactoRepository.findByTipoAndActivoFalseOrderByNombreAsc(tipo, pageable);
+                }
+            }
+        } else {
+            // Sin tipo específico
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                List<Contacto> contactos;
+                if (activo == null) {
+                    contactos = contactoRepository.findAll();
+                } else if (activo) {
+                    contactos = contactoRepository.findByActivoTrue();
+                } else {
+                    contactos = contactoRepository.findAll().stream()
+                        .filter(c -> !c.getActivo())
+                        .collect(Collectors.toList());
+                }
+                
+                // Filtrar por término de búsqueda
+                contactos = contactos.stream()
+                    .filter(c -> (c.getNombre() != null && c.getNombre().toLowerCase().contains(searchTerm.toLowerCase())) ||
+                                 (c.getContacto() != null && c.getContacto().toLowerCase().contains(searchTerm.toLowerCase())))
+                    .collect(Collectors.toList());
+                
+                // Convertir lista a página
+                int start = (int) pageable.getOffset();
+                int end = Math.min(start + pageable.getPageSize(), contactos.size());
+                List<Contacto> pageContent = contactos.subList(start, end);
+                contactoPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, contactos.size());
+            } else {
+                // Sin búsqueda ni tipo, solo filtro de activo
+                if (activo == null) {
+                    contactoPage = contactoRepository.findAllByOrderByNombreAsc(pageable);
+                } else if (activo) {
+                    contactoPage = contactoRepository.findByActivoTrueOrderByNombreAsc(pageable);
+                } else {
+                    contactoPage = contactoRepository.findByActivoFalseOrderByNombreAsc(pageable);
+                }
+            }
+        }
+        
+        return contactoPage.map(this::mapearEntidadADTO);
     }
 }

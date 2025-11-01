@@ -3,6 +3,9 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -173,5 +176,21 @@ public class CatalogoController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerUnidadesEmbolsado() {
         return obtenerPorTipo("UNIDAD_EMBOLSADO", true);
+    }
+
+    // Obtener Catálogos con paginado para listado
+    @Operation(summary = "Obtener catálogos paginados", 
+              description = "Obtiene la lista paginada de catálogos para el listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<Page<CatalogoDTO>> obtenerCatalogosPaginados(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) String tipo) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CatalogoDTO> response = catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, search, activo, tipo);
+        return ResponseEntity.ok(response);
     }
 }

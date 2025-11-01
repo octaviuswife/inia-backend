@@ -1,6 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
@@ -146,5 +148,58 @@ public class CultivarService {
     // Obtener entidad para uso interno
     public Cultivar obtenerEntidadPorId(Long id) {
         return cultivarRepository.findById(id).orElse(null);
+    }
+
+    /**
+     * Listar Cultivares con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @return Página de CultivarDTO filtrados
+     */
+    public Page<CultivarDTO> obtenerCultivaresPaginadosConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo) {
+        
+        Page<Cultivar> cultivarPage;
+        
+        // Si hay término de búsqueda, buscar en nombre
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            List<Cultivar> cultivares;
+            if (activo == null) {
+                // Buscar en todas (activos e inactivos)
+                cultivares = cultivarRepository.findAll().stream()
+                    .filter(c -> c.getNombre() != null && 
+                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))
+                    .collect(Collectors.toList());
+            } else if (activo) {
+                // Buscar solo en activos
+                cultivares = cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(searchTerm);
+            } else {
+                // Buscar solo en inactivos
+                cultivares = cultivarRepository.findByActivoFalse().stream()
+                    .filter(c -> c.getNombre() != null && 
+                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))
+                    .collect(Collectors.toList());
+            }
+            
+            // Convertir lista a página
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), cultivares.size());
+            List<Cultivar> pageContent = cultivares.subList(start, end);
+            cultivarPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, cultivares.size());
+        } else {
+            // Sin término de búsqueda, aplicar solo filtro de activo
+            if (activo == null) {
+                cultivarPage = cultivarRepository.findAllByOrderByNombreAsc(pageable);
+            } else if (activo) {
+                cultivarPage = cultivarRepository.findByActivoTrueOrderByNombreAsc(pageable);
+            } else {
+                cultivarPage = cultivarRepository.findByActivoFalseOrderByNombreAsc(pageable);
+            }
+        }
+        
+        return cultivarPage.map(this::mapearEntidadADTO);
     }
 }
