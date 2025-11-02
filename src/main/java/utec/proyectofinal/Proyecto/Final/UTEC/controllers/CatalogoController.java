@@ -60,7 +60,25 @@ public class CatalogoController {
         }
     }
 
+    // Obtener Catálogos con paginado para listado
+    // ⚠️ IMPORTANTE: Este endpoint debe estar ANTES de /{id} para evitar conflictos de rutas
+    @Operation(summary = "Obtener catálogos paginados", 
+              description = "Obtiene la lista paginada de catálogos para el listado")
+    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
+    @GetMapping("/listado")
+    public ResponseEntity<Page<CatalogoDTO>> obtenerCatalogosPaginados(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) String tipo) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CatalogoDTO> response = catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, search, activo, tipo);
+        return ResponseEntity.ok(response);
+    }
+
     // Obtener catálogo por ID
+    // ⚠️ Este endpoint con path variable debe estar DESPUÉS de los endpoints específicos como /listado
     @GetMapping("/{id}")
     @Operation(summary = "Obtener catálogo por ID", description = "Obtiene un catálogo específico por su ID")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
@@ -176,21 +194,5 @@ public class CatalogoController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     public ResponseEntity<List<CatalogoDTO>> obtenerUnidadesEmbolsado() {
         return obtenerPorTipo("UNIDAD_EMBOLSADO", true);
-    }
-
-    // Obtener Catálogos con paginado para listado
-    @Operation(summary = "Obtener catálogos paginados", 
-              description = "Obtiene la lista paginada de catálogos para el listado")
-    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
-    @GetMapping("/listado")
-    public ResponseEntity<Page<CatalogoDTO>> obtenerCatalogosPaginados(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean activo,
-            @RequestParam(required = false) String tipo) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<CatalogoDTO> response = catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, search, activo, tipo);
-        return ResponseEntity.ok(response);
     }
 }
