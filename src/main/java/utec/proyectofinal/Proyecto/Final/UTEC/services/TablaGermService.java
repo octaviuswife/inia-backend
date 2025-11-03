@@ -119,22 +119,45 @@ public class TablaGermService {
         }
         
         // Validar fechas de germinación
-        if (solicitud.getFechaInicioGerm() == null) {
-            throw new RuntimeException("La fecha de inicio de germinación es obligatoria");
+        if (solicitud.getFechaIngreso() == null) {
+            throw new RuntimeException("La fecha de ingreso es obligatoria");
+        }
+        
+        if (solicitud.getFechaGerminacion() == null) {
+            throw new RuntimeException("La fecha de germinación es obligatoria");
         }
         
         if (solicitud.getFechaUltConteo() == null) {
             throw new RuntimeException("La fecha de último conteo es obligatoria");
         }
         
-        // Validar que la fecha de último conteo sea posterior a la de inicio
-        if (!solicitud.getFechaUltConteo().isAfter(solicitud.getFechaInicioGerm())) {
-            throw new RuntimeException("La fecha de último conteo debe ser posterior a la fecha de inicio de germinación");
+        // Validar que la fecha de germinación sea posterior a la de ingreso
+        if (!solicitud.getFechaGerminacion().isAfter(solicitud.getFechaIngreso())) {
+            throw new RuntimeException("La fecha de germinación debe ser posterior a la fecha de ingreso");
         }
         
-        // Validar fechaFinal (debe estar entre fechaInicioGerm y fechaUltConteo, o después)
-        if (solicitud.getFechaFinal().isBefore(solicitud.getFechaInicioGerm())) {
-            throw new RuntimeException("La fecha final debe ser posterior o igual a la fecha de inicio de germinación");
+        // Si hay días de prefrío, validar que haya suficientes días entre fechaIngreso y fechaGerminacion
+        int diasPrefrio = (solicitud.getDiasPrefrio() != null) ? solicitud.getDiasPrefrio() : 0;
+        if (diasPrefrio > 0) {
+            long diasEntreFechas = java.time.temporal.ChronoUnit.DAYS.between(
+                solicitud.getFechaIngreso(), 
+                solicitud.getFechaGerminacion()
+            );
+            if (diasEntreFechas < diasPrefrio) {
+                throw new RuntimeException("Debe haber al menos " + diasPrefrio + 
+                    " días entre la fecha de ingreso y la fecha de germinación (días de prefrío requeridos). " +
+                    "Actualmente hay " + diasEntreFechas + " días.");
+            }
+        }
+        
+        // Validar que la fecha de último conteo sea posterior a la de germinación
+        if (!solicitud.getFechaUltConteo().isAfter(solicitud.getFechaGerminacion())) {
+            throw new RuntimeException("La fecha de último conteo debe ser posterior a la fecha de germinación");
+        }
+        
+        // Validar fechaFinal (debe estar entre fechaGerminacion y fechaUltConteo, o después)
+        if (solicitud.getFechaFinal().isBefore(solicitud.getFechaGerminacion())) {
+            throw new RuntimeException("La fecha final debe ser posterior o igual a la fecha de germinación");
         }
         
         if (solicitud.getFechaFinal().isBefore(solicitud.getFechaUltConteo())) {
@@ -167,51 +190,35 @@ public class TablaGermService {
             throw new RuntimeException("El número de fechas de conteos debe coincidir con el número de conteos definido");
         }
         
-        // Validar días de prefrío y pretratamiento según los flags booleanos
-        int diasPrefrio = 0;
-        int diasPretratamiento = 0;
-        
+        // Validar días de prefrío según el flag booleano y verificar que haya suficiente tiempo
         if (Boolean.TRUE.equals(solicitud.getTienePrefrio())) {
-            if (solicitud.getDiasPrefrio() != null) {
-                diasPrefrio = solicitud.getDiasPrefrio();
+            if (solicitud.getDiasPrefrio() != null && solicitud.getDiasPrefrio() > 0) {
                 if (diasPrefrio < 0) {
                     throw new RuntimeException("Los días de prefrío deben ser mayores o iguales a 0");
                 }
             }
         }
         
-        if (Boolean.TRUE.equals(solicitud.getTienePretratamiento())) {
-            if (solicitud.getDiasPretratamiento() != null) {
-                diasPretratamiento = solicitud.getDiasPretratamiento();
-                if (diasPretratamiento < 0) {
-                    throw new RuntimeException("Los días de pretratamiento deben ser mayores o iguales a 0");
-                }
-            }
-        }
-        
-        // Calcular fecha del primer conteo permitido
-        java.time.LocalDate fechaPrimerConteoPermitido = solicitud.getFechaInicioGerm()
-            .plusDays(diasPrefrio + diasPretratamiento);
-        
-        // Validar que las fechas de conteo estén dentro del rango y respeten los días de prefrío/pretratamiento
+        // Validar que las fechas de conteo estén dentro del rango
+        // Los días de prefrío se cuentan entre fechaIngreso y fechaGerminacion
+        // Por lo tanto, el primer conteo solo debe ser posterior a fechaGerminacion
         for (int i = 0; i < solicitud.getFechaConteos().size(); i++) {
             java.time.LocalDate fechaConteo = solicitud.getFechaConteos().get(i);
             if (fechaConteo == null) {
                 throw new RuntimeException("La fecha de conteo " + (i + 1) + " no puede ser nula");
             }
             
-            // Validar que la primera fecha de conteo respete los días de prefrío y pretratamiento
-            if (i == 0 && fechaConteo.isBefore(fechaPrimerConteoPermitido)) {
-                throw new RuntimeException("El primer conteo debe realizarse después de " + 
-                    (diasPrefrio + diasPretratamiento) + " días desde la fecha de inicio (fecha mínima: " + 
-                    fechaPrimerConteoPermitido + ")");
+            // Validar que la primera fecha de conteo sea posterior a la fecha de germinación
+            if (i == 0 && !fechaConteo.isAfter(solicitud.getFechaGerminacion())) {
+                throw new RuntimeException("El primer conteo debe realizarse después de la fecha de germinación (fecha mínima: " + 
+                    solicitud.getFechaGerminacion().plusDays(1) + ")");
             }
             
             // Validar que esté dentro del rango permitido
-            if (fechaConteo.isBefore(solicitud.getFechaInicioGerm()) || 
+            if (fechaConteo.isBefore(solicitud.getFechaGerminacion()) || 
                 fechaConteo.isAfter(solicitud.getFechaUltConteo())) {
                 throw new RuntimeException("La fecha de conteo " + (i + 1) + 
-                    " debe estar entre la fecha de inicio y la fecha de último conteo");
+                    " debe estar entre la fecha de germinación y la fecha de último conteo");
             }
             
             // Validar orden cronológico - debe ser igual o posterior al anterior
@@ -641,14 +648,13 @@ public class TablaGermService {
         tablaGerm.setTienePretratamiento(solicitud.getTienePretratamiento());
         if (Boolean.TRUE.equals(solicitud.getTienePretratamiento())) {
             tablaGerm.setDescripcionPretratamiento(solicitud.getDescripcionPretratamiento());
-            tablaGerm.setDiasPretratamiento(solicitud.getDiasPretratamiento() != null ? solicitud.getDiasPretratamiento() : 0);
         } else {
             tablaGerm.setDescripcionPretratamiento(null);
-            tablaGerm.setDiasPretratamiento(0);
         }
         
         // Campos de fechas y control de conteos
-        tablaGerm.setFechaInicioGerm(solicitud.getFechaInicioGerm());
+        tablaGerm.setFechaIngreso(solicitud.getFechaIngreso());
+        tablaGerm.setFechaGerminacion(solicitud.getFechaGerminacion());
         tablaGerm.setFechaConteos(solicitud.getFechaConteos());
         tablaGerm.setFechaUltConteo(solicitud.getFechaUltConteo());
         tablaGerm.setNumDias(solicitud.getNumDias());
@@ -684,11 +690,76 @@ public class TablaGermService {
         tablaGerm.setTienePretratamiento(solicitud.getTienePretratamiento());
         if (Boolean.TRUE.equals(solicitud.getTienePretratamiento())) {
             tablaGerm.setDescripcionPretratamiento(solicitud.getDescripcionPretratamiento());
-            tablaGerm.setDiasPretratamiento(solicitud.getDiasPretratamiento() != null ? solicitud.getDiasPretratamiento() : 0);
         } else {
             tablaGerm.setDescripcionPretratamiento(null);
-            tablaGerm.setDiasPretratamiento(0);
         };
+        
+        // Manejar cambios en el número de conteos
+        if (solicitud.getNumeroConteos() != null && tablaGerm.getNumeroConteos() != null &&
+            !solicitud.getNumeroConteos().equals(tablaGerm.getNumeroConteos())) {
+            
+            Integer conteosAnteriores = tablaGerm.getNumeroConteos();
+            Integer conteosNuevos = solicitud.getNumeroConteos();
+            
+            System.out.println("📊 Cambio en número de conteos detectado: " + conteosAnteriores + " -> " + conteosNuevos);
+            
+            // Ajustar el array de normales en todas las repeticiones
+            if (tablaGerm.getRepGerm() != null && !tablaGerm.getRepGerm().isEmpty()) {
+                for (RepGerm rep : tablaGerm.getRepGerm()) {
+                    List<Integer> normalesActuales = rep.getNormales() != null ? 
+                        new ArrayList<>(rep.getNormales()) : new ArrayList<>();
+                    
+                    if (conteosNuevos > conteosAnteriores) {
+                        // Agregar conteos al final (inicializados en 0)
+                        int conteosAAgregar = conteosNuevos - conteosAnteriores;
+                        for (int i = 0; i < conteosAAgregar; i++) {
+                            normalesActuales.add(0);
+                        }
+                        System.out.println("  ✅ Repetición " + rep.getNumRep() + ": agregados " + conteosAAgregar + " conteos al final");
+                    } else {
+                        // Eliminar conteos desde el final
+                        int conteosAEliminar = conteosAnteriores - conteosNuevos;
+                        for (int i = 0; i < conteosAEliminar && !normalesActuales.isEmpty(); i++) {
+                            normalesActuales.remove(normalesActuales.size() - 1);
+                        }
+                        System.out.println("  ✅ Repetición " + rep.getNumRep() + ": eliminados " + conteosAEliminar + " conteos desde el final");
+                    }
+                    
+                    rep.setNormales(normalesActuales);
+                    repGermRepository.save(rep);
+                }
+            }
+            
+            // Actualizar el número de conteos en la tabla
+            tablaGerm.setNumeroConteos(conteosNuevos);
+        }
+        
+        // Manejar cambios en el número de repeticiones
+        if (solicitud.getNumeroRepeticiones() != null && tablaGerm.getNumeroRepeticiones() != null &&
+            !solicitud.getNumeroRepeticiones().equals(tablaGerm.getNumeroRepeticiones())) {
+            
+            Integer repeticionesAnteriores = tablaGerm.getNumeroRepeticiones();
+            Integer repeticionesNuevas = solicitud.getNumeroRepeticiones();
+            
+            System.out.println("📊 Cambio en número de repeticiones detectado: " + repeticionesAnteriores + " -> " + repeticionesNuevas);
+            
+            if (repeticionesNuevas < repeticionesAnteriores) {
+                // Eliminar repeticiones desde el final
+                List<RepGerm> repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());
+                repeticiones.sort((r1, r2) -> Integer.compare(r2.getNumRep(), r1.getNumRep())); // Ordenar descendente
+                
+                int repeticionesAEliminar = repeticionesAnteriores - repeticionesNuevas;
+                for (int i = 0; i < repeticionesAEliminar && i < repeticiones.size(); i++) {
+                    RepGerm repAEliminar = repeticiones.get(i);
+                    System.out.println("  🗑️ Eliminando repetición " + repAEliminar.getNumRep());
+                    repGermRepository.delete(repAEliminar);
+                }
+            }
+            // Si se aumentan las repeticiones, el usuario las creará manualmente
+            
+            // Actualizar el número de repeticiones en la tabla
+            tablaGerm.setNumeroRepeticiones(repeticionesNuevas);
+        }
         
         // Actualizar fechas de conteos si se proporcionan
         if (solicitud.getFechaConteos() != null && !solicitud.getFechaConteos().isEmpty()) {
@@ -718,8 +789,12 @@ public class TablaGermService {
         }
         
         // Actualizar otros campos de fechas
-        if (solicitud.getFechaInicioGerm() != null) {
-            tablaGerm.setFechaInicioGerm(solicitud.getFechaInicioGerm());
+        if (solicitud.getFechaIngreso() != null) {
+            tablaGerm.setFechaIngreso(solicitud.getFechaIngreso());
+        }
+        
+        if (solicitud.getFechaGerminacion() != null) {
+            tablaGerm.setFechaGerminacion(solicitud.getFechaGerminacion());
         }
         
         if (solicitud.getFechaUltConteo() != null) {
@@ -730,12 +805,9 @@ public class TablaGermService {
             tablaGerm.setNumDias(solicitud.getNumDias());
         }
         
-        // Actualizar días de prefrío y pretratamiento
+        // Actualizar días de prefrío
         if (solicitud.getDiasPrefrio() != null) {
             tablaGerm.setDiasPrefrio(solicitud.getDiasPrefrio());
-        }
-        if (solicitud.getDiasPretratamiento() != null) {
-            tablaGerm.setDiasPretratamiento(solicitud.getDiasPretratamiento());
         }
     }
     
@@ -797,22 +869,16 @@ public class TablaGermService {
      */
     private void validarFechasConteosEnEdicion(TablaGermRequestDTO solicitud, TablaGerm tablaExistente) {
         // Aplicar las mismas validaciones que en creación
-        int diasPrefrio = (solicitud.getDiasPrefrio() != null) ? solicitud.getDiasPrefrio() : 
-                          (tablaExistente.getDiasPrefrio() != null ? tablaExistente.getDiasPrefrio() : 0);
-        int diasPretratamiento = (solicitud.getDiasPretratamiento() != null) ? solicitud.getDiasPretratamiento() : 
-                                 (tablaExistente.getDiasPretratamiento() != null ? tablaExistente.getDiasPretratamiento() : 0);
-        
-        java.time.LocalDate fechaInicio = solicitud.getFechaInicioGerm() != null ? 
-            solicitud.getFechaInicioGerm() : tablaExistente.getFechaInicioGerm();
-        
-        java.time.LocalDate fechaPrimerConteoPermitido = fechaInicio.plusDays(diasPrefrio + diasPretratamiento);
+        // Los días de prefrío se cuentan entre fechaIngreso y fechaGerminacion
+        java.time.LocalDate fechaGerminacion = solicitud.getFechaGerminacion() != null ? 
+            solicitud.getFechaGerminacion() : tablaExistente.getFechaGerminacion();
         
         for (int i = 0; i < solicitud.getFechaConteos().size(); i++) {
             java.time.LocalDate fechaConteo = solicitud.getFechaConteos().get(i);
             
-            if (i == 0 && fechaConteo.isBefore(fechaPrimerConteoPermitido)) {
-                throw new RuntimeException("El primer conteo debe realizarse después de " + 
-                    (diasPrefrio + diasPretratamiento) + " días desde la fecha de inicio");
+            if (i == 0 && !fechaConteo.isAfter(fechaGerminacion)) {
+                throw new RuntimeException("El primer conteo debe realizarse después de la fecha de germinación (fecha mínima: " + 
+                    fechaGerminacion.plusDays(1) + ")");
             }
         }
     }
@@ -869,14 +935,14 @@ public class TablaGermService {
         dto.setDescripcionPretratamiento(tablaGerm.getDescripcionPretratamiento());
         
         // Campos de fechas y control de conteos
-        dto.setFechaInicioGerm(tablaGerm.getFechaInicioGerm());
+        dto.setFechaIngreso(tablaGerm.getFechaIngreso());
+        dto.setFechaGerminacion(tablaGerm.getFechaGerminacion());
         dto.setFechaConteos(tablaGerm.getFechaConteos());
         dto.setFechaUltConteo(tablaGerm.getFechaUltConteo());
         dto.setNumDias(tablaGerm.getNumDias());
         dto.setNumeroRepeticiones(tablaGerm.getNumeroRepeticiones());
         dto.setNumeroConteos(tablaGerm.getNumeroConteos());
         dto.setDiasPrefrio(tablaGerm.getDiasPrefrio());
-        dto.setDiasPretratamiento(tablaGerm.getDiasPretratamiento());
         
         return dto;
     }

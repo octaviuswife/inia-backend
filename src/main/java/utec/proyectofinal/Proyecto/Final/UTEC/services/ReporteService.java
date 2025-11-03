@@ -301,10 +301,10 @@ public class ReporteService {
             .filter(g -> g.getLote() != null && g.getLote().getCultivar() != null && g.getLote().getCultivar().getEspecie() != null)
             .filter(g -> g.getTablaGerm() != null && !g.getTablaGerm().isEmpty())
             .flatMap(g -> g.getTablaGerm().stream()
-                .filter(t -> t.getFechaConteos() != null && !t.getFechaConteos().isEmpty() && t.getFechaInicioGerm() != null)
+                .filter(t -> t.getFechaConteos() != null && !t.getFechaConteos().isEmpty() && t.getFechaGerminacion() != null)
                 .map(t -> new Object() {
                     String especie = g.getLote().getCultivar().getEspecie().getNombreComun();
-                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaInicioGerm(), t.getFechaConteos().get(0));
+                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaGerminacion(), t.getFechaConteos().get(0));
                 }))
             .collect(Collectors.groupingBy(
                 obj -> obj.especie,
@@ -317,10 +317,10 @@ public class ReporteService {
             .filter(g -> g.getLote() != null && g.getLote().getCultivar() != null && g.getLote().getCultivar().getEspecie() != null)
             .filter(g -> g.getTablaGerm() != null && !g.getTablaGerm().isEmpty())
             .flatMap(g -> g.getTablaGerm().stream()
-                .filter(t -> t.getFechaUltConteo() != null && t.getFechaInicioGerm() != null)
+                .filter(t -> t.getFechaUltConteo() != null && t.getFechaGerminacion() != null)
                 .map(t -> new Object() {
                     String especie = g.getLote().getCultivar().getEspecie().getNombreComun();
-                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaInicioGerm(), t.getFechaUltConteo());
+                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaGerminacion(), t.getFechaUltConteo());
                 }))
             .collect(Collectors.groupingBy(
                 obj -> obj.especie,

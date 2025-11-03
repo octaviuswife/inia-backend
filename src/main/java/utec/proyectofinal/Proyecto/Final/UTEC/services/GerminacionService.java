@@ -362,7 +362,7 @@ public class GerminacionService {
             TablaGerm tablaGerm = germinacion.getTablaGerm().get(0);
             
             // Fechas de germinación
-            dto.setFechaInicioGerm(tablaGerm.getFechaInicioGerm());
+            dto.setFechaInicioGerm(tablaGerm.getFechaGerminacion());
             dto.setFechaFinal(tablaGerm.getFechaFinal());
             
             // Booleanos de prefrío y pretratamiento
