@@ -41,6 +41,10 @@ public class NotificacionService {
     @Autowired
     private AnalisisHistorialRepository analisisHistorialRepository;
 
+    // NUEVO: Servicio WebSocket para notificaciones en tiempo real
+    @Autowired
+    private NotificationWebSocketService wsService;
+
     // Crear notificación manual
     public NotificacionDTO crearNotificacion(NotificacionRequestDTO request) {
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId().intValue())
@@ -76,7 +80,13 @@ public class NotificacionService {
             notificacion.setUsuario(admin);
             notificacion.setTipo(USUARIO_REGISTRO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            
+            // EMITIR VÍA WEBSOCKET - El admin recibe la notificación instantáneamente
+            NotificacionDTO dto = convertToDTO(notificacion);
+            wsService.sendToUser(admin.getUsuarioID(), dto);
+            wsService.sendUnreadCount(admin.getUsuarioID(), 
+                contarNotificacionesNoLeidas(admin.getUsuarioID().longValue()));
         }
     }
 
@@ -91,7 +101,13 @@ public class NotificacionService {
         notificacion.setUsuario(usuario);
         notificacion.setTipo(USUARIO_APROBADO);
         
-        notificacionRepository.save(notificacion);
+        notificacion = notificacionRepository.save(notificacion);
+        
+        // EMITIR VÍA WEBSOCKET
+        NotificacionDTO dto = convertToDTO(notificacion);
+        wsService.sendToUser(usuario.getUsuarioID(), dto);
+        wsService.sendUnreadCount(usuario.getUsuarioID(), 
+            contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));
     }
 
     // Notificación cuando se rechaza un usuario
@@ -105,7 +121,13 @@ public class NotificacionService {
         notificacion.setUsuario(usuario);
         notificacion.setTipo(USUARIO_RECHAZADO);
         
-        notificacionRepository.save(notificacion);
+        notificacion = notificacionRepository.save(notificacion);
+        
+        // EMITIR VÍA WEBSOCKET
+        NotificacionDTO dto = convertToDTO(notificacion);
+        wsService.sendToUser(usuario.getUsuarioID(), dto);
+        wsService.sendUnreadCount(usuario.getUsuarioID(), 
+            contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));
     }
 
     // Notificación cuando se finaliza un análisis
@@ -128,7 +150,13 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_FINALIZADO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            
+            // EMITIR VÍA WEBSOCKET
+            NotificacionDTO dto = convertToDTO(notificacion);
+            wsService.sendToUser(admin.getUsuarioID(), dto);
+            wsService.sendUnreadCount(admin.getUsuarioID(), 
+                contarNotificacionesNoLeidas(admin.getUsuarioID().longValue()));
         }
     }
 
@@ -154,7 +182,13 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_APROBADO);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            
+            // EMITIR VÍA WEBSOCKET
+            NotificacionDTO dto = convertToDTO(notificacion);
+            wsService.sendToUser(usuario.getUsuarioID(), dto);
+            wsService.sendUnreadCount(usuario.getUsuarioID(), 
+                contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));
         }
     }
 
@@ -180,7 +214,13 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_REPETIR);
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            
+            // EMITIR VÍA WEBSOCKET
+            NotificacionDTO dto = convertToDTO(notificacion);
+            wsService.sendToUser(usuario.getUsuarioID(), dto);
+            wsService.sendUnreadCount(usuario.getUsuarioID(), 
+                contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));
         }
     }
 
