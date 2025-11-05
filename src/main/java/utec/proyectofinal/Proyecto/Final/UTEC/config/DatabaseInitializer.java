@@ -38,7 +38,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 System.out.println("   Email: admin@inia.gub.uy");
                 System.out.println("   ️  IMPORTANTE: Cambiar la contraseña después del primer login");
             } else {
-                System.out.println("ℹ️  Ya existe al menos un administrador en el sistema");
+                System.out.println("ℹYa existe al menos un administrador en el sistema");
             }
         } catch (Exception e) {
             System.err.println(" Error al inicializar admin predeterminado: " + e.getMessage());

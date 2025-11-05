@@ -40,7 +40,7 @@ public class CatalogosInitializer implements CommandLineRunner {
             // Verificar si ya existen malezas en la base de datos
             long count = malezasRepository.count();
             if (count > 0) {
-                System.out.println("ℹ️  Catálogo de Malezas ya inicializado (" + count + " registros)");
+                System.out.println("ℹCatálogo de Malezas ya inicializado (" + count + " registros)");
                 return;
             }
 
@@ -122,7 +122,7 @@ public class CatalogosInitializer implements CommandLineRunner {
             // Verificar si ya existen especies en la base de datos
             long count = especieRepository.count();
             if (count > 0) {
-                System.out.println("ℹ️  Catálogo de Especies ya inicializado (" + count + " registros)");
+                System.out.println("ℹCatálogo de Especies ya inicializado (" + count + " registros)");
                 return;
             }
 
