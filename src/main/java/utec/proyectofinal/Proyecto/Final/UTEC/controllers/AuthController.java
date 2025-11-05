@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -250,6 +252,18 @@ public class AuthController {
         return ResponseEntity.ok(solicitudes);
     }
 
+    @GetMapping("/pending/paginated")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar solicitudes pendientes paginadas", description = "Lista solicitudes pendientes con paginación y búsqueda")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Page<UsuarioDTO>> listarSolicitudesPendientesPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        Page<UsuarioDTO> solicitudes = usuarioService.listarSolicitudesPendientesPaginadas(page, size, search);
+        return ResponseEntity.ok(solicitudes);
+    }
+
     @PostMapping("/approve/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Aprobar usuario", description = "Aprueba un usuario registrado y le asigna un rol")
@@ -287,6 +301,37 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<UsuarioDTO>> listarUsuarios() {
         List<UsuarioDTO> usuarios = usuarioService.listarTodosUsuarios();
+        return ResponseEntity.ok(usuarios);
+    }
+
+    @GetMapping("/users/paginated")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar usuarios paginados", description = "Lista todos los usuarios con paginación, búsqueda y filtros por rol y estado activo")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Page<UsuarioDTO>> listarUsuariosPaginados(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) String activo) {
+        
+        // Convertir String a Rol enum si se proporciona
+        utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol rolEnum = null;
+        if (rol != null && !rol.trim().isEmpty() && !rol.equalsIgnoreCase("all")) {
+            try {
+                rolEnum = utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.valueOf(rol.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        }
+        
+        // Convertir String a Boolean si se proporciona
+        Boolean activoBoolean = null;
+        if (activo != null && !activo.trim().isEmpty() && !activo.equalsIgnoreCase("all")) {
+            activoBoolean = Boolean.parseBoolean(activo);
+        }
+        
+        Page<UsuarioDTO> usuarios = usuarioService.listarTodosUsuariosPaginados(page, size, search, rolEnum, activoBoolean);
         return ResponseEntity.ok(usuarios);
     }
 

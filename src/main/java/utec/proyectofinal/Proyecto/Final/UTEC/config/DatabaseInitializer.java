@@ -29,8 +29,8 @@ public class DatabaseInitializer implements CommandLineRunner {
 
     private void initializeDefaultAdmin() {
         try {
-            // Verificar si ya existe un admin en el sistema
-            if (usuarioRepository.findByRol(Rol.ADMIN).isEmpty()) {
+            // Verificar si ya existe al menos un admin en el sistema
+            if (!usuarioRepository.existsByRol(Rol.ADMIN)) {
                 usuarioService.crearAdminPredeterminado();
                 System.out.println("✅ Administrador predeterminado creado:");
                 System.out.println("   Usuario: admin");
@@ -38,7 +38,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 System.out.println("   Email: admin@inia.gub.uy");
                 System.out.println("   ⚠️  IMPORTANTE: Cambiar la contraseña después del primer login");
             } else {
-                System.out.println("ℹ️  Ya existe un administrador en el sistema");
+                System.out.println("ℹ️  Ya existe al menos un administrador en el sistema");
             }
         } catch (Exception e) {
             System.err.println("❌ Error al inicializar admin predeterminado: " + e.getMessage());

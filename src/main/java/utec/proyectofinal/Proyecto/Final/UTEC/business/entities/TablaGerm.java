@@ -67,7 +67,7 @@ public class TablaGerm {
     private String descripcionPretratamiento;
 
     // Campos de fechas y control de conteos movidos desde Germinacion
-    private LocalDate fechaIngreso; // Nueva fecha de ingreso
+    private LocalDate fechaIngreso; 
     private LocalDate fechaGerminacion; // Renombrado de fechaInicioGerm
 
     @ElementCollection

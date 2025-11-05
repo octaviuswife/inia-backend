@@ -5,6 +5,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -88,6 +92,25 @@ public class UsuarioService {
     }
 
     /**
+     * Listar solicitudes pendientes con paginación y búsqueda
+     */
+    public Page<UsuarioDTO> listarSolicitudesPendientesPaginadas(int page, int size, String search) {
+        // Crear Pageable ordenado por fecha de creación descendente (más recientes primero)
+        Pageable pageable = PageRequest.of(page, size,
+            Sort.by(Sort.Direction.DESC, "fechaCreacion"));
+        Page<Usuario> usuariosPage;
+        
+        if (search != null && !search.trim().isEmpty()) {
+            // Búsqueda por nombre de usuario, nombres, apellidos o email
+            usuariosPage = usuarioRepository.findByEstadoAndSearchTerm(EstadoUsuario.PENDIENTE, search, pageable);
+        } else {
+            usuariosPage = usuarioRepository.findByEstado(EstadoUsuario.PENDIENTE, pageable);
+        }
+        
+        return usuariosPage.map(this::mapearEntidadADTO);
+    }
+
+    /**
      * Aprobar usuario y asignar rol
      */
     public UsuarioDTO aprobarUsuario(Integer usuarioId, AprobarUsuarioRequestDTO solicitud) {
@@ -148,6 +171,47 @@ public class UsuarioService {
     }
 
     /**
+     * Listar todos los usuarios con paginación, búsqueda y filtros
+     */
+    public Page<UsuarioDTO> listarTodosUsuariosPaginados(int page, int size, String search, Rol rol, Boolean activo) {
+        // Crear Pageable con ordenamiento alfabético por nombres y apellidos
+        Pageable pageable = PageRequest.of(page, size, 
+            Sort.by(Sort.Direction.ASC, "apellidos", "nombres"));
+        Page<Usuario> usuariosPage;
+        
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        
+        // Combinaciones de filtros
+        if (rol != null && activo != null && hasSearch) {
+            // Rol + Activo + Búsqueda
+            usuariosPage = usuarioRepository.findByRolAndActivoAndSearchTerm(rol, activo, search, pageable);
+        } else if (rol != null && activo != null) {
+            // Rol + Activo (sin búsqueda)
+            usuariosPage = usuarioRepository.findByRolAndActivo(rol, activo, pageable);
+        } else if (rol != null && hasSearch) {
+            // Rol + Búsqueda
+            usuariosPage = usuarioRepository.findBySearchTermAndRol(search, rol, pageable);
+        } else if (activo != null && hasSearch) {
+            // Activo + Búsqueda
+            usuariosPage = usuarioRepository.findByActivoAndSearchTerm(activo, search, pageable);
+        } else if (rol != null) {
+            // Solo Rol
+            usuariosPage = usuarioRepository.findByRol(rol, pageable);
+        } else if (activo != null) {
+            // Solo Activo
+            usuariosPage = usuarioRepository.findByActivo(activo, pageable);
+        } else if (hasSearch) {
+            // Solo Búsqueda
+            usuariosPage = usuarioRepository.findBySearchTerm(search, pageable);
+        } else {
+            // Sin filtros
+            usuariosPage = usuarioRepository.findAll(pageable);
+        }
+        
+        return usuariosPage.map(this::mapearEntidadADTO);
+    }
+
+    /**
      * Listar usuarios activos
      */
     public List<UsuarioDTO> listarUsuariosActivos() {
@@ -174,6 +238,13 @@ public class UsuarioService {
             usuario.setEstado(solicitud.getEstado());
             // Sincronizar campo activo con estado
             usuario.setActivo(solicitud.getEstado() == EstadoUsuario.ACTIVO);
+        }
+        
+        // Actualizar campo activo si se proporciona (y sincronizar con estado)
+        if (solicitud.getActivo() != null) {
+            usuario.setActivo(solicitud.getActivo());
+            // Sincronizar estado con activo
+            usuario.setEstado(solicitud.getActivo() ? EstadoUsuario.ACTIVO : EstadoUsuario.INACTIVO);
         }
 
         Usuario usuarioActualizado = usuarioRepository.save(usuario);
@@ -245,9 +316,8 @@ public class UsuarioService {
      * Crear admin predeterminado si no existe
      */
     public UsuarioDTO crearAdminPredeterminado() {
-        // Verificar si ya existe un admin
-        Optional<Usuario> adminExistente = usuarioRepository.findByRol(Rol.ADMIN);
-        if (adminExistente.isPresent()) {
+        // Verificar si ya existe al menos un admin
+        if (usuarioRepository.existsByRol(Rol.ADMIN)) {
             throw new RuntimeException("Ya existe un administrador en el sistema");
         }
 

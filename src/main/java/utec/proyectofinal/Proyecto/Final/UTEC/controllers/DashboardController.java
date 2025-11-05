@@ -1,6 +1,9 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,6 +34,53 @@ public class DashboardController {
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             System.err.println("Error al obtener estadísticas del dashboard: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Endpoint offset estándar para análisis pendientes.
+     * Usa paginación con page/size para navegación de páginas.
+     * 
+     * @param page Número de página (base 0)
+     * @param size Número de items por página (default 10)
+     * @return Página de análisis pendientes
+     */
+    @GetMapping("/analisis-pendientes")
+    public ResponseEntity<Page<AnalisisPendienteDTO>> obtenerAnalisisPendientes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<AnalisisPendienteDTO> response = dashboardService.listarAnalisisPendientesPaginados(pageable);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("Error al obtener análisis pendientes: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Endpoint offset estándar para análisis por aprobar.
+     * Usa paginación con page/size para navegación de páginas.
+     * 
+     * @param page Número de página (base 0)
+     * @param size Número de items por página (default 10)
+     * @return Página de análisis por aprobar
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/analisis-por-aprobar")
+    public ResponseEntity<Page<AnalisisPorAprobarDTO>> obtenerAnalisisPorAprobar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<AnalisisPorAprobarDTO> response = dashboardService.listarAnalisisPorAprobarPaginados(pageable);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("Error al obtener análisis por aprobar: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
