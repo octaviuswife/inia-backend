@@ -304,7 +304,7 @@ public class TablaGermService {
         if (tablaGermExistente.isPresent()) {
             TablaGerm tablaGerm = tablaGermExistente.get();
             
-            System.out.println("📋 Actualizando tabla ID: " + id);
+            System.out.println(" Actualizando tabla ID: " + id);
             System.out.println("  Fecha último conteo anterior: " + tablaGerm.getFechaUltConteo());
             System.out.println("  Fecha último conteo nueva: " + solicitud.getFechaUltConteo());
             
@@ -320,7 +320,7 @@ public class TablaGermService {
                 
                 if (fechaAnteriorEsPresenteOPasada && fechaNuevaEsFutura) {
                     debeReiniciarCamposUltimoConteo = true;
-                    System.out.println("  ⚠️ Se detectó cambio de fecha último conteo a futuro - se reiniciarán campos");
+                    System.out.println("  ️ Se detectó cambio de fecha último conteo a futuro - se reiniciarán campos");
                 }
             }
             
@@ -701,7 +701,7 @@ public class TablaGermService {
             Integer conteosAnteriores = tablaGerm.getNumeroConteos();
             Integer conteosNuevos = solicitud.getNumeroConteos();
             
-            System.out.println("📊 Cambio en número de conteos detectado: " + conteosAnteriores + " -> " + conteosNuevos);
+            System.out.println(" Cambio en número de conteos detectado: " + conteosAnteriores + " -> " + conteosNuevos);
             
             // Ajustar el array de normales en todas las repeticiones
             if (tablaGerm.getRepGerm() != null && !tablaGerm.getRepGerm().isEmpty()) {
@@ -715,14 +715,14 @@ public class TablaGermService {
                         for (int i = 0; i < conteosAAgregar; i++) {
                             normalesActuales.add(0);
                         }
-                        System.out.println("  ✅ Repetición " + rep.getNumRep() + ": agregados " + conteosAAgregar + " conteos al final");
+                        System.out.println("   Repetición " + rep.getNumRep() + ": agregados " + conteosAAgregar + " conteos al final");
                     } else {
                         // Eliminar conteos desde el final
                         int conteosAEliminar = conteosAnteriores - conteosNuevos;
                         for (int i = 0; i < conteosAEliminar && !normalesActuales.isEmpty(); i++) {
                             normalesActuales.remove(normalesActuales.size() - 1);
                         }
-                        System.out.println("  ✅ Repetición " + rep.getNumRep() + ": eliminados " + conteosAEliminar + " conteos desde el final");
+                        System.out.println("   Repetición " + rep.getNumRep() + ": eliminados " + conteosAEliminar + " conteos desde el final");
                     }
                     
                     rep.setNormales(normalesActuales);
@@ -741,7 +741,7 @@ public class TablaGermService {
             Integer repeticionesAnteriores = tablaGerm.getNumeroRepeticiones();
             Integer repeticionesNuevas = solicitud.getNumeroRepeticiones();
             
-            System.out.println("📊 Cambio en número de repeticiones detectado: " + repeticionesAnteriores + " -> " + repeticionesNuevas);
+            System.out.println(" Cambio en número de repeticiones detectado: " + repeticionesAnteriores + " -> " + repeticionesNuevas);
             
             if (repeticionesNuevas < repeticionesAnteriores) {
                 // Eliminar repeticiones desde el final
@@ -751,7 +751,7 @@ public class TablaGermService {
                 int repeticionesAEliminar = repeticionesAnteriores - repeticionesNuevas;
                 for (int i = 0; i < repeticionesAEliminar && i < repeticiones.size(); i++) {
                     RepGerm repAEliminar = repeticiones.get(i);
-                    System.out.println("  🗑️ Eliminando repetición " + repAEliminar.getNumRep());
+                    System.out.println("  ️ Eliminando repetición " + repAEliminar.getNumRep());
                     repGermRepository.delete(repAEliminar);
                 }
             }
@@ -830,16 +830,16 @@ public class TablaGermService {
      * la fecha de último conteo cambia de presente/pasada a futura
      */
     private void reiniciarCamposUltimoConteo(TablaGerm tablaGerm) {
-        System.out.println("🔄 Reiniciando campos del último conteo para tabla ID: " + tablaGerm.getTablaGermID());
+        System.out.println(" Reiniciando campos del último conteo para tabla ID: " + tablaGerm.getTablaGermID());
         
         // Cargar repeticiones explícitamente desde la base de datos
         List<RepGerm> repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());
         
-        System.out.println("  📊 Repeticiones encontradas: " + repeticiones.size());
+        System.out.println("   Repeticiones encontradas: " + repeticiones.size());
         
         if (repeticiones != null && !repeticiones.isEmpty()) {
             for (RepGerm rep : repeticiones) {
-                System.out.println("  📝 Limpiando repetición " + rep.getNumRep() + 
+                System.out.println("   Limpiando repetición " + rep.getNumRep() + 
                     " (ID: " + rep.getRepGermID() + ")" +
                     " - Valores anteriores: anormales=" + rep.getAnormales() + 
                     ", duras=" + rep.getDuras() + 
@@ -853,15 +853,15 @@ public class TablaGermService {
                 rep.setMuertas(0);
                 
                 RepGerm repGuardada = repGermRepository.save(rep);
-                System.out.println("  ✅ Repetición " + rep.getNumRep() + " limpiada - Nuevos valores: anormales=" + 
+                System.out.println("   Repetición " + rep.getNumRep() + " limpiada - Nuevos valores: anormales=" + 
                     repGuardada.getAnormales() + ", duras=" + repGuardada.getDuras() + 
                     ", frescas=" + repGuardada.getFrescas() + ", muertas=" + repGuardada.getMuertas());
             }
         } else {
-            System.out.println("  ⚠️ No se encontraron repeticiones para limpiar");
+            System.out.println("  ️ No se encontraron repeticiones para limpiar");
         }
         
-        System.out.println("✅ Campos del último conteo reiniciados completamente");
+        System.out.println(" Campos del último conteo reiniciados completamente");
     }
     
     /**

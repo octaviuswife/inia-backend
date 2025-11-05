@@ -1,6 +1,6 @@
 # Documentación Completa - Exportación Excel 52 Columnas
 
-## 📋 Índice
+##  Índice
 1. [Resumen Ejecutivo](#resumen-ejecutivo)
 2. [Estructura Final del Excel](#estructura-final-del-excel)
 3. [Historial de Cambios](#historial-de-cambios)
@@ -10,7 +10,7 @@
 
 ---
 
-## 🎯 Resumen Ejecutivo
+##  Resumen Ejecutivo
 
 ### Objetivo
 Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
@@ -29,14 +29,14 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 - **Formato de fecha:** dd/MM/yyyy
 
 ### Estado Actual
-✅ **Compilación exitosa** sin errores  
-✅ **Estructura completa** de 52 columnas  
-✅ **Mapeo de datos** implementado con TipoListado enum  
-⚠️ **2 campos pendientes** en entidad Pureza (ver sección [Campos Pendientes](#campos-pendientes))
+ **Compilación exitosa** sin errores  
+ **Estructura completa** de 52 columnas  
+ **Mapeo de datos** implementado con TipoListado enum  
+️ **2 campos pendientes** en entidad Pureza (ver sección [Campos Pendientes](#campos-pendientes))
 
 ---
 
-## 📊 Estructura Final del Excel
+##  Estructura Final del Excel
 
 ### Vista General por Secciones
 
@@ -57,7 +57,7 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 
 ---
 
-## 🔍 Detalle de Columnas
+##  Detalle de Columnas
 
 ### A-I: Datos Básicos (9 columnas)
 
@@ -73,7 +73,7 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | H | 7 | Kilos | kilos | Peso en kilos |
 | I | 8 | H% | humedad | Porcentaje de humedad |
 
-### J-O: Pureza INIA (6 columnas) 🔵
+### J-O: Pureza INIA (6 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Entidad Pureza |
 |-----|-----|---------------|-----------|----------------|
@@ -82,9 +82,9 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | L | 11 | OC% | purezaOtrosCultivos | redonOtrosCultivos |
 | M | 12 | M% | purezaMalezas | redonMalezas |
 | N | 13 | MT.% | purezaMalezasToleradas | redonMalezasToleradas |
-| O | 14 | M.T.C% | purezaMateriaTotal | ⚠️ null (campo pendiente) |
+| O | 14 | M.T.C% | purezaMateriaTotal | ️ null (campo pendiente) |
 
-### P-U: Pureza INASE (6 columnas) 🟡
+### P-U: Pureza INASE (6 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Entidad Pureza |
 |-----|-----|---------------|-----------|----------------|
@@ -93,9 +93,9 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | R | 17 | OC-I% | purezaInaseOtrosCultivos | inaseOtrosCultivos |
 | S | 18 | M% | purezaInaseMalezas | inaseMalezas |
 | T | 19 | M.T-I% | purezaInaseMalezasToleradas | inaseMalezasToleradas |
-| U | 20 | M.T.C% | purezaInaseMateriaTotal | ⚠️ null (campo pendiente) |
+| U | 20 | M.T.C% | purezaInaseMateriaTotal | ️ null (campo pendiente) |
 
-### V-Y: Descripción (4 columnas) 🔵
+### V-Y: Descripción (4 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Origen |
 |-----|-----|---------------|-----------|--------|
@@ -104,7 +104,7 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | X | 23 | MT | descripcionMalezasToleradas | Listado → MalezasYCultivosCatalogo |
 | Y | 24 | MTC | descripcionMateriaTotal | Listado → MalezasYCultivosCatalogo |
 
-### Z-AD: DOSN (5 columnas) 🔵
+### Z-AD: DOSN (5 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Filtro TipoListado |
 |-----|-----|---------------|-----------|-------------------|
@@ -114,7 +114,7 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | AC | 28 | MT | dosnMalezasToleradas | MAL_TOLERANCIA + INIA |
 | AD | 29 | DB | dosnBrassica | BRASSICA + INIA |
 
-### AE-AI: DOSN-I (5 columnas) 🟡
+### AE-AI: DOSN-I (5 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Filtro TipoListado |
 |-----|-----|---------------|-----------|-------------------|
@@ -124,7 +124,7 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | AH | 33 | MT | dosnInaseMalezasToleradas | MAL_TOLERANCIA + INASE |
 | AI | 34 | DB | dosnInaseBrassica | BRASSICA + INASE |
 
-### AJ-AL: PMS, Fecha y TS (3 columnas) 🔵
+### AJ-AL: PMS, Fecha y TS (3 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Origen |
 |-----|-----|---------------|-----------|--------|
@@ -132,7 +132,7 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | AK | 36 | - | fechaAnalisis | Formato: dd/MM/yyyy |
 | AL | 37 | - | tratamientoSemillas | Lote.tratamientoSemillas |
 
-### AM-AR: Germinación INIA (6 columnas) 🔵
+### AM-AR: Germinación INIA (6 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Entidad Germinacion |
 |-----|-----|---------------|-----------|---------------------|
@@ -143,7 +143,7 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 | AQ | 42 | M% | germinacionSemillasMuertas | germinacionRedoSemillasMuertas |
 | AR | 43 | G% | germinacionTotal | germinacionRedoTotal |
 
-### AS-AX: Germinación INASE (6 columnas) 🟡
+### AS-AX: Germinación INASE (6 columnas) 
 
 | Col | Idx | Subencabezado | Campo DTO | Entidad Germinacion |
 |-----|-----|---------------|-----------|---------------------|
@@ -158,49 +158,49 @@ Generar archivos Excel (.xlsx) con datos de análisis de semillas que incluyen:
 
 | Col | Idx | Subencabezado | Campo DTO | Entidad Tetrazolio | Color |
 |-----|-----|---------------|-----------|-------------------|-------|
-| AY | 50 | - | viabilidadPorcentaje | tetrazolioViabilidadInstituto | 🔵 |
-| AZ | 51 | - | viabilidadInasePorcentaje | tetrazolioViabilidadInase | 🟡 |
+| AY | 50 | - | viabilidadPorcentaje | tetrazolioViabilidadInstituto |  |
+| AZ | 51 | - | viabilidadInasePorcentaje | tetrazolioViabilidadInase |  |
 
 ---
 
-## 📝 Historial de Cambios
+##  Historial de Cambios
 
 ### Iteración 1: Creación Inicial
-- ✅ Creado README_USO.md para el frontend
-- ✅ Agregada sección de prueba en `/reportes`
-- ✅ Estructura inicial de 50 columnas
+-  Creado README_USO.md para el frontend
+-  Agregada sección de prueba en `/reportes`
+-  Estructura inicial de 50 columnas
 
 ### Iteración 2: Agregado de Columnas Faltantes
-- ✅ Identificadas 2 columnas faltantes (MTC Pureza INASE, PMS)
-- ✅ Agregados campos en DatosExportacionExcelDTO
-- ✅ Actualizada estructura a 52 columnas
+-  Identificadas 2 columnas faltantes (MTC Pureza INASE, PMS)
+-  Agregados campos en DatosExportacionExcelDTO
+-  Actualizada estructura a 52 columnas
 
 ### Iteración 3: Corrección de Headers
-- ✅ Corregida distribución de Pureza INASE (5→6 columnas)
-- ✅ Ajustados rangos de celdas combinadas
-- ✅ Actualizado método `crearEncabezados()`
+-  Corregida distribución de Pureza INASE (5→6 columnas)
+-  Ajustados rangos de celdas combinadas
+-  Actualizado método `crearEncabezados()`
 
 ### Iteración 4: Mapeo Semántico de DOSN
-- ✅ Renombrados campos genéricos a nombres semánticos:
+-  Renombrados campos genéricos a nombres semánticos:
   - `dosnMateriaTotal` → `dosnMalezasToleranciaC`
   - `dosnDB` → `dosnBrassica`
-- ✅ Implementado filtrado por enum `TipoListado`
-- ✅ Separación correcta INIA/INASE con enum `Instituto`
+-  Implementado filtrado por enum `TipoListado`
+-  Separación correcta INIA/INASE con enum `Instituto`
 
 ### Iteración 5: Corrección de Orden
-- ✅ Corregido orden de columnas DOSN (MTC, OC, M, MT, DB)
-- ✅ Corregido orden de columnas DOSN-I (MTC, OC, M, MT, DB)
-- ✅ Agregada columna PMS en posición correcta
-- ✅ Movida Fecha Análisis a su columna propia
+-  Corregido orden de columnas DOSN (MTC, OC, M, MT, DB)
+-  Corregido orden de columnas DOSN-I (MTC, OC, M, MT, DB)
+-  Agregada columna PMS en posición correcta
+-  Movida Fecha Análisis a su columna propia
 
 ### Iteración 6: Descripción Completa
-- ✅ Agregada columna MTC en Descripción
-- ✅ Descripción ahora tiene 4 columnas (V-Y)
-- ✅ Actualizados todos los índices subsiguientes
+-  Agregada columna MTC en Descripción
+-  Descripción ahora tiene 4 columnas (V-Y)
+-  Actualizados todos los índices subsiguientes
 
 ---
 
-## 🔧 Mapeo de Campos
+##  Mapeo de Campos
 
 ### Métodos de Mapeo en ExportacionExcelService
 
@@ -285,7 +285,7 @@ dto.setViabilidadInasePorcentaje(tetrazolio.getTetrazolioViabilidadInase());
 
 ---
 
-## ⚠️ Campos Pendientes
+## ️ Campos Pendientes
 
 ### Entidad Pureza
 
@@ -319,7 +319,7 @@ dto.setPurezaInaseMateriaTotal(null);
 
 ---
 
-## 🧪 Guía de Pruebas
+##  Guía de Pruebas
 
 ### Probar desde el Frontend
 
@@ -363,7 +363,7 @@ dto.setPurezaInaseMateriaTotal(null);
 
 ---
 
-## 📚 Archivos del Proyecto
+##  Archivos del Proyecto
 
 ### Backend
 - **ExportacionExcelService.java** - Servicio principal de exportación
@@ -382,7 +382,7 @@ dto.setPurezaInaseMateriaTotal(null);
 
 ---
 
-## 🎨 Estilos de Celdas
+##  Estilos de Celdas
 
 ### Encabezados INIA (Gris)
 ```java
@@ -406,7 +406,7 @@ private CellStyle crearEstiloEncabezadoAmarillo(Workbook workbook) {
 
 ---
 
-## 🚀 Próximos Pasos
+##  Próximos Pasos
 
 1. **Agregar campos faltantes en Pureza**
    - `redonMateriaTotal`
@@ -424,4 +424,4 @@ private CellStyle crearEstiloEncabezadoAmarillo(Workbook workbook) {
 
 **Última actualización:** 2025-10-15  
 **Versión:** 1.0  
-**Estado:** ✅ Producción (con 2 campos pendientes en BD)
+**Estado:**  Producción (con 2 campos pendientes en BD)

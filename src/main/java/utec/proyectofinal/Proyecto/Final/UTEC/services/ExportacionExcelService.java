@@ -488,7 +488,7 @@ public class ExportacionExcelService {
         
         // Datos del lote
         dto.setLote(lote.getFicha());
-        dto.setNombreLote(lote.getNomLote());  // ✅ NUEVO: Nombre del lote
+        dto.setNombreLote(lote.getNomLote());  //  NUEVO: Nombre del lote
         dto.setKilos(lote.getKilosLimpios() != null ? lote.getKilosLimpios().toString() : "");
         
         // Número de análisis (usando el ID del lote como referencia temporal)
@@ -706,7 +706,7 @@ public class ExportacionExcelService {
             // Datos de viabilidad INIA (columna AY)
             dto.setViabilidadPorcentaje(tetrazolio.getPorcViablesRedondeo());
             
-            // ✅ Datos de viabilidad INASE (columna AZ) - usar el campo viabilidadInase
+            //  Datos de viabilidad INASE (columna AZ) - usar el campo viabilidadInase
             dto.setViabilidadInasePorcentaje(tetrazolio.getViabilidadInase());
         }
     }

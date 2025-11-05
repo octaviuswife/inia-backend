@@ -253,7 +253,7 @@ public class AnalisisService {
 
         // Si el análisis está marcado como A_REPETIR y tiene lote asociado
         if (analisis.getEstado() == Estado.A_REPETIR && analisis.getLote() != null && buscarPorLote != null) {
-            System.out.println("  ✅ Análisis está en A_REPETIR, validando si existen otros análisis válidos...");
+            System.out.println("   Análisis está en A_REPETIR, validando si existen otros análisis válidos...");
             
             // Buscar otros análisis del mismo tipo para el mismo lote
             java.util.List<T> analisisDelMismoLote = buscarPorLote.apply(analisis.getLote().getLoteID());
@@ -278,12 +278,12 @@ public class AnalisisService {
             System.out.println("  - ¿Existe otro análisis válido (activo, con estado y no A_REPETIR)? " + existeAnalisisValido);
             
             if (existeAnalisisValido) {
-                System.out.println("  ❌ ERROR: Ya existe un análisis válido, cancelando aprobación");
+                System.out.println("   ERROR: Ya existe un análisis válido, cancelando aprobación");
                 throw new RuntimeException("Ya existe un análisis válido de este tipo para el lote " + 
                     analisis.getLote().getFicha() + ". No se puede aprobar este análisis marcado para repetir.");
             }
             
-            System.out.println("  ✅ No existe otro análisis válido, procediendo con la aprobación...");
+            System.out.println("   No existe otro análisis válido, procediendo con la aprobación...");
         }
         
         // Ejecutar validación específica si existe
@@ -297,7 +297,7 @@ public class AnalisisService {
         // Guardar cambios
         T analisisActualizado = repository.save(analisis);
         
-        System.out.println("  ✅ Análisis aprobado exitosamente, nuevo estado: " + analisisActualizado.getEstado());
+        System.out.println("   Análisis aprobado exitosamente, nuevo estado: " + analisisActualizado.getEstado());
         
         return mapper.apply(analisisActualizado);
     }

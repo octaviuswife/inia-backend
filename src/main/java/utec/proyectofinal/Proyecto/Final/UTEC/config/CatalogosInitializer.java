@@ -44,7 +44,7 @@ public class CatalogosInitializer implements CommandLineRunner {
                 return;
             }
 
-            System.out.println("📋 Inicializando catálogo de Malezas...");
+            System.out.println(" Inicializando catálogo de Malezas...");
 
             // Lista de malezas tol cero
             List<MalezaData> malezasTolCero = Arrays.asList(
@@ -105,11 +105,11 @@ public class CatalogosInitializer implements CommandLineRunner {
                 count_inserted++;
             }
 
-            System.out.println("✅ Catálogo de Malezas inicializado exitosamente");
+            System.out.println(" Catálogo de Malezas inicializado exitosamente");
             System.out.println("   Total de malezas registradas: " + count_inserted);
             
         } catch (Exception e) {
-            System.err.println("❌ Error al inicializar catálogo de Malezas: " + e.getMessage());
+            System.err.println(" Error al inicializar catálogo de Malezas: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -126,7 +126,7 @@ public class CatalogosInitializer implements CommandLineRunner {
                 return;
             }
 
-            System.out.println("📋 Inicializando catálogo de Especies...");
+            System.out.println(" Inicializando catálogo de Especies...");
 
             // Lista de especies - Cereales y Oleaginosas
             List<EspecieData> cerealesOleaginosas = Arrays.asList(
@@ -209,11 +209,11 @@ public class CatalogosInitializer implements CommandLineRunner {
                 count_inserted++;
             }
 
-            System.out.println("✅ Catálogo de Especies inicializado exitosamente");
+            System.out.println(" Catálogo de Especies inicializado exitosamente");
             System.out.println("   Total de especies registradas: " + count_inserted);
             
         } catch (Exception e) {
-            System.err.println("❌ Error al inicializar catálogo de Especies: " + e.getMessage());
+            System.err.println(" Error al inicializar catálogo de Especies: " + e.getMessage());
             e.printStackTrace();
         }
     }

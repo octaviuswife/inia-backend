@@ -16,7 +16,7 @@ public class DatosExportacionExcelDTO {
     private String numeroArticulo;
     private String numeroAnalisis;
     private String numeroFicha;  // Mantener por compatibilidad
-    private String nombreLote;    // ✅ NUEVO: Nombre del lote
+    private String nombreLote;    //  NUEVO: Nombre del lote
     private String kilos;
     
     // Datos de humedad

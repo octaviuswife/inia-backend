@@ -57,8 +57,8 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT en cookies HttpOnly")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginData, HttpServletResponse response) {
-        System.out.println("🔐 [LOGIN] Iniciando proceso de login...");
-        System.out.println("🔐 [LOGIN] Usuario recibido: " + loginData.getUsuario());
+        System.out.println(" [LOGIN] Iniciando proceso de login...");
+        System.out.println(" [LOGIN] Usuario recibido: " + loginData.getUsuario());
         
         try {
             String usuario = loginData.getUsuario();
@@ -66,17 +66,17 @@ public class AuthController {
             
             Optional<Usuario> usuarioOpt = seguridadService.autenticarUsuario(usuario, password);
             
-            System.out.println("🔐 [LOGIN] Autenticación completada. Usuario encontrado: " + usuarioOpt.isPresent());
+            System.out.println(" [LOGIN] Autenticación completada. Usuario encontrado: " + usuarioOpt.isPresent());
 
             if (usuarioOpt.isPresent()) {
                 Usuario user = usuarioOpt.get();
                 String[] roles = seguridadService.listarRolesPorUsuario(user);
                 
                 // Debug: Ver qué roles se están asignando
-                System.out.println("🔐 [LOGIN] Usuario: " + user.getNombre());
-                System.out.println("🔐 [LOGIN] Roles asignados: " + java.util.Arrays.toString(roles));
-                System.out.println("🔐 [LOGIN] Estado usuario: " + user.getEstado());
-                System.out.println("🔐 [LOGIN] Rol en entidad: " + user.getRol());
+                System.out.println(" [LOGIN] Usuario: " + user.getNombre());
+                System.out.println(" [LOGIN] Roles asignados: " + java.util.Arrays.toString(roles));
+                System.out.println(" [LOGIN] Estado usuario: " + user.getEstado());
+                System.out.println(" [LOGIN] Rol en entidad: " + user.getRol());
                 
                 // Generar access token y refresh token
                 String accessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));
@@ -86,8 +86,8 @@ public class AuthController {
                 configurarCookieToken(response, "accessToken", accessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));
                 configurarCookieToken(response, "refreshToken", refreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));
                 
-                System.out.println("✅ [LOGIN] Cookies establecidas correctamente");
-                System.out.println("✅ [LOGIN] Preparando respuesta con datos de usuario...");
+                System.out.println(" [LOGIN] Cookies establecidas correctamente");
+                System.out.println(" [LOGIN] Preparando respuesta con datos de usuario...");
                 
                 // Responder SOLO con información del usuario (NO incluir token en body)
                 Map<String, Object> responseBody = new HashMap<>();
@@ -108,7 +108,7 @@ public class AuthController {
                     .body(Map.of("error", "Credenciales incorrectas"));
                     
         } catch (RuntimeException e) {
-            System.err.println("❌ [LOGIN] Error en autenticación: " + e.getMessage());
+            System.err.println(" [LOGIN] Error en autenticación: " + e.getMessage());
             e.printStackTrace();
             
             String mensaje = switch (e.getMessage()) {
@@ -135,7 +135,7 @@ public class AuthController {
             nombre, valor, maxAgeSegundos
         );
         
-        System.out.println("🍪 [AuthController] Estableciendo cookie: " + nombre + " (maxAge: " + maxAgeSegundos + "s)");
+        System.out.println(" [AuthController] Estableciendo cookie: " + nombre + " (maxAge: " + maxAgeSegundos + "s)");
         
         response.addHeader("Set-Cookie", cookieValue);
     }
@@ -400,7 +400,7 @@ public class AuthController {
                 configurarCookieToken(response, "accessToken", nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));
                 configurarCookieToken(response, "refreshToken", nuevoRefreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));
                 
-                System.out.println("✅ [PERFIL] Tokens actualizados después de modificar perfil para usuario: " + usuario.getNombre());
+                System.out.println(" [PERFIL] Tokens actualizados después de modificar perfil para usuario: " + usuario.getNombre());
             }
             
             return ResponseEntity.ok(Map.of(
