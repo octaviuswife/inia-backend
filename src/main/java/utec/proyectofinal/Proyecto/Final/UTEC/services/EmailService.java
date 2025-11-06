@@ -274,6 +274,273 @@ public class EmailService {
     }
 
     /**
+     * Enviar código de recuperación de contraseña
+     */
+    public void enviarCodigoRecuperacion(String usuarioEmail, String usuarioNombre, String codigoRecuperacion) {
+        String asunto = "Código de Recuperación - Sistema INIA";
+        
+        String contenidoHtml = "<!DOCTYPE html>" +
+            "<html lang='es'>" +
+            "<head>" +
+            "    <meta charset='UTF-8'>" +
+            "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+            "    <title>Código de Recuperación INIA</title>" +
+            "</head>" +
+            "<body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'>" +
+            "    <table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'>" +
+            "        <tr>" +
+            "            <td align='center'>" +
+            "                <table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>" +
+            "                    " +
+            "                    <!-- Header -->" +
+            "                    <tr>" +
+            "                        <td style='background: linear-gradient(135deg, " + INIA_GREEN + " 0%, " + INIA_LIGHT_GREEN + " 100%); padding: 40px 30px; text-align: center;'>" +
+            "                            <h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'>INIA</h1>" +
+            "                            <p style='margin: 10px 0 0 0; color: " + INIA_YELLOW + "; font-size: 14px;'>Instituto Nacional de Investigación Agropecuaria</p>" +
+            "                        </td>" +
+            "                    </tr>" +
+            "                    " +
+            "                    <!-- Body -->" +
+            "                    <tr>" +
+            "                        <td style='padding: 40px 30px;'>" +
+            "                            <div style='text-align: center; margin-bottom: 30px;'>" +
+            "                                <div style='display: inline-block; background-color: #ff9800; width: 80px; height: 80px; border-radius: 50%; " +
+            "                                     line-height: 80px; font-size: 40px; color: white;'>🔐</div>" +
+            "                            </div>" +
+            "                            " +
+            "                            <h2 style='margin: 0 0 20px 0; color: " + INIA_GREEN + "; font-size: 24px; text-align: center;'>Recuperación de Contraseña</h2>" +
+            "                            " +
+            "                            <p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
+            "                                Hola <strong>" + usuarioNombre + "</strong>," +
+            "                            </p>" +
+            "                            " +
+            "                            <p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
+            "                                Recibimos una solicitud para restablecer tu contraseña. Usa el siguiente código:" +
+            "                            </p>" +
+            "                            " +
+            "                            <div style='background-color: " + INIA_GRAY + "; border: 2px dashed " + INIA_GREEN + "; padding: 25px; margin: 30px 0; border-radius: 8px; text-align: center;'>" +
+            "                                <p style='margin: 0 0 10px 0; color: #666; font-size: 14px; font-weight: bold;'>TU CÓDIGO DE RECUPERACIÓN:</p>" +
+            "                                <p style='margin: 0; color: " + INIA_GREEN + "; font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: monospace;'>" + codigoRecuperacion + "</p>" +
+            "                            </div>" +
+            "                            " +
+            "                            <div style='background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; margin: 25px 0; border-radius: 4px;'>" +
+            "                                <p style='margin: 0 0 10px 0; color: #856404; font-size: 15px; line-height: 1.6;'>" +
+            "                                    <strong>⏱️ IMPORTANTE:</strong><br>" +
+            "                                    Este código es válido solo por <strong>10 minutos</strong>." +
+            "                                </p>" +
+            "                                <p style='margin: 10px 0 0 0; color: #856404; font-size: 15px; line-height: 1.6;'>" +
+            "                                    <strong>🔐 SEGURIDAD:</strong><br>" +
+            "                                    También necesitarás tu código de Google Authenticator para completar el cambio de contraseña." +
+            "                                </p>" +
+            "                            </div>" +
+            "                            " +
+            "                            <div style='background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 25px 0; border-radius: 4px;'>" +
+            "                                <p style='margin: 0; color: #721c24; font-size: 14px; line-height: 1.6;'>" +
+            "                                    <strong>¿No solicitaste este código?</strong><br>" +
+            "                                    Si no fuiste tú, ignora este correo. Tu contraseña permanecerá segura." +
+            "                                </p>" +
+            "                            </div>" +
+            "                            " +
+            "                        </td>" +
+            "                    </tr>" +
+            "                    " +
+            "                    <!-- Footer -->" +
+            "                    <tr>" +
+            "                        <td style='background-color: " + INIA_GRAY + "; padding: 30px; text-align: center; border-top: 1px solid #ddd;'>" +
+            "                            <p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'>" +
+            "                                Este es un correo automático del Sistema INIA." +
+            "                            </p>" +
+            "                            <p style='margin: 0; color: #999; font-size: 12px;'>" +
+            "                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria" +
+            "                            </p>" +
+            "                        </td>" +
+            "                    </tr>" +
+            "                </table>" +
+            "            </td>" +
+            "        </tr>" +
+            "    </table>" +
+            "</body>" +
+            "</html>";
+
+        enviarEmail(usuarioEmail, asunto, contenidoHtml);
+    }
+
+    /**
+     * Enviar notificación de activación de 2FA
+     */
+    public void enviar2FAActivado(String usuarioEmail, String usuarioNombre) {
+        String asunto = "Autenticación de Dos Factores Activada - Sistema INIA";
+        
+        String contenidoHtml = "<!DOCTYPE html>" +
+            "<html lang='es'>" +
+            "<head>" +
+            "    <meta charset='UTF-8'>" +
+            "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+            "    <title>2FA Activado INIA</title>" +
+            "</head>" +
+            "<body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'>" +
+            "    <table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'>" +
+            "        <tr>" +
+            "            <td align='center'>" +
+            "                <table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>" +
+            "                    " +
+            "                    <!-- Header -->" +
+            "                    <tr>" +
+            "                        <td style='background: linear-gradient(135deg, " + INIA_GREEN + " 0%, " + INIA_LIGHT_GREEN + " 100%); padding: 40px 30px; text-align: center;'>" +
+            "                            <h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'>INIA</h1>" +
+            "                            <p style='margin: 10px 0 0 0; color: " + INIA_YELLOW + "; font-size: 14px;'>Instituto Nacional de Investigación Agropecuaria</p>" +
+            "                        </td>" +
+            "                    </tr>" +
+            "                    " +
+            "                    <!-- Body -->" +
+            "                    <tr>" +
+            "                        <td style='padding: 40px 30px;'>" +
+            "                            <div style='text-align: center; margin-bottom: 30px;'>" +
+            "                                <div style='display: inline-block; background-color: #28a745; width: 80px; height: 80px; border-radius: 50%; " +
+            "                                     line-height: 80px; font-size: 40px; color: white;'>🛡️</div>" +
+            "                            </div>" +
+            "                            " +
+            "                            <h2 style='margin: 0 0 20px 0; color: " + INIA_GREEN + "; font-size: 24px; text-align: center;'>Seguridad Mejorada</h2>" +
+            "                            " +
+            "                            <p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
+            "                                Hola <strong>" + usuarioNombre + "</strong>," +
+            "                            </p>" +
+            "                            " +
+            "                            <div style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 25px 0; border-radius: 4px;'>" +
+            "                                <p style='margin: 0; color: #155724; font-size: 15px; line-height: 1.6;'>" +
+            "                                    <strong>✅ Autenticación de Dos Factores Activada</strong><br>" +
+            "                                    Has activado exitosamente la autenticación de dos factores (2FA) en tu cuenta." +
+            "                                </p>" +
+            "                            </div>" +
+            "                            " +
+            "                            <p style='margin: 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
+            "                                Tu cuenta ahora está protegida con una capa adicional de seguridad:" +
+            "                            </p>" +
+            "                            " +
+            "                            <ul style='color: #333; font-size: 15px; line-height: 1.8; margin: 20px 0;'>" +
+            "                                <li>Necesitarás tu código de Google Authenticator para iniciar sesión en nuevos dispositivos</li>" +
+            "                                <li>Los dispositivos de confianza no requerirán 2FA por 30 días</li>" +
+            "                                <li>Se requiere 2FA para recuperación de contraseña</li>" +
+            "                            </ul>" +
+            "                            " +
+            "                            <div style='background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; margin: 25px 0; border-radius: 4px;'>" +
+            "                                <p style='margin: 0; color: #856404; font-size: 14px; line-height: 1.6;'>" +
+            "                                    <strong>⚠️ ¿No fuiste tú?</strong><br>" +
+            "                                    Si no activaste 2FA, contacta inmediatamente al administrador." +
+            "                                </p>" +
+            "                            </div>" +
+            "                            " +
+            "                        </td>" +
+            "                    </tr>" +
+            "                    " +
+            "                    <!-- Footer -->" +
+            "                    <tr>" +
+            "                        <td style='background-color: " + INIA_GRAY + "; padding: 30px; text-align: center; border-top: 1px solid #ddd;'>" +
+            "                            <p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'>" +
+            "                                Este es un correo automático del Sistema INIA." +
+            "                            </p>" +
+            "                            <p style='margin: 0; color: #999; font-size: 12px;'>" +
+            "                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria" +
+            "                            </p>" +
+            "                        </td>" +
+            "                    </tr>" +
+            "                </table>" +
+            "            </td>" +
+            "        </tr>" +
+            "    </table>" +
+            "</body>" +
+            "</html>";
+
+        enviarEmail(usuarioEmail, asunto, contenidoHtml);
+    }
+
+    /**
+     * Enviar notificación de nuevo dispositivo de confianza
+     */
+    public void enviarNuevoDispositivo(String usuarioEmail, String usuarioNombre, String nombreDispositivo, String ipAddress) {
+        String asunto = "Nuevo Dispositivo de Confianza - Sistema INIA";
+        
+        String contenidoHtml = "<!DOCTYPE html>" +
+            "<html lang='es'>" +
+            "<head>" +
+            "    <meta charset='UTF-8'>" +
+            "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+            "    <title>Nuevo Dispositivo INIA</title>" +
+            "</head>" +
+            "<body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'>" +
+            "    <table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'>" +
+            "        <tr>" +
+            "            <td align='center'>" +
+            "                <table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>" +
+            "                    " +
+            "                    <!-- Header -->" +
+            "                    <tr>" +
+            "                        <td style='background: linear-gradient(135deg, " + INIA_GREEN + " 0%, " + INIA_LIGHT_GREEN + " 100%); padding: 40px 30px; text-align: center;'>" +
+            "                            <h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'>INIA</h1>" +
+            "                            <p style='margin: 10px 0 0 0; color: " + INIA_YELLOW + "; font-size: 14px;'>Instituto Nacional de Investigación Agropecuaria</p>" +
+            "                        </td>" +
+            "                    </tr>" +
+            "                    " +
+            "                    <!-- Body -->" +
+            "                    <tr>" +
+            "                        <td style='padding: 40px 30px;'>" +
+            "                            <div style='text-align: center; margin-bottom: 30px;'>" +
+            "                                <div style='display: inline-block; background-color: #17a2b8; width: 80px; height: 80px; border-radius: 50%; " +
+            "                                     line-height: 80px; font-size: 40px; color: white;'>📱</div>" +
+            "                            </div>" +
+            "                            " +
+            "                            <h2 style='margin: 0 0 20px 0; color: " + INIA_GREEN + "; font-size: 24px; text-align: center;'>Nuevo Dispositivo de Confianza</h2>" +
+            "                            " +
+            "                            <p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
+            "                                Hola <strong>" + usuarioNombre + "</strong>," +
+            "                            </p>" +
+            "                            " +
+            "                            <p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
+            "                                Se ha agregado un nuevo dispositivo de confianza a tu cuenta:" +
+            "                            </p>" +
+            "                            " +
+            "                            <div style='background-color: " + INIA_GRAY + "; border-left: 4px solid " + INIA_GREEN + "; padding: 20px; margin: 25px 0; border-radius: 4px;'>" +
+            "                                <p style='margin: 0 0 10px 0; color: #666; font-size: 14px; font-weight: bold;'>DETALLES DEL DISPOSITIVO:</p>" +
+            "                                <p style='margin: 5px 0; color: #333; font-size: 15px;'><strong>Dispositivo:</strong> " + nombreDispositivo + "</p>" +
+            "                                <p style='margin: 5px 0; color: #333; font-size: 15px;'><strong>IP:</strong> " + ipAddress + "</p>" +
+            "                            </div>" +
+            "                            " +
+            "                            <p style='margin: 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
+            "                                Este dispositivo no requerirá código 2FA durante los próximos 30 días." +
+            "                            </p>" +
+            "                            " +
+            "                            <div style='background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 25px 0; border-radius: 4px;'>" +
+            "                                <p style='margin: 0; color: #721c24; font-size: 14px; line-height: 1.6;'>" +
+            "                                    <strong>⚠️ ¿No reconoces este dispositivo?</strong><br>" +
+            "                                    Inicia sesión inmediatamente y revoca este dispositivo desde tu perfil." +
+            "                                </p>" +
+            "                            </div>" +
+            "                            " +
+            "                        </td>" +
+            "                    </tr>" +
+            "                    " +
+            "                    <!-- Footer -->" +
+            "                    <tr>" +
+            "                        <td style='background-color: " + INIA_GRAY + "; padding: 30px; text-align: center; border-top: 1px solid #ddd;'>" +
+            "                            <p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'>" +
+            "                                Este es un correo automático del Sistema INIA." +
+            "                            </p>" +
+            "                            <p style='margin: 0; color: #999; font-size: 12px;'>" +
+            "                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria" +
+            "                            </p>" +
+            "                        </td>" +
+            "                    </tr>" +
+            "                </table>" +
+            "            </td>" +
+            "        </tr>" +
+            "    </table>" +
+            "</body>" +
+            "</html>";
+
+        enviarEmail(usuarioEmail, asunto, contenidoHtml);
+    }
+
+    /**
      * Método genérico para enviar emails
      */
     private void enviarEmail(String destinatario, String asunto, String contenidoHtml) {

@@ -27,16 +27,26 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ActualizarPerfilRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.AprobarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ForgotPasswordRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GestionarUsuarioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoginRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RegistroUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ResetPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Verify2FARequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.Setup2FAResponseDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TrustedDeviceDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
 import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.EmailService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.RecoveryCodeService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TotpService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TrustedDeviceService;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 
 @RestController
@@ -53,6 +63,18 @@ public class AuthController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private TotpService totpService;
+
+    @Autowired
+    private RecoveryCodeService recoveryCodeService;
+
+    @Autowired
+    private TrustedDeviceService trustedDeviceService;
+
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT en cookies HttpOnly")

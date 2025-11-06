@@ -39,6 +39,12 @@ public class UsuarioService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private TotpService totpService;
+
+    @Autowired
+    private BackupCodeService backupCodeService;
+
     /**
      * Buscar usuario por ID
      */
@@ -354,6 +360,7 @@ public class UsuarioService {
 
     /**
      * Crear admin predeterminado si no existe
+     * El admin se crea con 2FA YA ACTIVADO para cumplir con la política de seguridad
      */
     public UsuarioDTO crearAdminPredeterminado() {
         // Verificar si ya existe al menos un admin
@@ -361,19 +368,92 @@ public class UsuarioService {
             throw new RuntimeException("Ya existe un administrador en el sistema");
         }
 
+        System.out.println("=" .repeat(80));
+        System.out.println("🔐 CREANDO USUARIO ADMINISTRADOR CON 2FA OBLIGATORIO");
+        System.out.println("=" .repeat(80));
+
         // Crear admin predeterminado
         Usuario admin = new Usuario();
         admin.setNombre("admin");
         admin.setNombres("Administrador");
         admin.setApellidos("del Sistema");
-        admin.setEmail("admin@inia.gub.uy");
+        admin.setEmail("admin@temporal.local"); // Email temporal que DEBE cambiar
         admin.setContrasenia(passwordEncoder.encode("admin123")); // Contraseña temporal
         admin.setRol(Rol.ADMIN);
         admin.setEstado(EstadoUsuario.ACTIVO);
         admin.setActivo(true);
+        admin.setRequiereCambioCredenciales(true); // ⚠️ DEBE cambiar credenciales en primer login
+
+        // GENERAR 2FA AUTOMÁTICAMENTE (pero NO habilitado hasta que configure sus credenciales)
+        String secret = totpService.generateSecret();
+        admin.setTotpSecret(secret);
+        admin.setTotpEnabled(false); // Se habilitará después de cambiar credenciales
 
         Usuario adminGuardado = usuarioRepository.save(admin);
+
+        // NO generamos códigos de respaldo hasta que el admin configure sus credenciales
+        
+        // MOSTRAR INFORMACIÓN EN CONSOLA
+        System.out.println("\n✅ ADMINISTRADOR CREADO EXITOSAMENTE");
+        System.out.println("-".repeat(80));
+        System.out.println("📧 Usuario: admin");
+        System.out.println("🔑 Contraseña temporal: admin123");
+        System.out.println("-".repeat(80));
+        System.out.println("\n⚠️  CONFIGURACIÓN INICIAL REQUERIDA");
+        System.out.println("-".repeat(80));
+        System.out.println("1. Ve a http://localhost:3000/login");
+        System.out.println("2. Ingresa las credenciales temporales (admin / admin123)");
+        System.out.println("3. Serás redirigido a configurar:");
+        System.out.println("   - Tu email real");
+        System.out.println("   - Tu contraseña segura");
+        System.out.println("   - Google Authenticator (2FA obligatorio)");
+        System.out.println("4. Recibirás códigos de respaldo (guárdalos en lugar seguro)");
+        System.out.println("-".repeat(80));
+        System.out.println("\n💡 TIP: El sistema te guiará paso a paso en el navegador");
+        System.out.println("=" .repeat(80));
+        System.out.println("\n");
+
         return mapearEntidadADTO(adminGuardado);
+    }
+
+    // === MÉTODOS PARA 2FA Y RECUPERACIÓN DE CONTRASEÑA ===
+
+    /**
+     * Guardar usuario (método público para uso desde controladores 2FA)
+     */
+    public Usuario guardar(Usuario usuario) {
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Buscar usuario por email
+     */
+    public Optional<Usuario> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
+    /**
+     * Cambiar contraseña de un usuario (para recuperación de contraseña)
+     */
+    public void cambiarContrasenia(Integer usuarioId, String nuevaContrasenia) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        // Validar que la nueva contraseña no esté vacía
+        if (nuevaContrasenia == null || nuevaContrasenia.trim().isEmpty()) {
+            throw new RuntimeException("La nueva contraseña no puede estar vacía");
+        }
+        
+        // Validar longitud mínima de contraseña
+        if (nuevaContrasenia.length() < 8) {
+            throw new RuntimeException("La contraseña debe tener al menos 8 caracteres");
+        }
+        
+        // Hashear y guardar la nueva contraseña
+        usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));
+        usuarioRepository.save(usuario);
+        
+        System.out.println("✅ Contraseña cambiada para usuario: " + usuario.getNombre());
     }
 
     // === Métodos auxiliares ===
