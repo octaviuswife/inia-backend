@@ -28,7 +28,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     List<Usuario> findAllByRol(Rol rol);
     Page<Usuario> findByRol(Rol rol, Pageable pageable);
     Page<Usuario> findByActivo(Boolean activo, Pageable pageable);
-    
+    Optional<Usuario> findByRol(Rol rol);
+        
     boolean existsByNombreIgnoreCase(String nombre);
     boolean existsByEmailIgnoreCase(String email);
     boolean existsByRol(Rol rol);

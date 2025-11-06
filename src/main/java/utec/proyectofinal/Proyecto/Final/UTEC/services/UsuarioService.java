@@ -35,6 +35,9 @@ public class UsuarioService {
 
     @Autowired
     private NotificacionService notificacionService;
+    
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Buscar usuario por ID
@@ -76,6 +79,32 @@ public class UsuarioService {
         } catch (Exception e) {
             // Log error but don't fail the registration
             System.err.println("Error creating notification for new user: " + e.getMessage());
+        }
+        
+        // Enviar emails
+        try {
+            // 1. Email de confirmación al usuario registrado
+            emailService.enviarEmailConfirmacionRegistro(
+                usuarioGuardado.getEmail(),
+                usuarioGuardado.getNombres() + " " + usuarioGuardado.getApellidos()
+            );
+            
+            // 2. Email a todos los analistas notificando el nuevo registro
+            List<Usuario> analistas = usuarioRepository.findAllByRol(Rol.ANALISTA);
+            for (Usuario analista : analistas) {
+                if (analista.getActivo() && analista.getEmail() != null) {
+                    emailService.enviarEmailNuevoRegistro(
+                        analista.getEmail(),
+                        analista.getNombres() + " " + analista.getApellidos(),
+                        usuarioGuardado.getNombres() + " " + usuarioGuardado.getApellidos(),
+                        usuarioGuardado.getEmail()
+                    );
+                }
+            }
+            
+            System.out.println("✉️ Emails enviados: confirmación a usuario y notificación a " + analistas.size() + " analista(s)");
+        } catch (Exception e) {
+            System.err.println("⚠️ Error enviando emails (registro continúa): " + e.getMessage());
         }
         
         return mapearEntidadADTO(usuarioGuardado);
@@ -133,6 +162,17 @@ public class UsuarioService {
         } catch (Exception e) {
             // Log error but don't fail the approval
             System.err.println("Error creating notification for user approval: " + e.getMessage());
+        }
+        
+        // Enviar email de bienvenida al usuario aprobado
+        try {
+            emailService.enviarEmailBienvenida(
+                usuarioActualizado.getEmail(),
+                usuarioActualizado.getNombres() + " " + usuarioActualizado.getApellidos()
+            );
+            System.out.println("✉️ Email de bienvenida enviado a: " + usuarioActualizado.getEmail());
+        } catch (Exception e) {
+            System.err.println("⚠️ Error enviando email de bienvenida (aprobación continúa): " + e.getMessage());
         }
         
         return mapearEntidadADTO(usuarioActualizado);
@@ -355,10 +395,34 @@ public class UsuarioService {
         dto.setNombres(usuario.getNombres());
         dto.setApellidos(usuario.getApellidos());
         dto.setEmail(usuario.getEmail());
+        
+        // Campo original
         dto.setRol(usuario.getRol());
+        
+        // Mapear rol a array de strings para el frontend
+        if (usuario.getRol() != null) {
+            dto.setRoles(List.of(usuario.getRol().name()));
+        } else {
+            dto.setRoles(List.of());
+        }
+        
         dto.setEstado(usuario.getEstado());
+        
+        // Mapear estado a string para el frontend
+        if (usuario.getEstado() != null) {
+            dto.setEstadoSolicitud(usuario.getEstado().name());
+        }
+        
         dto.setActivo(usuario.getActivo());
+        
+        // Campo original
         dto.setFechaCreacion(usuario.getFechaCreacion());
+        
+        // Mapear fechaCreacion a ISO string para el frontend
+        if (usuario.getFechaCreacion() != null) {
+            dto.setFechaRegistro(usuario.getFechaCreacion().toString());
+        }
+        
         dto.setFechaUltimaConexion(usuario.getFechaUltimaConexion());
         dto.setNombreCompleto(usuario.getNombreCompleto());
         return dto;
