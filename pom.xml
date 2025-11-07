@@ -113,6 +113,13 @@
 			<scope>test</scope>
 		</dependency>
 		
+		<!-- H2 para tests (base de datos en memoria) -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
 		<!-- Apache POI para generar archivos Excel -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
