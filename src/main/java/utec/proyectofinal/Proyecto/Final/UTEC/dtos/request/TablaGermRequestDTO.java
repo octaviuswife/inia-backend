@@ -22,12 +22,13 @@ public class TablaGermRequestDTO {
     private Boolean tienePrefrio;
     private String descripcionPrefrio;
     
-    // Campos de pretratamiento (boolean + descripción + días)
+    // Campos de pretratamiento (boolean + descripción, sin días)
     private Boolean tienePretratamiento;
     private String descripcionPretratamiento;
     
     // Campos de fechas y control de conteos movidos desde Germinacion
-    private LocalDate fechaInicioGerm;
+    private LocalDate fechaIngreso; // Nueva fecha de ingreso
+    private LocalDate fechaGerminacion; // Renombrado de fechaInicioGerm
     private List<LocalDate> fechaConteos;
     private LocalDate fechaUltConteo;
     private String numDias;
@@ -36,7 +37,6 @@ public class TablaGermRequestDTO {
     private Integer numeroRepeticiones;
     private Integer numeroConteos;
     
-    // Nuevos campos para días de prefrío y pretratamiento
+    // Campo para días de prefrío (pretratamiento ya no tiene días)
     private Integer diasPrefrio;
-    private Integer diasPretratamiento;
 }

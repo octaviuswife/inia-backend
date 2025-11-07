@@ -80,7 +80,7 @@ public class RepPmsService {
 
         // Verificar si se completó la tanda (número esperado de repeticiones totales) y procesar cálculos
         if (repeticionesTotalesTandaActual + 1 >= pms.getNumRepeticionesEsperadas()) {
-            System.out.println("🔄 Tanda completa! Validando todas las repeticiones del PMS ID: " + pmsId);
+            System.out.println(" Tanda completa! Validando todas las repeticiones del PMS ID: " + pmsId);
             System.out.println("  Repeticiones totales: " + (repeticionesTotalesTandaActual + 1) + " >= Esperadas: " + pms.getNumRepeticionesEsperadas());
             
             // Validar TODAS las repeticiones del PMS con estadísticas globales

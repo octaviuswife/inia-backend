@@ -5,6 +5,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +38,12 @@ public class UsuarioService {
     
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private TotpService totpService;
+
+    @Autowired
+    private BackupCodeService backupCodeService;
 
     /**
      * Buscar usuario por ID
@@ -117,6 +127,25 @@ public class UsuarioService {
     }
 
     /**
+     * Listar solicitudes pendientes con paginación y búsqueda
+     */
+    public Page<UsuarioDTO> listarSolicitudesPendientesPaginadas(int page, int size, String search) {
+        // Crear Pageable ordenado por fecha de creación descendente (más recientes primero)
+        Pageable pageable = PageRequest.of(page, size,
+            Sort.by(Sort.Direction.DESC, "fechaCreacion"));
+        Page<Usuario> usuariosPage;
+        
+        if (search != null && !search.trim().isEmpty()) {
+            // Búsqueda por nombre de usuario, nombres, apellidos o email
+            usuariosPage = usuarioRepository.findByEstadoAndSearchTerm(EstadoUsuario.PENDIENTE, search, pageable);
+        } else {
+            usuariosPage = usuarioRepository.findByEstado(EstadoUsuario.PENDIENTE, pageable);
+        }
+        
+        return usuariosPage.map(this::mapearEntidadADTO);
+    }
+
+    /**
      * Aprobar usuario y asignar rol
      */
     public UsuarioDTO aprobarUsuario(Integer usuarioId, AprobarUsuarioRequestDTO solicitud) {
@@ -188,6 +217,47 @@ public class UsuarioService {
     }
 
     /**
+     * Listar todos los usuarios con paginación, búsqueda y filtros
+     */
+    public Page<UsuarioDTO> listarTodosUsuariosPaginados(int page, int size, String search, Rol rol, Boolean activo) {
+        // Crear Pageable con ordenamiento alfabético por nombres y apellidos
+        Pageable pageable = PageRequest.of(page, size, 
+            Sort.by(Sort.Direction.ASC, "apellidos", "nombres"));
+        Page<Usuario> usuariosPage;
+        
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        
+        // Combinaciones de filtros
+        if (rol != null && activo != null && hasSearch) {
+            // Rol + Activo + Búsqueda
+            usuariosPage = usuarioRepository.findByRolAndActivoAndSearchTerm(rol, activo, search, pageable);
+        } else if (rol != null && activo != null) {
+            // Rol + Activo (sin búsqueda)
+            usuariosPage = usuarioRepository.findByRolAndActivo(rol, activo, pageable);
+        } else if (rol != null && hasSearch) {
+            // Rol + Búsqueda
+            usuariosPage = usuarioRepository.findBySearchTermAndRol(search, rol, pageable);
+        } else if (activo != null && hasSearch) {
+            // Activo + Búsqueda
+            usuariosPage = usuarioRepository.findByActivoAndSearchTerm(activo, search, pageable);
+        } else if (rol != null) {
+            // Solo Rol
+            usuariosPage = usuarioRepository.findByRol(rol, pageable);
+        } else if (activo != null) {
+            // Solo Activo
+            usuariosPage = usuarioRepository.findByActivo(activo, pageable);
+        } else if (hasSearch) {
+            // Solo Búsqueda
+            usuariosPage = usuarioRepository.findBySearchTerm(search, pageable);
+        } else {
+            // Sin filtros
+            usuariosPage = usuarioRepository.findAll(pageable);
+        }
+        
+        return usuariosPage.map(this::mapearEntidadADTO);
+    }
+
+    /**
      * Listar usuarios activos
      */
     public List<UsuarioDTO> listarUsuariosActivos() {
@@ -214,6 +284,13 @@ public class UsuarioService {
             usuario.setEstado(solicitud.getEstado());
             // Sincronizar campo activo con estado
             usuario.setActivo(solicitud.getEstado() == EstadoUsuario.ACTIVO);
+        }
+        
+        // Actualizar campo activo si se proporciona (y sincronizar con estado)
+        if (solicitud.getActivo() != null) {
+            usuario.setActivo(solicitud.getActivo());
+            // Sincronizar estado con activo
+            usuario.setEstado(solicitud.getActivo() ? EstadoUsuario.ACTIVO : EstadoUsuario.INACTIVO);
         }
 
         Usuario usuarioActualizado = usuarioRepository.save(usuario);
@@ -283,27 +360,100 @@ public class UsuarioService {
 
     /**
      * Crear admin predeterminado si no existe
+     * El admin se crea con 2FA YA ACTIVADO para cumplir con la política de seguridad
      */
     public UsuarioDTO crearAdminPredeterminado() {
-        // Verificar si ya existe un admin
-        Optional<Usuario> adminExistente = usuarioRepository.findByRol(Rol.ADMIN);
-        if (adminExistente.isPresent()) {
+        // Verificar si ya existe al menos un admin
+        if (usuarioRepository.existsByRol(Rol.ADMIN)) {
             throw new RuntimeException("Ya existe un administrador en el sistema");
         }
+
+        System.out.println("=" .repeat(80));
+        System.out.println("🔐 CREANDO USUARIO ADMINISTRADOR CON 2FA OBLIGATORIO");
+        System.out.println("=" .repeat(80));
 
         // Crear admin predeterminado
         Usuario admin = new Usuario();
         admin.setNombre("admin");
         admin.setNombres("Administrador");
         admin.setApellidos("del Sistema");
-        admin.setEmail("admin@inia.gub.uy");
+        admin.setEmail("admin@temporal.local"); // Email temporal que DEBE cambiar
         admin.setContrasenia(passwordEncoder.encode("admin123")); // Contraseña temporal
         admin.setRol(Rol.ADMIN);
         admin.setEstado(EstadoUsuario.ACTIVO);
         admin.setActivo(true);
+        admin.setRequiereCambioCredenciales(true); // ⚠️ DEBE cambiar credenciales en primer login
+
+        // GENERAR 2FA AUTOMÁTICAMENTE (pero NO habilitado hasta que configure sus credenciales)
+        String secret = totpService.generateSecret();
+        admin.setTotpSecret(secret);
+        admin.setTotpEnabled(false); // Se habilitará después de cambiar credenciales
 
         Usuario adminGuardado = usuarioRepository.save(admin);
+
+        // NO generamos códigos de respaldo hasta que el admin configure sus credenciales
+        
+        // MOSTRAR INFORMACIÓN EN CONSOLA
+        System.out.println("\n✅ ADMINISTRADOR CREADO EXITOSAMENTE");
+        System.out.println("-".repeat(80));
+        System.out.println("📧 Usuario: admin");
+        System.out.println("🔑 Contraseña temporal: admin123");
+        System.out.println("-".repeat(80));
+        System.out.println("\n⚠️  CONFIGURACIÓN INICIAL REQUERIDA");
+        System.out.println("-".repeat(80));
+        System.out.println("1. Ve a http://localhost:3000/login");
+        System.out.println("2. Ingresa las credenciales temporales (admin / admin123)");
+        System.out.println("3. Serás redirigido a configurar:");
+        System.out.println("   - Tu email real");
+        System.out.println("   - Tu contraseña segura");
+        System.out.println("   - Google Authenticator (2FA obligatorio)");
+        System.out.println("4. Recibirás códigos de respaldo (guárdalos en lugar seguro)");
+        System.out.println("-".repeat(80));
+        System.out.println("\n💡 TIP: El sistema te guiará paso a paso en el navegador");
+        System.out.println("=" .repeat(80));
+        System.out.println("\n");
+
         return mapearEntidadADTO(adminGuardado);
+    }
+
+    // === MÉTODOS PARA 2FA Y RECUPERACIÓN DE CONTRASEÑA ===
+
+    /**
+     * Guardar usuario (método público para uso desde controladores 2FA)
+     */
+    public Usuario guardar(Usuario usuario) {
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Buscar usuario por email
+     */
+    public Optional<Usuario> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
+    /**
+     * Cambiar contraseña de un usuario (para recuperación de contraseña)
+     */
+    public void cambiarContrasenia(Integer usuarioId, String nuevaContrasenia) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        // Validar que la nueva contraseña no esté vacía
+        if (nuevaContrasenia == null || nuevaContrasenia.trim().isEmpty()) {
+            throw new RuntimeException("La nueva contraseña no puede estar vacía");
+        }
+        
+        // Validar longitud mínima de contraseña
+        if (nuevaContrasenia.length() < 8) {
+            throw new RuntimeException("La contraseña debe tener al menos 8 caracteres");
+        }
+        
+        // Hashear y guardar la nueva contraseña
+        usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));
+        usuarioRepository.save(usuario);
+        
+        System.out.println("✅ Contraseña cambiada para usuario: " + usuario.getNombre());
     }
 
     // === Métodos auxiliares ===

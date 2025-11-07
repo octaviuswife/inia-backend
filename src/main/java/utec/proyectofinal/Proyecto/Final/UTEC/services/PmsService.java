@@ -292,13 +292,13 @@ public class PmsService {
         BigDecimal umbralInferior = media.subtract(desviacion.multiply(new BigDecimal("2")));
         BigDecimal umbralSuperior = media.add(desviacion.multiply(new BigDecimal("2")));
         
-        System.out.println("📊 ESTADÍSTICAS GLOBALES DEL PMS (todas las repeticiones):");
+        System.out.println(" ESTADÍSTICAS GLOBALES DEL PMS (todas las repeticiones):");
         System.out.println("  Total repeticiones: " + todasLasRepeticiones.size());
         System.out.println("  Media (μ): " + media);
         System.out.println("  Desviación (σ): " + desviacion);
         System.out.println("  Umbral inferior (μ - 2σ): " + umbralInferior);
         System.out.println("  Umbral superior (μ + 2σ): " + umbralSuperior);
-        System.out.println("📊 VALIDACIÓN DE TANDA " + numTanda + ":");
+        System.out.println(" VALIDACIÓN DE TANDA " + numTanda + ":");
         
         // PASO 4: Marcar repeticiones de esta tanda como válidas o inválidas según ±2σ GLOBAL
         for (RepPms rep : repeticionesTanda) {
@@ -306,11 +306,11 @@ public class PmsService {
                               rep.getPeso().compareTo(umbralSuperior) <= 0;
             rep.setValido(esValida);
             System.out.println("    Rep #" + rep.getNumRep() + " (Tanda " + numTanda + "): " + rep.getPeso() + "g -> " + 
-                (esValida ? "✅ VÁLIDA" : "❌ INVÁLIDA") +
+                (esValida ? " VÁLIDA" : " INVÁLIDA") +
                 " (comparación: " + rep.getPeso() + " vs [" + umbralInferior + ", " + umbralSuperior + "])");
         }
         repPmsRepository.saveAll(repeticionesTanda);
-        System.out.println("  ✅ Validaciones guardadas en BD");
+        System.out.println("   Validaciones guardadas en BD");
         
         // PASO 5: Filtrar solo repeticiones válidas de esta tanda y recalcular estadísticas
         List<RepPms> repeticionesValidas = repeticionesTanda.stream()
@@ -341,12 +341,12 @@ public class PmsService {
             // CV no aceptable - incrementar tandas si es posible
             if (puedeIncrementarTandas(pms)) {
                 pms.setNumTandas(pms.getNumTandas() + 1);
-                System.out.println("  ⚠️ CV no aceptable. Se incrementa el número de tandas a: " + pms.getNumTandas());
+                System.out.println("  ️ CV no aceptable. Se incrementa el número de tandas a: " + pms.getNumTandas());
             } else {
-                System.out.println("  ⚠️ CV no aceptable pero se alcanzó el límite máximo de 16 repeticiones.");
+                System.out.println("  ️ CV no aceptable pero se alcanzó el límite máximo de 16 repeticiones.");
             }
         } else {
-            System.out.println("  ✅ CV aceptable para la tanda " + numTanda);
+            System.out.println("   CV aceptable para la tanda " + numTanda);
         }
         
         // PASO 8: Actualizar estadísticas generales del PMS
@@ -362,7 +362,7 @@ public class PmsService {
      */
     @Transactional
     public void validarTodasLasRepeticiones(Long pmsId) {
-        System.out.println("🔄 VALIDANDO TODAS LAS REPETICIONES del PMS ID: " + pmsId);
+        System.out.println(" VALIDANDO TODAS LAS REPETICIONES del PMS ID: " + pmsId);
         
         Pms pms = pmsRepository.findById(pmsId)
             .orElseThrow(() -> new RuntimeException("PMS no encontrado con ID: " + pmsId));
@@ -394,7 +394,7 @@ public class PmsService {
         BigDecimal umbralInferior = media.subtract(desviacion.multiply(new BigDecimal("2")));
         BigDecimal umbralSuperior = media.add(desviacion.multiply(new BigDecimal("2")));
         
-        System.out.println("📊 ESTADÍSTICAS GLOBALES:");
+        System.out.println(" ESTADÍSTICAS GLOBALES:");
         System.out.println("  Total repeticiones: " + todasLasRepeticiones.size());
         System.out.println("  Media (μ): " + media);
         System.out.println("  Desviación (σ): " + desviacion);
@@ -408,12 +408,12 @@ public class PmsService {
                               rep.getPeso().compareTo(umbralSuperior) <= 0;
             rep.setValido(esValida);
             System.out.println("    Rep #" + rep.getNumRep() + " (Tanda " + rep.getNumTanda() + "): " + 
-                rep.getPeso() + "g -> " + (esValida ? "✅ VÁLIDA" : "❌ INVÁLIDA"));
+                rep.getPeso() + "g -> " + (esValida ? " VÁLIDA" : " INVÁLIDA"));
         }
         
         // Guardar todas las validaciones
         repPmsRepository.saveAll(todasLasRepeticiones);
-        System.out.println("  ✅ Validaciones guardadas");
+        System.out.println("   Validaciones guardadas");
         
         // Verificar CV con repeticiones válidas
         List<RepPms> repeticionesValidas = todasLasRepeticiones.stream()
@@ -428,7 +428,7 @@ public class PmsService {
             
             if (estadisticasValidas.getCoeficienteVariacion().compareTo(umbralCV) > 0 && puedeIncrementarTandas(pms)) {
                 pms.setNumTandas(pms.getNumTandas() + 1);
-                System.out.println("  ⚠️ CV no aceptable. Se incrementa número de tandas a: " + pms.getNumTandas());
+                System.out.println("  ️ CV no aceptable. Se incrementa número de tandas a: " + pms.getNumTandas());
             }
         }
         
@@ -436,7 +436,7 @@ public class PmsService {
         actualizarEstadisticasGenerales(pms);
         pmsRepository.save(pms);
         
-        System.out.println("✅ Validación completada");
+        System.out.println(" Validación completada");
     }
     
     // Método público para actualizar estadísticas generales desde servicios externos

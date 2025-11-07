@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,22 +20,33 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ActualizarPerfilRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.AprobarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ForgotPasswordRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GestionarUsuarioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoginRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RegistroUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ResetPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Verify2FARequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.Setup2FAResponseDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TrustedDeviceDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
 import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.EmailService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.RecoveryCodeService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TotpService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TrustedDeviceService;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 
 @RestController
@@ -52,11 +64,23 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private TotpService totpService;
+
+    @Autowired
+    private RecoveryCodeService recoveryCodeService;
+
+    @Autowired
+    private TrustedDeviceService trustedDeviceService;
+
+    @Autowired
+    private EmailService emailService;
+
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT en cookies HttpOnly")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginData, HttpServletResponse response) {
-        System.out.println("🔐 [LOGIN] Iniciando proceso de login...");
-        System.out.println("🔐 [LOGIN] Usuario recibido: " + loginData.getUsuario());
+        System.out.println(" [LOGIN] Iniciando proceso de login...");
+        System.out.println(" [LOGIN] Usuario recibido: " + loginData.getUsuario());
         
         try {
             String usuario = loginData.getUsuario();
@@ -64,17 +88,17 @@ public class AuthController {
             
             Optional<Usuario> usuarioOpt = seguridadService.autenticarUsuario(usuario, password);
             
-            System.out.println("🔐 [LOGIN] Autenticación completada. Usuario encontrado: " + usuarioOpt.isPresent());
+            System.out.println(" [LOGIN] Autenticación completada. Usuario encontrado: " + usuarioOpt.isPresent());
 
             if (usuarioOpt.isPresent()) {
                 Usuario user = usuarioOpt.get();
                 String[] roles = seguridadService.listarRolesPorUsuario(user);
                 
                 // Debug: Ver qué roles se están asignando
-                System.out.println("🔐 [LOGIN] Usuario: " + user.getNombre());
-                System.out.println("🔐 [LOGIN] Roles asignados: " + java.util.Arrays.toString(roles));
-                System.out.println("🔐 [LOGIN] Estado usuario: " + user.getEstado());
-                System.out.println("🔐 [LOGIN] Rol en entidad: " + user.getRol());
+                System.out.println(" [LOGIN] Usuario: " + user.getNombre());
+                System.out.println(" [LOGIN] Roles asignados: " + java.util.Arrays.toString(roles));
+                System.out.println(" [LOGIN] Estado usuario: " + user.getEstado());
+                System.out.println(" [LOGIN] Rol en entidad: " + user.getRol());
                 
                 // Generar access token y refresh token
                 String accessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));
@@ -84,8 +108,8 @@ public class AuthController {
                 configurarCookieToken(response, "accessToken", accessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));
                 configurarCookieToken(response, "refreshToken", refreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));
                 
-                System.out.println("✅ [LOGIN] Cookies establecidas correctamente");
-                System.out.println("✅ [LOGIN] Preparando respuesta con datos de usuario...");
+                System.out.println(" [LOGIN] Cookies establecidas correctamente");
+                System.out.println(" [LOGIN] Preparando respuesta con datos de usuario...");
                 
                 // Responder SOLO con información del usuario (NO incluir token en body)
                 Map<String, Object> responseBody = new HashMap<>();
@@ -106,7 +130,7 @@ public class AuthController {
                     .body(Map.of("error", "Credenciales incorrectas"));
                     
         } catch (RuntimeException e) {
-            System.err.println("❌ [LOGIN] Error en autenticación: " + e.getMessage());
+            System.err.println(" [LOGIN] Error en autenticación: " + e.getMessage());
             e.printStackTrace();
             
             String mensaje = switch (e.getMessage()) {
@@ -133,7 +157,7 @@ public class AuthController {
             nombre, valor, maxAgeSegundos
         );
         
-        System.out.println("🍪 [AuthController] Estableciendo cookie: " + nombre + " (maxAge: " + maxAgeSegundos + "s)");
+        System.out.println(" [AuthController] Estableciendo cookie: " + nombre + " (maxAge: " + maxAgeSegundos + "s)");
         
         response.addHeader("Set-Cookie", cookieValue);
     }
@@ -250,6 +274,18 @@ public class AuthController {
         return ResponseEntity.ok(solicitudes);
     }
 
+    @GetMapping("/pending/paginated")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar solicitudes pendientes paginadas", description = "Lista solicitudes pendientes con paginación y búsqueda")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Page<UsuarioDTO>> listarSolicitudesPendientesPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        Page<UsuarioDTO> solicitudes = usuarioService.listarSolicitudesPendientesPaginadas(page, size, search);
+        return ResponseEntity.ok(solicitudes);
+    }
+
     @PostMapping("/approve/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Aprobar usuario", description = "Aprueba un usuario registrado y le asigna un rol")
@@ -287,6 +323,37 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<UsuarioDTO>> listarUsuarios() {
         List<UsuarioDTO> usuarios = usuarioService.listarTodosUsuarios();
+        return ResponseEntity.ok(usuarios);
+    }
+
+    @GetMapping("/users/paginated")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar usuarios paginados", description = "Lista todos los usuarios con paginación, búsqueda y filtros por rol y estado activo")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Page<UsuarioDTO>> listarUsuariosPaginados(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) String activo) {
+        
+        // Convertir String a Rol enum si se proporciona
+        utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol rolEnum = null;
+        if (rol != null && !rol.trim().isEmpty() && !rol.equalsIgnoreCase("all")) {
+            try {
+                rolEnum = utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.valueOf(rol.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        }
+        
+        // Convertir String a Boolean si se proporciona
+        Boolean activoBoolean = null;
+        if (activo != null && !activo.trim().isEmpty() && !activo.equalsIgnoreCase("all")) {
+            activoBoolean = Boolean.parseBoolean(activo);
+        }
+        
+        Page<UsuarioDTO> usuarios = usuarioService.listarTodosUsuariosPaginados(page, size, search, rolEnum, activoBoolean);
         return ResponseEntity.ok(usuarios);
     }
 
@@ -355,7 +422,7 @@ public class AuthController {
                 configurarCookieToken(response, "accessToken", nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));
                 configurarCookieToken(response, "refreshToken", nuevoRefreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));
                 
-                System.out.println("✅ [PERFIL] Tokens actualizados después de modificar perfil para usuario: " + usuario.getNombre());
+                System.out.println(" [PERFIL] Tokens actualizados después de modificar perfil para usuario: " + usuario.getNombre());
             }
             
             return ResponseEntity.ok(Map.of(

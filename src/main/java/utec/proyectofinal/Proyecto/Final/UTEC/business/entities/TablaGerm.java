@@ -62,12 +62,13 @@ public class TablaGerm {
     private Boolean tienePrefrio;
     private String descripcionPrefrio;
     
-    // Campos de pretratamiento (boolean + descripción + días)
+    // Campos de pretratamiento (boolean + descripción, sin días)
     private Boolean tienePretratamiento;
     private String descripcionPretratamiento;
 
     // Campos de fechas y control de conteos movidos desde Germinacion
-    private LocalDate fechaInicioGerm;
+    private LocalDate fechaIngreso; 
+    private LocalDate fechaGerminacion; // Renombrado de fechaInicioGerm
 
     @ElementCollection
     private List<LocalDate> fechaConteos;
@@ -80,9 +81,8 @@ public class TablaGerm {
     private Integer numeroRepeticiones;
     private Integer numeroConteos;
     
-    // Nuevos campos para días de prefrío y pretratamiento
+    // Campo para días de prefrío (pretratamiento ya no tiene días)
     private Integer diasPrefrio;
-    private Integer diasPretratamiento;
 
     @ManyToOne
     @JoinColumn(name = "germinacionID")

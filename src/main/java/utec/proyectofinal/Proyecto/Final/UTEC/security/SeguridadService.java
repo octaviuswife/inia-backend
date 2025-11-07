@@ -1,6 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
@@ -76,5 +78,34 @@ public class SeguridadService {
 
     public boolean existeEmailActivo(String email) {
         return usuarioRepository.findByEmailIgnoreCase(email).isPresent();
+    }
+
+    /**
+     * Obtener el ID del usuario autenticado actualmente
+     * Usado en endpoints protegidos con @PreAuthorize
+     */
+    public Integer obtenerUsuarioAutenticado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (auth == null || auth.getName() == null) {
+            throw new RuntimeException("No hay usuario autenticado");
+        }
+        
+        // El nombre en el Authentication puede ser el username o email
+        String identifier = auth.getName();
+        
+        // Intentar buscar por nombre primero
+        Optional<Usuario> usuario = usuarioRepository.findByNombre(identifier);
+        
+        // Si no se encuentra, intentar por email
+        if (usuario.isEmpty()) {
+            usuario = usuarioRepository.findByEmail(identifier);
+        }
+        
+        if (usuario.isEmpty()) {
+            throw new RuntimeException("Usuario autenticado no encontrado en base de datos");
+        }
+        
+        return usuario.get().getUsuarioID();
     }
 }

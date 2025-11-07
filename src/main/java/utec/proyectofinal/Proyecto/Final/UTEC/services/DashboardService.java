@@ -1,6 +1,8 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.DashboardStatsDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.AnalisisPendienteDTO;
@@ -55,6 +57,58 @@ public class DashboardService {
         stats.setAnalisisPorAprobar(analisisRepository.countByEstado(Estado.PENDIENTE_APROBACION));
         
         return stats;
+    }
+    
+    /**
+     * Paginación offset estándar para análisis pendientes.
+     * Mejor para navegación con números de página.
+     * 
+     * @param pageable Información de paginación (page, size, sort)
+     * @return Página de análisis pendientes
+     */
+    public Page<AnalisisPendienteDTO> listarAnalisisPendientesPaginados(Pageable pageable) {
+        Page<AnalisisPendienteProjection> proyecciones = analisisPendienteRepository.findAllPaginado(pageable);
+        
+        return proyecciones.map(p -> new AnalisisPendienteDTO(
+            p.getLoteID(),
+            p.getNomLote(),
+            p.getFicha(),
+            p.getEspecieNombre(),
+            p.getCultivarNombre(),
+            TipoAnalisis.valueOf(p.getTipoAnalisis())
+        ));
+    }
+    
+    /**
+     * Paginación offset estándar para análisis por aprobar.
+     * Mejor para navegación con números de página.
+     * 
+     * @param pageable Información de paginación (page, size, sort)
+     * @return Página de análisis por aprobar
+     */
+    public Page<AnalisisPorAprobarDTO> listarAnalisisPorAprobarPaginados(Pageable pageable) {
+        Page<AnalisisPorAprobarProjection> proyecciones = analisisPorAprobarRepository.findAllPaginado(pageable);
+        
+        return proyecciones.map(p -> {
+            AnalisisPorAprobarDTO dto = new AnalisisPorAprobarDTO();
+            dto.setAnalisisID(p.getAnalisisID());
+            dto.setTipo(TipoAnalisis.valueOf(p.getTipoAnalisis()));
+            dto.setLoteID(p.getLoteID());
+            dto.setNomLote(p.getNomLote());
+            dto.setFicha(p.getFicha());
+            
+            // Convertir fechas String a LocalDateTime
+            if (p.getFechaInicio() != null) {
+                dto.setFechaInicio(LocalDateTime.parse(p.getFechaInicio(), 
+                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            }
+            if (p.getFechaFin() != null) {
+                dto.setFechaFin(LocalDateTime.parse(p.getFechaFin(), 
+                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            }
+            
+            return dto;
+        });
     }
     
     /**
