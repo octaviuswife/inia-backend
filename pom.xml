@@ -111,8 +111,7 @@
 			<version>3.5.3</version>
 		</dependency>
 		
-		<!-- Apache Commons Codec para encoding seguro -->
-		<dependency>
+		<!-- Apache Commons Codec para encoding seguro -->		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 		</dependency>
@@ -172,6 +171,19 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+			
+			<!-- Maven Surefire Plugin con configuración de Mockito -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.3</version>
+				<configuration>
+					<argLine>
+						-XX:+EnableDynamicAgentLoading
+					</argLine>
+				</configuration>
+			</plugin>
+			
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
