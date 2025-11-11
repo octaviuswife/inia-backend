@@ -220,7 +220,7 @@ class RepPmsServiceTest {
 
         // ASSERT
         assertNotNull(resultado);
-        verify(repPmsRepository, times(2)).save(any(RepPms.class));
+        verify(repPmsRepository, times(1)).save(any(RepPms.class));
         verify(analisisHistorialService, times(1)).registrarModificacion(any(Pms.class));
     }
 

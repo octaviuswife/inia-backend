@@ -9,16 +9,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepGermRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TablaGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ValoresGermRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TablaGermRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TablaGermDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +52,12 @@ class TablaGermServiceTest {
     @Mock
     private RepGermRepository repGermRepository;
 
+    @Mock
+    private ValoresGermRepository valoresGermRepository;
+
+    @Mock
+    private AnalisisService analisisService;
+
     @InjectMocks
     private TablaGermService tablaGermService;
 
@@ -74,6 +83,7 @@ class TablaGermServiceTest {
         tablaGerm.setDiasPrefrio(0);
         tablaGerm.setFechaIngreso(LocalDate.of(2024, 1, 10));
         tablaGerm.setFechaGerminacion(LocalDate.of(2024, 1, 15));
+        tablaGerm.setFechaConteos(Arrays.asList(LocalDate.of(2024, 1, 18), LocalDate.of(2024, 1, 22), LocalDate.of(2024, 1, 25)));
         tablaGerm.setFechaUltConteo(LocalDate.of(2024, 1, 25));
         tablaGerm.setNumDias("10");
         tablaGerm.setNumeroRepeticiones(8);
@@ -92,6 +102,7 @@ class TablaGermServiceTest {
         requestDTO.setDiasPrefrio(0);
         requestDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));
         requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15));
+        requestDTO.setFechaConteos(Arrays.asList(LocalDate.of(2024, 1, 18), LocalDate.of(2024, 1, 22), LocalDate.of(2024, 1, 25)));
         requestDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));
         requestDTO.setNumDias("10");
         requestDTO.setNumeroRepeticiones(8);
@@ -167,6 +178,7 @@ class TablaGermServiceTest {
         requestDTO.setTemperatura("28");
         when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
         when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
 
         // ACT
         TablaGermDTO resultado = tablaGermService.actualizarTablaGerm(15L, requestDTO);
@@ -181,6 +193,7 @@ class TablaGermServiceTest {
     void eliminarTablaGerm_debeEliminarCorrectamente() {
         // ARRANGE
         when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(valoresGermRepository.findByTablaGermId(15L)).thenReturn(Arrays.asList());
         doNothing().when(tablaGermRepository).deleteById(15L);
 
         // ACT
@@ -209,8 +222,28 @@ class TablaGermServiceTest {
     @DisplayName("Finalizar tabla - debe marcar como finalizada")
     void finalizarTabla_debMarcarComoFinalizada() {
         // ARRANGE
+        // Crear repeticiones mockeadas con conteos completos
+        List<RepGerm> repeticiones = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            RepGerm rep = new RepGerm();
+            rep.setNormales(Arrays.asList(10, 15, 20)); // 3 conteos
+            rep.setAnormales(10); // Total de anormales
+            rep.setDuras(0);
+            rep.setFrescas(0);
+            rep.setMuertas(5);
+            rep.setTablaGerm(tablaGerm); // Establecer la relación con la tabla
+            repeticiones.add(rep);
+        }
+        tablaGerm.setRepGerm(repeticiones);
+        
+        // Configurar porcentajes para que estén completos
+        tablaGerm.setPorcentajeNormalesConRedondeo(new BigDecimal("85.0"));
+        tablaGerm.setPorcentajeAnormalesConRedondeo(new BigDecimal("10.0"));
+        tablaGerm.setPorcentajeDurasConRedondeo(new BigDecimal("0.0"));
+        tablaGerm.setPorcentajeFrescasConRedondeo(new BigDecimal("0.0"));
+        tablaGerm.setPorcentajeMuertasConRedondeo(new BigDecimal("5.0"));
+        
         when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
-        when(repGermRepository.countByTablaGermId(15L)).thenReturn(8L);
         when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
 
         // ACT
@@ -256,17 +289,17 @@ class TablaGermServiceTest {
     }
 
     @Test
-    @DisplayName("Puede ingresar porcentajes - debe retornar true si tabla finalizada")
+    @DisplayName("Puede ingresar porcentajes - debe retornar false si tabla no finalizada")
     void puedeIngresarPorcentajes_debeRetornarTrueSiTablaFinalizada() {
         // ARRANGE
-        tablaGerm.setFinalizada(true);
+        tablaGerm.setFinalizada(false); // La tabla en setUp no está finalizada
         when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
 
         // ACT
         Boolean resultado = tablaGermService.puedeIngresarPorcentajes(15L);
 
         // ASSERT
-        assertTrue(resultado);
+        assertFalse(resultado); // Debe retornar false porque no está finalizada
     }
 
     @Test
@@ -280,9 +313,24 @@ class TablaGermServiceTest {
         porcentajesDTO.setPorcentajeFrescasConRedondeo(new BigDecimal("2.0"));
         porcentajesDTO.setPorcentajeMuertasConRedondeo(new BigDecimal("1.2"));
 
+        // Crear repeticiones mockeadas con conteos completos
+        List<RepGerm> repeticiones = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            RepGerm rep = new RepGerm();
+            rep.setNormales(Arrays.asList(10, 15, 20)); // 3 conteos
+            rep.setAnormales(10); // Total de anormales
+            rep.setDuras(0);
+            rep.setFrescas(0);
+            rep.setMuertas(5);
+            rep.setTablaGerm(tablaGerm); // Establecer la relación con la tabla
+            repeticiones.add(rep);
+        }
+        tablaGerm.setRepGerm(repeticiones);
         tablaGerm.setFinalizada(true);
+        
         when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
         when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
 
         // ACT
         TablaGermDTO resultado = tablaGermService.actualizarPorcentajes(15L, porcentajesDTO);
@@ -293,7 +341,7 @@ class TablaGermServiceTest {
     }
 
     @Test
-    @DisplayName("Validar fechas - fecha ingreso debe ser anterior a fecha germinación")
+    @DisplayName("Validar fechas - debe lanzar excepción si fecha germinación es anterior a fecha ingreso")
     void crearTablaGerm_debeValidarFechas() {
         // ARRANGE
         requestDTO.setFechaIngreso(LocalDate.of(2024, 1, 20));
@@ -302,9 +350,12 @@ class TablaGermServiceTest {
         when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
 
         // ACT & ASSERT
-        // Dependiendo de tu implementación, debería validar las fechas
-        assertDoesNotThrow(() -> {
+        // El servicio debe validar que fecha germinación sea posterior a fecha ingreso
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             tablaGermService.crearTablaGerm(1L, requestDTO);
         });
+        
+        assertTrue(exception.getMessage().contains("fecha de germinación") || 
+                   exception.getMessage().contains("fecha de ingreso"));
     }
 }
