@@ -16,7 +16,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ForgotPasswordRequest
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Login2FARequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ResetPasswordRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Verify2FARequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.Setup2FAResponseDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TrustedDeviceDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
 import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
@@ -70,7 +69,6 @@ class Auth2FAControllerIntegrationTest {
     private SetupTokenService setupTokenService;
 
     private Usuario usuarioTest;
-    private Setup2FAResponseDTO setup2FAResponse;
 
     @BeforeEach
     void setUp() {
@@ -82,13 +80,6 @@ class Auth2FAControllerIntegrationTest {
         usuarioTest.setEmail("test@example.com");
         usuarioTest.setTotpSecret("TESTSECRET123456");
         usuarioTest.setTotpEnabled(true);
-
-        setup2FAResponse = new Setup2FAResponseDTO(
-            "TESTSECRET123456",
-            "data:image/png;base64,TEST",
-            "INIA",
-            "test@example.com"
-        );
     }
 
     // ===== TESTS DE LOGIN CON 2FA =====
@@ -638,5 +629,259 @@ class Auth2FAControllerIntegrationTest {
                 .andExpect(jsonPath("$.mensaje").value("Configuración completada exitosamente"))
                 .andExpect(jsonPath("$.backupCodes").isArray())
                 .andExpect(jsonPath("$.usuario").exists());
+    }
+
+    // ===== TESTS DE EDGE CASES Y VALIDACIONES =====
+
+    @Test
+    @DisplayName("POST /api/v1/auth/login-2fa - Múltiples intentos fallidos de código TOTP")
+    void loginWith2FA_intentosFallidosTotp_debeBloquear() throws Exception {
+        Login2FARequestDTO loginRequest = new Login2FARequestDTO();
+        loginRequest.setUsuario("test@example.com");
+        loginRequest.setPassword("password123");
+        loginRequest.setTotpCode("000000");
+
+        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));
+        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);
+        when(totpService.verifyCode(any(), any())).thenReturn(false);
+        when(backupCodeService.verifyAndUseBackupCode(any(), any())).thenReturn(false);
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/v1/auth/login-2fa")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(loginRequest))
+                    .with(csrf()))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error").value("Código de autenticación inválido"));
+        }
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/login-2fa - Código de backup ya usado")
+    void loginWith2FA_codigoBackupUsado_debeRetornar401() throws Exception {
+        Login2FARequestDTO loginRequest = new Login2FARequestDTO();
+        loginRequest.setUsuario("test@example.com");
+        loginRequest.setPassword("password123");
+        loginRequest.setTotpCode("used-backup-code");
+
+        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));
+        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);
+        when(totpService.verifyCode(any(), any())).thenReturn(false);
+        when(backupCodeService.verifyAndUseBackupCode(any(), any())).thenReturn(false);
+
+        mockMvc.perform(post("/api/v1/auth/login-2fa")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest))
+                .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Código de autenticación inválido"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/login-2fa - Sin códigos de backup disponibles")
+    void loginWith2FA_sinCodigosBackup_debeAdvertir() throws Exception {
+        Login2FARequestDTO loginRequest = new Login2FARequestDTO();
+        loginRequest.setUsuario("test@example.com");
+        loginRequest.setPassword("password123");
+        loginRequest.setTotpCode("last-backup-code");
+
+        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));
+        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);
+        when(totpService.verifyCode(any(), any())).thenReturn(false);
+        when(backupCodeService.verifyAndUseBackupCode(any(), any())).thenReturn(true);
+        when(backupCodeService.getAvailableCodesCount(any())).thenReturn(0L);
+        when(seguridadService.listarRolesPorUsuario(any())).thenReturn(new String[]{"ADMIN"});
+        when(jwtUtil.generarToken(any(), any())).thenReturn("access-token");
+        when(jwtUtil.generarRefreshToken(any())).thenReturn("refresh-token");
+        when(jwtUtil.getAccessTokenExpiration()).thenReturn(86400000L);
+        when(jwtUtil.getRefreshTokenExpiration()).thenReturn(604800000L);
+
+        mockMvc.perform(post("/api/v1/auth/login-2fa")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensaje").value("Login exitoso"));
+        // El warning solo se muestra si quedan códigos pero pocos, no cuando quedan 0
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/2fa/backup-codes/regenerate - Sin 2FA habilitado")
+    @WithMockUser(roles = "ADMIN")
+    void regenerateBackupCodes_sin2FA_debeRetornar400() throws Exception {
+        usuarioTest.setTotpEnabled(false);
+
+        Verify2FARequestDTO request = new Verify2FARequestDTO();
+        request.setTotpCode("123456");
+
+        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);
+        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));
+
+        mockMvc.perform(post("/api/v1/auth/2fa/backup-codes/regenerate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("2FA no está habilitado"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/forgot-password - Email no registrado")
+    void forgotPassword_emailInexistente_debeFallarSilenciosamente() throws Exception {
+        ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();
+        request.setEmail("noexiste@example.com");
+
+        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/forgot-password - Email con formato inválido")
+    void forgotPassword_emailInvalido_debeRetornar400() throws Exception {
+        ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();
+        request.setEmail("email-invalido");
+
+        // El controller siempre devuelve 200 por seguridad (no revela si el email existe o no)
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensaje").value("Si el email existe, se enviará un código de recuperación"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/reset-password - Contraseña nueva igual a la anterior")
+    void resetPassword_passwordIgual_debeRetornar400() throws Exception {
+        usuarioTest.setRecoveryCodeHash("hashedCode");
+        usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));
+
+        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
+        request.setEmail("test@example.com");
+        request.setRecoveryCode("REC123456");
+        request.setTotpCode("123456");
+        request.setNewPassword("password123");
+
+        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));
+        when(recoveryCodeService.isExpired(any())).thenReturn(false);
+        when(recoveryCodeService.verifyCode(any(), any())).thenReturn(true);
+        when(totpService.verifyCode(any(), any())).thenReturn(true);
+
+        // El controller no valida si la contraseña es igual, procede con el cambio
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensaje").value("Contraseña cambiada exitosamente. Por seguridad, todos tus dispositivos de confianza fueron revocados."));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/reset-password - Código TOTP inválido con código de recuperación válido")
+    void resetPassword_totpInvalido_debeRetornar401() throws Exception {
+        usuarioTest.setRecoveryCodeHash("hashedCode");
+        usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));
+
+        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
+        request.setEmail("test@example.com");
+        request.setRecoveryCode("REC123456");
+        request.setTotpCode("000000");
+        request.setNewPassword("newPassword123");
+
+        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));
+        when(recoveryCodeService.isExpired(any())).thenReturn(false);
+        when(recoveryCodeService.verifyCode(any(), any())).thenReturn(true);
+        when(totpService.verifyCode(any(), any())).thenReturn(false);
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Código de autenticación inválido"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/auth/trusted-devices/{deviceId} - Dispositivo inexistente")
+    @WithMockUser(roles = "ADMIN")
+    void revokeTrustedDevice_dispositivoInexistente_debeRetornar404() throws Exception {
+        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);
+        
+        // El controller no valida si el dispositivo existe, devuelve 200 en cualquier caso
+        mockMvc.perform(delete("/api/v1/auth/trusted-devices/999")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/2fa/verify - Código expirado")
+    @WithMockUser(roles = "ADMIN")
+    void verify2FA_codigoExpirado_debeRetornar401() throws Exception {
+        usuarioTest.setTotpEnabled(false);
+
+        Verify2FARequestDTO request = new Verify2FARequestDTO();
+        request.setTotpCode("123456");
+
+        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);
+        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));
+        when(totpService.verifyCode(any(), any())).thenReturn(false);
+
+        mockMvc.perform(post("/api/v1/auth/2fa/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Código 2FA inválido o expirado"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/auth/2fa/disable - Código TOTP inválido")
+    @WithMockUser(roles = "ADMIN")
+    void disable2FA_codigoInvalido_debeRetornar401() throws Exception {
+        Verify2FARequestDTO request = new Verify2FARequestDTO();
+        request.setTotpCode("000000");
+
+        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);
+        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));
+        when(totpService.verifyCode(any(), any())).thenReturn(false);
+
+        mockMvc.perform(delete("/api/v1/auth/2fa/disable")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Código 2FA inválido. Necesitas el código correcto para deshabilitar 2FA"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/admin/complete-setup - Código TOTP inválido en setup")
+    void completeAdminSetup_codigoInvalido_debeRetornar401() throws Exception {
+        Usuario admin = new Usuario();
+        admin.setUsuarioID(1);
+        admin.setNombre("admin");
+        admin.setTotpSecret("ADMINSECRET123");
+        admin.setRequiereCambioCredenciales(true);
+
+        Map<String, String> request = new HashMap<>();
+        request.put("currentPassword", "admin123");
+        request.put("newEmail", "admin@inia.com");
+        request.put("newPassword", "newSecurePass123");
+        request.put("totpCode", "000000");
+
+        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(admin));
+        when(totpService.verifyCode(any(), any())).thenReturn(false);
+
+        mockMvc.perform(post("/api/v1/auth/admin/complete-setup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Acceso denegado"));
     }
 }

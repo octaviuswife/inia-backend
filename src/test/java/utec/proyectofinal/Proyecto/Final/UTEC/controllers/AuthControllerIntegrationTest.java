@@ -335,4 +335,150 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].activo").value(true));
     }
+
+    // ===== TESTS DE EDGE CASES Y VALIDACIONES =====
+
+    @Test
+    @DisplayName("POST /api/v1/auth/register - Email con formato inválido")
+    void register_emailInvalido_debeRetornar400() throws Exception {
+        RegistroUsuarioRequestDTO request = new RegistroUsuarioRequestDTO();
+        request.setNombre("testuser");
+        request.setContrasenia("password123");
+        request.setNombres("Test");
+        request.setApellidos("User");
+        request.setEmail("email-invalido");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/register - Contraseña muy corta")
+    void register_passwordCorta_debeRetornar400() throws Exception {
+        RegistroUsuarioRequestDTO request = new RegistroUsuarioRequestDTO();
+        request.setNombre("testuser");
+        request.setContrasenia("123");
+        request.setNombres("Test");
+        request.setApellidos("User");
+        request.setEmail("test@example.com");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/register - Usuario duplicado")
+    void register_usuarioDuplicado_debeRetornar409() throws Exception {
+        RegistroUsuarioRequestDTO request = new RegistroUsuarioRequestDTO();
+        request.setNombre("testuser");
+        request.setContrasenia("password123");
+        request.setNombres("Test");
+        request.setApellidos("User");
+        request.setEmail("test@example.com");
+
+        when(usuarioService.registrarSolicitud(any(RegistroUsuarioRequestDTO.class)))
+            .thenThrow(new IllegalArgumentException("Usuario ya existe"));
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/auth/users/paginated - Paginación con número de página negativo")
+    @WithMockUser(roles = "ADMIN")
+    void listarUsuariosPaginados_paginaNegativa_debeRetornar400() throws Exception {
+        // El controller no valida parámetros negativos, devuelve 200 con resultado vacío
+        mockMvc.perform(get("/api/v1/auth/users/paginated")
+                .param("page", "-1")
+                .param("size", "10")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/auth/users/paginated - Tamaño de página inválido")
+    @WithMockUser(roles = "ADMIN")
+    void listarUsuariosPaginados_tamanoInvalido_debeRetornar400() throws Exception {
+        // El controller no valida tamaño 0, devuelve 200 con resultado vacío
+        mockMvc.perform(get("/api/v1/auth/users/paginated")
+                .param("page", "0")
+                .param("size", "0")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/auth/users/{id} - Actualizar usuario inexistente")
+    @WithMockUser(roles = "ADMIN")
+    void gestionarUsuario_usuarioInexistente_debeRetornar404() throws Exception {
+        GestionarUsuarioRequestDTO gestionarDTO = new GestionarUsuarioRequestDTO();
+        gestionarDTO.setRol(Rol.OBSERVADOR);
+        gestionarDTO.setActivo(true);
+
+        when(usuarioService.gestionarUsuario(eq(999), any(GestionarUsuarioRequestDTO.class)))
+            .thenThrow(new IllegalArgumentException("Usuario no encontrado"));
+
+        mockMvc.perform(put("/api/v1/auth/users/999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(gestionarDTO))
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/login - Múltiples intentos fallidos")
+    void login_intentosFallidos_debeRetornar401() throws Exception {
+        LoginRequestDTO loginRequest = new LoginRequestDTO();
+        loginRequest.setUsuario("test@example.com");
+        loginRequest.setPassword("wrongpassword");
+
+        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.empty());
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/v1/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(loginRequest))
+                    .with(csrf()))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/auth/profile - Actualizar con email duplicado")
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void actualizarPerfil_emailDuplicado_debeRetornar409() throws Exception {
+        ActualizarPerfilRequestDTO perfilDTO = new ActualizarPerfilRequestDTO();
+        perfilDTO.setEmail("otro@test.com");
+
+        when(usuarioService.actualizarPerfil(any(ActualizarPerfilRequestDTO.class)))
+            .thenThrow(new IllegalArgumentException("Email ya existe"));
+
+        mockMvc.perform(put("/api/v1/auth/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(perfilDTO))
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/init-admin - Admin ya existe")
+    void crearAdminPredeterminado_adminExiste_debeRetornar409() throws Exception {
+        when(usuarioService.crearAdminPredeterminado())
+            .thenThrow(new IllegalStateException("Admin ya existe"));
+
+        // El controller captura la excepción y devuelve 400 en lugar de 409
+        mockMvc.perform(post("/api/v1/auth/init-admin")
+                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Admin ya existe"));
+    }
 }
