@@ -178,9 +178,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.3</version>
 				<configuration>
-					<argLine>
-						-XX:+EnableDynamicAgentLoading
-					</argLine>
+					<argLine>${argLine} -XX:+EnableDynamicAgentLoading</argLine>
 				</configuration>
 			</plugin>
 			
@@ -197,7 +195,7 @@
 					</execution>
 					<execution>
 						<id>report</id>
-						<phase>test</phase>
+						<phase>verify</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
