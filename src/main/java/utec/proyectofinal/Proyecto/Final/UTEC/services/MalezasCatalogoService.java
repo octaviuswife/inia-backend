@@ -117,7 +117,7 @@ public class MalezasCatalogoService {
         Page<MalezasCatalogo> malezasPage = repository.findByActivoTrueOrderByNombreComunAsc(pageable);
         return malezasPage.map(this::mapearEntidadADTO);
     }
-    
+
     /**
      * Listar Malezas con paginado y filtros dinámicos
      * @param pageable Información de paginación
