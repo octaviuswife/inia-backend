@@ -39,8 +39,13 @@ public class FiltroJWTAutorizacion extends OncePerRequestFilter {
                 SecurityContextHolder.clearContext();
             }
             filterChain.doFilter(request, response);
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException ex) {
-            // Log del error para debugging
+        } catch (JwtException ex) {
+            // Captura TODAS las excepciones de JWT: 
+            // - ExpiredJwtException (token expirado)
+            // - UnsupportedJwtException (formato no soportado)
+            // - MalformedJwtException (token malformado)
+            // - SignatureException (firma incorrecta)
+            // - etc.
             System.err.println("Error JWT: " + ex.getMessage());
             SecurityContextHolder.clearContext();
             // Continuar con el filtro para que Spring Security maneje la autenticación fallida
