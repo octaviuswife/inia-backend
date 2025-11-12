@@ -211,27 +211,7 @@ public class ContactoService {
         return contactoRepository.findByContactoIDAndActivoTrue(contactoID).orElse(null);
     }
 
-    // Listar Contactos con paginado (para listado)
-    public Page<ContactoDTO> obtenerContactosPaginados(Pageable pageable) {
-        Page<Contacto> contactoPage = contactoRepository.findByActivoTrueOrderByNombreAsc(pageable);
-        return contactoPage.map(this::mapearEntidadADTO);
-    }
 
-    // Listar Contactos con paginado y filtro por activo
-    public Page<ContactoDTO> obtenerContactosPaginadosConFiltro(Pageable pageable, String filtroActivo) {
-        Page<Contacto> contactoPage;
-        
-        if ("activos".equalsIgnoreCase(filtroActivo)) {
-            contactoPage = contactoRepository.findByActivoTrueOrderByNombreAsc(pageable);
-        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
-            contactoPage = contactoRepository.findByActivoFalseOrderByNombreAsc(pageable);
-        } else {
-            // "todos" o cualquier otro valor
-            contactoPage = contactoRepository.findAllByOrderByNombreAsc(pageable);
-        }
-        
-        return contactoPage.map(this::mapearEntidadADTO);
-    }
 
     /**
      * Listar Contactos con paginado y filtros dinámicos
