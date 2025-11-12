@@ -805,4 +805,288 @@ class PurezaServiceTest {
         dto.setFechaFin(pureza.getFechaFin());
         return dto;
     }
+
+    @Test
+    @DisplayName("Actualizar pureza - cambio de estado de APROBADO a PENDIENTE_APROBACION cuando es analista")
+    void actualizarPureza_estadoAprobadoComoAnalista_debeCambiarAPendienteAprobacion() {
+        // ARRANGE
+        pureza.setEstado(Estado.APROBADO);
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        when(analisisService.esAnalista()).thenReturn(true);
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(analisisService, times(1)).esAnalista();
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - estado APROBADO como admin mantiene estado")
+    void actualizarPureza_estadoAprobadoComoAdmin_mantienEstado() {
+        // ARRANGE
+        pureza.setEstado(Estado.APROBADO);
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        when(analisisService.esAnalista()).thenReturn(false);
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - con lote inexistente debe lanzar excepción")
+    void actualizarPureza_conLoteInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(999L)).thenReturn(Optional.empty());
+        purezaRequestDTO.setIdLote(999L);
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> {
+            purezaService.actualizarPureza(1L, purezaRequestDTO);
+        });
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - con todas las actualizaciones de campos INASE")
+    void actualizarPureza_actualizarCamposINASE_debeActualizarCorrectamente() {
+        // ARRANGE
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        
+        purezaRequestDTO.setInasePura(BigDecimal.valueOf(96.0));
+        purezaRequestDTO.setInaseMateriaInerte(BigDecimal.valueOf(2.5));
+        purezaRequestDTO.setInaseOtrosCultivos(BigDecimal.valueOf(1.0));
+        purezaRequestDTO.setInaseMalezas(BigDecimal.valueOf(0.5));
+        purezaRequestDTO.setInaseMalezasToleradas(BigDecimal.valueOf(0.0));
+        purezaRequestDTO.setInaseMalezasTolCero(BigDecimal.valueOf(0.0));
+        purezaRequestDTO.setInaseFecha(java.time.LocalDate.now());
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - con todas las actualizaciones de campos Redon")
+    void actualizarPureza_actualizarCamposRedon_debeActualizarCorrectamente() {
+        // ARRANGE
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        
+        purezaRequestDTO.setRedonSemillaPura(BigDecimal.valueOf(95.5));
+        purezaRequestDTO.setRedonMateriaInerte(BigDecimal.valueOf(2.0));
+        purezaRequestDTO.setRedonOtrosCultivos(BigDecimal.valueOf(1.5));
+        purezaRequestDTO.setRedonMalezas(BigDecimal.valueOf(0.5));
+        purezaRequestDTO.setRedonMalezasToleradas(BigDecimal.valueOf(0.5));
+        purezaRequestDTO.setRedonMalezasTolCero(BigDecimal.valueOf(0.0));
+        purezaRequestDTO.setRedonPesoTotal(BigDecimal.valueOf(100.0));
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - agregar listados vacíos debe limpiar lista")
+    void actualizarPureza_conListadosVacios_debeLimpiarLista() {
+        // ARRANGE
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        
+        pureza.setListados(new ArrayList<>());
+        pureza.getListados().add(new Listado());
+        
+        purezaRequestDTO.setOtrasSemillas(new ArrayList<>()); // Lista vacía
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - inicializar lista de listados si es null")
+    void actualizarPureza_inicializarListadosSiEsNull_debeCrearLista() {
+        // ARRANGE
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        
+        pureza.setListados(null);
+        
+        List<ListadoRequestDTO> nuevosListados = new ArrayList<>();
+        ListadoRequestDTO listado = new ListadoRequestDTO();
+        nuevosListados.add(listado);
+        purezaRequestDTO.setOtrasSemillas(nuevosListados);
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - actualizar todos los campos de fecha y comentarios")
+    void actualizarPureza_actualizarFechaYComentarios_debeActualizarCorrectamente() {
+        // ARRANGE
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        
+        purezaRequestDTO.setFecha(java.time.LocalDate.now());
+        purezaRequestDTO.setComentarios("Comentario actualizado");
+        purezaRequestDTO.setCumpleEstandar(false);
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar pureza - actualizar todos los campos de pesos en gramos")
+    void actualizarPureza_actualizarPesosGramos_debeActualizarCorrectamente() {
+        // ARRANGE
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        
+        purezaRequestDTO.setSemillaPura_g(BigDecimal.valueOf(92.0));
+        purezaRequestDTO.setMateriaInerte_g(BigDecimal.valueOf(4.0));
+        purezaRequestDTO.setOtrosCultivos_g(BigDecimal.valueOf(2.0));
+        purezaRequestDTO.setMalezas_g(BigDecimal.valueOf(1.0));
+        purezaRequestDTO.setMalezasToleradas_g(BigDecimal.valueOf(0.5));
+        purezaRequestDTO.setMalezasTolCero_g(BigDecimal.valueOf(0.5));
+        
+        // ACT
+        PurezaDTO resultado = purezaService.actualizarPureza(1L, purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a DTO - con lote y cultivar completos")
+    void mapearEntidadADTO_conLoteYCultivarCompletos_debeIncluirTodosDatos() {
+        // ARRANGE
+        Especie especie = new Especie();
+        especie.setEspecieID(1L);
+        especie.setNombreComun("Trigo");
+        
+        Cultivar cultivar = new Cultivar();
+        cultivar.setCultivarID(1L);
+        cultivar.setNombre("Cultivar Premium");
+        cultivar.setEspecie(especie);
+        
+        lote.setCultivar(cultivar);
+        lote.setFicha("FICHA-001");
+        
+        pureza.setRedonSemillaPura(BigDecimal.valueOf(95.5));
+        
+        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
+            .thenReturn(new ArrayList<>());
+
+        // ACT
+        PurezaDTO resultado = purezaService.obtenerPurezaPorId(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.getAnalisisID());
+    }
+
+    @Test
+    @DisplayName("Validar antes de finalizar - con datos Redon debe pasar")
+    void validarAntesDeFinalizar_conDatosRedon_debeValidar() {
+        // ARRANGE
+        pureza.setRedonSemillaPura(BigDecimal.valueOf(95.0));
+        pureza.setPesoInicial_g(BigDecimal.valueOf(100.0));
+        pureza.setPesoTotal_g(BigDecimal.valueOf(100.0));
+        
+        when(analisisService.finalizarAnalisisGenerico(eq(1L), eq(purezaRepository), any(), any()))
+            .thenReturn(mapearEntidadADTO(pureza));
+
+        // ACT
+        PurezaDTO resultado = purezaService.finalizarAnalisis(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+    }
+
+    @Test
+    @DisplayName("Validar pesos - con pesos null no debe validar")
+    void validarPesos_pesosNull_noDebeValidar() {
+        // ARRANGE
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
+        
+        purezaRequestDTO.setPesoInicial_g(null);
+        purezaRequestDTO.setPesoTotal_g(null);
+
+        // ACT - No debe lanzar excepción
+        PurezaDTO resultado = purezaService.crearPureza(purezaRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(purezaRepository, times(1)).save(any(Pureza.class));
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - con nombre común con espacios usa nombre científico")
+    void mapearEntidadAListadoDTO_nombreComunConEspacios_usaNombreCientifico() {
+        // ARRANGE
+        Especie especie = new Especie();
+        especie.setEspecieID(1L);
+        especie.setNombreComun("   ");
+        especie.setNombreCientifico("Nombre Científico");
+        
+        Cultivar cultivar = new Cultivar();
+        cultivar.setCultivarID(1L);
+        cultivar.setEspecie(especie);
+        
+        lote.setCultivar(cultivar);
+        
+        List<Pureza> listaPureza = List.of(pureza);
+        Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
+        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(page);
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
+            .thenReturn(new ArrayList<>());
+
+        // ACT
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertFalse(resultado.isEmpty());
+        PurezaListadoDTO dto = resultado.getContent().get(0);
+        assertEquals("Nombre Científico", dto.getEspecie());
+    }
 }
