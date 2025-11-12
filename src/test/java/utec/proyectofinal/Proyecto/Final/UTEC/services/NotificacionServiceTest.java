@@ -418,4 +418,425 @@ class NotificacionServiceTest {
             () -> notificacionService.eliminarNotificacion(1L));
         verify(notificacionRepository, never()).save(any(Notificacion.class));
     }
+
+    // ========== TESTS PARA NOTIFICACIONES DE ANÁLISIS ==========
+
+    @Test
+    @DisplayName("notificarAnalisisAprobado - debe notificar a usuarios involucrados (no admins)")
+    void notificarAnalisisAprobado_debeNotificarAUsuariosInvolucrados() {
+        // ARRANGE
+        AnalisisHistorial historial1 = new AnalisisHistorial();
+        historial1.setUsuario(usuarioTest); // Analista
+        
+        AnalisisHistorial historial2 = new AnalisisHistorial();
+        historial2.setUsuario(adminTest); // Admin (debe ser excluido)
+
+        when(analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(1L))
+            .thenReturn(Arrays.asList(historial1, historial2));
+        when(analisisRepository.findById(1L)).thenReturn(Optional.of(analisisTest));
+        when(notificacionRepository.save(any(Notificacion.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(notificacionRepository.countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(1))
+            .thenReturn(1L);
+
+        // ACT
+        notificacionService.notificarAnalisisAprobado(1L);
+
+        // ASSERT
+        verify(notificacionRepository, times(1)).save(argThat(notif -> 
+            notif.getNombre().equals("Análisis aprobado") &&
+            notif.getUsuario().equals(usuarioTest) &&
+            notif.getAnalisisId().equals(1L) &&
+            notif.getTipo() == TipoNotificacion.ANALISIS_APROBADO
+        ));
+        verify(wsService, times(1)).sendToUser(eq(1), any(NotificacionDTO.class));
+    }
+
+    @Test
+    @DisplayName("notificarAnalisisAprobado - sin usuarios involucrados no debe crear notificaciones")
+    void notificarAnalisisAprobado_sinUsuariosInvolucrados_noDebeCrearNotificaciones() {
+        // ARRANGE
+        AnalisisHistorial historial1 = new AnalisisHistorial();
+        historial1.setUsuario(adminTest); // Solo admin
+
+        when(analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(1L))
+            .thenReturn(Collections.singletonList(historial1));
+        when(analisisRepository.findById(1L)).thenReturn(Optional.of(analisisTest));
+
+        // ACT
+        notificacionService.notificarAnalisisAprobado(1L);
+
+        // ASSERT
+        verify(notificacionRepository, never()).save(any(Notificacion.class));
+        verify(wsService, never()).sendToUser(any(), any(NotificacionDTO.class));
+    }
+
+    @Test
+    @DisplayName("notificarAnalisisRepetir - debe notificar a usuarios involucrados")
+    void notificarAnalisisRepetir_debeNotificarAUsuariosInvolucrados() {
+        // ARRANGE
+        Usuario analista2 = new Usuario();
+        analista2.setUsuarioID(3);
+        analista2.setNombres("Analista");
+        analista2.setApellidos("Dos");
+        analista2.setRol(Rol.ANALISTA);
+
+        AnalisisHistorial historial1 = new AnalisisHistorial();
+        historial1.setUsuario(usuarioTest);
+        
+        AnalisisHistorial historial2 = new AnalisisHistorial();
+        historial2.setUsuario(analista2);
+        
+        AnalisisHistorial historial3 = new AnalisisHistorial();
+        historial3.setUsuario(usuarioTest); // Duplicado, debe filtrar
+
+        when(analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(1L))
+            .thenReturn(Arrays.asList(historial1, historial2, historial3));
+        when(analisisRepository.findById(1L)).thenReturn(Optional.of(analisisTest));
+        when(notificacionRepository.save(any(Notificacion.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(notificacionRepository.countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(anyInt()))
+            .thenReturn(1L);
+
+        // ACT
+        notificacionService.notificarAnalisisRepetir(1L);
+
+        // ASSERT
+        verify(notificacionRepository, times(2)).save(argThat(notif -> 
+            notif.getNombre().equals("Análisis marcado para repetir") &&
+            notif.getTipo() == TipoNotificacion.ANALISIS_REPETIR
+        ));
+        verify(wsService, times(2)).sendToUser(any(), any(NotificacionDTO.class));
+    }
+
+    @Test
+    @DisplayName("notificarAnalisisPendienteAprobacion - debe notificar a todos los admins")
+    void notificarAnalisisPendienteAprobacion_debeNotificarATodosLosAdmins() {
+        // ARRANGE
+        Usuario admin2 = new Usuario();
+        admin2.setUsuarioID(3);
+        admin2.setNombres("Admin");
+        admin2.setApellidos("Dos");
+        admin2.setRol(Rol.ADMIN);
+        admin2.setEstado(EstadoUsuario.ACTIVO);
+
+        when(usuarioRepository.findByEstado(EstadoUsuario.ACTIVO))
+            .thenReturn(Arrays.asList(adminTest, admin2, usuarioTest)); // 2 admins, 1 analista
+        when(analisisRepository.findById(1L)).thenReturn(Optional.of(analisisTest));
+        when(notificacionRepository.save(any(Notificacion.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // ACT
+        notificacionService.notificarAnalisisPendienteAprobacion(1L);
+
+        // ASSERT
+        verify(notificacionRepository, times(2)).save(argThat(notif -> 
+            notif.getNombre().equals("Análisis modificado - Requiere nueva aprobación") &&
+            notif.getMensaje().contains("ha sido modificado y requiere nueva aprobación")
+        ));
+    }
+
+    // ========== TESTS PARA MÉTODOS CON VALIDACIÓN DE ACCESO ==========
+
+    @Test
+    @DisplayName("validarAccesoANotificaciones - admin puede acceder a cualquier usuario")
+    void validarAccesoANotificaciones_adminPuedeAccederACualquierUsuario() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("admin");
+        when(usuarioRepository.findByNombre("admin")).thenReturn(Optional.of(adminTest));
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Notificacion> page = new PageImpl<>(Collections.emptyList());
+
+        when(notificacionRepository.findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(1, pageable))
+            .thenReturn(page);
+
+        // ACT
+        Page<NotificacionDTO> resultado = notificacionService.obtenerNotificacionesPorUsuarioConValidacion(1L, pageable);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(notificacionRepository).findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(1, pageable);
+    }
+
+    @Test
+    @DisplayName("validarAccesoANotificaciones - usuario normal solo puede acceder a sus propias notificaciones")
+    void validarAccesoANotificaciones_usuarioNormalSoloPuedeAccederASusPropias() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // ACT & ASSERT - Intentar acceder a notificaciones de otro usuario (ID 2)
+        assertThrows(RuntimeException.class, () -> 
+            notificacionService.obtenerNotificacionesPorUsuarioConValidacion(2L, pageable));
+    }
+
+    @Test
+    @DisplayName("obtenerMisNotificaciones - debe retornar notificaciones del usuario autenticado")
+    void obtenerMisNotificaciones_debeRetornarNotificacionesDelUsuarioAutenticado() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        Pageable pageable = PageRequest.of(0, 10);
+        
+        Notificacion notif1 = new Notificacion();
+        notif1.setId(1L);
+        notif1.setNombre("Mi notificación 1");
+        notif1.setMensaje("Mensaje 1");
+        notif1.setUsuario(usuarioTest);
+        notif1.setLeido(false);
+        notif1.setActivo(true);
+        notif1.setTipo(TipoNotificacion.ANALISIS_APROBADO);
+
+        Page<Notificacion> page = new PageImpl<>(Collections.singletonList(notif1));
+
+        when(notificacionRepository.findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(1, pageable))
+            .thenReturn(page);
+
+        // ACT
+        Page<NotificacionDTO> resultado = notificacionService.obtenerMisNotificaciones(pageable);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+        assertEquals("Mi notificación 1", resultado.getContent().get(0).getNombre());
+        verify(notificacionRepository).findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(1, pageable);
+    }
+
+    @Test
+    @DisplayName("marcarTodasMisNotificacionesComoLeidas - debe marcar todas del usuario autenticado")
+    void marcarTodasMisNotificacionesComoLeidas_debeMarcaTodasDelUsuarioAutenticado() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        Notificacion notif1 = new Notificacion();
+        notif1.setLeido(false);
+        
+        Notificacion notif2 = new Notificacion();
+        notif2.setLeido(false);
+
+        when(notificacionRepository.findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(1))
+            .thenReturn(Arrays.asList(notif1, notif2));
+
+        // ACT
+        notificacionService.marcarTodasMisNotificacionesComoLeidas();
+
+        // ASSERT
+        assertTrue(notif1.getLeido());
+        assertTrue(notif2.getLeido());
+        verify(notificacionRepository).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("obtenerNotificacionesPorUsuarioConValidacion - debe validar y retornar notificaciones")
+    void obtenerNotificacionesPorUsuarioConValidacion_debeValidarYRetornar() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Notificacion> page = new PageImpl<>(Collections.emptyList());
+
+        when(notificacionRepository.findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(1, pageable))
+            .thenReturn(page);
+
+        // ACT
+        Page<NotificacionDTO> resultado = notificacionService.obtenerNotificacionesPorUsuarioConValidacion(1L, pageable);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(notificacionRepository).findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(1, pageable);
+    }
+
+    @Test
+    @DisplayName("contarMisNotificacionesNoLeidas - debe contar solo del usuario autenticado")
+    void contarMisNotificacionesNoLeidas_debeContarSoloDelUsuarioAutenticado() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        when(notificacionRepository.countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(1))
+            .thenReturn(3L);
+
+        // ACT
+        Long count = notificacionService.contarMisNotificacionesNoLeidas();
+
+        // ASSERT
+        assertEquals(3L, count);
+        verify(notificacionRepository).countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(1);
+    }
+
+    @Test
+    @DisplayName("obtenerNotificacionesNoLeidasConValidacion - debe validar acceso y retornar no leídas")
+    void obtenerNotificacionesNoLeidasConValidacion_debeValidarYRetornar() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        Notificacion notif1 = new Notificacion();
+        notif1.setId(1L);
+        notif1.setNombre("No leída");
+        notif1.setMensaje("Mensaje");
+        notif1.setUsuario(usuarioTest);
+        notif1.setLeido(false);
+        notif1.setActivo(true);
+        notif1.setTipo(TipoNotificacion.ANALISIS_APROBADO);
+
+        when(notificacionRepository.findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrueOrderByFechaCreacionDesc(1))
+            .thenReturn(Collections.singletonList(notif1));
+
+        // ACT
+        List<NotificacionDTO> resultado = notificacionService.obtenerNotificacionesNoLeidasConValidacion(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertFalse(resultado.get(0).getLeido());
+    }
+
+    @Test
+    @DisplayName("obtenerNotificacionesNoLeidasConValidacion - usuario sin permisos debe lanzar excepción")
+    void obtenerNotificacionesNoLeidasConValidacion_sinPermisos_debeLanzarExcepcion() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        // ACT & ASSERT - Intentar acceder a notificaciones de otro usuario (ID 2)
+        assertThrows(RuntimeException.class, () -> 
+            notificacionService.obtenerNotificacionesNoLeidasConValidacion(2L));
+    }
+
+    @Test
+    @DisplayName("contarNotificacionesNoLeidasConValidacion - debe validar acceso y contar")
+    void contarNotificacionesNoLeidasConValidacion_debeValidarYContar() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("admin");
+        when(usuarioRepository.findByNombre("admin")).thenReturn(Optional.of(adminTest));
+
+        when(notificacionRepository.countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(1))
+            .thenReturn(5L);
+
+        // ACT
+        Long count = notificacionService.contarNotificacionesNoLeidasConValidacion(1L);
+
+        // ASSERT
+        assertEquals(5L, count);
+        verify(notificacionRepository).countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(1);
+    }
+
+    @Test
+    @DisplayName("contarNotificacionesNoLeidasConValidacion - usuario sin permisos debe lanzar excepción")
+    void contarNotificacionesNoLeidasConValidacion_sinPermisos_debeLanzarExcepcion() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> 
+            notificacionService.contarNotificacionesNoLeidasConValidacion(2L));
+    }
+
+    @Test
+    @DisplayName("marcarTodasComoLeidasConValidacion - debe validar acceso y marcar todas")
+    void marcarTodasComoLeidasConValidacion_debeValidarYMarcarTodas() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        Notificacion notif1 = new Notificacion();
+        notif1.setLeido(false);
+        
+        Notificacion notif2 = new Notificacion();
+        notif2.setLeido(false);
+
+        when(notificacionRepository.findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(1))
+            .thenReturn(Arrays.asList(notif1, notif2));
+
+        // ACT
+        notificacionService.marcarTodasComoLeidasConValidacion(1L);
+
+        // ASSERT
+        assertTrue(notif1.getLeido());
+        assertTrue(notif2.getLeido());
+        verify(notificacionRepository).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("marcarTodasComoLeidasConValidacion - usuario sin permisos debe lanzar excepción")
+    void marcarTodasComoLeidasConValidacion_sinPermisos_debeLanzarExcepcion() {
+        // ARRANGE
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testuser");
+        when(usuarioRepository.findByNombre("testuser")).thenReturn(Optional.of(usuarioTest));
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> 
+            notificacionService.marcarTodasComoLeidasConValidacion(2L));
+    }
+
+    @Test
+    @DisplayName("notificarAnalisisAprobado - análisis no encontrado debe lanzar excepción")
+    void notificarAnalisisAprobado_analisisNoEncontrado_debeLanzarExcepcion() {
+        // ARRANGE
+        when(analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(999L))
+            .thenReturn(Collections.emptyList());
+        when(analisisRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> 
+            notificacionService.notificarAnalisisAprobado(999L));
+    }
+
+    @Test
+    @DisplayName("notificarAnalisisRepetir - análisis no encontrado debe lanzar excepción")
+    void notificarAnalisisRepetir_analisisNoEncontrado_debeLanzarExcepcion() {
+        // ARRANGE
+        when(analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(999L))
+            .thenReturn(Collections.emptyList());
+        when(analisisRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> 
+            notificacionService.notificarAnalisisRepetir(999L));
+    }
+
+    @Test
+    @DisplayName("notificarAnalisisPendienteAprobacion - análisis no encontrado debe lanzar excepción")
+    void notificarAnalisisPendienteAprobacion_analisisNoEncontrado_debeLanzarExcepcion() {
+        // ARRANGE
+        when(usuarioRepository.findByEstado(EstadoUsuario.ACTIVO))
+            .thenReturn(Collections.singletonList(adminTest));
+        when(analisisRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> 
+            notificacionService.notificarAnalisisPendienteAprobacion(999L));
+    }
 }
