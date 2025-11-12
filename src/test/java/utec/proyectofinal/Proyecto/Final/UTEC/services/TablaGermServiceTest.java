@@ -18,6 +18,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ValoresGermR
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TablaGermRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TablaGermDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -357,5 +358,456 @@ class TablaGermServiceTest {
         
         assertTrue(exception.getMessage().contains("fecha de germinación") || 
                    exception.getMessage().contains("fecha de ingreso"));
+    }
+
+    // ========== TESTS PARA MÉTODOS PRIVADOS PROBADOS INDIRECTAMENTE ==========
+
+    @Test
+    @DisplayName("reiniciarDatosConteo - debe reiniciar datos cuando fecha de conteo cambia a futuro")
+    void reiniciarDatosConteo_debeReiniciarCuandoCambiaFechaConteo() {
+        // ARRANGE
+        List<RepGerm> repeticiones = new ArrayList<>();
+        RepGerm rep1 = new RepGerm();
+        rep1.setRepGermID(1L);
+        rep1.setNumRep(1);
+        rep1.setNormales(Arrays.asList(10, 15, 20));
+        rep1.setTablaGerm(tablaGerm);
+        repeticiones.add(rep1);
+        
+        tablaGerm.setRepGerm(repeticiones);
+        tablaGerm.setFechaGerminacion(LocalDate.of(2024, 1, 17));
+        tablaGerm.setFechaUltConteo(LocalDate.of(2024, 1, 25));
+        
+        // Cambiar fecha del segundo conteo a una entre germinación y último conteo
+        requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 17));
+        requestDTO.getFechaConteos().set(1, LocalDate.of(2024, 1, 23));
+        requestDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));
+        requestDTO.setFechaFinal(LocalDate.of(2024, 1, 26));
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep1);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(repGermRepository, atLeastOnce()).save(any(RepGerm.class));
+    }
+
+    @Test
+    @DisplayName("validarFechasConteosEnEdicion - debe validar primer conteo posterior a germinación")
+    void validarFechasConteosEnEdicion_debeValidarPrimerConteo() {
+        // ARRANGE
+        requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 17));
+        requestDTO.getFechaConteos().set(0, LocalDate.of(2024, 1, 17)); // Igual a germinación
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            tablaGermService.actualizarTablaGerm(15L, requestDTO);
+        });
+        
+        assertTrue(exception.getMessage().contains("primer conteo") || 
+                   exception.getMessage().contains("debe ser posterior"));
+    }
+
+    @Test
+    @DisplayName("mapearValoresGermADTO - debe mapear correctamente al actualizar valores")
+    void mapearValoresGermADTO_debeMapeaCorrectamente() {
+        // ARRANGE - Este método se usa internamente en obtenerTablaGermPorId
+        // Crear ValoresGerm para probar el mapeo
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm valoresInia = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm();
+        valoresInia.setValoresGermID(1L);
+        valoresInia.setInstituto(Instituto.INIA);
+        valoresInia.setNormales(new BigDecimal("85.0"));
+        valoresInia.setAnormales(new BigDecimal("10.0"));
+        valoresInia.setDuras(new BigDecimal("2.0"));
+        valoresInia.setFrescas(new BigDecimal("1.0"));
+        valoresInia.setMuertas(new BigDecimal("2.0"));
+        valoresInia.setGerminacion(new BigDecimal("85.0"));
+        valoresInia.setTablaGerm(tablaGerm);
+        
+        tablaGerm.setValoresGerm(Arrays.asList(valoresInia));
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+
+        // ACT
+        TablaGermDTO resultado = tablaGermService.obtenerTablaGermPorId(15L);
+
+        // ASSERT
+        assertNotNull(resultado.getValoresGerm());
+        assertEquals(1, resultado.getValoresGerm().size());
+        assertEquals(Instituto.INIA, resultado.getValoresGerm().get(0).getInstituto());
+        assertEquals(new BigDecimal("85.0"), resultado.getValoresGerm().get(0).getNormales());
+    }
+
+    @Test
+    @DisplayName("reiniciarCamposUltimoConteo - debe reiniciar cuando fecha último conteo cambia a futuro")
+    void reiniciarCamposUltimoConteo_debeReiniciarCuandoFechaCambiaAFuturo() {
+        // ARRANGE
+        List<RepGerm> repeticiones = new ArrayList<>();
+        RepGerm rep1 = new RepGerm();
+        rep1.setRepGermID(1L);
+        rep1.setNumRep(1);
+        rep1.setNormales(Arrays.asList(10, 15, 20));
+        rep1.setAnormales(10);
+        rep1.setDuras(2);
+        rep1.setFrescas(1);
+        rep1.setMuertas(3);
+        rep1.setTablaGerm(tablaGerm);
+        repeticiones.add(rep1);
+        
+        tablaGerm.setRepGerm(repeticiones);
+        tablaGerm.setFechaUltConteo(LocalDate.now().minusDays(1)); // Fecha pasada
+        tablaGerm.setFechaFinal(LocalDate.now().plusDays(10)); // Asegurar que fecha final es posterior
+        
+        // Cambiar fecha a futuro
+        requestDTO.setFechaUltConteo(LocalDate.now().plusDays(5));
+        requestDTO.setFechaFinal(LocalDate.now().plusDays(10)); // Asegurar que fecha final es posterior
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        when(repGermRepository.findByTablaGermId(15L)).thenReturn(repeticiones);
+        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep1);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(repGermRepository, atLeastOnce()).save(argThat(rep -> 
+            rep.getAnormales() == 0 && rep.getDuras() == 0 && 
+            rep.getFrescas() == 0 && rep.getMuertas() == 0
+        ));
+    }
+
+    @Test
+    @DisplayName("actualizarValoresInia - debe actualizar valores cuando se finalizan porcentajes")
+    void actualizarValoresInia_debeActualizarCuandoSeFinalizanPorcentajes() {
+        // ARRANGE
+        PorcentajesRedondeoRequestDTO porcentajesDTO = new PorcentajesRedondeoRequestDTO();
+        porcentajesDTO.setPorcentajeNormalesConRedondeo(new BigDecimal("85.0"));
+        porcentajesDTO.setPorcentajeAnormalesConRedondeo(new BigDecimal("8.0"));
+        porcentajesDTO.setPorcentajeDurasConRedondeo(new BigDecimal("3.0"));
+        porcentajesDTO.setPorcentajeFrescasConRedondeo(new BigDecimal("2.0"));
+        porcentajesDTO.setPorcentajeMuertasConRedondeo(new BigDecimal("2.0"));
+
+        List<RepGerm> repeticiones = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            RepGerm rep = new RepGerm();
+            rep.setNormales(Arrays.asList(10, 15, 20));
+            rep.setAnormales(10);
+            rep.setDuras(0);
+            rep.setFrescas(0);
+            rep.setMuertas(5);
+            rep.setTablaGerm(tablaGerm);
+            repeticiones.add(rep);
+        }
+        tablaGerm.setRepGerm(repeticiones);
+        tablaGerm.setFinalizada(true);
+        
+        // Crear ValoresGerm existente
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm valoresInia = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm();
+        valoresInia.setInstituto(Instituto.INIA);
+        valoresInia.setTablaGerm(tablaGerm);
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        when(valoresGermRepository.findByTablaGermIdAndInstituto(15L, Instituto.INIA))
+            .thenReturn(Optional.of(valoresInia));
+        when(valoresGermRepository.save(any())).thenReturn(valoresInia);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarPorcentajes(15L, porcentajesDTO);
+
+        // ASSERT
+        verify(valoresGermRepository).save(argThat(valores -> 
+            valores.getInstituto() == Instituto.INIA &&
+            valores.getNormales().compareTo(new BigDecimal("85.0")) == 0 &&
+            valores.getGerminacion().compareTo(new BigDecimal("85.0")) == 0
+        ));
+    }
+
+    @Test
+    @DisplayName("actualizarEntidadDesdeSolicitud - debe actualizar prefrío cuando está activo")
+    void actualizarEntidadDesdeSolicitud_debeActualizarPrefrio() {
+        // ARRANGE
+        requestDTO.setTienePrefrio(true);
+        requestDTO.setDiasPrefrio(7);
+        requestDTO.setDescripcionPrefrio("7 días a 4°C");
+        requestDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));
+        requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 20)); // 10 días después (suficiente)
+        requestDTO.setFechaConteos(Arrays.asList(
+            LocalDate.of(2024, 1, 22), // Después de germinación
+            LocalDate.of(2024, 1, 23),
+            LocalDate.of(2024, 1, 24)
+        ));
+        requestDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));
+        requestDTO.setFechaFinal(LocalDate.of(2024, 1, 26));
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(tablaGermRepository).save(argThat(tabla -> 
+            tabla.getTienePrefrio() && 
+            tabla.getDiasPrefrio() == 7 &&
+            "7 días a 4°C".equals(tabla.getDescripcionPrefrio())
+        ));
+    }
+
+    @Test
+    @DisplayName("actualizarEntidadDesdeSolicitud - debe limpiar prefrío cuando está inactivo")
+    void actualizarEntidadDesdeSolicitud_debeLimpiarPrefrioInactivo() {
+        // ARRANGE
+        tablaGerm.setTienePrefrio(true);
+        tablaGerm.setDiasPrefrio(7);
+        tablaGerm.setDescripcionPrefrio("7 días a 4°C");
+        
+        requestDTO.setTienePrefrio(false);
+        requestDTO.setDiasPrefrio(null);
+        requestDTO.setDescripcionPrefrio(null);
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(tablaGermRepository).save(argThat(tabla -> 
+            !tabla.getTienePrefrio() && 
+            tabla.getDiasPrefrio() == 0 &&
+            tabla.getDescripcionPrefrio() == null
+        ));
+    }
+
+    @Test
+    @DisplayName("actualizarEntidadDesdeSolicitud - debe actualizar pretratamiento cuando está activo")
+    void actualizarEntidadDesdeSolicitud_debeActualizarPretratamiento() {
+        // ARRANGE
+        requestDTO.setTienePretratamiento(true);
+        requestDTO.setDescripcionPretratamiento("Escarificación química");
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(tablaGermRepository).save(argThat(tabla -> 
+            tabla.getTienePretratamiento() &&
+            "Escarificación química".equals(tabla.getDescripcionPretratamiento())
+        ));
+    }
+
+    @Test
+    @DisplayName("actualizarEntidadDesdeSolicitud - debe aumentar número de conteos")
+    void actualizarEntidadDesdeSolicitud_debeAumentarNumeroConteos() {
+        // ARRANGE
+        List<RepGerm> repeticiones = new ArrayList<>();
+        RepGerm rep1 = new RepGerm();
+        rep1.setRepGermID(1L);
+        rep1.setNumRep(1);
+        rep1.setNormales(new ArrayList<>(Arrays.asList(10, 15, 20))); // 3 conteos
+        rep1.setTablaGerm(tablaGerm);
+        repeticiones.add(rep1);
+        
+        tablaGerm.setRepGerm(repeticiones);
+        tablaGerm.setNumeroConteos(3);
+        
+        requestDTO.setNumeroConteos(5); // Aumentar a 5 conteos
+        requestDTO.setFechaConteos(Arrays.asList(
+            LocalDate.of(2024, 1, 18), 
+            LocalDate.of(2024, 1, 20),
+            LocalDate.of(2024, 1, 22), 
+            LocalDate.of(2024, 1, 24),
+            LocalDate.of(2024, 1, 25)
+        ));
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep1);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(repGermRepository, atLeastOnce()).save(argThat(rep -> 
+            rep.getNormales() != null && rep.getNormales().size() == 5
+        ));
+    }
+
+    @Test
+    @DisplayName("actualizarEntidadDesdeSolicitud - debe disminuir número de conteos")
+    void actualizarEntidadDesdeSolicitud_debeDisminuirNumeroConteos() {
+        // ARRANGE
+        List<RepGerm> repeticiones = new ArrayList<>();
+        RepGerm rep1 = new RepGerm();
+        rep1.setRepGermID(1L);
+        rep1.setNumRep(1);
+        rep1.setNormales(new ArrayList<>(Arrays.asList(10, 15, 20, 25, 30))); // 5 conteos
+        rep1.setTablaGerm(tablaGerm);
+        repeticiones.add(rep1);
+        
+        tablaGerm.setRepGerm(repeticiones);
+        tablaGerm.setNumeroConteos(5);
+        
+        requestDTO.setNumeroConteos(3); // Reducir a 3 conteos
+        requestDTO.setFechaConteos(Arrays.asList(
+            LocalDate.of(2024, 1, 18), 
+            LocalDate.of(2024, 1, 22), 
+            LocalDate.of(2024, 1, 25)
+        ));
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep1);
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(repGermRepository, atLeastOnce()).save(argThat(rep -> 
+            rep.getNormales() != null && rep.getNormales().size() == 3
+        ));
+    }
+
+    @Test
+    @DisplayName("actualizarEntidadDesdeSolicitud - debe disminuir número de repeticiones")
+    void actualizarEntidadDesdeSolicitud_debeDisminuirNumeroRepeticiones() {
+        // ARRANGE
+        List<RepGerm> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 8; i++) {
+            RepGerm rep = new RepGerm();
+            rep.setRepGermID((long) i);
+            rep.setNumRep(i);
+            rep.setNormales(Arrays.asList(10, 15, 20));
+            rep.setTablaGerm(tablaGerm);
+            repeticiones.add(rep);
+        }
+        
+        tablaGerm.setRepGerm(repeticiones);
+        tablaGerm.setNumeroRepeticiones(8);
+        
+        requestDTO.setNumeroRepeticiones(4); // Reducir a 4 repeticiones
+        
+        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));
+        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);
+        when(repGermRepository.findByTablaGermId(15L)).thenReturn(repeticiones);
+        doNothing().when(repGermRepository).delete(any(RepGerm.class));
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());
+
+        // ACT
+        tablaGermService.actualizarTablaGerm(15L, requestDTO);
+
+        // ASSERT
+        verify(repGermRepository, times(4)).delete(any(RepGerm.class));
+    }
+
+    @Test
+    @DisplayName("validarDatosTablaGerm - debe validar días de prefrío suficientes")
+    void validarDatosTablaGerm_debeValidarDiasPrefrio() {
+        // ARRANGE
+        requestDTO.setTienePrefrio(true);
+        requestDTO.setDiasPrefrio(10);
+        requestDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));
+        requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15)); // Solo 5 días, insuficientes
+        
+        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            tablaGermService.crearTablaGerm(1L, requestDTO);
+        });
+        
+        assertTrue(exception.getMessage().contains("días de prefrío"));
+    }
+
+    @Test
+    @DisplayName("validarDatosTablaGerm - debe validar fechaFinal posterior a fechaGerminacion")
+    void validarDatosTablaGerm_debeValidarFechaFinalPosteriorAGerminacion() {
+        // ARRANGE
+        requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 20));
+        requestDTO.setFechaFinal(LocalDate.of(2024, 1, 15)); // Anterior a germinación
+        
+        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            tablaGermService.crearTablaGerm(1L, requestDTO);
+        });
+        
+        assertTrue(exception.getMessage().contains("fecha final"));
+    }
+
+    @Test
+    @DisplayName("validarDatosTablaGerm - debe validar número de repeticiones en rango 1-20")
+    void validarDatosTablaGerm_debeValidarRangoRepeticiones() {
+        // ARRANGE
+        requestDTO.setNumeroRepeticiones(25); // Fuera del rango
+        
+        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            tablaGermService.crearTablaGerm(1L, requestDTO);
+        });
+        
+        assertTrue(exception.getMessage().contains("repeticiones") && 
+                   exception.getMessage().contains("20"));
+    }
+
+    @Test
+    @DisplayName("validarDatosTablaGerm - debe validar número de conteos en rango 1-15")
+    void validarDatosTablaGerm_debeValidarRangoConteos() {
+        // ARRANGE
+        requestDTO.setNumeroConteos(20); // Fuera del rango
+        
+        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            tablaGermService.crearTablaGerm(1L, requestDTO);
+        });
+        
+        assertTrue(exception.getMessage().contains("conteos") && 
+                   exception.getMessage().contains("15"));
+    }
+
+    @Test
+    @DisplayName("validarDatosTablaGerm - debe validar orden cronológico de fechas de conteos")
+    void validarDatosTablaGerm_debeValidarOrdenCronologicoConteos() {
+        // ARRANGE
+        requestDTO.setFechaConteos(Arrays.asList(
+            LocalDate.of(2024, 1, 25), // Posterior
+            LocalDate.of(2024, 1, 18), // Anterior - orden incorrecto
+            LocalDate.of(2024, 1, 22)
+        ));
+        
+        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            tablaGermService.crearTablaGerm(1L, requestDTO);
+        });
+        
+        assertTrue(exception.getMessage().contains("posterior"));
     }
 }
