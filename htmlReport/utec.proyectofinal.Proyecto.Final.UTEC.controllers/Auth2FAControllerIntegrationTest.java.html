@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Auth2FAControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">Auth2FAControllerIntegrationTest.java</span></div><h1>Auth2FAControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Auth2FAControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, RepPmsControllerIntegrationTest Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">Auth2FAControllerIntegrationTest.java</span></div><h1>Auth2FAControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -195,8 +195,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L195">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L196">                .content(objectMapper.writeValueAsString(loginRequest))</span>
 <span class="fc" id="L197">                .with(csrf()))</span>
-<span class="fc" id="L198">                .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L199">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Credenciales incorrectas&quot;));</span>
+<span class="fc" id="L198">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L199">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Credenciales incorrectas&quot;));</span>
 <span class="fc" id="L200">    }</span>
 
     @Test
@@ -258,7 +258,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L258">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L259">                .with(csrf()))</span>
 <span class="fc" id="L260">                .andExpect(status().isBadRequest())</span>
-<span class="fc" id="L261">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Ya tienes 2FA habilitado. Usa el login normal.&quot;));</span>
+<span class="fc" id="L261">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;El usuario ya tiene 2FA habilitado. Inicia sesión normalmente.&quot;));</span>
 <span class="fc" id="L262">    }</span>
 
     // ===== TESTS DE VERIFICACIÓN INICIAL DE 2FA =====
@@ -308,8 +308,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L308">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L309">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L310">                .with(csrf()))</span>
-<span class="fc" id="L311">                .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L312">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código 2FA inválido o expirado&quot;));</span>
+<span class="fc" id="L311">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L312">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
 <span class="fc" id="L313">    }</span>
 
     // ===== TESTS DE SETUP Y VERIFICACIÓN (AUTENTICADOS) =====
@@ -506,8 +506,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L506">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L507">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L508">                .with(csrf()))</span>
-<span class="fc" id="L509">                .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L510">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de recuperación expirado. Solicita uno nuevo.&quot;));</span>
+<span class="fc" id="L509">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L510">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Código de recuperación expirado. Solicita uno nuevo.&quot;));</span>
 <span class="fc" id="L511">    }</span>
 
     // ===== TESTS DE CÓDIGOS DE RESPALDO =====
@@ -590,8 +590,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 <span class="fc" id="L591">        mockMvc.perform(get(&quot;/api/v1/auth/admin/setup-data/invalid-token&quot;)</span>
 <span class="fc" id="L592">                .with(csrf()))</span>
-<span class="fc" id="L593">                .andExpect(status().isNotFound())</span>
-<span class="fc" id="L594">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Token inválido o expirado&quot;));</span>
+<span class="fc" id="L593">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L594">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Token inválido o expirado&quot;));</span>
 <span class="fc" id="L595">    }</span>
 
     @Test
@@ -652,8 +652,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L652">                    .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L653">                    .content(objectMapper.writeValueAsString(loginRequest))</span>
 <span class="fc" id="L654">                    .with(csrf()))</span>
-<span class="fc" id="L655">                    .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L656">                    .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
+<span class="fc" id="L655">                    .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L656">                    .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
         }
 <span class="fc" id="L658">    }</span>
 
@@ -674,8 +674,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L674">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L675">                .content(objectMapper.writeValueAsString(loginRequest))</span>
 <span class="fc" id="L676">                .with(csrf()))</span>
-<span class="fc" id="L677">                .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L678">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
+<span class="fc" id="L677">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L678">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
 <span class="fc" id="L679">    }</span>
 
     @Test
@@ -723,7 +723,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L723">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L724">                .with(csrf()))</span>
 <span class="fc" id="L725">                .andExpect(status().isBadRequest())</span>
-<span class="fc" id="L726">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;2FA no está habilitado&quot;));</span>
+<span class="fc" id="L726">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;2FA no está habilitado&quot;));</span>
 <span class="fc" id="L727">    }</span>
 
     @Test
@@ -804,8 +804,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L804">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L805">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L806">                .with(csrf()))</span>
-<span class="fc" id="L807">                .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L808">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
+<span class="fc" id="L807">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L808">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
 <span class="fc" id="L809">    }</span>
 
     @Test
@@ -837,8 +837,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L837">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L838">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L839">                .with(csrf()))</span>
-<span class="fc" id="L840">                .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L841">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código 2FA inválido o expirado&quot;));</span>
+<span class="fc" id="L840">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L841">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
 <span class="fc" id="L842">    }</span>
 
     @Test
@@ -856,8 +856,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L856">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L857">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L858">                .with(csrf()))</span>
-<span class="fc" id="L859">                .andExpect(status().isUnauthorized())</span>
-<span class="fc" id="L860">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código 2FA inválido. Necesitas el código correcto para deshabilitar 2FA&quot;));</span>
+<span class="fc" id="L859">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L860">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Código 2FA inválido. Necesitas el código correcto para deshabilitar 2FA&quot;));</span>
 <span class="fc" id="L861">    }</span>
 
     @Test
@@ -882,8 +882,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L882">                .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L883">                .content(objectMapper.writeValueAsString(request))</span>
 <span class="fc" id="L884">                .with(csrf()))</span>
-<span class="fc" id="L885">                .andExpect(status().isForbidden())</span>
-<span class="fc" id="L886">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Acceso denegado&quot;));</span>
+<span class="fc" id="L885">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L886">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;No autorizado para esta acción&quot;));</span>
 <span class="fc" id="L887">    }</span>
 
     // ===== TESTS ADICIONALES DE extractDeviceName =====
@@ -1138,7 +1138,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L1138">        mockMvc.perform(delete(&quot;/api/v1/auth/trusted-devices/999&quot;)</span>
 <span class="fc" id="L1139">                .with(csrf()))</span>
 <span class="fc" id="L1140">                .andExpect(status().isBadRequest())</span>
-<span class="fc" id="L1141">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;No tienes permiso para revocar este dispositivo&quot;));</span>
+<span class="fc" id="L1141">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;No tienes permiso para revocar este dispositivo&quot;));</span>
 <span class="fc" id="L1142">    }</span>
 
     @Test
@@ -1152,7 +1152,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L1152">        mockMvc.perform(delete(&quot;/api/v1/auth/trusted-devices/-1&quot;)</span>
 <span class="fc" id="L1153">                .with(csrf()))</span>
 <span class="fc" id="L1154">                .andExpect(status().isBadRequest())</span>
-<span class="fc" id="L1155">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;ID de dispositivo inválido&quot;));</span>
+<span class="fc" id="L1155">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;ID de dispositivo inválido&quot;));</span>
 <span class="fc" id="L1156">    }</span>
 
     // ===== TESTS ADICIONALES DE revokeAllTrustedDevices =====
@@ -1203,8 +1203,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 <span class="fc" id="L1204">        mockMvc.perform(delete(&quot;/api/v1/auth/trusted-devices&quot;)</span>
 <span class="fc" id="L1205">                .with(csrf()))</span>
-<span class="fc" id="L1206">                .andExpect(status().isInternalServerError())</span>
-<span class="fc" id="L1207">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Error al revocar dispositivos&quot;));</span>
+<span class="fc" id="L1206">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L1207">                .andExpect(jsonPath(&quot;$.message&quot;).value(&quot;Error de base de datos&quot;));</span>
 <span class="fc" id="L1208">    }</span>
 
     // ===== TESTS DE LOGIN CON CAMBIO DE CREDENCIALES (PASO 2) =====

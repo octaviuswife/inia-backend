@@ -195,8 +195,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Credenciales incorrectas"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Credenciales incorrectas"));
     }
 
     @Test
@@ -258,7 +258,7 @@ class Auth2FAControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Ya tienes 2FA habilitado. Usa el login normal."));
+                .andExpect(jsonPath("$.message").value("El usuario ya tiene 2FA habilitado. Inicia sesión normalmente."));
     }
 
     // ===== TESTS DE VERIFICACIÓN INICIAL DE 2FA =====
@@ -308,8 +308,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Código 2FA inválido o expirado"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Código de autenticación inválido"));
     }
 
     // ===== TESTS DE SETUP Y VERIFICACIÓN (AUTENTICADOS) =====
@@ -506,8 +506,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Código de recuperación expirado. Solicita uno nuevo."));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Código de recuperación expirado. Solicita uno nuevo."));
     }
 
     // ===== TESTS DE CÓDIGOS DE RESPALDO =====
@@ -590,8 +590,8 @@ class Auth2FAControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/auth/admin/setup-data/invalid-token")
                 .with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Token inválido o expirado"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Token inválido o expirado"));
     }
 
     @Test
@@ -652,8 +652,8 @@ class Auth2FAControllerIntegrationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(loginRequest))
                     .with(csrf()))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error").value("Código de autenticación inválido"));
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Código de autenticación inválido"));
         }
     }
 
@@ -674,8 +674,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Código de autenticación inválido"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Código de autenticación inválido"));
     }
 
     @Test
@@ -723,7 +723,7 @@ class Auth2FAControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("2FA no está habilitado"));
+                .andExpect(jsonPath("$.message").value("2FA no está habilitado"));
     }
 
     @Test
@@ -804,8 +804,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Código de autenticación inválido"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Código de autenticación inválido"));
     }
 
     @Test
@@ -837,8 +837,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Código 2FA inválido o expirado"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Código de autenticación inválido"));
     }
 
     @Test
@@ -856,8 +856,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Código 2FA inválido. Necesitas el código correcto para deshabilitar 2FA"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Código 2FA inválido. Necesitas el código correcto para deshabilitar 2FA"));
     }
 
     @Test
@@ -882,8 +882,8 @@ class Auth2FAControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("Acceso denegado"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("No autorizado para esta acción"));
     }
 
     // ===== TESTS ADICIONALES DE extractDeviceName =====
@@ -1138,7 +1138,7 @@ class Auth2FAControllerIntegrationTest {
         mockMvc.perform(delete("/api/v1/auth/trusted-devices/999")
                 .with(csrf()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("No tienes permiso para revocar este dispositivo"));
+                .andExpect(jsonPath("$.message").value("No tienes permiso para revocar este dispositivo"));
     }
 
     @Test
@@ -1152,7 +1152,7 @@ class Auth2FAControllerIntegrationTest {
         mockMvc.perform(delete("/api/v1/auth/trusted-devices/-1")
                 .with(csrf()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("ID de dispositivo inválido"));
+                .andExpect(jsonPath("$.message").value("ID de dispositivo inválido"));
     }
 
     // ===== TESTS ADICIONALES DE revokeAllTrustedDevices =====
@@ -1203,8 +1203,8 @@ class Auth2FAControllerIntegrationTest {
 
         mockMvc.perform(delete("/api/v1/auth/trusted-devices")
                 .with(csrf()))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error").value("Error al revocar dispositivos"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Error de base de datos"));
     }
 
     // ===== TESTS DE LOGIN CON CAMBIO DE CREDENCIALES (PASO 2) =====

@@ -79,27 +79,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Maneja excepciones de RuntimeException lanzadas por la lógica de negocio
-     * Incluye validaciones de análisis, estados inválidos, etc.
-     * HTTP 400 Bad Request (fallback genérico)
-     */
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(
-            RuntimeException ex, 
-            HttpServletRequest request) {
-        
-        ErrorResponse error = new ErrorResponse(
-            ex.getMessage(),
-            HttpStatus.BAD_REQUEST.value(),
-            request.getRequestURI()
-        );
-        
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(error);
-    }
-
-    /**
      * Maneja excepciones de acceso denegado (403 Forbidden)
      */
     @ExceptionHandler(AccessDeniedException.class)
@@ -119,6 +98,26 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Maneja IllegalStateException - errores de estado interno del sistema
+     * HTTP 500 Internal Server Error
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(
+            IllegalStateException ex,
+            HttpServletRequest request) {
+        
+        ErrorResponse error = new ErrorResponse(
+            ex.getMessage(),
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            request.getRequestURI()
+        );
+        
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(error);
+    }
+
+    /**
      * Maneja IllegalArgumentException (argumentos inválidos)
      */
     @ExceptionHandler(IllegalArgumentException.class)
@@ -134,6 +133,42 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
+            .body(error);
+    }
+
+    /**
+     * Maneja excepciones de RuntimeException lanzadas por la lógica de negocio
+     * Si el mensaje contiene palabras clave de "no encontrado", retorna 404
+     * De lo contrario, retorna 400 Bad Request
+     * Nota: IllegalStateException se maneja en su propio handler específico
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(
+            RuntimeException ex, 
+            HttpServletRequest request) {
+        
+        // IllegalStateException tiene su propio handler, ignorar aquí
+        if (ex instanceof IllegalStateException) {
+            throw ex; // Re-lanzar para que sea capturada por su handler específico
+        }
+        
+        String mensaje = ex.getMessage();
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        
+        // Si el mensaje indica que algo no fue encontrado, retornar 404
+        if (mensaje != null && (mensaje.toLowerCase().contains("no encontrad") || 
+                                mensaje.toLowerCase().contains("not found"))) {
+            status = HttpStatus.NOT_FOUND;
+        }
+        
+        ErrorResponse error = new ErrorResponse(
+            mensaje,
+            status.value(),
+            request.getRequestURI()
+        );
+        
+        return ResponseEntity
+            .status(status)
             .body(error);
     }
 

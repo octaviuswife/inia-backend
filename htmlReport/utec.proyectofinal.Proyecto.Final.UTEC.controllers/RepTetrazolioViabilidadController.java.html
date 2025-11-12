@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepTetrazolioViabilidadController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">RepTetrazolioViabilidadController.java</span></div><h1>RepTetrazolioViabilidadController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepTetrazolioViabilidadController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, RepPmsControllerIntegrationTest Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, RepTetrazolioViabilidadControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, Auth2FAControllerIntegrationTest Coverage Results, java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">RepTetrazolioViabilidadController.java</span></div><h1>RepTetrazolioViabilidadController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import java.util.List;
 
@@ -40,17 +40,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
     public ResponseEntity&lt;RepTetrazolioViabilidadDTO&gt; crearRepeticion(
             @PathVariable Long tetrazolioId,
             @RequestBody RepTetrazolioViabilidadRequestDTO solicitud) {
-        try {
-<span class="fc" id="L44">            System.out.println(&quot;Creando repetición para tetrazolio ID: &quot; + tetrazolioId + &quot; con datos: &quot; + solicitud);</span>
-<span class="fc" id="L45">            RepTetrazolioViabilidadDTO repeticionCreada = repeticionService.crearRepeticion(tetrazolioId, solicitud);</span>
-<span class="fc" id="L46">            return new ResponseEntity&lt;&gt;(repeticionCreada, HttpStatus.CREATED);</span>
-<span class="fc" id="L47">        } catch (RuntimeException e) {</span>
-<span class="fc" id="L48">            System.err.println(&quot;Error al crear repetición: &quot; + e.getMessage());</span>
-<span class="fc" id="L49">            return new ResponseEntity&lt;&gt;(null, HttpStatus.BAD_REQUEST);</span>
-<span class="nc" id="L50">        } catch (Exception e) {</span>
-<span class="nc" id="L51">            System.err.println(&quot;Error interno al crear repetición: &quot; + e.getMessage());</span>
-<span class="nc" id="L52">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
-        }
+<span class="fc" id="L43">        RepTetrazolioViabilidadDTO repeticionCreada = repeticionService.crearRepeticion(tetrazolioId, solicitud);</span>
+<span class="fc" id="L44">        return ResponseEntity.status(HttpStatus.CREATED).body(repeticionCreada);</span>
     }
 
     // Obtener todas las repeticiones de un tetrazolio
@@ -59,13 +50,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     @GetMapping
     public ResponseEntity&lt;List&lt;RepTetrazolioViabilidadDTO&gt;&gt; obtenerRepeticionesPorTetrazolio(@PathVariable Long tetrazolioId) {
-        try {
-<span class="fc" id="L63">            List&lt;RepTetrazolioViabilidadDTO&gt; repeticiones = repeticionService.obtenerRepeticionesPorTetrazolio(tetrazolioId);</span>
-<span class="fc" id="L64">            return new ResponseEntity&lt;&gt;(repeticiones, HttpStatus.OK);</span>
-<span class="fc" id="L65">        } catch (Exception e) {</span>
-<span class="fc" id="L66">            System.err.println(&quot;Error al obtener repeticiones: &quot; + e.getMessage());</span>
-<span class="fc" id="L67">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
-        }
+<span class="fc" id="L53">        List&lt;RepTetrazolioViabilidadDTO&gt; repeticiones = repeticionService.obtenerRepeticionesPorTetrazolio(tetrazolioId);</span>
+<span class="fc" id="L54">        return ResponseEntity.ok(repeticiones);</span>
     }
 
     // Contar repeticiones de un tetrazolio
@@ -74,12 +60,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     @GetMapping(&quot;/count&quot;)
     public ResponseEntity&lt;Long&gt; contarRepeticionesPorTetrazolio(@PathVariable Long tetrazolioId) {
-        try {
-<span class="fc" id="L78">            Long count = repeticionService.contarRepeticionesPorTetrazolio(tetrazolioId);</span>
-<span class="fc" id="L79">            return new ResponseEntity&lt;&gt;(count, HttpStatus.OK);</span>
-<span class="fc" id="L80">        } catch (Exception e) {</span>
-<span class="fc" id="L81">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
-        }
+<span class="fc" id="L63">        Long count = repeticionService.contarRepeticionesPorTetrazolio(tetrazolioId);</span>
+<span class="fc" id="L64">        return ResponseEntity.ok(count);</span>
     }
 
     // Obtener repetición específica por ID (ruta alternativa fuera del contexto del tetrazolio)
@@ -90,14 +72,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
     public ResponseEntity&lt;RepTetrazolioViabilidadDTO&gt; obtenerRepeticionPorId(
             @PathVariable Long tetrazolioId,
             @PathVariable Long repeticionId) {
-        try {
-<span class="fc" id="L94">            RepTetrazolioViabilidadDTO repeticion = repeticionService.obtenerRepeticionPorId(repeticionId);</span>
-<span class="fc" id="L95">            return new ResponseEntity&lt;&gt;(repeticion, HttpStatus.OK);</span>
-<span class="fc" id="L96">        } catch (RuntimeException e) {</span>
-<span class="fc" id="L97">            return new ResponseEntity&lt;&gt;(null, HttpStatus.NOT_FOUND);</span>
-<span class="nc" id="L98">        } catch (Exception e) {</span>
-<span class="nc" id="L99">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
-        }
+<span class="fc" id="L75">        RepTetrazolioViabilidadDTO repeticion = repeticionService.obtenerRepeticionPorId(repeticionId);</span>
+<span class="fc" id="L76">        return ResponseEntity.ok(repeticion);</span>
     }
 
     // Actualizar repetición específica
@@ -109,14 +85,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
             @PathVariable Long tetrazolioId,
             @PathVariable Long repeticionId,
             @RequestBody RepTetrazolioViabilidadRequestDTO solicitud) {
-        try {
-<span class="fc" id="L113">            RepTetrazolioViabilidadDTO repeticionActualizada = repeticionService.actualizarRepeticion(repeticionId, solicitud);</span>
-<span class="fc" id="L114">            return new ResponseEntity&lt;&gt;(repeticionActualizada, HttpStatus.OK);</span>
-<span class="fc" id="L115">        } catch (RuntimeException e) {</span>
-<span class="fc" id="L116">            return new ResponseEntity&lt;&gt;(null, HttpStatus.NOT_FOUND);</span>
-<span class="nc" id="L117">        } catch (Exception e) {</span>
-<span class="nc" id="L118">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
-        }
+<span class="fc" id="L88">        RepTetrazolioViabilidadDTO repeticionActualizada = repeticionService.actualizarRepeticion(repeticionId, solicitud);</span>
+<span class="fc" id="L89">        return ResponseEntity.ok(repeticionActualizada);</span>
     }
 
     // Eliminar repetición específica (eliminación real)
@@ -124,17 +94,11 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadSe
               description = &quot;Elimina una repetición específica de un análisis de tetrazolio viabilidad (eliminación física)&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
     @DeleteMapping(&quot;/{repeticionId}&quot;)
-    public ResponseEntity&lt;HttpStatus&gt; eliminarRepeticion(
+    public ResponseEntity&lt;Void&gt; eliminarRepeticion(
             @PathVariable Long tetrazolioId,
             @PathVariable Long repeticionId) {
-        try {
-<span class="fc" id="L131">            repeticionService.eliminarRepeticion(repeticionId);</span>
-<span class="fc" id="L132">            return new ResponseEntity&lt;&gt;(HttpStatus.NO_CONTENT);</span>
-<span class="fc" id="L133">        } catch (RuntimeException e) {</span>
-<span class="fc" id="L134">            return new ResponseEntity&lt;&gt;(HttpStatus.NOT_FOUND);</span>
-<span class="nc" id="L135">        } catch (Exception e) {</span>
-<span class="nc" id="L136">            return new ResponseEntity&lt;&gt;(HttpStatus.INTERNAL_SERVER_ERROR);</span>
-        }
+<span class="fc" id="L100">        repeticionService.eliminarRepeticion(repeticionId);</span>
+<span class="fc" id="L101">        return ResponseEntity.noContent().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
