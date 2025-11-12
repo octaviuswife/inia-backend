@@ -294,4 +294,336 @@ class RepPmsServiceTest {
         assertEquals(8L, resultado);
         verify(repPmsRepository, times(1)).countByPmsId(1L);
     }
+
+    // ==============================
+    // TESTS DE determinarTandaActual
+    // ==============================
+
+    @Test
+    @DisplayName("determinarTandaActual - debe retornar 1 cuando no hay repeticiones")
+    void determinarTandaActual_debeRetornar1CuandoNoHayRepeticiones() {
+        // ARRANGE
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(0L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList()); // Sin repeticiones
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(repPms);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getNumTanda(), "Debe asignar tanda 1 cuando no hay repeticiones");
+    }
+
+    @Test
+    @DisplayName("determinarTandaActual - debe retornar tanda incompleta con repeticiones válidas insuficientes")
+    void determinarTandaActual_debeRetornarTandaIncompletaConValidasInsuficientes() {
+        // ARRANGE
+        // Crear 5 repeticiones válidas en tanda 1 (necesita 8)
+        RepPms rep1 = crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), true);
+        RepPms rep2 = crearRepeticionConValor(2L, 2, 1, new BigDecimal("45.5"), true);
+        RepPms rep3 = crearRepeticionConValor(3L, 3, 1, new BigDecimal("46.0"), true);
+        RepPms rep4 = crearRepeticionConValor(4L, 4, 1, new BigDecimal("45.8"), true);
+        RepPms rep5 = crearRepeticionConValor(5L, 5, 1, new BigDecimal("45.3"), true);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(5L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList(rep1, rep2, rep3, rep4, rep5));
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(repPms);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getNumTanda(), "Debe seguir en tanda 1 porque tiene menos de 8 válidas");
+    }
+
+    @Test
+    @DisplayName("determinarTandaActual - debe retornar tanda incompleta aunque haya inválidas")
+    void determinarTandaActual_debeRetornarTandaIncompletaConInvalidas() {
+        // ARRANGE
+        // Tanda 1: 5 válidas + 2 inválidas = 7 total (necesita 8 válidas)
+        RepPms rep1 = crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), true);
+        RepPms rep2 = crearRepeticionConValor(2L, 2, 1, new BigDecimal("45.5"), true);
+        RepPms rep3 = crearRepeticionConValor(3L, 3, 1, new BigDecimal("46.0"), true);
+        RepPms rep4 = crearRepeticionConValor(4L, 4, 1, new BigDecimal("45.8"), true);
+        RepPms rep5 = crearRepeticionConValor(5L, 5, 1, new BigDecimal("45.3"), true);
+        RepPms rep6 = crearRepeticionConValor(6L, 6, 1, new BigDecimal("60.0"), false); // Inválida (outlier)
+        RepPms rep7 = crearRepeticionConValor(7L, 7, 1, new BigDecimal("30.0"), false); // Inválida (outlier)
+
+        RepPms octavaRep = crearRepeticionConValor(8L, 8, 1, new BigDecimal("45.6"), null);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(7L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList(rep1, rep2, rep3, rep4, rep5, rep6, rep7));
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(octavaRep);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        when(repPmsRepository.findById(8L)).thenReturn(Optional.of(octavaRep));
+        doNothing().when(pmsService).validarTodasLasRepeticiones(1L);
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getNumTanda(), "Debe seguir en tanda 1 porque solo tiene 5 válidas (necesita 8)");
+    }
+
+    @Test
+    @DisplayName("determinarTandaActual - debe incrementar tanda cuando CV no es aceptable")
+    void determinarTandaActual_debeIncrementarTandaCuandoCVNoAceptable() {
+        // ARRANGE
+        // Tanda 1: 8 válidas completas pero con CV alto (> 4%)
+        RepPms rep1 = crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), true);
+        RepPms rep2 = crearRepeticionConValor(2L, 2, 1, new BigDecimal("46.0"), true);
+        RepPms rep3 = crearRepeticionConValor(3L, 3, 1, new BigDecimal("47.0"), true);
+        RepPms rep4 = crearRepeticionConValor(4L, 4, 1, new BigDecimal("48.0"), true);
+        RepPms rep5 = crearRepeticionConValor(5L, 5, 1, new BigDecimal("49.0"), true);
+        RepPms rep6 = crearRepeticionConValor(6L, 6, 1, new BigDecimal("50.0"), true);
+        RepPms rep7 = crearRepeticionConValor(7L, 7, 1, new BigDecimal("51.0"), true);
+        RepPms rep8 = crearRepeticionConValor(8L, 8, 1, new BigDecimal("52.0"), true);
+
+        pms.setNumTandas(1);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(8L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList(rep1, rep2, rep3, rep4, rep5, rep6, rep7, rep8));
+        when(pmsRepository.save(any(Pms.class))).thenAnswer(invocation -> {
+            Pms savedPms = invocation.getArgument(0);
+            // Verificar que se incrementó el número de tandas
+            if (savedPms.getNumTandas() == 2) {
+                pms.setNumTandas(2); // Actualizar para futuras llamadas
+            }
+            return savedPms;
+        });
+        
+        RepPms nuevaRep = crearRepeticionConValor(9L, 9, 2, new BigDecimal("45.5"), null);
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(nuevaRep);
+        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(2, resultado.getNumTanda(), "Debe asignar tanda 2 porque la tanda 1 está completa pero CV no es aceptable");
+        verify(pmsRepository, atLeastOnce()).save(argThat(p -> p.getNumTandas() == 2));
+    }
+
+    @Test
+    @DisplayName("determinarTandaActual - debe lanzar excepción cuando CV es aceptable")
+    void determinarTandaActual_debeLanzarExcepcionCuandoCVAceptable() {
+        // ARRANGE
+        // Tanda 1: 8 válidas con valores muy similares (CV < 4%)
+        RepPms rep1 = crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), true);
+        RepPms rep2 = crearRepeticionConValor(2L, 2, 1, new BigDecimal("45.1"), true);
+        RepPms rep3 = crearRepeticionConValor(3L, 3, 1, new BigDecimal("45.2"), true);
+        RepPms rep4 = crearRepeticionConValor(4L, 4, 1, new BigDecimal("45.0"), true);
+        RepPms rep5 = crearRepeticionConValor(5L, 5, 1, new BigDecimal("45.1"), true);
+        RepPms rep6 = crearRepeticionConValor(6L, 6, 1, new BigDecimal("45.2"), true);
+        RepPms rep7 = crearRepeticionConValor(7L, 7, 1, new BigDecimal("45.0"), true);
+        RepPms rep8 = crearRepeticionConValor(8L, 8, 1, new BigDecimal("45.1"), true);
+
+        pms.setNumTandas(1);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(8L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList(rep1, rep2, rep3, rep4, rep5, rep6, rep7, rep8));
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+        });
+
+        assertTrue(exception.getMessage().contains("CV global") && exception.getMessage().contains("ya es aceptable"),
+                "Debe lanzar excepción indicando que el CV ya es aceptable");
+    }
+
+    @Test
+    @DisplayName("determinarTandaActual - debe lanzar excepción cuando se alcanza el límite de 16 repeticiones")
+    void determinarTandaActual_debeLanzarExcepcionCuandoAlcanzaLimite16() {
+        // ARRANGE
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(16L); // Ya hay 16 repeticiones
+
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+        });
+
+        assertTrue(exception.getMessage().contains("más de 16 repeticiones"),
+                "Debe lanzar excepción por límite de 16 repeticiones");
+    }
+
+    @Test
+    @DisplayName("determinarTandaActual - debe retornar tanda 2 si tanda 1 está completa con suficientes válidas")
+    void determinarTandaActual_debeRetornarTanda2SiTanda1CompletaConValidas() {
+        // ARRANGE
+        // Tanda 1: 8 válidas (completa con CV alto, por eso se creó tanda 2)
+        // Tanda 2: 3 válidas (incompleta)
+        List<RepPms> repeticiones = Arrays.asList(
+            crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), true),
+            crearRepeticionConValor(2L, 2, 1, new BigDecimal("46.0"), true),
+            crearRepeticionConValor(3L, 3, 1, new BigDecimal("47.0"), true),
+            crearRepeticionConValor(4L, 4, 1, new BigDecimal("48.0"), true),
+            crearRepeticionConValor(5L, 5, 1, new BigDecimal("49.0"), true),
+            crearRepeticionConValor(6L, 6, 1, new BigDecimal("50.0"), true),
+            crearRepeticionConValor(7L, 7, 1, new BigDecimal("51.0"), true),
+            crearRepeticionConValor(8L, 8, 1, new BigDecimal("52.0"), true),
+            crearRepeticionConValor(9L, 9, 2, new BigDecimal("46.1"), true),
+            crearRepeticionConValor(10L, 10, 2, new BigDecimal("46.3"), true),
+            crearRepeticionConValor(11L, 11, 2, new BigDecimal("46.5"), true)
+        );
+
+        pms.setNumTandas(2);
+
+        RepPms nuevaRep = crearRepeticionConValor(12L, 12, 2, new BigDecimal("46.7"), null);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(11L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(nuevaRep);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(2, resultado.getNumTanda(), "Debe asignar tanda 2 porque la tanda 1 está completa");
+    }
+
+    // ==============================
+    // TESTS DE crearRepeticion con tanda completa
+    // ==============================
+
+    @Test
+    @DisplayName("crearRepeticion - debe validar todas las repeticiones cuando se completa la tanda")
+    void crearRepeticion_debeValidarTodasCuandoCompletaTanda() {
+        // ARRANGE
+        // Crear 7 repeticiones existentes en tanda 1
+        List<RepPms> repeticionesExistentes = Arrays.asList(
+            crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), null),
+            crearRepeticionConValor(2L, 2, 1, new BigDecimal("45.5"), null),
+            crearRepeticionConValor(3L, 3, 1, new BigDecimal("46.0"), null),
+            crearRepeticionConValor(4L, 4, 1, new BigDecimal("45.8"), null),
+            crearRepeticionConValor(5L, 5, 1, new BigDecimal("45.3"), null),
+            crearRepeticionConValor(6L, 6, 1, new BigDecimal("45.7"), null),
+            crearRepeticionConValor(7L, 7, 1, new BigDecimal("45.2"), null)
+        );
+
+        // La octava repetición completará la tanda
+        RepPms octavaRepeticion = crearRepeticionConValor(8L, 8, 1, new BigDecimal("45.9"), true);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(7L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticionesExistentes);
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(octavaRepeticion);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        when(repPmsRepository.findById(8L)).thenReturn(Optional.of(octavaRepeticion));
+        
+        // Mockear la validación de todas las repeticiones
+        doNothing().when(pmsService).validarTodasLasRepeticiones(1L);
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(8L, resultado.getRepPMSID(), "Debe ser la octava repetición");
+        
+        // Verificar que se llamó a validarTodasLasRepeticiones cuando se completó la tanda
+        verify(pmsService, times(1)).validarTodasLasRepeticiones(1L);
+        
+        // Verificar que se recargó la repetición para obtener el valor actualizado de 'valido'
+        verify(repPmsRepository, times(1)).findById(8L);
+    }
+
+    @Test
+    @DisplayName("crearRepeticion - NO debe validar si no se completa la tanda")
+    void crearRepeticion_noDebeValidarSiNoCompletaTanda() {
+        // ARRANGE
+        // Crear 5 repeticiones existentes (no alcanza las 8 esperadas)
+        List<RepPms> repeticionesExistentes = Arrays.asList(
+            crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), null),
+            crearRepeticionConValor(2L, 2, 1, new BigDecimal("45.5"), null),
+            crearRepeticionConValor(3L, 3, 1, new BigDecimal("46.0"), null),
+            crearRepeticionConValor(4L, 4, 1, new BigDecimal("45.8"), null),
+            crearRepeticionConValor(5L, 5, 1, new BigDecimal("45.3"), null)
+        );
+
+        RepPms sextaRepeticion = crearRepeticionConValor(6L, 6, 1, new BigDecimal("45.7"), null);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(5L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticionesExistentes);
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(sextaRepeticion);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        
+        // Verificar que NO se llamó a validarTodasLasRepeticiones porque no se completó la tanda
+        verify(pmsService, never()).validarTodasLasRepeticiones(anyLong());
+        
+        // Verificar que se registró la modificación en el historial
+        verify(analisisHistorialService, times(1)).registrarModificacion(pms);
+    }
+
+    @Test
+    @DisplayName("crearRepeticion - debe validar cuando se alcanza exactamente el número esperado")
+    void crearRepeticion_debeValidarCuandoAlcanzaExactamenteNumeroEsperado() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4); // Reducir a 4 para simplificar el test
+        
+        List<RepPms> repeticionesExistentes = Arrays.asList(
+            crearRepeticionConValor(1L, 1, 1, new BigDecimal("45.0"), null),
+            crearRepeticionConValor(2L, 2, 1, new BigDecimal("45.5"), null),
+            crearRepeticionConValor(3L, 3, 1, new BigDecimal("46.0"), null)
+        );
+
+        RepPms cuartaRepeticion = crearRepeticionConValor(4L, 4, 1, new BigDecimal("45.8"), true);
+
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(3L);
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticionesExistentes);
+        when(repPmsRepository.save(any(RepPms.class))).thenReturn(cuartaRepeticion);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        when(repPmsRepository.findById(4L)).thenReturn(Optional.of(cuartaRepeticion));
+        
+        doNothing().when(pmsService).validarTodasLasRepeticiones(1L);
+
+        // ACT
+        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);
+
+        // ASSERT
+        assertNotNull(resultado);
+        
+        // Verificar que se validó cuando se alcanzó exactamente el número esperado
+        verify(pmsService, times(1)).validarTodasLasRepeticiones(1L);
+    }
+
+    // Método auxiliar para crear repeticiones de prueba
+    private RepPms crearRepeticionConValor(Long id, Integer numRep, Integer numTanda, 
+                                           BigDecimal peso, Boolean valido) {
+        RepPms rep = new RepPms();
+        rep.setRepPMSID(id);
+        rep.setNumRep(numRep);
+        rep.setNumTanda(numTanda);
+        rep.setPeso(peso);
+        rep.setValido(valido);
+        rep.setPms(pms);
+        return rep;
+    }
 }
