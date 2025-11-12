@@ -340,4 +340,439 @@ class GerminacionServiceTest {
         assertEquals(1, resultado.getTotalElements());
         assertEquals(1, resultado.getContent().size());
     }
+
+    @Test
+    @DisplayName("Obtener todas las germinaciones - debe retornar lista activa")
+    void obtenerTodasGerminaciones_debeRetornarListaActiva() {
+        // ARRANGE
+        when(germinacionRepository.findByActivoTrue()).thenReturn(Arrays.asList(germinacion));
+
+        // ACT
+        var resultado = germinacionService.obtenerTodasGerminaciones();
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertNotNull(resultado.getGerminaciones());
+        assertEquals(1, resultado.getGerminaciones().size());
+        verify(germinacionRepository, times(1)).findByActivoTrue();
+    }
+
+    @Test
+    @DisplayName("Obtener germinaciones paginadas con filtro 'activos' - debe retornar solo activos")
+    void obtenerGerminacionesPaginadasConFiltro_activos_debeRetornarSoloActivos() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadasConFiltro(pageable, "activos");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+        verify(germinacionRepository, times(1)).findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Obtener germinaciones paginadas con filtro 'inactivos' - debe retornar solo inactivos")
+    void obtenerGerminacionesPaginadasConFiltro_inactivos_debeRetornarSoloInactivos() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        germinacion.setActivo(false);
+        when(germinacionRepository.findByActivoFalseOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadasConFiltro(pageable, "inactivos");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+        verify(germinacionRepository, times(1)).findByActivoFalseOrderByFechaInicioDesc(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Obtener germinaciones paginadas con filtro 'todos' - debe retornar todos")
+    void obtenerGerminacionesPaginadasConFiltro_todos_debeRetornarTodos() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        when(germinacionRepository.findAllByOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadasConFiltro(pageable, "todos");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+        verify(germinacionRepository, times(1)).findAllByOrderByFechaInicioDesc(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Obtener germinaciones paginadas con filtros completos - debe aplicar specification")
+    void obtenerGerminacionesPaginadasConFiltros_conTodosParametros_debeAplicarFiltros() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        when(germinacionRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadasConFiltros(
+            pageable, "test", true, "REGISTRADO", 1L
+        );
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(germinacionRepository, times(1)).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Actualizar germinación con ID inexistente - debe lanzar excepción")
+    void actualizarGerminacion_conIdInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+        when(germinacionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> {
+            germinacionService.actualizarGerminacion(999L, germinacionRequestDTO);
+        });
+    }
+
+    @Test
+    @DisplayName("Actualizar germinación seguro con lote inexistente - debe lanzar excepción")
+    void actualizarGerminacionSeguro_conLoteInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+        GerminacionEditRequestDTO editDTO = new GerminacionEditRequestDTO();
+        editDTO.setIdLote(999L);
+        
+        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
+        when(loteRepository.findById(999L)).thenReturn(Optional.empty());
+        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any(Germinacion.class));
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> {
+            germinacionService.actualizarGerminacionSeguro(1L, editDTO);
+        });
+    }
+
+    @Test
+    @DisplayName("Actualizar germinación seguro con ID inexistente - debe lanzar excepción")
+    void actualizarGerminacionSeguro_conIdInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+        GerminacionEditRequestDTO editDTO = new GerminacionEditRequestDTO();
+        when(germinacionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> {
+            germinacionService.actualizarGerminacionSeguro(999L, editDTO);
+        });
+    }
+
+    @Test
+    @DisplayName("Eliminar germinación con ID inexistente - debe lanzar excepción")
+    void eliminarGerminacion_conIdInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+        when(germinacionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> {
+            germinacionService.eliminarGerminacion(999L);
+        });
+    }
+
+    @Test
+    @DisplayName("Finalizar análisis - debe llamar al servicio de análisis")
+    void finalizarAnalisis_debeLlamarServicioAnalisis() {
+        // ARRANGE
+        GerminacionDTO germinacionDTO = new GerminacionDTO();
+        germinacionDTO.setAnalisisID(1L);
+        germinacionDTO.setEstado(Estado.PENDIENTE_APROBACION);
+        
+        when(analisisService.finalizarAnalisisGenerico(any(), any(), any(), any())).thenReturn(germinacionDTO);
+
+        // ACT
+        GerminacionDTO resultado = germinacionService.finalizarAnalisis(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(analisisService, times(1)).finalizarAnalisisGenerico(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Aprobar análisis - debe llamar al servicio de análisis")
+    void aprobarAnalisis_debeLlamarServicioAnalisis() {
+        // ARRANGE
+        GerminacionDTO germinacionDTO = new GerminacionDTO();
+        germinacionDTO.setAnalisisID(1L);
+        germinacionDTO.setEstado(Estado.APROBADO);
+        
+        when(analisisService.aprobarAnalisisGenerico(any(), any(), any(), any(), any())).thenReturn(germinacionDTO);
+
+        // ACT
+        GerminacionDTO resultado = germinacionService.aprobarAnalisis(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(analisisService, times(1)).aprobarAnalisisGenerico(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Marcar para repetir - debe llamar al servicio de análisis")
+    void marcarParaRepetir_debeLlamarServicioAnalisis() {
+        // ARRANGE
+        GerminacionDTO germinacionDTO = new GerminacionDTO();
+        germinacionDTO.setAnalisisID(1L);
+        germinacionDTO.setEstado(Estado.A_REPETIR);
+        
+        when(analisisService.marcarParaRepetirGenerico(any(), any(), any(), any())).thenReturn(germinacionDTO);
+
+        // ACT
+        GerminacionDTO resultado = germinacionService.marcarParaRepetir(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+        verify(analisisService, times(1)).marcarParaRepetirGenerico(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Crear germinación con lote inactivo - debe lanzar excepción")
+    void crearGerminacion_conLoteInactivo_debeLanzarExcepcion() {
+        // ARRANGE
+        lote.setActivo(false);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> {
+            germinacionService.crearGerminacion(germinacionRequestDTO);
+        });
+    }
+
+    @Test
+    @DisplayName("Crear germinación con error al guardar - debe lanzar excepción")
+    void crearGerminacion_conErrorAlGuardar_debeLanzarExcepcion() {
+        // ARRANGE
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(germinacionRepository.save(any(Germinacion.class))).thenThrow(new RuntimeException("Error al guardar"));
+        doNothing().when(analisisService).establecerFechaInicio(any(Germinacion.class));
+
+        // ACT & ASSERT
+        assertThrows(RuntimeException.class, () -> {
+            germinacionService.crearGerminacion(germinacionRequestDTO);
+        });
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a DTO con lote completo - debe mapear correctamente")
+    void mapearEntidadADTO_conLoteCompleto_debeMapeartodo() {
+        // ARRANGE
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie especie = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie();
+        especie.setNombreComun("Trigo");
+        
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar cultivar = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar();
+        cultivar.setNombre("Cultivar Test");
+        cultivar.setEspecie(especie);
+        
+        lote.setCultivar(cultivar);
+        lote.setFicha("FICHA-001");
+        germinacion.setLote(lote);
+        
+        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(java.util.Collections.emptyList());
+
+        // ACT
+        var resultado = germinacionService.obtenerGerminacionPorId(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals("LOTE-GERM-001", resultado.getLote());
+        assertEquals("FICHA-001", resultado.getFicha());
+        assertEquals("Cultivar Test", resultado.getCultivarNombre());
+        assertEquals("Trigo", resultado.getEspecieNombre());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - con lote y especie completos")
+    void mapearEntidadAListadoDTO_conLoteYEspecieCompletos() {
+        // ARRANGE
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie especie = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie();
+        especie.setNombreComun("Trigo");
+        especie.setNombreCientifico("Triticum aestivum");
+        
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar cultivar = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar();
+        cultivar.setNombre("Cultivar Test");
+        cultivar.setEspecie(especie);
+        
+        lote.setCultivar(cultivar);
+        germinacion.setLote(lote);
+        
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(java.util.Collections.emptyList());
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadas(PageRequest.of(0, 10));
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+        GerminacionListadoDTO dto = resultado.getContent().get(0);
+        assertEquals("Trigo", dto.getEspecie());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - con nombre común vacío usa científico")
+    void mapearEntidadAListadoDTO_nombreComunVacio_usaCientifico() {
+        // ARRANGE
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie especie = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie();
+        especie.setNombreComun("");
+        especie.setNombreCientifico("Triticum aestivum");
+        
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar cultivar = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar();
+        cultivar.setEspecie(especie);
+        
+        lote.setCultivar(cultivar);
+        germinacion.setLote(lote);
+        
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(java.util.Collections.emptyList());
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadas(PageRequest.of(0, 10));
+
+        // ASSERT
+        GerminacionListadoDTO dto = resultado.getContent().get(0);
+        assertEquals("Triticum aestivum", dto.getEspecie());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - sin cultivar no debe fallar")
+    void mapearEntidadAListadoDTO_sinCultivar_noDebeFallar() {
+        // ARRANGE
+        lote.setCultivar(null);
+        germinacion.setLote(lote);
+        
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(java.util.Collections.emptyList());
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadas(PageRequest.of(0, 10));
+
+        // ASSERT
+        assertNotNull(resultado);
+        GerminacionListadoDTO dto = resultado.getContent().get(0);
+        assertNull(dto.getEspecie());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - sin lote no debe fallar")
+    void mapearEntidadAListadoDTO_sinLote_noDebeFallar() {
+        // ARRANGE
+        germinacion.setLote(null);
+        
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(java.util.Collections.emptyList());
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadas(PageRequest.of(0, 10));
+
+        // ASSERT
+        assertNotNull(resultado);
+        GerminacionListadoDTO dto = resultado.getContent().get(0);
+        assertNull(dto.getLote());
+        assertNull(dto.getEspecie());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - estado A_REPETIR marca cumpleNorma false")
+    void mapearEntidadAListadoDTO_estadoARepetir_cumpleNormaFalse() {
+        // ARRANGE
+        germinacion.setEstado(Estado.A_REPETIR);
+        
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(java.util.Collections.emptyList());
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadas(PageRequest.of(0, 10));
+
+        // ASSERT
+        GerminacionListadoDTO dto = resultado.getContent().get(0);
+        assertFalse(dto.getCumpleNorma());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - con TablaGerm y ValoresGerm completos")
+    void mapearEntidadAListadoDTO_conTablaGermYValores_debeMapeartodo() {
+        // ARRANGE
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm tablaGerm = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm();
+        tablaGerm.setFechaGerminacion(LocalDate.now());
+        tablaGerm.setFechaFinal(LocalDate.now().plusDays(7));
+        tablaGerm.setTienePrefrio(true);
+        tablaGerm.setTienePretratamiento(false);
+        
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm valorInia = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm();
+        valorInia.setInstituto(utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto.INIA);
+        valorInia.setGerminacion(java.math.BigDecimal.valueOf(85.0));
+        
+        utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm valorInase = 
+            new utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm();
+        valorInase.setInstituto(utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto.INASE);
+        valorInase.setGerminacion(java.math.BigDecimal.valueOf(83.0));
+        
+        tablaGerm.setValoresGerm(Arrays.asList(valorInia, valorInase));
+        germinacion.setTablaGerm(Arrays.asList(tablaGerm));
+        
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(java.util.Collections.emptyList());
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadas(PageRequest.of(0, 10));
+
+        // ASSERT
+        GerminacionListadoDTO dto = resultado.getContent().get(0);
+        assertTrue(dto.getTienePrefrio());
+        assertFalse(dto.getTienePretratamiento());
+        assertNotNull(dto.getValorGerminacionINIA());
+        assertNotNull(dto.getValorGerminacionINASE());
+        assertEquals(0, dto.getValorGerminacionINIA().compareTo(java.math.BigDecimal.valueOf(85.0)));
+        assertEquals(0, dto.getValorGerminacionINASE().compareTo(java.math.BigDecimal.valueOf(83.0)));
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - con historial de usuario")
+    void mapearEntidadAListadoDTO_conHistorial_debeMostrarUsuarios() {
+        // ARRANGE
+        var historial = new java.util.ArrayList<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.AnalisisHistorialDTO>();
+        var primerRegistro = new utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.AnalisisHistorialDTO();
+        primerRegistro.setUsuario("usuario_creador@test.com");
+        var segundoRegistro = new utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.AnalisisHistorialDTO();
+        segundoRegistro.setUsuario("usuario_modificador@test.com");
+        historial.add(segundoRegistro);
+        historial.add(primerRegistro);
+        
+        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(germinacion)));
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong())).thenReturn(historial);
+
+        // ACT
+        Page<GerminacionListadoDTO> resultado = germinacionService.obtenerGerminacionesPaginadas(PageRequest.of(0, 10));
+
+        // ASSERT
+        GerminacionListadoDTO dto = resultado.getContent().get(0);
+        assertEquals("usuario_creador@test.com", dto.getUsuarioCreador());
+        assertEquals("usuario_modificador@test.com", dto.getUsuarioModificador());
+    }
 }
