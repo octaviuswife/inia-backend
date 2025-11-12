@@ -166,41 +166,41 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
     @Operation(summary = &quot;Renovar access token&quot;, description = &quot;Usa el refresh token para generar un nuevo access token&quot;)
     public ResponseEntity&lt;?&gt; refresh(@CookieValue(name = &quot;refreshToken&quot;, required = false) String refreshToken, HttpServletResponse response) {
         try {
-<span class="nc bnc" id="L169" title="All 4 branches missed.">            if (refreshToken == null || refreshToken.isEmpty()) {</span>
-<span class="nc" id="L170">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
-<span class="nc" id="L171">                        .body(Map.of(&quot;error&quot;, &quot;Refresh token no encontrado&quot;));</span>
+<span class="pc bpc" id="L169" title="1 of 4 branches missed.">            if (refreshToken == null || refreshToken.isEmpty()) {</span>
+<span class="fc" id="L170">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L171">                        .body(Map.of(&quot;error&quot;, &quot;Refresh token no encontrado&quot;));</span>
             }
 
-<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (!jwtUtil.esTokenValido(refreshToken)) {</span>
-<span class="nc" id="L175">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
-<span class="nc" id="L176">                        .body(Map.of(&quot;error&quot;, &quot;Refresh token inválido o expirado&quot;));</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">            if (!jwtUtil.esTokenValido(refreshToken)) {</span>
+<span class="fc" id="L175">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L176">                        .body(Map.of(&quot;error&quot;, &quot;Refresh token inválido o expirado&quot;));</span>
             }
 
-<span class="nc" id="L179">            String tipo = jwtUtil.obtenerTipoToken(refreshToken);</span>
-<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (!&quot;refresh&quot;.equals(tipo)) {</span>
-<span class="nc" id="L181">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
-<span class="nc" id="L182">                        .body(Map.of(&quot;error&quot;, &quot;Token no es de tipo refresh&quot;));</span>
+<span class="fc" id="L179">            String tipo = jwtUtil.obtenerTipoToken(refreshToken);</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">            if (!&quot;refresh&quot;.equals(tipo)) {</span>
+<span class="fc" id="L181">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L182">                        .body(Map.of(&quot;error&quot;, &quot;Token no es de tipo refresh&quot;));</span>
             }
 
-<span class="nc" id="L185">            Integer userId = jwtUtil.obtenerUserIdDelToken(refreshToken);</span>
-<span class="nc" id="L186">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+<span class="fc" id="L185">            Integer userId = jwtUtil.obtenerUserIdDelToken(refreshToken);</span>
+<span class="fc" id="L186">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
 
-<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
-<span class="nc" id="L189">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
-<span class="nc" id="L190">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="fc" id="L189">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L190">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
             }
 
-<span class="nc" id="L193">            Usuario user = usuarioOpt.get();</span>
-<span class="nc" id="L194">            String[] roles = seguridadService.listarRolesPorUsuario(user);</span>
+<span class="fc" id="L193">            Usuario user = usuarioOpt.get();</span>
+<span class="fc" id="L194">            String[] roles = seguridadService.listarRolesPorUsuario(user);</span>
 
             // Generar nuevo access token
-<span class="nc" id="L197">            String nuevoAccessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));</span>
-<span class="nc" id="L198">            configurarCookieToken(response, &quot;accessToken&quot;, nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));</span>
+<span class="fc" id="L197">            String nuevoAccessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));</span>
+<span class="fc" id="L198">            configurarCookieToken(response, &quot;accessToken&quot;, nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));</span>
 
-<span class="nc" id="L200">            return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Access token renovado exitosamente&quot;));</span>
-<span class="nc" id="L201">        } catch (Exception e) {</span>
-<span class="nc" id="L202">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
-<span class="nc" id="L203">                    .body(Map.of(&quot;error&quot;, &quot;Error al renovar token: &quot; + e.getMessage()));</span>
+<span class="fc" id="L200">            return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Access token renovado exitosamente&quot;));</span>
+<span class="fc" id="L201">        } catch (Exception e) {</span>
+<span class="fc" id="L202">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L203">                    .body(Map.of(&quot;error&quot;, &quot;Error al renovar token: &quot; + e.getMessage()));</span>
         }
     }
 
@@ -228,22 +228,22 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
     @SecurityRequirement(name = &quot;bearerAuth&quot;)
     public ResponseEntity&lt;?&gt; validateToken(@RequestHeader(&quot;Authorization&quot;) String authHeader) {
         try {
-<span class="nc" id="L231">            String token = authHeader.replace(&quot;Bearer &quot;, &quot;&quot;);</span>
+<span class="fc" id="L231">            String token = authHeader.replace(&quot;Bearer &quot;, &quot;&quot;);</span>
             
-<span class="nc bnc" id="L233" title="All 2 branches missed.">            if (jwtUtil.esTokenValido(token)) {</span>
-<span class="nc" id="L234">                String username = jwtUtil.obtenerUsuarioDelToken(token);</span>
-<span class="nc" id="L235">                return ResponseEntity.ok(Map.of(</span>
-<span class="nc" id="L236">                    &quot;valido&quot;, true,</span>
-<span class="nc" id="L237">                    &quot;usuario&quot;, username</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">            if (jwtUtil.esTokenValido(token)) {</span>
+<span class="fc" id="L234">                String username = jwtUtil.obtenerUsuarioDelToken(token);</span>
+<span class="fc" id="L235">                return ResponseEntity.ok(Map.of(</span>
+<span class="fc" id="L236">                    &quot;valido&quot;, true,</span>
+<span class="fc" id="L237">                    &quot;usuario&quot;, username</span>
                 ));
             }
             
-<span class="nc" id="L241">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
-<span class="nc" id="L242">                    .body(Map.of(&quot;valido&quot;, false, &quot;error&quot;, &quot;Token inválido&quot;));</span>
+<span class="fc" id="L241">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L242">                    .body(Map.of(&quot;valido&quot;, false, &quot;error&quot;, &quot;Token inválido&quot;));</span>
                     
-<span class="nc" id="L244">        } catch (Exception e) {</span>
-<span class="nc" id="L245">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
-<span class="nc" id="L246">                    .body(Map.of(&quot;valido&quot;, false, &quot;error&quot;, &quot;Token malformado&quot;));</span>
+<span class="fc" id="L244">        } catch (Exception e) {</span>
+<span class="fc" id="L245">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L246">                    .body(Map.of(&quot;valido&quot;, false, &quot;error&quot;, &quot;Token malformado&quot;));</span>
         }
     }
 
@@ -282,8 +282,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
             @RequestParam(defaultValue = &quot;0&quot;) int page,
             @RequestParam(defaultValue = &quot;10&quot;) int size,
             @RequestParam(required = false) String search) {
-<span class="nc" id="L285">        Page&lt;UsuarioDTO&gt; solicitudes = usuarioService.listarSolicitudesPendientesPaginadas(page, size, search);</span>
-<span class="nc" id="L286">        return ResponseEntity.ok(solicitudes);</span>
+<span class="fc" id="L285">        Page&lt;UsuarioDTO&gt; solicitudes = usuarioService.listarSolicitudesPendientesPaginadas(page, size, search);</span>
+<span class="fc" id="L286">        return ResponseEntity.ok(solicitudes);</span>
     }
 
     @PostMapping(&quot;/approve/{id}&quot;)
@@ -339,18 +339,18 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
         
         // Convertir String a Rol enum si se proporciona
 <span class="fc" id="L341">        utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol rolEnum = null;</span>
-<span class="pc bpc" id="L342" title="5 of 6 branches missed.">        if (rol != null &amp;&amp; !rol.trim().isEmpty() &amp;&amp; !rol.equalsIgnoreCase(&quot;all&quot;)) {</span>
+<span class="pc bpc" id="L342" title="1 of 6 branches missed.">        if (rol != null &amp;&amp; !rol.trim().isEmpty() &amp;&amp; !rol.equalsIgnoreCase(&quot;all&quot;)) {</span>
             try {
-<span class="nc" id="L344">                rolEnum = utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.valueOf(rol.toUpperCase());</span>
-<span class="nc" id="L345">            } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L346">                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();</span>
+<span class="fc" id="L344">                rolEnum = utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.valueOf(rol.toUpperCase());</span>
+<span class="fc" id="L345">            } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L346">                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();</span>
             }
         }
         
         // Convertir String a Boolean si se proporciona
 <span class="fc" id="L351">        Boolean activoBoolean = null;</span>
-<span class="pc bpc" id="L352" title="5 of 6 branches missed.">        if (activo != null &amp;&amp; !activo.trim().isEmpty() &amp;&amp; !activo.equalsIgnoreCase(&quot;all&quot;)) {</span>
-<span class="nc" id="L353">            activoBoolean = Boolean.parseBoolean(activo);</span>
+<span class="pc bpc" id="L352" title="1 of 6 branches missed.">        if (activo != null &amp;&amp; !activo.trim().isEmpty() &amp;&amp; !activo.equalsIgnoreCase(&quot;all&quot;)) {</span>
+<span class="fc" id="L353">            activoBoolean = Boolean.parseBoolean(activo);</span>
         }
         
 <span class="fc" id="L356">        Page&lt;UsuarioDTO&gt; usuarios = usuarioService.listarTodosUsuariosPaginados(page, size, search, rolEnum, activoBoolean);</span>
@@ -393,9 +393,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
         try {
 <span class="fc" id="L394">            UsuarioDTO perfil = usuarioService.obtenerPerfil();</span>
 <span class="fc" id="L395">            return ResponseEntity.ok(perfil);</span>
-<span class="nc" id="L396">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L397">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
-<span class="nc" id="L398">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+<span class="fc" id="L396">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L397">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L398">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
         }
     }
 

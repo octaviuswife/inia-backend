@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoDTO;
@@ -33,7 +34,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.LegadoService;
 @WebMvcTest(LegadoController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName(&quot;Tests de integración para LegadoController&quot;)
-<span class="fc" id="L36">class LegadoControllerIntegrationTest {</span>
+<span class="fc" id="L37">class LegadoControllerIntegrationTest {</span>
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,189 +48,189 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.LegadoService;
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L50">        legadoSimple = new LegadoSimpleDTO();</span>
-<span class="fc" id="L51">        legadoSimple.setLegadoID(1L);</span>
+<span class="fc" id="L51">        legadoSimple = new LegadoSimpleDTO();</span>
+<span class="fc" id="L52">        legadoSimple.setLegadoID(1L);</span>
 
-<span class="fc" id="L53">        legado = new LegadoDTO();</span>
-<span class="fc" id="L54">        legado.setLegadoID(1L);</span>
-<span class="fc" id="L55">        legado.setArchivoOrigen(&quot;legado.xlsx&quot;);</span>
+<span class="fc" id="L54">        legado = new LegadoDTO();</span>
+<span class="fc" id="L55">        legado.setLegadoID(1L);</span>
+<span class="fc" id="L56">        legado.setArchivoOrigen(&quot;legado.xlsx&quot;);</span>
 
-<span class="fc" id="L57">        legadoListado = new LegadoListadoDTO();</span>
-<span class="fc" id="L58">        legadoListado.setLegadoID(1L);</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L58">        legadoListado = new LegadoListadoDTO();</span>
+<span class="fc" id="L59">        legadoListado.setLegadoID(1L);</span>
+<span class="fc" id="L60">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados - Debe listar todos los registros legados activos&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void obtenerTodosSimple_debeRetornarLista() throws Exception {
-<span class="fc" id="L65">        List&lt;LegadoSimpleDTO&gt; legados = Arrays.asList(legadoSimple);</span>
+<span class="fc" id="L66">        List&lt;LegadoSimpleDTO&gt; legados = Arrays.asList(legadoSimple);</span>
 
-<span class="fc" id="L67">        when(legadoService.obtenerTodosSimple()).thenReturn(legados);</span>
+<span class="fc" id="L68">        when(legadoService.obtenerTodosSimple()).thenReturn(legados);</span>
 
-<span class="fc" id="L69">        mockMvc.perform(get(&quot;/api/legados&quot;)</span>
-<span class="fc" id="L70">                .with(csrf()))</span>
-<span class="fc" id="L71">                .andExpect(status().isOk())</span>
-<span class="fc" id="L72">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
-<span class="fc" id="L73">                .andExpect(jsonPath(&quot;$[0].legadoID&quot;).value(1));</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L70">        mockMvc.perform(get(&quot;/api/legados&quot;)</span>
+<span class="fc" id="L71">                .with(csrf()))</span>
+<span class="fc" id="L72">                .andExpect(status().isOk())</span>
+<span class="fc" id="L73">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
+<span class="fc" id="L74">                .andExpect(jsonPath(&quot;$[0].legadoID&quot;).value(1));</span>
+<span class="fc" id="L75">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/listado - Debe soportar paginación con filtros&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void obtenerLegadosPaginadas_conFiltros_debeRetornarPagina() throws Exception {
-<span class="fc" id="L80">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
-<span class="fc" id="L81">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
+<span class="fc" id="L81">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
+<span class="fc" id="L82">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
 
-<span class="fc" id="L83">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
+<span class="fc" id="L84">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
 
-<span class="fc" id="L85">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
-<span class="fc" id="L86">                .param(&quot;page&quot;, &quot;0&quot;)</span>
-<span class="fc" id="L87">                .param(&quot;size&quot;, &quot;10&quot;)</span>
-<span class="fc" id="L88">                .with(csrf()))</span>
-<span class="fc" id="L89">                .andExpect(status().isOk())</span>
-<span class="fc" id="L90">                .andExpect(jsonPath(&quot;$.content&quot;).isArray())</span>
-<span class="fc" id="L91">                .andExpect(jsonPath(&quot;$.content[0].legadoID&quot;).value(1));</span>
-<span class="fc" id="L92">    }</span>
+<span class="fc" id="L86">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
+<span class="fc" id="L87">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L88">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L89">                .with(csrf()))</span>
+<span class="fc" id="L90">                .andExpect(status().isOk())</span>
+<span class="fc" id="L91">                .andExpect(jsonPath(&quot;$.content&quot;).isArray())</span>
+<span class="fc" id="L92">                .andExpect(jsonPath(&quot;$.content[0].legadoID&quot;).value(1));</span>
+<span class="fc" id="L93">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/{id} - Debe obtener legado por ID&quot;)
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     void obtenerPorId_conIdValido_debeRetornarLegado() throws Exception {
-<span class="fc" id="L98">        when(legadoService.obtenerPorId(1L)).thenReturn(legado);</span>
+<span class="fc" id="L99">        when(legadoService.obtenerPorId(1L)).thenReturn(legado);</span>
 
-<span class="fc" id="L100">        mockMvc.perform(get(&quot;/api/legados/1&quot;)</span>
-<span class="fc" id="L101">                .with(csrf()))</span>
-<span class="fc" id="L102">                .andExpect(status().isOk())</span>
-<span class="fc" id="L103">                .andExpect(jsonPath(&quot;$.legadoID&quot;).value(1))</span>
-<span class="fc" id="L104">                .andExpect(jsonPath(&quot;$.archivoOrigen&quot;).value(&quot;legado.xlsx&quot;));</span>
-<span class="fc" id="L105">    }</span>
+<span class="fc" id="L101">        mockMvc.perform(get(&quot;/api/legados/1&quot;)</span>
+<span class="fc" id="L102">                .with(csrf()))</span>
+<span class="fc" id="L103">                .andExpect(status().isOk())</span>
+<span class="fc" id="L104">                .andExpect(jsonPath(&quot;$.legadoID&quot;).value(1))</span>
+<span class="fc" id="L105">                .andExpect(jsonPath(&quot;$.archivoOrigen&quot;).value(&quot;legado.xlsx&quot;));</span>
+<span class="fc" id="L106">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/{id} - Debe retornar 404 si no existe&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void obtenerPorId_conIdInexistente_debeRetornar404() throws Exception {
-<span class="fc" id="L111">        when(legadoService.obtenerPorId(anyLong())).thenThrow(new RuntimeException(&quot;Legado no encontrado&quot;));</span>
+<span class="fc" id="L112">        when(legadoService.obtenerPorId(anyLong())).thenThrow(new RuntimeException(&quot;Legado no encontrado&quot;));</span>
 
-<span class="fc" id="L113">        mockMvc.perform(get(&quot;/api/legados/999&quot;)</span>
-<span class="fc" id="L114">                .with(csrf()))</span>
-<span class="fc" id="L115">                .andExpect(status().isNotFound());</span>
-<span class="fc" id="L116">    }</span>
+<span class="fc" id="L114">        mockMvc.perform(get(&quot;/api/legados/999&quot;)</span>
+<span class="fc" id="L115">                .with(csrf()))</span>
+<span class="fc" id="L116">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L117">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/archivo/{archivoOrigen} - Debe filtrar por archivo origen&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void obtenerPorArchivo_conArchivoValido_debeRetornarLista() throws Exception {
-<span class="fc" id="L122">        List&lt;LegadoSimpleDTO&gt; legados = Arrays.asList(legadoSimple);</span>
+<span class="fc" id="L123">        List&lt;LegadoSimpleDTO&gt; legados = Arrays.asList(legadoSimple);</span>
 
-<span class="fc" id="L124">        when(legadoService.obtenerPorArchivo(anyString())).thenReturn(legados);</span>
+<span class="fc" id="L125">        when(legadoService.obtenerPorArchivo(anyString())).thenReturn(legados);</span>
 
-<span class="fc" id="L126">        mockMvc.perform(get(&quot;/api/legados/archivo/legado.xlsx&quot;)</span>
-<span class="fc" id="L127">                .with(csrf()))</span>
-<span class="fc" id="L128">                .andExpect(status().isOk())</span>
-<span class="fc" id="L129">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
-<span class="fc" id="L130">                .andExpect(jsonPath(&quot;$[0].legadoID&quot;).value(1));</span>
-<span class="fc" id="L131">    }</span>
+<span class="fc" id="L127">        mockMvc.perform(get(&quot;/api/legados/archivo/legado.xlsx&quot;)</span>
+<span class="fc" id="L128">                .with(csrf()))</span>
+<span class="fc" id="L129">                .andExpect(status().isOk())</span>
+<span class="fc" id="L130">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
+<span class="fc" id="L131">                .andExpect(jsonPath(&quot;$[0].legadoID&quot;).value(1));</span>
+<span class="fc" id="L132">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/ficha/{ficha} - Debe buscar por número de ficha&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void obtenerPorFicha_conFichaValida_debeRetornarLista() throws Exception {
-<span class="fc" id="L137">        List&lt;LegadoSimpleDTO&gt; legados = Arrays.asList(legadoSimple);</span>
+<span class="fc" id="L138">        List&lt;LegadoSimpleDTO&gt; legados = Arrays.asList(legadoSimple);</span>
 
-<span class="fc" id="L139">        when(legadoService.obtenerPorFicha(anyString())).thenReturn(legados);</span>
+<span class="fc" id="L140">        when(legadoService.obtenerPorFicha(anyString())).thenReturn(legados);</span>
 
-<span class="fc" id="L141">        mockMvc.perform(get(&quot;/api/legados/ficha/F-2023-001&quot;)</span>
-<span class="fc" id="L142">                .with(csrf()))</span>
-<span class="fc" id="L143">                .andExpect(status().isOk())</span>
-<span class="fc" id="L144">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
-<span class="fc" id="L145">                .andExpect(jsonPath(&quot;$[0].legadoID&quot;).value(1));</span>
-<span class="fc" id="L146">    }</span>
+<span class="fc" id="L142">        mockMvc.perform(get(&quot;/api/legados/ficha/F-2023-001&quot;)</span>
+<span class="fc" id="L143">                .with(csrf()))</span>
+<span class="fc" id="L144">                .andExpect(status().isOk())</span>
+<span class="fc" id="L145">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
+<span class="fc" id="L146">                .andExpect(jsonPath(&quot;$[0].legadoID&quot;).value(1));</span>
+<span class="fc" id="L147">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/especies - Debe listar especies únicas&quot;)
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     void obtenerEspeciesUnicas_debeRetornarLista() throws Exception {
-<span class="fc" id="L152">        List&lt;String&gt; especies = Arrays.asList(&quot;Triticum aestivum&quot;, &quot;Hordeum vulgare&quot;);</span>
+<span class="fc" id="L153">        List&lt;String&gt; especies = Arrays.asList(&quot;Triticum aestivum&quot;, &quot;Hordeum vulgare&quot;);</span>
 
-<span class="fc" id="L154">        when(legadoService.obtenerEspeciesUnicas()).thenReturn(especies);</span>
+<span class="fc" id="L155">        when(legadoService.obtenerEspeciesUnicas()).thenReturn(especies);</span>
 
-<span class="fc" id="L156">        mockMvc.perform(get(&quot;/api/legados/especies&quot;)</span>
-<span class="fc" id="L157">                .with(csrf()))</span>
-<span class="fc" id="L158">                .andExpect(status().isOk())</span>
-<span class="fc" id="L159">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
-<span class="fc" id="L160">                .andExpect(jsonPath(&quot;$[0]&quot;).value(&quot;Triticum aestivum&quot;));</span>
-<span class="fc" id="L161">    }</span>
+<span class="fc" id="L157">        mockMvc.perform(get(&quot;/api/legados/especies&quot;)</span>
+<span class="fc" id="L158">                .with(csrf()))</span>
+<span class="fc" id="L159">                .andExpect(status().isOk())</span>
+<span class="fc" id="L160">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
+<span class="fc" id="L161">                .andExpect(jsonPath(&quot;$[0]&quot;).value(&quot;Triticum aestivum&quot;));</span>
+<span class="fc" id="L162">    }</span>
 
     @Test
     @DisplayName(&quot;DELETE /api/legados/{id} - Admin puede desactivar registro&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void desactivar_comoAdmin_debeRetornar200() throws Exception {
-<span class="fc" id="L167">        doNothing().when(legadoService).desactivar(anyLong());</span>
+<span class="fc" id="L168">        doNothing().when(legadoService).desactivar(anyLong());</span>
 
-<span class="fc" id="L169">        mockMvc.perform(delete(&quot;/api/legados/1&quot;)</span>
-<span class="fc" id="L170">                .with(csrf()))</span>
-<span class="fc" id="L171">                .andExpect(status().isOk());</span>
-<span class="fc" id="L172">    }</span>
+<span class="fc" id="L170">        mockMvc.perform(delete(&quot;/api/legados/1&quot;)</span>
+<span class="fc" id="L171">                .with(csrf()))</span>
+<span class="fc" id="L172">                .andExpect(status().isOk());</span>
+<span class="fc" id="L173">    }</span>
 
     @Test
     @DisplayName(&quot;DELETE /api/legados/{id} - Debe manejar error al desactivar&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void desactivar_conError_debeRetornar404() throws Exception {
-<span class="fc" id="L178">        doThrow(new RuntimeException(&quot;Legado no encontrado&quot;)).when(legadoService).desactivar(anyLong());</span>
+<span class="fc" id="L179">        doThrow(new RuntimeException(&quot;Legado no encontrado&quot;)).when(legadoService).desactivar(anyLong());</span>
 
-<span class="fc" id="L180">        mockMvc.perform(delete(&quot;/api/legados/999&quot;)</span>
-<span class="fc" id="L181">                .with(csrf()))</span>
-<span class="fc" id="L182">                .andExpect(status().isNotFound());</span>
-<span class="fc" id="L183">    }</span>
+<span class="fc" id="L181">        mockMvc.perform(delete(&quot;/api/legados/999&quot;)</span>
+<span class="fc" id="L182">                .with(csrf()))</span>
+<span class="fc" id="L183">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L184">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/listado - Debe permitir búsqueda por término&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void obtenerLegadosPaginadas_conSearchTerm_debeRetornarResultados() throws Exception {
-<span class="fc" id="L189">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
-<span class="fc" id="L190">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
+<span class="fc" id="L190">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
+<span class="fc" id="L191">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
 
-<span class="fc" id="L192">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
+<span class="fc" id="L193">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
 
-<span class="fc" id="L194">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
-<span class="fc" id="L195">                .param(&quot;search&quot;, &quot;LOTE-2023&quot;)</span>
-<span class="fc" id="L196">                .with(csrf()))</span>
-<span class="fc" id="L197">                .andExpect(status().isOk())</span>
-<span class="fc" id="L198">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
-<span class="fc" id="L199">    }</span>
+<span class="fc" id="L195">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
+<span class="fc" id="L196">                .param(&quot;search&quot;, &quot;LOTE-2023&quot;)</span>
+<span class="fc" id="L197">                .with(csrf()))</span>
+<span class="fc" id="L198">                .andExpect(status().isOk())</span>
+<span class="fc" id="L199">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
+<span class="fc" id="L200">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/listado - Debe permitir filtro por especie&quot;)
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     void obtenerLegadosPaginadas_conEspecie_debeRetornarResultados() throws Exception {
-<span class="fc" id="L205">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
-<span class="fc" id="L206">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
+<span class="fc" id="L206">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
+<span class="fc" id="L207">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
 
-<span class="fc" id="L208">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
+<span class="fc" id="L209">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
 
-<span class="fc" id="L210">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
-<span class="fc" id="L211">                .param(&quot;especie&quot;, &quot;Triticum aestivum&quot;)</span>
-<span class="fc" id="L212">                .with(csrf()))</span>
-<span class="fc" id="L213">                .andExpect(status().isOk())</span>
-<span class="fc" id="L214">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
-<span class="fc" id="L215">    }</span>
+<span class="fc" id="L211">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
+<span class="fc" id="L212">                .param(&quot;especie&quot;, &quot;Triticum aestivum&quot;)</span>
+<span class="fc" id="L213">                .with(csrf()))</span>
+<span class="fc" id="L214">                .andExpect(status().isOk())</span>
+<span class="fc" id="L215">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
+<span class="fc" id="L216">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/legados/listado - Debe permitir filtro por rango de fechas&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void obtenerLegadosPaginadas_conRangoFechas_debeRetornarResultados() throws Exception {
-<span class="fc" id="L221">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
-<span class="fc" id="L222">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
+<span class="fc" id="L222">        List&lt;LegadoListadoDTO&gt; legados = Arrays.asList(legadoListado);</span>
+<span class="fc" id="L223">        Page&lt;LegadoListadoDTO&gt; page = new PageImpl&lt;&gt;(legados);</span>
 
-<span class="fc" id="L224">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
+<span class="fc" id="L225">        when(legadoService.obtenerLegadosPaginadas(any(), any(), any(), any(), any())).thenReturn(page);</span>
 
-<span class="fc" id="L226">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
-<span class="fc" id="L227">                .param(&quot;fechaReciboInicio&quot;, &quot;2023-01-01&quot;)</span>
-<span class="fc" id="L228">                .param(&quot;fechaReciboFin&quot;, &quot;2023-12-31&quot;)</span>
-<span class="fc" id="L229">                .with(csrf()))</span>
-<span class="fc" id="L230">                .andExpect(status().isOk())</span>
-<span class="fc" id="L231">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
-<span class="fc" id="L232">    }</span>
+<span class="fc" id="L227">        mockMvc.perform(get(&quot;/api/legados/listado&quot;)</span>
+<span class="fc" id="L228">                .param(&quot;fechaReciboInicio&quot;, &quot;2023-01-01&quot;)</span>
+<span class="fc" id="L229">                .param(&quot;fechaReciboFin&quot;, &quot;2023-12-31&quot;)</span>
+<span class="fc" id="L230">                .with(csrf()))</span>
+<span class="fc" id="L231">                .andExpect(status().isOk())</span>
+<span class="fc" id="L232">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
+<span class="fc" id="L233">    }</span>
 }
 
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

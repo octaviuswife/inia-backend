@@ -56,11 +56,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 <span class="fc" id="L57">        reporteGeneralDTO = new ReporteGeneralDTO(</span>
 <span class="fc" id="L58">            25L,</span>
-<span class="fc" id="L59">            analisisPorPeriodo,</span>
-<span class="fc" id="L60">            analisisPorEstado,</span>
-<span class="fc" id="L61">            porcentajeCompletitud,</span>
+            analisisPorPeriodo,
+            analisisPorEstado,
+            porcentajeCompletitud,
 <span class="fc" id="L62">            7.5,</span>
-<span class="fc" id="L63">            topAnalisisProblemas</span>
+            topAnalisisProblemas
         );
 
 <span class="fc" id="L66">        Map&lt;String, Double&gt; mediaGerminacionPorEspecie = new HashMap&lt;&gt;();</span>
@@ -74,9 +74,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L74">        tiempoPromedioUltimoConteo.put(&quot;Trigo&quot;, 10.0);</span>
 
 <span class="fc" id="L76">        reporteGerminacionDTO = new ReporteGerminacionDTO(</span>
-<span class="fc" id="L77">            mediaGerminacionPorEspecie,</span>
-<span class="fc" id="L78">            tiempoPromedioPrimerConteo,</span>
-<span class="fc" id="L79">            tiempoPromedioUltimoConteo,</span>
+            mediaGerminacionPorEspecie,
+            tiempoPromedioPrimerConteo,
+            tiempoPromedioUltimoConteo,
 <span class="fc" id="L80">            15L</span>
         );
 
@@ -100,10 +100,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L100">        porcentajeCumpleEstandar.put(&quot;Trigo&quot;, 90.0);</span>
 
 <span class="fc" id="L102">        reportePurezaDTO = new ReportePurezaDTO(</span>
-<span class="fc" id="L103">            contaminantesPorEspecie,</span>
-<span class="fc" id="L104">            porcentajeMalezas,</span>
-<span class="fc" id="L105">            porcentajeOtrasSemillas,</span>
-<span class="fc" id="L106">            porcentajeCumpleEstandar,</span>
+            contaminantesPorEspecie,
+            porcentajeMalezas,
+            porcentajeOtrasSemillas,
+            porcentajeCumpleEstandar,
 <span class="fc" id="L107">            100L</span>
         );
 
@@ -111,7 +111,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L111">        mediaViabilidadPorEspecie.put(&quot;Trigo&quot;, 88.0);</span>
 
 <span class="fc" id="L113">        reporteTetrazolioDTO = new ReporteTetrazolioDTO(</span>
-<span class="fc" id="L114">            mediaViabilidadPorEspecie,</span>
+            mediaViabilidadPorEspecie,
 <span class="fc" id="L115">            20L</span>
         );
 <span class="fc" id="L117">    }</span>

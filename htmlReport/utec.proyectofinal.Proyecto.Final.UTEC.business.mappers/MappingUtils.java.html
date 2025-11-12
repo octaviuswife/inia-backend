@@ -24,13 +24,13 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
     }
 
     public static EspecieDTO toEspecieDTO(Especie especie) {
-<span class="nc" id="L27">        EspecieDTO dto = new EspecieDTO();</span>
-<span class="nc" id="L28">        dto.setEspecieID(especie.getEspecieID());</span>
-<span class="nc" id="L29">        dto.setNombreComun(especie.getNombreComun());</span>
-<span class="nc" id="L30">        dto.setNombreCientifico(especie.getNombreCientifico());</span>
-<span class="nc" id="L31">        dto.setActivo(especie.getActivo());</span>
+<span class="fc" id="L27">        EspecieDTO dto = new EspecieDTO();</span>
+<span class="fc" id="L28">        dto.setEspecieID(especie.getEspecieID());</span>
+<span class="fc" id="L29">        dto.setNombreComun(especie.getNombreComun());</span>
+<span class="fc" id="L30">        dto.setNombreCientifico(especie.getNombreCientifico());</span>
+<span class="fc" id="L31">        dto.setActivo(especie.getActivo());</span>
         // Cultivares se puede agregar si es necesario
-<span class="nc" id="L33">        return dto;</span>
+<span class="fc" id="L33">        return dto;</span>
     }
 
     public static ListadoDTO toListadoDTO(Listado listado) {
@@ -44,8 +44,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
 <span class="fc" id="L44">            dto.setCatalogo(toCatalogoDTO(listado.getCatalogo()));</span>
         }
         
-<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if (listado.getEspecie() != null) {</span>
-<span class="nc" id="L48">            dto.setEspecie(toEspecieDTO(listado.getEspecie()));</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (listado.getEspecie() != null) {</span>
+<span class="fc" id="L48">            dto.setEspecie(toEspecieDTO(listado.getEspecie()));</span>
         }
         
 <span class="fc" id="L51">        return dto;</span>
@@ -59,19 +59,19 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
 
 <span class="fc bfc" id="L60" title="All 2 branches covered.">        if (solicitud.getIdCatalogo() != null) {</span>
 <span class="fc" id="L61">            Optional&lt;MalezasCatalogo&gt; catalogoOpt = catalogoRepository.findById(solicitud.getIdCatalogo());</span>
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            if (catalogoOpt.isPresent()) {</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (catalogoOpt.isPresent()) {</span>
 <span class="fc" id="L63">                listado.setCatalogo(catalogoOpt.get());</span>
 <span class="fc" id="L64">            } else {</span>
-<span class="nc" id="L65">                throw new RuntimeException(&quot;Catálogo no encontrado con ID: &quot; + solicitud.getIdCatalogo());</span>
+<span class="fc" id="L65">                throw new RuntimeException(&quot;Catálogo no encontrado con ID: &quot; + solicitud.getIdCatalogo());</span>
             }
         }
         
-<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (solicitud.getIdEspecie() != null) {</span>
-<span class="nc" id="L70">            Optional&lt;Especie&gt; especieOpt = especieRepository.findById(solicitud.getIdEspecie());</span>
-<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (especieOpt.isPresent()) {</span>
-<span class="nc" id="L72">                listado.setEspecie(especieOpt.get());</span>
-<span class="nc" id="L73">            } else {</span>
-<span class="nc" id="L74">                throw new RuntimeException(&quot;Especie no encontrada con ID: &quot; + solicitud.getIdEspecie());</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (solicitud.getIdEspecie() != null) {</span>
+<span class="fc" id="L70">            Optional&lt;Especie&gt; especieOpt = especieRepository.findById(solicitud.getIdEspecie());</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (especieOpt.isPresent()) {</span>
+<span class="fc" id="L72">                listado.setEspecie(especieOpt.get());</span>
+<span class="fc" id="L73">            } else {</span>
+<span class="fc" id="L74">                throw new RuntimeException(&quot;Especie no encontrada con ID: &quot; + solicitud.getIdEspecie());</span>
             }
         }
         

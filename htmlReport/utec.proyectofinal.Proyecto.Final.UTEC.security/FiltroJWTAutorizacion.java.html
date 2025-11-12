@@ -27,42 +27,47 @@ import java.util.stream.Collectors;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-<span class="nc" id="L30">            String token = extraerToken(request);</span>
-<span class="nc bnc" id="L31" title="All 4 branches missed.">            if (token != null &amp;&amp; !token.isEmpty()) {</span>
-<span class="nc" id="L32">                Claims claims = validarToken(token);</span>
-<span class="nc bnc" id="L33" title="All 2 branches missed.">                if (claims.get(&quot;authorities&quot;) != null) {</span>
-<span class="nc" id="L34">                    crearAutenticacion(claims);</span>
-<span class="nc" id="L35">                } else {</span>
-<span class="nc" id="L36">                    SecurityContextHolder.clearContext();</span>
+<span class="fc" id="L30">            String token = extraerToken(request);</span>
+<span class="fc bfc" id="L31" title="All 4 branches covered.">            if (token != null &amp;&amp; !token.isEmpty()) {</span>
+<span class="fc" id="L32">                Claims claims = validarToken(token);</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">                if (claims.get(&quot;authorities&quot;) != null) {</span>
+<span class="fc" id="L34">                    crearAutenticacion(claims);</span>
+                } else {
+<span class="fc" id="L36">                    SecurityContextHolder.clearContext();</span>
                 }
-<span class="nc" id="L38">            } else {</span>
-<span class="nc" id="L39">                SecurityContextHolder.clearContext();</span>
+<span class="fc" id="L38">            } else {</span>
+<span class="fc" id="L39">                SecurityContextHolder.clearContext();</span>
             }
-<span class="nc" id="L41">            filterChain.doFilter(request, response);</span>
-<span class="nc" id="L42">        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException ex) {</span>
-            // Log del error para debugging
-<span class="nc" id="L44">            System.err.println(&quot;Error JWT: &quot; + ex.getMessage());</span>
-<span class="nc" id="L45">            SecurityContextHolder.clearContext();</span>
+<span class="fc" id="L41">            filterChain.doFilter(request, response);</span>
+<span class="fc" id="L42">        } catch (JwtException ex) {</span>
+            // Captura TODAS las excepciones de JWT: 
+            // - ExpiredJwtException (token expirado)
+            // - UnsupportedJwtException (formato no soportado)
+            // - MalformedJwtException (token malformado)
+            // - SignatureException (firma incorrecta)
+            // - etc.
+<span class="fc" id="L49">            System.err.println(&quot;Error JWT: &quot; + ex.getMessage());</span>
+<span class="fc" id="L50">            SecurityContextHolder.clearContext();</span>
             // Continuar con el filtro para que Spring Security maneje la autenticación fallida
-<span class="nc" id="L47">            filterChain.doFilter(request, response);</span>
-<span class="nc" id="L48">            return;</span>
-        }
-<span class="nc" id="L50">    }</span>
+<span class="fc" id="L52">            filterChain.doFilter(request, response);</span>
+<span class="fc" id="L53">            return;</span>
+<span class="fc" id="L54">        }</span>
+<span class="fc" id="L55">    }</span>
 
     private void crearAutenticacion(Claims claims) {
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L54">        List&lt;String&gt; autorizaciones = (List&lt;String&gt;) claims.get(&quot;authorities&quot;);</span>
+<span class="fc" id="L59">        List&lt;String&gt; autorizaciones = (List&lt;String&gt;) claims.get(&quot;authorities&quot;);</span>
         
         
         // Agregar prefijo ROLE_ para que funcione con hasRole()
-<span class="nc" id="L58">        List&lt;SimpleGrantedAuthority&gt; authorities = autorizaciones.stream()</span>
-<span class="nc" id="L59">                .map(role -&gt; new SimpleGrantedAuthority(&quot;ROLE_&quot; + role))</span>
-<span class="nc" id="L60">                .collect(Collectors.toList());</span>
+<span class="fc" id="L63">        List&lt;SimpleGrantedAuthority&gt; authorities = autorizaciones.stream()</span>
+<span class="fc" id="L64">                .map(role -&gt; new SimpleGrantedAuthority(&quot;ROLE_&quot; + role))</span>
+<span class="fc" id="L65">                .collect(Collectors.toList());</span>
         
         
-<span class="nc" id="L63">        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);</span>
-<span class="nc" id="L64">        SecurityContextHolder.getContext().setAuthentication(authenticationToken);</span>
-<span class="nc" id="L65">    }</span>
+<span class="fc" id="L68">        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);</span>
+<span class="fc" id="L69">        SecurityContextHolder.getContext().setAuthentication(authenticationToken);</span>
+<span class="fc" id="L70">    }</span>
 
     /**
      * Extrae el token JWT desde cookies (preferible) o desde el header Authorization (fallback).
@@ -70,32 +75,32 @@ import java.util.stream.Collectors;
     private String extraerToken(HttpServletRequest request) {
         
         // 1) Intentar obtener desde cookie HttpOnly (método seguro)
-<span class="nc" id="L73">        Cookie[] cookies = request.getCookies();</span>
-<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (cookies != null) {</span>
-<span class="nc bnc" id="L75" title="All 2 branches missed.">            for (Cookie cookie : cookies) {</span>
-<span class="nc bnc" id="L76" title="All 2 branches missed.">                if (ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {</span>
-<span class="nc" id="L77">                    return cookie.getValue();</span>
+<span class="fc" id="L78">        Cookie[] cookies = request.getCookies();</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (cookies != null) {</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            for (Cookie cookie : cookies) {</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">                if (ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {</span>
+<span class="fc" id="L82">                    return cookie.getValue();</span>
                 }
             }
-<span class="nc" id="L80">        } else {</span>
-<span class="nc" id="L81">            System.out.println(&quot;No se encontraron cookies en la solicitud.&quot;);</span>
+        } else {
+<span class="fc" id="L86">            System.out.println(&quot;No se encontraron cookies en la solicitud.&quot;);</span>
         }
         
         // 2) Fallback: obtener desde header Authorization (compatibilidad temporal)
-<span class="nc" id="L85">        String authHeader = request.getHeader(&quot;Authorization&quot;);</span>
-<span class="nc bnc" id="L86" title="All 4 branches missed.">        if (authHeader != null &amp;&amp; authHeader.startsWith(&quot;Bearer &quot;)) {</span>
-<span class="nc" id="L87">            return authHeader.replace(&quot;Bearer &quot;, &quot;&quot;);</span>
+<span class="fc" id="L90">        String authHeader = request.getHeader(&quot;Authorization&quot;);</span>
+<span class="fc bfc" id="L91" title="All 4 branches covered.">        if (authHeader != null &amp;&amp; authHeader.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="fc" id="L92">            return authHeader.replace(&quot;Bearer &quot;, &quot;&quot;);</span>
         }
         
-<span class="nc" id="L90">        return null;</span>
+<span class="fc" id="L95">        return null;</span>
     }
 
     private Claims validarToken(String token) {
-<span class="nc" id="L94">        return Jwts.parser()</span>
-<span class="nc" id="L95">                .verifyWith(secretKey)</span>
-<span class="nc" id="L96">                .build()</span>
-<span class="nc" id="L97">                .parseSignedClaims(token)</span>
-<span class="nc" id="L98">                .getPayload();</span>
+<span class="fc" id="L99">        return Jwts.parser()</span>
+<span class="fc" id="L100">                .verifyWith(secretKey)</span>
+<span class="fc" id="L101">                .build()</span>
+<span class="fc" id="L102">                .parseSignedClaims(token)</span>
+<span class="fc" id="L103">                .getPayload();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

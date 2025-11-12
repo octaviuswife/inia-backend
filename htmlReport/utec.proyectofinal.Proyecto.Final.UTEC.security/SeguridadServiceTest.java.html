@@ -202,7 +202,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L202">        verify(usuarioRepository).save(argThat(usuario -&gt; {</span>
 <span class="fc" id="L203">            LocalDateTime fechaConexion = usuario.getFechaUltimaConexion();</span>
 <span class="pc bpc" id="L204" title="1 of 2 branches missed.">            return fechaConexion != null &amp;&amp; </span>
-<span class="pc bpc" id="L205" title="3 of 4 branches missed.">                   (fechaConexion.isEqual(antes) || fechaConexion.isAfter(antes));</span>
+<span class="pc bpc" id="L205" title="2 of 4 branches missed.">                   (fechaConexion.isEqual(antes) || fechaConexion.isAfter(antes));</span>
         }));
 <span class="fc" id="L207">    }</span>
 

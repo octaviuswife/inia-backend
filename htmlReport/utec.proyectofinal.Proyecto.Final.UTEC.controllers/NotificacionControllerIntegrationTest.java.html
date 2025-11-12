@@ -88,7 +88,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L88">        Page&lt;NotificacionDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L89">            Arrays.asList(notificacionDTO),</span>
 <span class="fc" id="L90">            PageRequest.of(0, 10),</span>
-<span class="fc" id="L91">            1</span>
+            1
         );
         
 <span class="fc" id="L94">        when(notificacionService.obtenerNotificacionesPorUsuarioConValidacion(eq(1L), any())).thenReturn(page);</span>
@@ -110,7 +110,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L110">        Page&lt;NotificacionDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L111">            Arrays.asList(notificacionDTO),</span>
 <span class="fc" id="L112">            PageRequest.of(0, 10),</span>
-<span class="fc" id="L113">            1</span>
+            1
         );
         
 <span class="fc" id="L116">        when(notificacionService.obtenerMisNotificaciones(any())).thenReturn(page);</span>
@@ -242,7 +242,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L242">        Page&lt;NotificacionDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L243">            Arrays.asList(notificacionDTO),</span>
 <span class="fc" id="L244">            PageRequest.of(0, 10),</span>
-<span class="fc" id="L245">            1</span>
+            1
         );
         
 <span class="fc" id="L248">        when(notificacionService.obtenerMisNotificaciones(any())).thenReturn(page);</span>
@@ -261,7 +261,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L261">        Page&lt;NotificacionDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L262">            Arrays.asList(notificacionDTO),</span>
 <span class="fc" id="L263">            PageRequest.of(2, 5),</span>
-<span class="fc" id="L264">            20</span>
+            20
         );
         
 <span class="fc" id="L267">        when(notificacionService.obtenerMisNotificaciones(any())).thenReturn(page);</span>
@@ -282,7 +282,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L282">        Page&lt;NotificacionDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L283">            Arrays.asList(notificacionDTO),</span>
 <span class="fc" id="L284">            PageRequest.of(1, 15),</span>
-<span class="fc" id="L285">            30</span>
+            30
         );
         
 <span class="fc" id="L288">        when(notificacionService.obtenerNotificacionesPorUsuarioConValidacion(eq(1L), any())).thenReturn(page);</span>
