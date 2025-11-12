@@ -93,8 +93,9 @@ public class LoteService {
         try {
             System.out.println("Creando lote con solicitud: " + solicitud);
             
-            // Validar fechaRecibo no sea posterior a la fecha actual
+            // Validar fechas no sean posteriores a la fecha actual
             validarFechaRecibo(solicitud.getFechaRecibo());
+            validarFechaCosecha(solicitud.getFechaCosecha());
             
             Lote lote = mapearSolicitudAEntidad(solicitud);
             lote.setActivo(true);
@@ -120,8 +121,9 @@ public class LoteService {
                 throw new RuntimeException("No se puede editar un lote inactivo. Debe reactivarlo primero.");
             }
             
-            // Validar fechaRecibo no sea posterior a la fecha actual
+            // Validar fechas no sean posteriores a la fecha actual
             validarFechaRecibo(solicitud.getFechaRecibo());
+            validarFechaCosecha(solicitud.getFechaCosecha());
             
             // Validar cambios en tipos de análisis antes de actualizar
             if (solicitud.getTiposAnalisisAsignados() != null) {
@@ -685,10 +687,16 @@ public class LoteService {
         
         return dto;
     }
-
+    
     private void validarFechaRecibo(LocalDate fechaRecibo) {
         if (fechaRecibo != null && fechaRecibo.isAfter(LocalDate.now())) {
             throw new RuntimeException("La fecha de recibo no puede ser posterior a la fecha actual");
+        }
+    }
+    
+    private void validarFechaCosecha(LocalDate fechaCosecha) {
+        if (fechaCosecha != null && fechaCosecha.isAfter(LocalDate.now())) {
+            throw new RuntimeException("La fecha de cosecha no puede ser posterior a la fecha actual");
         }
     }
     

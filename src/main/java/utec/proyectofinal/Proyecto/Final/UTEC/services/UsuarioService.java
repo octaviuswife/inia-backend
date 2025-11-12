@@ -507,4 +507,28 @@ public class UsuarioService {
         dto.setNombreCompleto(usuario.getNombreCompleto());
         return dto;
     }
+
+    /**
+     * Verifica si un nombre de usuario está disponible
+     * @param nombre el nombre de usuario a verificar
+     * @return true si está disponible, false si ya existe
+     */
+    public boolean esNombreUsuarioDisponible(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return false;
+        }
+        return usuarioRepository.findByNombre(nombre.trim()).isEmpty();
+    }
+
+    /**
+     * Verifica si un email está disponible
+     * @param email el email a verificar
+     * @return true si está disponible, false si ya existe
+     */
+    public boolean esEmailDisponible(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        return usuarioRepository.findByEmail(email.trim()).isEmpty();
+    }
 }

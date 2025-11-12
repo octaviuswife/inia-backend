@@ -452,4 +452,30 @@ public class AuthController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    // === VALIDACIONES DE UNICIDAD ===
+
+    @GetMapping("/check-username")
+    @Operation(summary = "Verificar disponibilidad de nombre de usuario", description = "Verifica si un nombre de usuario está disponible")
+    public ResponseEntity<?> verificarNombreUsuario(@RequestParam String nombre) {
+        try {
+            boolean disponible = usuarioService.esNombreUsuarioDisponible(nombre);
+            return ResponseEntity.ok(Map.of("disponible", disponible));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al verificar nombre de usuario"));
+        }
+    }
+
+    @GetMapping("/check-email")
+    @Operation(summary = "Verificar disponibilidad de email", description = "Verifica si un email está disponible")
+    public ResponseEntity<?> verificarEmail(@RequestParam String email) {
+        try {
+            boolean disponible = usuarioService.esEmailDisponible(email);
+            return ResponseEntity.ok(Map.of("disponible", disponible));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al verificar email"));
+        }
+    }
 }
