@@ -66,6 +66,9 @@ public class UsuarioService {
             throw new RuntimeException("El email ya está registrado");
         }
 
+        // Validar contraseña
+        validarContrasenia(solicitud.getContrasenia());
+
         // Crear nuevo usuario en estado PENDIENTE
         Usuario usuario = new Usuario();
         usuario.setNombre(solicitud.getNombre());
@@ -321,6 +324,14 @@ public class UsuarioService {
                 throw new RuntimeException("Contraseña actual incorrecta");
             }
             
+            // Validar que la nueva contraseña no sea igual a la actual
+            if (passwordEncoder.matches(solicitud.getContraseniaNueva(), usuario.getContrasenia())) {
+                throw new RuntimeException("La nueva contraseña no puede ser igual a la contraseña actual");
+            }
+            
+            // Validar nueva contraseña
+            validarContrasenia(solicitud.getContraseniaNueva());
+            
             usuario.setContrasenia(passwordEncoder.encode(solicitud.getContraseniaNueva()));
         }
 
@@ -439,15 +450,13 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
-        // Validar que la nueva contraseña no esté vacía
-        if (nuevaContrasenia == null || nuevaContrasenia.trim().isEmpty()) {
-            throw new RuntimeException("La nueva contraseña no puede estar vacía");
+        // Validar que la nueva contraseña no sea igual a la actual
+        if (passwordEncoder.matches(nuevaContrasenia, usuario.getContrasenia())) {
+            throw new RuntimeException("La nueva contraseña no puede ser igual a la contraseña actual");
         }
         
-        // Validar longitud mínima de contraseña
-        if (nuevaContrasenia.length() < 8) {
-            throw new RuntimeException("La contraseña debe tener al menos 8 caracteres");
-        }
+        // Validar nueva contraseña
+        validarContrasenia(nuevaContrasenia);
         
         // Hashear y guardar la nueva contraseña
         usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));
@@ -457,6 +466,31 @@ public class UsuarioService {
     }
 
     // === Métodos auxiliares ===
+
+    /**
+     * Valida que la contraseña cumpla con los requisitos de seguridad
+     * @param contrasenia la contraseña a validar
+     * @throws RuntimeException si la contraseña no cumple los requisitos
+     */
+    private void validarContrasenia(String contrasenia) {
+        if (contrasenia == null || contrasenia.trim().isEmpty()) {
+            throw new RuntimeException("La contraseña no puede estar vacía");
+        }
+        
+        if (contrasenia.length() < 8) {
+            throw new RuntimeException("La contraseña debe tener al menos 8 caracteres");
+        }
+        
+        // Validar que contenga al menos una letra (a-z, A-Z)
+        if (!contrasenia.matches(".*[a-zA-Z].*")) {
+            throw new RuntimeException("La contraseña debe contener al menos una letra");
+        }
+        
+        // Validar que contenga al menos un número (0-9)
+        if (!contrasenia.matches(".*\\d.*")) {
+            throw new RuntimeException("La contraseña debe contener al menos un número");
+        }
+    }
 
     private Usuario obtenerUsuarioActual() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
