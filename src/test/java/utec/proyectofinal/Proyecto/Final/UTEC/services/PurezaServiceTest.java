@@ -14,6 +14,8 @@ import org.springframework.data.jpa.domain.Specification;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pureza;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasCatalogoRepository;
@@ -544,6 +546,19 @@ class PurezaServiceTest {
     @DisplayName("Mapear entidad a listado DTO - con lote y especie completos")
     void mapearEntidadAListadoDTO_conLoteYEspecieCompletos() {
         // ARRANGE
+        Especie especie = new Especie();
+        especie.setEspecieID(1L);
+        especie.setNombreComun("Especie Test");
+        especie.setNombreCientifico("Especie Cientifica Test");
+        
+        Cultivar cultivar = new Cultivar();
+        cultivar.setCultivarID(1L);
+        cultivar.setNombre("Cultivar Test");
+        cultivar.setEspecie(especie);
+        
+        lote.setNomLote("LOTE-001");
+        lote.setCultivar(cultivar);
+        
         List<Pureza> listaPureza = List.of(pureza);
         Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
         when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
@@ -557,6 +572,116 @@ class PurezaServiceTest {
         // ASSERT
         assertNotNull(resultado);
         assertFalse(resultado.isEmpty());
+        PurezaListadoDTO dto = resultado.getContent().get(0);
+        assertEquals(1L, dto.getAnalisisID());
+        assertEquals("LOTE-001", dto.getLote());
+        assertEquals("Especie Test", dto.getEspecie());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - con nombre común vacío usa nombre científico")
+    void mapearEntidadAListadoDTO_nombreComunVacio_usaNombreCientifico() {
+        // ARRANGE
+        Especie especie = new Especie();
+        especie.setEspecieID(1L);
+        especie.setNombreComun(null);
+        especie.setNombreCientifico("Nombre Científico Test");
+        
+        Cultivar cultivar = new Cultivar();
+        cultivar.setCultivarID(1L);
+        cultivar.setNombre("Cultivar Test");
+        cultivar.setEspecie(especie);
+        
+        lote.setCultivar(cultivar);
+        
+        List<Pureza> listaPureza = List.of(pureza);
+        Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
+        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(page);
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
+            .thenReturn(new ArrayList<>());
+
+        // ACT
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertFalse(resultado.isEmpty());
+        PurezaListadoDTO dto = resultado.getContent().get(0);
+        assertEquals("Nombre Científico Test", dto.getEspecie());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - sin cultivar no debe fallar")
+    void mapearEntidadAListadoDTO_sinCultivar_noDebeFallar() {
+        // ARRANGE
+        lote.setCultivar(null);
+        
+        List<Pureza> listaPureza = List.of(pureza);
+        Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
+        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(page);
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
+            .thenReturn(new ArrayList<>());
+
+        // ACT
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertFalse(resultado.isEmpty());
+        PurezaListadoDTO dto = resultado.getContent().get(0);
+        assertNull(dto.getEspecie());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - sin lote no debe fallar")
+    void mapearEntidadAListadoDTO_sinLote_noDebeFallar() {
+        // ARRANGE
+        pureza.setLote(null);
+        
+        List<Pureza> listaPureza = List.of(pureza);
+        Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
+        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(page);
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
+            .thenReturn(new ArrayList<>());
+
+        // ACT
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertFalse(resultado.isEmpty());
+        PurezaListadoDTO dto = resultado.getContent().get(0);
+        assertNull(dto.getIdLote());
+        assertNull(dto.getLote());
+    }
+
+    @Test
+    @DisplayName("Mapear entidad a listado DTO - con historial de usuario")
+    void mapearEntidadAListadoDTO_conHistorial_debeMostrarUsuario() {
+        // ARRANGE
+        var historial = new ArrayList<utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.AnalisisHistorialDTO>();
+        var registro = new utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.AnalisisHistorialDTO();
+        registro.setUsuario("usuario_test@test.com");
+        historial.add(registro);
+        
+        List<Pureza> listaPureza = List.of(pureza);
+        Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
+        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+            .thenReturn(page);
+        when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
+            .thenReturn(historial);
+
+        // ACT
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertFalse(resultado.isEmpty());
+        PurezaListadoDTO dto = resultado.getContent().get(0);
+        assertEquals("usuario_test@test.com", dto.getUsuarioCreador());
     }
 
     @Test
