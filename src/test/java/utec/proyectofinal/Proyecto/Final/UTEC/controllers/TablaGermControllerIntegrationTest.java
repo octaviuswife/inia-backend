@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -306,5 +307,70 @@ class TablaGermControllerIntegrationTest {
                 GERMINACION_ID, TABLA_ID)
                 .with(csrf()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(roles = "OBSERVADOR")
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/contar - Error al contar")
+    void contarTablas_debeRetornar500ConError() throws Exception {
+        when(tablaGermService.contarTablasPorGerminacion(GERMINACION_ID))
+            .thenThrow(new RuntimeException("Error en servicio"));
+
+        mockMvc.perform(get("/api/germinacion/{germinacionId}/tabla/contar", GERMINACION_ID)
+                .with(csrf()))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @WithMockUser(roles = "ANALISTA")
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/puede-ingresar-porcentajes - Error")
+    void puedeIngresarPorcentajes_debeRetornar500ConError() throws Exception {
+        when(tablaGermService.puedeIngresarPorcentajes(TABLA_ID))
+            .thenThrow(new RuntimeException("Error verificando permisos"));
+
+        mockMvc.perform(get("/api/germinacion/{germinacionId}/tabla/{tablaId}/puede-ingresar-porcentajes", 
+                GERMINACION_ID, TABLA_ID)
+                .with(csrf()))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @WithMockUser(roles = "ANALISTA")
+    @DisplayName("PUT /api/germinacion/{germinacionId}/tabla/{tablaId} - Error 404 al actualizar")
+    void actualizarTabla_debeRetornar404CuandoNoExiste() throws Exception {
+        when(tablaGermService.actualizarTablaGerm(eq(999L), any(TablaGermRequestDTO.class)))
+            .thenThrow(new RuntimeException("Tabla no encontrada"));
+
+        mockMvc.perform(put("/api/germinacion/{germinacionId}/tabla/{tablaId}", 
+                GERMINACION_ID, 999L)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("DELETE /api/germinacion/{germinacionId}/tabla/{tablaId} - Error 404 al eliminar")
+    void eliminarTabla_debeRetornar404CuandoNoExiste() throws Exception {
+        doThrow(new RuntimeException("Tabla no encontrada"))
+            .when(tablaGermService).eliminarTablaGerm(999L);
+
+        mockMvc.perform(delete("/api/germinacion/{germinacionId}/tabla/{tablaId}", 
+                GERMINACION_ID, 999L)
+                .with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "OBSERVADOR")
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla - Error al obtener lista")
+    void obtenerTablasPorGerminacion_debeRetornar500ConError() throws Exception {
+        when(tablaGermService.obtenerTablasPorGerminacion(GERMINACION_ID))
+            .thenThrow(new RuntimeException("Error en servicio"));
+
+        mockMvc.perform(get("/api/germinacion/{germinacionId}/tabla", GERMINACION_ID)
+                .with(csrf()))
+                .andExpect(status().isInternalServerError());
     }
 }

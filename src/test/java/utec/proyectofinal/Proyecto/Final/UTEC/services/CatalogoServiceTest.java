@@ -314,4 +314,444 @@ class CatalogoServiceTest {
         assertEquals("Nacional", resultado.getValor());
         verify(catalogoRepository, times(1)).save(any(Catalogo.class));
     }
+
+    @Test
+    @DisplayName("Obtener entidad por ID - debe retornar la entidad si existe")
+    void obtenerEntidadPorId_cuandoExiste_debeRetornarEntidad() {
+        // ARRANGE
+        when(catalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));
+
+        // ACT
+        Catalogo resultado = catalogoService.obtenerEntidadPorId(1L);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.getId());
+        assertEquals("10%", resultado.getValor());
+    }
+
+    @Test
+    @DisplayName("Obtener entidad por ID inexistente - debe retornar null")
+    void obtenerEntidadPorId_cuandoNoExiste_debeRetornarNull() {
+        // ARRANGE
+        when(catalogoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT
+        Catalogo resultado = catalogoService.obtenerEntidadPorId(999L);
+
+        // ASSERT
+        assertNull(resultado);
+    }
+
+    @Test
+    @DisplayName("Eliminar físicamente - debe eliminar el registro de la base de datos")
+    void eliminarFisicamente_debeEliminarRegistro() {
+        // ARRANGE
+        doNothing().when(catalogoRepository).deleteById(1L);
+
+        // ACT
+        catalogoService.eliminarFisicamente(1L);
+
+        // ASSERT
+        verify(catalogoRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados - debe retornar página de catálogos activos")
+    void obtenerCatalogosPaginados_debeRetornarPaginaActivos() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginados(pageable);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+        verify(catalogoRepository, times(1)).findByActivoTrueOrderByTipoAscValorAsc(pageable);
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtro activos - debe retornar solo activos")
+    void obtenerCatalogosPaginadosConFiltro_activos_debeRetornarSoloActivos() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltro(pageable, "activos");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+        verify(catalogoRepository, times(1)).findByActivoTrueOrderByTipoAscValorAsc(pageable);
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtro inactivos - debe retornar solo inactivos")
+    void obtenerCatalogosPaginadosConFiltro_inactivos_debeRetornarSoloInactivos() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        catalogo.setActivo(false);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByActivoFalseOrderByTipoAscValorAsc(pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltro(pageable, "inactivos");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+        verify(catalogoRepository, times(1)).findByActivoFalseOrderByTipoAscValorAsc(pageable);
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtro todos - debe retornar todos")
+    void obtenerCatalogosPaginadosConFiltro_todos_debeRetornarTodos() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findAllByOrderByTipoAscValorAsc(pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltro(pageable, "todos");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+        verify(catalogoRepository, times(1)).findAllByOrderByTipoAscValorAsc(pageable);
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con tipo y búsqueda")
+    void obtenerCatalogosPaginadosConFiltros_conTipoYBusqueda_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        
+        when(catalogoRepository.findByTipoAndActivoTrue(TipoCatalogo.HUMEDAD))
+            .thenReturn(Arrays.asList(catalogo));
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, "10", true, "HUMEDAD");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con tipo sin búsqueda activos")
+    void obtenerCatalogosPaginadosConFiltros_conTipoSinBusquedaActivos_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByTipoAndActivoTrueOrderByValorAsc(TipoCatalogo.HUMEDAD, pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, null, true, "HUMEDAD");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con tipo sin búsqueda inactivos")
+    void obtenerCatalogosPaginadosConFiltros_conTipoSinBusquedaInactivos_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        catalogo.setActivo(false);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByTipoAndActivoFalseOrderByValorAsc(TipoCatalogo.HUMEDAD, pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, null, false, "HUMEDAD");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con tipo sin búsqueda sin filtro activo")
+    void obtenerCatalogosPaginadosConFiltros_conTipoSinBusquedaSinFiltroActivo_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByTipoOrderByValorAsc(TipoCatalogo.HUMEDAD, pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, null, null, "HUMEDAD");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con tipo inválido")
+    void obtenerCatalogosPaginadosConFiltros_conTipoInvalido_debeRetornarVacio() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, null, true, "TIPO_INVALIDO");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - sin tipo con búsqueda activos")
+    void obtenerCatalogosPaginadosConFiltros_sinTipoConBusquedaActivos_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        
+        when(catalogoRepository.findByActivoTrue())
+            .thenReturn(Arrays.asList(catalogo));
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, "10", true, null);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - sin tipo con búsqueda inactivos")
+    void obtenerCatalogosPaginadosConFiltros_sinTipoConBusquedaInactivos_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        catalogo.setActivo(false);
+        
+        when(catalogoRepository.findAll())
+            .thenReturn(Arrays.asList(catalogo));
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, "10", false, null);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - sin tipo con búsqueda sin filtro activo")
+    void obtenerCatalogosPaginadosConFiltros_sinTipoConBusquedaSinFiltroActivo_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        
+        when(catalogoRepository.findAll())
+            .thenReturn(Arrays.asList(catalogo));
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, "10", null, null);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - sin tipo sin búsqueda activos")
+    void obtenerCatalogosPaginadosConFiltros_sinTipoSinBusquedaActivos_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, null, true, null);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - sin tipo sin búsqueda inactivos")
+    void obtenerCatalogosPaginadosConFiltros_sinTipoSinBusquedaInactivos_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        catalogo.setActivo(false);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findByActivoFalseOrderByTipoAscValorAsc(pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, null, false, null);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - sin tipo sin búsqueda sin filtro activo")
+    void obtenerCatalogosPaginadosConFiltros_sinTipoSinBusquedaSinFiltroActivo_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Catalogo> page = new org.springframework.data.domain.PageImpl<>(
+            Arrays.asList(catalogo)
+        );
+        
+        when(catalogoRepository.findAllByOrderByTipoAscValorAsc(pageable))
+            .thenReturn(page);
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, null, null, null);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con tipo y búsqueda inactivos")
+    void obtenerCatalogosPaginadosConFiltros_conTipoYBusquedaInactivos_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        catalogo.setActivo(false);
+        
+        when(catalogoRepository.findByTipoAndActivoFalse(TipoCatalogo.HUMEDAD))
+            .thenReturn(Arrays.asList(catalogo));
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, "10", false, "HUMEDAD");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con tipo y búsqueda sin filtro activo")
+    void obtenerCatalogosPaginadosConFiltros_conTipoYBusquedaSinFiltroActivo_debeFiltrar() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        
+        when(catalogoRepository.findByTipo(TipoCatalogo.HUMEDAD))
+            .thenReturn(Arrays.asList(catalogo));
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, "10", null, "HUMEDAD");
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Obtener catálogos paginados con filtros - con búsqueda sin coincidencias")
+    void obtenerCatalogosPaginadosConFiltros_conBusquedaSinCoincidencias_debeRetornarVacio() {
+        // ARRANGE
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        
+        when(catalogoRepository.findByActivoTrue())
+            .thenReturn(Arrays.asList(catalogo));
+
+        // ACT
+        org.springframework.data.domain.Page<CatalogoDTO> resultado = 
+            catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, "999", true, null);
+
+        // ASSERT
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Actualizar catálogo inexistente - debe retornar null")
+    void actualizar_cuandoNoExiste_debeRetornarNull() {
+        // ARRANGE
+        when(catalogoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT
+        CatalogoDTO resultado = catalogoService.actualizar(999L, catalogoRequestDTO);
+
+        // ASSERT
+        assertNull(resultado);
+        verify(catalogoRepository, never()).save(any(Catalogo.class));
+    }
+
+    @Test
+    @DisplayName("Reactivar catálogo inexistente - debe retornar null")
+    void reactivar_cuandoNoExiste_debeRetornarNull() {
+        // ARRANGE
+        when(catalogoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT
+        CatalogoDTO resultado = catalogoService.reactivar(999L);
+
+        // ASSERT
+        assertNull(resultado);
+        verify(catalogoRepository, never()).save(any(Catalogo.class));
+    }
+
+    @Test
+    @DisplayName("Eliminar catálogo inexistente - no debe lanzar excepción")
+    void eliminar_cuandoNoExiste_noDebeLanzarExcepcion() {
+        // ARRANGE
+        when(catalogoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        assertDoesNotThrow(() -> catalogoService.eliminar(999L));
+        verify(catalogoRepository, never()).save(any(Catalogo.class));
+    }
 }

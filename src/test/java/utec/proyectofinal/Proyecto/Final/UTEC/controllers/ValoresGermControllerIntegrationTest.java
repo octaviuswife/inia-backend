@@ -3,6 +3,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -181,6 +182,98 @@ class ValoresGermControllerIntegrationTest {
 
         mockMvc.perform(delete("/api/germinacion/1/tabla/1/valores/1")
                 .with(csrf()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().string("Valores de germinación eliminados exitosamente"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/{valoresId} - Debe retornar 404 cuando no existe")
+    @WithMockUser(roles = "ADMIN")
+    void eliminarValores_conIdInexistente_debeRetornar404() throws Exception {
+        doThrow(new RuntimeException("Valores de germinación no encontrados con ID: 999"))
+            .when(valoresGermService).eliminarValores(999L);
+
+        mockMvc.perform(delete("/api/germinacion/1/tabla/1/valores/999")
+                .with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores - Debe retornar 400 cuando hay error")
+    @WithMockUser(roles = "OBSERVADOR")
+    void obtenerValoresPorTabla_conError_debeRetornar400() throws Exception {
+        when(valoresGermService.obtenerValoresPorTabla(1L))
+            .thenThrow(new RuntimeException("Error al obtener valores"));
+
+        mockMvc.perform(get("/api/germinacion/1/tabla/1/valores")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/inia - Debe retornar 404 cuando no existe")
+    @WithMockUser(roles = "ANALISTA")
+    void obtenerValoresIniaPorTabla_conTablaInexistente_debeRetornar404() throws Exception {
+        when(valoresGermService.obtenerValoresIniaPorTabla(999L))
+            .thenThrow(new RuntimeException("No se encontraron valores de INIA para la tabla: 999"));
+
+        mockMvc.perform(get("/api/germinacion/1/tabla/999/valores/inia")
+                .with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/inase - Debe retornar 404 cuando no existe")
+    @WithMockUser(roles = "ANALISTA")
+    void obtenerValoresInasePorTabla_conTablaInexistente_debeRetornar404() throws Exception {
+        when(valoresGermService.obtenerValoresInasePorTabla(999L))
+            .thenThrow(new RuntimeException("No se encontraron valores de INASE para la tabla: 999"));
+
+        mockMvc.perform(get("/api/germinacion/1/tabla/999/valores/inase")
+                .with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/instituto - Debe obtener valores por instituto INIA")
+    @WithMockUser(roles = "ANALISTA")
+    void obtenerValoresPorTablaEInstituto_conInstitutoInia_debeRetornarValores() throws Exception {
+        when(valoresGermService.obtenerValoresPorTablaEInstituto(1L, Instituto.INIA)).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/api/germinacion/1/tabla/1/valores/instituto")
+                .param("instituto", "INIA")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.instituto").value("INIA"))
+                .andExpect(jsonPath("$.tablaGermId").value(1L));
+    }
+
+    @Test
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/instituto - Debe obtener valores por instituto INASE")
+    @WithMockUser(roles = "ANALISTA")
+    void obtenerValoresPorTablaEInstituto_conInstitutoInase_debeRetornarValores() throws Exception {
+        responseDTO.setInstituto(Instituto.INASE);
+        responseDTO.setValoresGermID(2L);
+        when(valoresGermService.obtenerValoresPorTablaEInstituto(1L, Instituto.INASE)).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/api/germinacion/1/tabla/1/valores/instituto")
+                .param("instituto", "INASE")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.instituto").value("INASE"))
+                .andExpect(jsonPath("$.valoresGermID").value(2L));
+    }
+
+    @Test
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/instituto - Debe retornar 404 cuando no existe")
+    @WithMockUser(roles = "OBSERVADOR")
+    void obtenerValoresPorTablaEInstituto_conDatosInexistentes_debeRetornar404() throws Exception {
+        when(valoresGermService.obtenerValoresPorTablaEInstituto(999L, Instituto.INIA))
+            .thenThrow(new RuntimeException("No se encontraron valores para el instituto INIA en la tabla: 999"));
+
+        mockMvc.perform(get("/api/germinacion/1/tabla/999/valores/instituto")
+                .param("instituto", "INIA")
+                .with(csrf()))
+                .andExpect(status().isNotFound());
     }
 }

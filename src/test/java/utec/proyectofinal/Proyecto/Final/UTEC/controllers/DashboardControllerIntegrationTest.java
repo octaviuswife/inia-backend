@@ -207,4 +207,57 @@ class DashboardControllerIntegrationTest {
                 .with(csrf()))
                 .andExpect(status().isInternalServerError());
     }
+
+    @Test
+    @DisplayName("GET /api/dashboard/analisis-por-aprobar - Debe manejar error en servicio")
+    @WithMockUser(roles = "ADMIN")
+    void obtenerAnalisisPorAprobar_conError_debeRetornar500() throws Exception {
+        when(dashboardService.listarAnalisisPorAprobarPaginados(any(Pageable.class)))
+            .thenThrow(new RuntimeException("Error en servicio"));
+
+        mockMvc.perform(get("/api/dashboard/analisis-por-aprobar")
+                .with(csrf()))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @DisplayName("GET /api/dashboard/analisis-pendientes/keyset - Debe manejar error genérico")
+    @WithMockUser(roles = "ANALISTA")
+    void obtenerAnalisisPendientesKeyset_conErrorGenerico_debeRetornar500() throws Exception {
+        when(dashboardService.listarAnalisisPendientesKeyset(null, 20))
+            .thenThrow(new RuntimeException("Error inesperado"));
+
+        mockMvc.perform(get("/api/dashboard/analisis-pendientes/keyset")
+                .param("size", "20")
+                .with(csrf()))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @DisplayName("GET /api/dashboard/analisis-por-aprobar/keyset - Debe manejar cursor inválido")
+    @WithMockUser(roles = "ADMIN")
+    void obtenerAnalisisPorAprobarKeyset_conCursorInvalido_debeRetornar400() throws Exception {
+        when(dashboardService.listarAnalisisPorAprobarKeyset("invalidCursor", 20))
+            .thenThrow(new InvalidCursorException("Cursor inválido o corrupto"));
+
+        mockMvc.perform(get("/api/dashboard/analisis-por-aprobar/keyset")
+                .param("cursor", "invalidCursor")
+                .param("size", "20")
+                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    @DisplayName("GET /api/dashboard/analisis-por-aprobar/keyset - Debe manejar error genérico")
+    @WithMockUser(roles = "ADMIN")
+    void obtenerAnalisisPorAprobarKeyset_conErrorGenerico_debeRetornar500() throws Exception {
+        when(dashboardService.listarAnalisisPorAprobarKeyset(null, 20))
+            .thenThrow(new RuntimeException("Error inesperado en servicio"));
+
+        mockMvc.perform(get("/api/dashboard/analisis-por-aprobar/keyset")
+                .param("size", "20")
+                .with(csrf()))
+                .andExpect(status().isInternalServerError());
+    }
 }
