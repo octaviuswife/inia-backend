@@ -7,6 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ContactoRepository;
@@ -21,9 +25,11 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @DisplayName("Tests de ContactoService")
 class ContactoServiceTest {
 
@@ -258,5 +264,243 @@ class ContactoServiceTest {
         assertNotNull(resultado);
         assertEquals(1, resultado.size());
         assertEquals(TipoContacto.EMPRESA, resultado.get(0).getTipo());
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPorTipo - con activo=true retorna solo activos")
+    void obtenerContactosPorTipo_activoTrue_retornaSoloActivos() {
+        when(contactoRepository.findByTipoAndActivoTrue(TipoContacto.CLIENTE))
+            .thenReturn(Arrays.asList(contacto));
+
+        List<ContactoDTO> resultado = contactoService.obtenerContactosPorTipo(TipoContacto.CLIENTE, true);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        verify(contactoRepository, times(1)).findByTipoAndActivoTrue(TipoContacto.CLIENTE);
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPorTipo - con activo=false retorna solo inactivos")
+    void obtenerContactosPorTipo_activoFalse_retornaSoloInactivos() {
+        Contacto contactoInactivo = new Contacto();
+        contactoInactivo.setContactoID(3L);
+        contactoInactivo.setNombre("Inactivo");
+        contactoInactivo.setTipo(TipoContacto.CLIENTE);
+        contactoInactivo.setActivo(false);
+
+        when(contactoRepository.findByTipoAndActivoFalse(TipoContacto.CLIENTE))
+            .thenReturn(Arrays.asList(contactoInactivo));
+
+        List<ContactoDTO> resultado = contactoService.obtenerContactosPorTipo(TipoContacto.CLIENTE, false);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        verify(contactoRepository, times(1)).findByTipoAndActivoFalse(TipoContacto.CLIENTE);
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPorTipo - con activo=null retorna todos")
+    void obtenerContactosPorTipo_activoNull_retornaTodos() {
+        when(contactoRepository.findByTipo(TipoContacto.CLIENTE))
+            .thenReturn(Arrays.asList(contacto, empresa));
+
+        List<ContactoDTO> resultado = contactoService.obtenerContactosPorTipo(TipoContacto.CLIENTE, null);
+
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        verify(contactoRepository, times(1)).findByTipo(TipoContacto.CLIENTE);
+    }
+
+    @Test
+    @DisplayName("obtenerEmpresas - con activo=true retorna solo empresas activas")
+    void obtenerEmpresas_activoTrue_retornaSoloActivas() {
+        when(contactoRepository.findByTipoAndActivoTrue(TipoContacto.EMPRESA))
+            .thenReturn(Arrays.asList(empresa));
+
+        List<ContactoDTO> resultado = contactoService.obtenerEmpresas(true);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals(TipoContacto.EMPRESA, resultado.get(0).getTipo());
+    }
+
+    @Test
+    @DisplayName("obtenerEmpresas - con activo=false retorna solo empresas inactivas")
+    void obtenerEmpresas_activoFalse_retornaInactivas() {
+        Contacto empresaInactiva = new Contacto();
+        empresaInactiva.setContactoID(4L);
+        empresaInactiva.setNombre("Empresa Inactiva");
+        empresaInactiva.setTipo(TipoContacto.EMPRESA);
+        empresaInactiva.setActivo(false);
+
+        when(contactoRepository.findByTipoAndActivoFalse(TipoContacto.EMPRESA))
+            .thenReturn(Arrays.asList(empresaInactiva));
+
+        List<ContactoDTO> resultado = contactoService.obtenerEmpresas(false);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+    }
+
+    @Test
+    @DisplayName("obtenerEmpresas - con activo=null retorna todas")
+    void obtenerEmpresas_activoNull_retornaTodas() {
+        when(contactoRepository.findByTipo(TipoContacto.EMPRESA))
+            .thenReturn(Arrays.asList(empresa));
+
+        List<ContactoDTO> resultado = contactoService.obtenerEmpresas(null);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+    }
+
+    @Test
+    @DisplayName("obtenerClientes - con activo=true retorna solo clientes activos")
+    void obtenerClientes_activoTrue_retornaSoloActivos() {
+        when(contactoRepository.findByTipoAndActivoTrue(TipoContacto.CLIENTE))
+            .thenReturn(Arrays.asList(contacto));
+
+        List<ContactoDTO> resultado = contactoService.obtenerClientes(true);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals(TipoContacto.CLIENTE, resultado.get(0).getTipo());
+    }
+
+    @Test
+    @DisplayName("obtenerClientes - con activo=false retorna solo clientes inactivos")
+    void obtenerClientes_activoFalse_retornaInactivos() {
+        Contacto clienteInactivo = new Contacto();
+        clienteInactivo.setContactoID(5L);
+        clienteInactivo.setNombre("Cliente Inactivo");
+        clienteInactivo.setTipo(TipoContacto.CLIENTE);
+        clienteInactivo.setActivo(false);
+
+        when(contactoRepository.findByTipoAndActivoFalse(TipoContacto.CLIENTE))
+            .thenReturn(Arrays.asList(clienteInactivo));
+
+        List<ContactoDTO> resultado = contactoService.obtenerClientes(false);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+    }
+
+    @Test
+    @DisplayName("obtenerClientes - con activo=null retorna todos")
+    void obtenerClientes_activoNull_retornaTodos() {
+        when(contactoRepository.findByTipo(TipoContacto.CLIENTE))
+            .thenReturn(Arrays.asList(contacto));
+
+        List<ContactoDTO> resultado = contactoService.obtenerClientes(null);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPaginadosConFiltros - sin filtros retorna todos activos")
+    void obtenerContactosPaginadosConFiltros_sinFiltros_retornaTodosActivos() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Contacto> contactoPage = new PageImpl<>(Arrays.asList(contacto, empresa));
+
+        when(contactoRepository.findByActivoTrueOrderByNombreAsc(pageable)).thenReturn(contactoPage);
+
+        Page<ContactoDTO> resultado = contactoService.obtenerContactosPaginadosConFiltros(
+            pageable, null, true, null);
+
+        assertNotNull(resultado);
+        assertEquals(2, resultado.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPaginadosConFiltros - con tipo CLIENTE")
+    void obtenerContactosPaginadosConFiltros_conTipoCliente() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Contacto> contactoPage = new PageImpl<>(Arrays.asList(contacto));
+
+        when(contactoRepository.findByTipoAndActivoTrueOrderByNombreAsc(TipoContacto.CLIENTE, pageable))
+            .thenReturn(contactoPage);
+
+        Page<ContactoDTO> resultado = contactoService.obtenerContactosPaginadosConFiltros(
+            pageable, null, true, TipoContacto.CLIENTE);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPaginadosConFiltros - con tipo EMPRESA")
+    void obtenerContactosPaginadosConFiltros_conTipoEmpresa() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Contacto> contactoPage = new PageImpl<>(Arrays.asList(empresa));
+
+        when(contactoRepository.findByTipoAndActivoTrueOrderByNombreAsc(TipoContacto.EMPRESA, pageable))
+            .thenReturn(contactoPage);
+
+        Page<ContactoDTO> resultado = contactoService.obtenerContactosPaginadosConFiltros(
+            pageable, null, true, TipoContacto.EMPRESA);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPaginadosConFiltros - con searchTerm")
+    void obtenerContactosPaginadosConFiltros_conSearchTerm() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(contactoRepository.findByActivoTrue()).thenReturn(Arrays.asList(contacto, empresa));
+
+        Page<ContactoDTO> resultado = contactoService.obtenerContactosPaginadosConFiltros(
+            pageable, "Juan", true, null);
+
+        assertNotNull(resultado);
+        // Debe filtrar solo los que coinciden con "Juan"
+        assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPaginadosConFiltros - con activo=false")
+    void obtenerContactosPaginadosConFiltros_activoFalse() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Contacto> contactoPage = new PageImpl<>(Arrays.asList());
+
+        when(contactoRepository.findByActivoFalseOrderByNombreAsc(pageable)).thenReturn(contactoPage);
+
+        Page<ContactoDTO> resultado = contactoService.obtenerContactosPaginadosConFiltros(
+            pageable, null, false, null);
+
+        assertNotNull(resultado);
+        verify(contactoRepository, times(1)).findByActivoFalseOrderByNombreAsc(pageable);
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPaginadosConFiltros - con activo=null retorna todos")
+    void obtenerContactosPaginadosConFiltros_activoNull_retornaTodos() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Contacto> contactoPage = new PageImpl<>(Arrays.asList(contacto, empresa));
+
+        when(contactoRepository.findAllByOrderByNombreAsc(pageable)).thenReturn(contactoPage);
+
+        Page<ContactoDTO> resultado = contactoService.obtenerContactosPaginadosConFiltros(
+            pageable, null, null, null);
+
+        assertNotNull(resultado);
+        assertEquals(2, resultado.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("obtenerContactosPaginadosConFiltros - con tipo y searchTerm")
+    void obtenerContactosPaginadosConFiltros_conTipoYSearchTerm() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(contactoRepository.findByTipoAndActivoTrue(TipoContacto.CLIENTE))
+            .thenReturn(Arrays.asList(contacto));
+
+        Page<ContactoDTO> resultado = contactoService.obtenerContactosPaginadosConFiltros(
+            pageable, "Juan", true, TipoContacto.CLIENTE);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getContent().size());
     }
 }

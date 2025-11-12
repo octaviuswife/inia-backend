@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepGermServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">RepGermServiceTest.java</span></div><h1>RepGermServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TablaGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepGermRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
+/**
+ * Tests unitarios para RepGermService
+ * 
+ * Funcionalidades testeadas:
+ * - Creación de repeticiones con validaciones
+ * - Actualización de repeticiones y totales
+ * - Validación de datos de entrada
+ * - Cálculo de promedios sin redondeo
+ * - Cálculo de promedios por conteo
+ * - Mapeo de DTOs a entidades y viceversa
+ * - Eliminación de repeticiones
+ * - Consultas de repeticiones por tabla
+ * - Verificación de completitud de repeticiones
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de RepGermService&quot;)
+<span class="fc" id="L46">class RepGermServiceTest {</span>
+
+    @Mock
+    private RepGermRepository repGermRepository;
+
+    @Mock
+    private TablaGermRepository tablaGermRepository;
+
+    @Mock
+    private AnalisisService analisisService;
+
+    @InjectMocks
+    private RepGermService repGermService;
+
+    private TablaGerm tablaGerm;
+    private Germinacion germinacion;
+    private RepGermRequestDTO repGermRequestDTO;
+    private RepGerm repGerm;
+
+    @BeforeEach
+    void setUp() {
+        // ARRANGE: Preparar germinación
+<span class="fc" id="L68">        germinacion = new Germinacion();</span>
+<span class="fc" id="L69">        germinacion.setAnalisisID(1L);</span>
+<span class="fc" id="L70">        germinacion.setActivo(true);</span>
+
+        // ARRANGE: Preparar tabla de germinación
+<span class="fc" id="L73">        tablaGerm = new TablaGerm();</span>
+<span class="fc" id="L74">        tablaGerm.setTablaGermID(1L);</span>
+<span class="fc" id="L75">        tablaGerm.setGerminacion(germinacion);</span>
+<span class="fc" id="L76">        tablaGerm.setNumeroRepeticiones(4);</span>
+<span class="fc" id="L77">        tablaGerm.setNumeroConteos(3);</span>
+<span class="fc" id="L78">        tablaGerm.setNumSemillasPRep(100);</span>
+<span class="fc" id="L79">        tablaGerm.setFinalizada(false);</span>
+
+        // ARRANGE: Preparar request DTO con todos los datos
+<span class="fc" id="L82">        repGermRequestDTO = new RepGermRequestDTO();</span>
+<span class="fc" id="L83">        repGermRequestDTO.setNormales(Arrays.asList(25, 30, 20)); // 3 conteos</span>
+<span class="fc" id="L84">        repGermRequestDTO.setAnormales(10);</span>
+<span class="fc" id="L85">        repGermRequestDTO.setDuras(5);</span>
+<span class="fc" id="L86">        repGermRequestDTO.setFrescas(3);</span>
+<span class="fc" id="L87">        repGermRequestDTO.setMuertas(7);</span>
+
+        // ARRANGE: Preparar repetición existente
+<span class="fc" id="L90">        repGerm = new RepGerm();</span>
+<span class="fc" id="L91">        repGerm.setRepGermID(1L);</span>
+<span class="fc" id="L92">        repGerm.setNumRep(1);</span>
+<span class="fc" id="L93">        repGerm.setNormales(Arrays.asList(25, 30, 20));</span>
+<span class="fc" id="L94">        repGerm.setAnormales(10);</span>
+<span class="fc" id="L95">        repGerm.setDuras(5);</span>
+<span class="fc" id="L96">        repGerm.setFrescas(3);</span>
+<span class="fc" id="L97">        repGerm.setMuertas(7);</span>
+<span class="fc" id="L98">        repGerm.setTotal(100);</span>
+<span class="fc" id="L99">        repGerm.setTablaGerm(tablaGerm);</span>
+<span class="fc" id="L100">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe crear con todos los datos correctos&quot;)
+    void crearRepGerm_debeCrearConTodosLosDatos() {
+        // ARRANGE
+<span class="fc" id="L106">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L107">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+<span class="fc" id="L108">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(repGerm);</span>
+<span class="fc" id="L109">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(repGerm));</span>
+<span class="fc" id="L110">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+
+        // ACT
+<span class="fc" id="L113">        RepGermDTO resultado = repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L116">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L117">        assertEquals(1L, resultado.getRepGermID(), &quot;El ID debe ser 1&quot;);</span>
+<span class="fc" id="L118">        assertEquals(1, resultado.getNumRep(), &quot;El número de repetición debe ser 1&quot;);</span>
+<span class="fc" id="L119">        assertEquals(Arrays.asList(25, 30, 20), resultado.getNormales(), &quot;Los valores normales deben coincidir&quot;);</span>
+<span class="fc" id="L120">        assertEquals(10, resultado.getAnormales(), &quot;Las anormales deben ser 10&quot;);</span>
+<span class="fc" id="L121">        assertEquals(5, resultado.getDuras(), &quot;Las duras deben ser 5&quot;);</span>
+<span class="fc" id="L122">        assertEquals(3, resultado.getFrescas(), &quot;Las frescas deben ser 3&quot;);</span>
+<span class="fc" id="L123">        assertEquals(7, resultado.getMuertas(), &quot;Las muertas deben ser 7&quot;);</span>
+<span class="fc" id="L124">        assertEquals(100, resultado.getTotal(), &quot;El total debe ser 100&quot;);</span>
+<span class="fc" id="L125">        assertEquals(1L, resultado.getTablaGermId(), &quot;El ID de tabla debe ser 1&quot;);</span>
+
+        // Verificar que se guardó la repetición
+<span class="fc" id="L128">        verify(repGermRepository, times(1)).save(any(RepGerm.class));</span>
+        // Verificar que se actualizó la tabla
+<span class="fc" id="L130">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L131">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe generar numRep automáticamente&quot;)
+    void crearRepGerm_debeGenerarNumRepAutomaticamente() {
+        // ARRANGE
+<span class="fc" id="L137">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L138">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(2L); // Ya hay 2 repeticiones</span>
+        
+<span class="fc" id="L140">        RepGerm repGerm3 = new RepGerm();</span>
+<span class="fc" id="L141">        repGerm3.setRepGermID(3L);</span>
+<span class="fc" id="L142">        repGerm3.setNumRep(3); // Debe ser la tercera</span>
+<span class="fc" id="L143">        repGerm3.setTablaGerm(tablaGerm);</span>
+<span class="fc" id="L144">        repGerm3.setNormales(Arrays.asList(25, 30, 20));</span>
+<span class="fc" id="L145">        repGerm3.setTotal(100);</span>
+        
+<span class="fc" id="L147">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(repGerm3);</span>
+<span class="fc" id="L148">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(repGerm3));</span>
+<span class="fc" id="L149">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+
+        // ACT
+<span class="fc" id="L152">        RepGermDTO resultado = repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L155">        assertEquals(3, resultado.getNumRep(), &quot;El numRep debe ser 3 (siguiente disponible)&quot;);</span>
+        // Se llama 2 veces: una en crearRepGerm y otra en mapearSolicitudAEntidad
+<span class="fc" id="L157">        verify(repGermRepository, times(2)).countByTablaGermId(1L);</span>
+<span class="fc" id="L158">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe validar número máximo de repeticiones&quot;)
+    void crearRepGerm_debeValidarNumeroMaximoRepeticiones() {
+        // ARRANGE
+<span class="fc" id="L164">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L165">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(4L); // Ya hay 4 (el máximo)</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L168">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L169">            repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+<span class="nc" id="L170">        });</span>
+
+<span class="fc" id="L172">        assertTrue(exception.getMessage().contains(&quot;No se pueden agregar más repeticiones&quot;),</span>
+                &quot;Debe lanzar excepción por exceder número máximo de repeticiones&quot;);
+<span class="fc" id="L174">        verify(repGermRepository, never()).save(any(RepGerm.class));</span>
+<span class="fc" id="L175">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe validar tabla no encontrada&quot;)
+    void crearRepGerm_debeValidarTablaNoEncontrada() {
+        // ARRANGE
+<span class="fc" id="L181">        when(tablaGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L184">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L185">            repGermService.crearRepGerm(999L, repGermRequestDTO);</span>
+<span class="nc" id="L186">        });</span>
+
+<span class="fc" id="L188">        assertTrue(exception.getMessage().contains(&quot;Tabla no encontrada&quot;),</span>
+                &quot;Debe lanzar excepción cuando la tabla no existe&quot;);
+<span class="fc" id="L190">        verify(repGermRepository, never()).save(any(RepGerm.class));</span>
+<span class="fc" id="L191">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe validar que el total no exceda el límite máximo (105% tolerancia)&quot;)
+    void crearRepGerm_debeValidarLimiteMaximo() {
+        // ARRANGE
+<span class="fc" id="L197">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L198">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+
+        // Datos que exceden el límite máximo (100 * 1.05 = 105)
+<span class="fc" id="L201">        RepGermRequestDTO requestExcesivo = new RepGermRequestDTO();</span>
+<span class="fc" id="L202">        requestExcesivo.setNormales(Arrays.asList(50, 40, 20)); // 110 total</span>
+<span class="fc" id="L203">        requestExcesivo.setAnormales(0);</span>
+<span class="fc" id="L204">        requestExcesivo.setDuras(0);</span>
+<span class="fc" id="L205">        requestExcesivo.setFrescas(0);</span>
+<span class="fc" id="L206">        requestExcesivo.setMuertas(0);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L209">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L210">            repGermService.crearRepGerm(1L, requestExcesivo);</span>
+<span class="nc" id="L211">        });</span>
+
+<span class="fc" id="L213">        assertTrue(exception.getMessage().contains(&quot;excede el límite máximo permitido&quot;),</span>
+                &quot;Debe lanzar excepción cuando el total excede el límite máximo&quot;);
+<span class="fc" id="L215">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe validar valores negativos en normales&quot;)
+    void crearRepGerm_debeValidarValoresNegativosEnNormales() {
+        // ARRANGE
+<span class="fc" id="L221">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L222">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+
+<span class="fc" id="L224">        RepGermRequestDTO requestNegativo = new RepGermRequestDTO();</span>
+<span class="fc" id="L225">        requestNegativo.setNormales(Arrays.asList(25, -10, 20)); // Valor negativo</span>
+<span class="fc" id="L226">        requestNegativo.setAnormales(10);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L229">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L230">            repGermService.crearRepGerm(1L, requestNegativo);</span>
+<span class="nc" id="L231">        });</span>
+
+<span class="fc" id="L233">        assertTrue(exception.getMessage().contains(&quot;no puede ser negativo&quot;),</span>
+                &quot;Debe lanzar excepción cuando hay valores negativos en normales&quot;);
+<span class="fc" id="L235">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe validar valores negativos en anormales&quot;)
+    void crearRepGerm_debeValidarValoresNegativosEnAnormales() {
+        // ARRANGE
+<span class="fc" id="L241">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L242">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+
+<span class="fc" id="L244">        RepGermRequestDTO requestNegativo = new RepGermRequestDTO();</span>
+<span class="fc" id="L245">        requestNegativo.setNormales(Arrays.asList(25, 30, 20));</span>
+<span class="fc" id="L246">        requestNegativo.setAnormales(-5); // Valor negativo</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L249">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L250">            repGermService.crearRepGerm(1L, requestNegativo);</span>
+<span class="nc" id="L251">        });</span>
+
+<span class="fc" id="L253">        assertTrue(exception.getMessage().contains(&quot;anormales no puede ser negativo&quot;),</span>
+                &quot;Debe lanzar excepción cuando anormales es negativo&quot;);
+<span class="fc" id="L255">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe validar valores que exceden numSemillasPRep&quot;)
+    void crearRepGerm_debeValidarValoresQueExcedenNumSemillasPRep() {
+        // ARRANGE
+<span class="fc" id="L261">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L262">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+
+<span class="fc" id="L264">        RepGermRequestDTO requestExcesivo = new RepGermRequestDTO();</span>
+<span class="fc" id="L265">        requestExcesivo.setNormales(Arrays.asList(25, 30, 20));</span>
+<span class="fc" id="L266">        requestExcesivo.setAnormales(150); // Excede 100</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L269">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L270">            repGermService.crearRepGerm(1L, requestExcesivo);</span>
+<span class="nc" id="L271">        });</span>
+
+<span class="fc" id="L273">        assertTrue(exception.getMessage().contains(&quot;no puede exceder&quot;),</span>
+                &quot;Debe lanzar excepción cuando un valor individual excede numSemillasPRep&quot;);
+<span class="fc" id="L275">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe rechazar total cero&quot;)
+    void crearRepGerm_debeRechazarTotalCero() {
+        // ARRANGE
+<span class="fc" id="L281">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L282">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+
+<span class="fc" id="L284">        RepGermRequestDTO requestVacio = new RepGermRequestDTO();</span>
+<span class="fc" id="L285">        requestVacio.setNormales(Arrays.asList(0, 0, 0));</span>
+<span class="fc" id="L286">        requestVacio.setAnormales(0);</span>
+<span class="fc" id="L287">        requestVacio.setDuras(0);</span>
+<span class="fc" id="L288">        requestVacio.setFrescas(0);</span>
+<span class="fc" id="L289">        requestVacio.setMuertas(0);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L292">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L293">            repGermService.crearRepGerm(1L, requestVacio);</span>
+<span class="nc" id="L294">        });</span>
+
+<span class="fc" id="L296">        assertTrue(exception.getMessage().contains(&quot;Debe ingresar al menos un valor&quot;),</span>
+                &quot;Debe lanzar excepción cuando el total es cero&quot;);
+<span class="fc" id="L298">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar repetición - debe actualizar correctamente todos los campos&quot;)
+    void actualizarRepGerm_debeActualizarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L304">        when(repGermRepository.findById(1L)).thenReturn(Optional.of(repGerm));</span>
+        
+<span class="fc" id="L306">        RepGermRequestDTO requestActualizado = new RepGermRequestDTO();</span>
+<span class="fc" id="L307">        requestActualizado.setNormales(Arrays.asList(30, 35, 25)); // Nuevos valores</span>
+<span class="fc" id="L308">        requestActualizado.setAnormales(5);</span>
+<span class="fc" id="L309">        requestActualizado.setDuras(2);</span>
+<span class="fc" id="L310">        requestActualizado.setFrescas(1);</span>
+<span class="fc" id="L311">        requestActualizado.setMuertas(2);</span>
+        
+<span class="fc" id="L313">        RepGerm repGermActualizada = new RepGerm();</span>
+<span class="fc" id="L314">        repGermActualizada.setRepGermID(1L);</span>
+<span class="fc" id="L315">        repGermActualizada.setNumRep(1);</span>
+<span class="fc" id="L316">        repGermActualizada.setNormales(Arrays.asList(30, 35, 25));</span>
+<span class="fc" id="L317">        repGermActualizada.setAnormales(5);</span>
+<span class="fc" id="L318">        repGermActualizada.setDuras(2);</span>
+<span class="fc" id="L319">        repGermActualizada.setFrescas(1);</span>
+<span class="fc" id="L320">        repGermActualizada.setMuertas(2);</span>
+<span class="fc" id="L321">        repGermActualizada.setTotal(100); // 30+35+25+5+2+1+2=100</span>
+<span class="fc" id="L322">        repGermActualizada.setTablaGerm(tablaGerm);</span>
+        
+<span class="fc" id="L324">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(repGermActualizada);</span>
+<span class="fc" id="L325">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(repGermActualizada));</span>
+<span class="fc" id="L326">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+<span class="fc" id="L327">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any(Germinacion.class));</span>
+
+        // ACT
+<span class="fc" id="L330">        RepGermDTO resultado = repGermService.actualizarRepGerm(1L, requestActualizado);</span>
+
+        // ASSERT
+<span class="fc" id="L333">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L334">        assertEquals(Arrays.asList(30, 35, 25), resultado.getNormales(), &quot;Los valores normales deben actualizarse&quot;);</span>
+<span class="fc" id="L335">        assertEquals(5, resultado.getAnormales(), &quot;Las anormales deben actualizarse&quot;);</span>
+<span class="fc" id="L336">        assertEquals(2, resultado.getDuras(), &quot;Las duras deben actualizarse&quot;);</span>
+<span class="fc" id="L337">        assertEquals(1, resultado.getFrescas(), &quot;Las frescas deben actualizarse&quot;);</span>
+<span class="fc" id="L338">        assertEquals(2, resultado.getMuertas(), &quot;Las muertas deben actualizarse&quot;);</span>
+<span class="fc" id="L339">        assertEquals(100, resultado.getTotal(), &quot;El total debe recalcularse correctamente&quot;);</span>
+
+<span class="fc" id="L341">        verify(repGermRepository, times(1)).save(any(RepGerm.class));</span>
+<span class="fc" id="L342">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L343">        verify(analisisService, times(1)).manejarEdicionAnalisisFinalizado(any(Germinacion.class));</span>
+<span class="fc" id="L344">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar repetición - debe validar repetición no encontrada&quot;)
+    void actualizarRepGerm_debeValidarRepeticionNoEncontrada() {
+        // ARRANGE
+<span class="fc" id="L350">        when(repGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L353">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L354">            repGermService.actualizarRepGerm(999L, repGermRequestDTO);</span>
+<span class="nc" id="L355">        });</span>
+
+<span class="fc" id="L357">        assertTrue(exception.getMessage().contains(&quot;Repetición no encontrada&quot;),</span>
+                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);
+<span class="fc" id="L359">        verify(repGermRepository, never()).save(any(RepGerm.class));</span>
+<span class="fc" id="L360">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar repetición - debe eliminar correctamente&quot;)
+    void eliminarRepGerm_debeEliminarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L366">        when(repGermRepository.findById(1L)).thenReturn(Optional.of(repGerm));</span>
+<span class="fc" id="L367">        doNothing().when(repGermRepository).deleteById(1L);</span>
+
+        // ACT
+<span class="fc" id="L370">        repGermService.eliminarRepGerm(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L373">        verify(repGermRepository, times(1)).deleteById(1L);</span>
+<span class="fc" id="L374">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar repetición - debe validar repetición no encontrada&quot;)
+    void eliminarRepGerm_debeValidarRepeticionNoEncontrada() {
+        // ARRANGE
+<span class="fc" id="L380">        when(repGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L383">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L384">            repGermService.eliminarRepGerm(999L);</span>
+<span class="nc" id="L385">        });</span>
+
+<span class="fc" id="L387">        assertTrue(exception.getMessage().contains(&quot;Repetición no encontrada&quot;),</span>
+                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);
+<span class="fc" id="L389">        verify(repGermRepository, never()).deleteById(anyLong());</span>
+<span class="fc" id="L390">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener repetición por ID - debe retornar repetición existente&quot;)
+    void obtenerRepGermPorId_debeRetornarRepeticionExistente() {
+        // ARRANGE
+<span class="fc" id="L396">        when(repGermRepository.findById(1L)).thenReturn(Optional.of(repGerm));</span>
+
+        // ACT
+<span class="fc" id="L399">        RepGermDTO resultado = repGermService.obtenerRepGermPorId(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L402">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L403">        assertEquals(1L, resultado.getRepGermID(), &quot;El ID debe coincidir&quot;);</span>
+<span class="fc" id="L404">        assertEquals(1, resultado.getNumRep(), &quot;El numRep debe coincidir&quot;);</span>
+<span class="fc" id="L405">        verify(repGermRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L406">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener repetición por ID - debe validar repetición no encontrada&quot;)
+    void obtenerRepGermPorId_debeValidarRepeticionNoEncontrada() {
+        // ARRANGE
+<span class="fc" id="L412">        when(repGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L415">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L416">            repGermService.obtenerRepGermPorId(999L);</span>
+<span class="nc" id="L417">        });</span>
+
+<span class="fc" id="L419">        assertTrue(exception.getMessage().contains(&quot;Repetición no encontrada&quot;),</span>
+                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);
+<span class="fc" id="L421">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener repeticiones por tabla - debe retornar lista de repeticiones&quot;)
+    void obtenerRepeticionesPorTabla_debeRetornarListaRepeticiones() {
+        // ARRANGE
+<span class="fc" id="L427">        RepGerm rep2 = new RepGerm();</span>
+<span class="fc" id="L428">        rep2.setRepGermID(2L);</span>
+<span class="fc" id="L429">        rep2.setNumRep(2);</span>
+<span class="fc" id="L430">        rep2.setNormales(Arrays.asList(28, 32, 22));</span>
+<span class="fc" id="L431">        rep2.setAnormales(8);</span>
+<span class="fc" id="L432">        rep2.setDuras(4);</span>
+<span class="fc" id="L433">        rep2.setFrescas(2);</span>
+<span class="fc" id="L434">        rep2.setMuertas(4);</span>
+<span class="fc" id="L435">        rep2.setTotal(100);</span>
+<span class="fc" id="L436">        rep2.setTablaGerm(tablaGerm);</span>
+
+<span class="fc" id="L438">        List&lt;RepGerm&gt; repeticiones = Arrays.asList(repGerm, rep2);</span>
+<span class="fc" id="L439">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(repeticiones);</span>
+
+        // ACT
+<span class="fc" id="L442">        List&lt;RepGermDTO&gt; resultado = repGermService.obtenerRepeticionesPorTabla(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L445">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L446">        assertEquals(2, resultado.size(), &quot;Debe retornar 2 repeticiones&quot;);</span>
+<span class="fc" id="L447">        assertEquals(1, resultado.get(0).getNumRep(), &quot;La primera debe ser numRep 1&quot;);</span>
+<span class="fc" id="L448">        assertEquals(2, resultado.get(1).getNumRep(), &quot;La segunda debe ser numRep 2&quot;);</span>
+<span class="fc" id="L449">        verify(repGermRepository, times(1)).findByTablaGermId(1L);</span>
+<span class="fc" id="L450">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener repeticiones por tabla - debe retornar lista vacía si no hay repeticiones&quot;)
+    void obtenerRepeticionesPorTabla_debeRetornarListaVacia() {
+        // ARRANGE
+<span class="fc" id="L456">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(new ArrayList&lt;&gt;());</span>
+
+        // ACT
+<span class="fc" id="L459">        List&lt;RepGermDTO&gt; resultado = repGermService.obtenerRepeticionesPorTabla(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L462">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L463">        assertEquals(0, resultado.size(), &quot;La lista debe estar vacía&quot;);</span>
+<span class="fc" id="L464">    }</span>
+
+    @Test
+    @DisplayName(&quot;Contar repeticiones por tabla - debe retornar conteo correcto&quot;)
+    void contarRepeticionesPorTabla_debeRetornarConteoCorrecto() {
+        // ARRANGE
+<span class="fc" id="L470">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(3L);</span>
+
+        // ACT
+<span class="fc" id="L473">        Long resultado = repGermService.contarRepeticionesPorTabla(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L476">        assertEquals(3L, resultado, &quot;Debe retornar el conteo correcto&quot;);</span>
+<span class="fc" id="L477">        verify(repGermRepository, times(1)).countByTablaGermId(1L);</span>
+<span class="fc" id="L478">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar totales tabla - debe calcular total como suma de repeticiones&quot;)
+    void actualizarTotalesTablaGerm_debeCalcularTotalCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L484">        RepGerm rep1 = new RepGerm();</span>
+<span class="fc" id="L485">        rep1.setTotal(100);</span>
+<span class="fc" id="L486">        rep1.setNormales(Arrays.asList(25, 30, 20));</span>
+<span class="fc" id="L487">        rep1.setAnormales(10);</span>
+<span class="fc" id="L488">        rep1.setDuras(5);</span>
+<span class="fc" id="L489">        rep1.setFrescas(3);</span>
+<span class="fc" id="L490">        rep1.setMuertas(7);</span>
+<span class="fc" id="L491">        rep1.setTablaGerm(tablaGerm);</span>
+
+<span class="fc" id="L493">        RepGerm rep2 = new RepGerm();</span>
+<span class="fc" id="L494">        rep2.setTotal(98);</span>
+<span class="fc" id="L495">        rep2.setNormales(Arrays.asList(28, 32, 22));</span>
+<span class="fc" id="L496">        rep2.setAnormales(8);</span>
+<span class="fc" id="L497">        rep2.setDuras(3);</span>
+<span class="fc" id="L498">        rep2.setFrescas(1);</span>
+<span class="fc" id="L499">        rep2.setMuertas(4);</span>
+<span class="fc" id="L500">        rep2.setTablaGerm(tablaGerm);</span>
+
+<span class="fc" id="L502">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L503">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+<span class="fc" id="L504">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep1);</span>
+<span class="fc" id="L505">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(rep1, rep2));</span>
+<span class="fc" id="L506">        when(tablaGermRepository.save(any(TablaGerm.class))).thenAnswer(invocation -&gt; {</span>
+<span class="fc" id="L507">            TablaGerm tabla = invocation.getArgument(0);</span>
+            // Verificar que el total sea 198 (100 + 98)
+<span class="fc" id="L509">            assertEquals(198, tabla.getTotal(), &quot;El total debe ser la suma de las repeticiones&quot;);</span>
+<span class="fc" id="L510">            return tabla;</span>
+        });
+
+        // ACT
+<span class="fc" id="L514">        repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L517">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L518">    }</span>
+
+    @Test
+    @DisplayName(&quot;Calcular promedios sin redondeo - debe calcular 5 promedios correctamente&quot;)
+    void calcularPromediosSinRedondeo_debeCalcularCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L524">        tablaGerm.setNumeroRepeticiones(4);</span>
+        
+        // Crear 4 repeticiones completas
+<span class="fc" id="L527">        RepGerm rep1 = crearRepeticion(1, Arrays.asList(25, 30, 20), 10, 5, 3, 7);</span>
+<span class="fc" id="L528">        RepGerm rep2 = crearRepeticion(2, Arrays.asList(28, 32, 22), 8, 4, 2, 4);</span>
+<span class="fc" id="L529">        RepGerm rep3 = crearRepeticion(3, Arrays.asList(26, 31, 21), 9, 5, 2, 6);</span>
+<span class="fc" id="L530">        RepGerm rep4 = crearRepeticion(4, Arrays.asList(27, 29, 23), 11, 3, 4, 3);</span>
+
+<span class="fc" id="L532">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L533">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(3L);</span>
+<span class="fc" id="L534">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep4);</span>
+<span class="fc" id="L535">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(rep1, rep2, rep3, rep4));</span>
+<span class="fc" id="L536">        when(tablaGermRepository.save(any(TablaGerm.class))).thenAnswer(invocation -&gt; {</span>
+<span class="fc" id="L537">            TablaGerm tabla = invocation.getArgument(0);</span>
+            
+            // Verificar que se calcularon los 5 promedios
+<span class="fc" id="L540">            assertNotNull(tabla.getPromedioSinRedondeo(), &quot;Los promedios no deben ser nulos&quot;);</span>
+<span class="fc" id="L541">            assertEquals(5, tabla.getPromedioSinRedondeo().size(), &quot;Debe haber 5 promedios&quot;);</span>
+            
+            // Promedio normales: (25+30+20+28+32+22+26+31+21+27+29+23)/4 = 314/4 = 78.50
+<span class="fc" id="L544">            assertEquals(new BigDecimal(&quot;78.50&quot;), tabla.getPromedioSinRedondeo().get(0), </span>
+                    &quot;Promedio de normales debe ser 78.50&quot;);
+            
+            // Promedio anormales: (10+8+9+11)/4 = 38/4 = 9.50
+<span class="fc" id="L548">            assertEquals(new BigDecimal(&quot;9.50&quot;), tabla.getPromedioSinRedondeo().get(1), </span>
+                    &quot;Promedio de anormales debe ser 9.50&quot;);
+            
+            // Promedio duras: (5+4+5+3)/4 = 17/4 = 4.25
+<span class="fc" id="L552">            assertEquals(new BigDecimal(&quot;4.25&quot;), tabla.getPromedioSinRedondeo().get(2), </span>
+                    &quot;Promedio de duras debe ser 4.25&quot;);
+            
+            // Promedio frescas: (3+2+2+4)/4 = 11/4 = 2.75
+<span class="fc" id="L556">            assertEquals(new BigDecimal(&quot;2.75&quot;), tabla.getPromedioSinRedondeo().get(3), </span>
+                    &quot;Promedio de frescas debe ser 2.75&quot;);
+            
+            // Promedio muertas: (7+4+6+3)/4 = 20/4 = 5.00
+<span class="fc" id="L560">            assertEquals(new BigDecimal(&quot;5.00&quot;), tabla.getPromedioSinRedondeo().get(4), </span>
+                    &quot;Promedio de muertas debe ser 5.00&quot;);
+            
+<span class="fc" id="L563">            return tabla;</span>
+        });
+
+        // ACT
+<span class="fc" id="L567">        repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L570">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L571">    }</span>
+
+    @Test
+    @DisplayName(&quot;Calcular promedios por conteo - debe calcular promedios por cada conteo individual&quot;)
+    void calcularPromediosPorConteo_debeCalcularCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L577">        tablaGerm.setNumeroRepeticiones(4);</span>
+<span class="fc" id="L578">        tablaGerm.setNumeroConteos(3);</span>
+        
+        // Crear 4 repeticiones completas
+<span class="fc" id="L581">        RepGerm rep1 = crearRepeticion(1, Arrays.asList(25, 30, 20), 10, 5, 3, 7);</span>
+<span class="fc" id="L582">        RepGerm rep2 = crearRepeticion(2, Arrays.asList(28, 32, 22), 8, 4, 2, 4);</span>
+<span class="fc" id="L583">        RepGerm rep3 = crearRepeticion(3, Arrays.asList(26, 31, 21), 9, 5, 2, 6);</span>
+<span class="fc" id="L584">        RepGerm rep4 = crearRepeticion(4, Arrays.asList(27, 29, 23), 11, 3, 4, 3);</span>
+
+<span class="fc" id="L586">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L587">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(3L);</span>
+<span class="fc" id="L588">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep4);</span>
+<span class="fc" id="L589">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(rep1, rep2, rep3, rep4));</span>
+<span class="fc" id="L590">        when(tablaGermRepository.save(any(TablaGerm.class))).thenAnswer(invocation -&gt; {</span>
+<span class="fc" id="L591">            TablaGerm tabla = invocation.getArgument(0);</span>
+            
+            // Verificar que se calcularon los promedios por conteo (3 conteos + 4 campos)
+<span class="fc" id="L594">            assertNotNull(tabla.getPromediosSinRedPorConteo(), &quot;Los promedios por conteo no deben ser nulos&quot;);</span>
+<span class="fc" id="L595">            assertEquals(7, tabla.getPromediosSinRedPorConteo().size(), &quot;Debe haber 7 promedios (3 conteos + 4 campos)&quot;);</span>
+            
+            // Promedio conteo 1: (25+28+26+27)/4 = 106/4 = 26.50
+<span class="fc" id="L598">            assertEquals(new BigDecimal(&quot;26.50&quot;), tabla.getPromediosSinRedPorConteo().get(0), </span>
+                    &quot;Promedio del conteo 1 debe ser 26.50&quot;);
+            
+            // Promedio conteo 2: (30+32+31+29)/4 = 122/4 = 30.50
+<span class="fc" id="L602">            assertEquals(new BigDecimal(&quot;30.50&quot;), tabla.getPromediosSinRedPorConteo().get(1), </span>
+                    &quot;Promedio del conteo 2 debe ser 30.50&quot;);
+            
+            // Promedio conteo 3: (20+22+21+23)/4 = 86/4 = 21.50
+<span class="fc" id="L606">            assertEquals(new BigDecimal(&quot;21.50&quot;), tabla.getPromediosSinRedPorConteo().get(2), </span>
+                    &quot;Promedio del conteo 3 debe ser 21.50&quot;);
+            
+            // Promedio anormales: (10+8+9+11)/4 = 38/4 = 9.50
+<span class="fc" id="L610">            assertEquals(new BigDecimal(&quot;9.50&quot;), tabla.getPromediosSinRedPorConteo().get(3), </span>
+                    &quot;Promedio de anormales debe ser 9.50&quot;);
+            
+            // Promedio duras: (5+4+5+3)/4 = 17/4 = 4.25
+<span class="fc" id="L614">            assertEquals(new BigDecimal(&quot;4.25&quot;), tabla.getPromediosSinRedPorConteo().get(4), </span>
+                    &quot;Promedio de duras debe ser 4.25&quot;);
+            
+            // Promedio frescas: (3+2+2+4)/4 = 11/4 = 2.75
+<span class="fc" id="L618">            assertEquals(new BigDecimal(&quot;2.75&quot;), tabla.getPromediosSinRedPorConteo().get(5), </span>
+                    &quot;Promedio de frescas debe ser 2.75&quot;);
+            
+            // Promedio muertas: (7+4+6+3)/4 = 20/4 = 5.00
+<span class="fc" id="L622">            assertEquals(new BigDecimal(&quot;5.00&quot;), tabla.getPromediosSinRedPorConteo().get(6), </span>
+                    &quot;Promedio de muertas debe ser 5.00&quot;);
+            
+<span class="fc" id="L625">            return tabla;</span>
+        });
+
+        // ACT
+<span class="fc" id="L629">        repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L632">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L633">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar todas las repeticiones completas - debe retornar true cuando están completas&quot;)
+    void todasLasRepeticionesCompletas_debeRetornarTrueCuandoCompletas() {
+        // ARRANGE
+<span class="fc" id="L639">        tablaGerm.setNumeroRepeticiones(2);</span>
+        
+<span class="fc" id="L641">        RepGerm rep1 = crearRepeticion(1, Arrays.asList(25, 30, 20), 10, 5, 3, 7);</span>
+<span class="fc" id="L642">        RepGerm rep2 = crearRepeticion(2, Arrays.asList(28, 32, 22), 8, 4, 2, 4);</span>
+
+<span class="fc" id="L644">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L645">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(1L);</span>
+<span class="fc" id="L646">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep2);</span>
+<span class="fc" id="L647">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(rep1, rep2));</span>
+<span class="fc" id="L648">        when(tablaGermRepository.save(any(TablaGerm.class))).thenAnswer(invocation -&gt; {</span>
+<span class="fc" id="L649">            TablaGerm tabla = invocation.getArgument(0);</span>
+            
+            // Verificar que se calcularon promedios (solo se hace cuando todas están completas)
+<span class="fc" id="L652">            assertNotNull(tabla.getPromedioSinRedondeo(), &quot;Los promedios deben calcularse cuando todas están completas&quot;);</span>
+<span class="fc" id="L653">            assertEquals(5, tabla.getPromedioSinRedondeo().size(), &quot;Debe haber 5 promedios&quot;);</span>
+            
+<span class="fc" id="L655">            return tabla;</span>
+        });
+
+        // ACT
+<span class="fc" id="L659">        repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L662">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L663">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar todas las repeticiones completas - debe retornar false cuando faltan repeticiones&quot;)
+    void todasLasRepeticionesCompletas_debeRetornarFalseCuandoFaltan() {
+        // ARRANGE
+<span class="fc" id="L669">        tablaGerm.setNumeroRepeticiones(4); // Se esperan 4</span>
+        
+<span class="fc" id="L671">        RepGerm rep1 = crearRepeticion(1, Arrays.asList(25, 30, 20), 10, 5, 3, 7);</span>
+
+<span class="fc" id="L673">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L674">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+<span class="fc" id="L675">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(rep1);</span>
+<span class="fc" id="L676">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(rep1)); // Solo 1 de 4</span>
+<span class="fc" id="L677">        when(tablaGermRepository.save(any(TablaGerm.class))).thenAnswer(invocation -&gt; {</span>
+<span class="fc" id="L678">            TablaGerm tabla = invocation.getArgument(0);</span>
+            
+            // Verificar que NO se calcularon promedios (faltan repeticiones)
+<span class="pc bpc" id="L681" title="3 of 4 branches missed.">            assertTrue(tabla.getPromedioSinRedondeo() == null || tabla.getPromedioSinRedondeo().isEmpty(),</span>
+                    &quot;No deben calcularse promedios cuando faltan repeticiones&quot;);
+            
+<span class="fc" id="L684">            return tabla;</span>
+        });
+
+        // ACT
+<span class="fc" id="L688">        repGermService.crearRepGerm(1L, repGermRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L691">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L692">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear entidad a DTO - debe mapear todos los campos correctamente&quot;)
+    void mapearEntidadADTO_debeMapeaTodosLosCampos() {
+        // ARRANGE
+<span class="fc" id="L698">        when(repGermRepository.findById(1L)).thenReturn(Optional.of(repGerm));</span>
+
+        // ACT
+<span class="fc" id="L701">        RepGermDTO resultado = repGermService.obtenerRepGermPorId(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L704">        assertNotNull(resultado, &quot;El DTO no debe ser nulo&quot;);</span>
+<span class="fc" id="L705">        assertEquals(repGerm.getRepGermID(), resultado.getRepGermID(), &quot;El ID debe coincidir&quot;);</span>
+<span class="fc" id="L706">        assertEquals(repGerm.getNumRep(), resultado.getNumRep(), &quot;El numRep debe coincidir&quot;);</span>
+<span class="fc" id="L707">        assertEquals(repGerm.getNormales(), resultado.getNormales(), &quot;Los normales deben coincidir&quot;);</span>
+<span class="fc" id="L708">        assertEquals(repGerm.getAnormales(), resultado.getAnormales(), &quot;Las anormales deben coincidir&quot;);</span>
+<span class="fc" id="L709">        assertEquals(repGerm.getDuras(), resultado.getDuras(), &quot;Las duras deben coincidir&quot;);</span>
+<span class="fc" id="L710">        assertEquals(repGerm.getFrescas(), resultado.getFrescas(), &quot;Las frescas deben coincidir&quot;);</span>
+<span class="fc" id="L711">        assertEquals(repGerm.getMuertas(), resultado.getMuertas(), &quot;Las muertas deben coincidir&quot;);</span>
+<span class="fc" id="L712">        assertEquals(repGerm.getTotal(), resultado.getTotal(), &quot;El total debe coincidir&quot;);</span>
+<span class="fc" id="L713">        assertEquals(repGerm.getTablaGerm().getTablaGermID(), resultado.getTablaGermId(), </span>
+                &quot;El ID de tabla debe coincidir&quot;);
+<span class="fc" id="L715">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición con valores null - debe asignar valores por defecto&quot;)
+    void crearRepGerm_conValoresNull_debeAsignarDefecto() {
+        // ARRANGE
+<span class="fc" id="L721">        RepGermRequestDTO requestConNulls = new RepGermRequestDTO();</span>
+<span class="fc" id="L722">        requestConNulls.setNormales(Arrays.asList(75, null, null)); // Solo primer valor</span>
+<span class="fc" id="L723">        requestConNulls.setAnormales(null);</span>
+<span class="fc" id="L724">        requestConNulls.setDuras(null);</span>
+<span class="fc" id="L725">        requestConNulls.setFrescas(null);</span>
+<span class="fc" id="L726">        requestConNulls.setMuertas(null);</span>
+
+<span class="fc" id="L728">        RepGerm repGermConDefectos = new RepGerm();</span>
+<span class="fc" id="L729">        repGermConDefectos.setRepGermID(1L);</span>
+<span class="fc" id="L730">        repGermConDefectos.setNumRep(1);</span>
+<span class="fc" id="L731">        repGermConDefectos.setNormales(Arrays.asList(75, 0, 0)); // Completado con 0</span>
+<span class="fc" id="L732">        repGermConDefectos.setAnormales(0);</span>
+<span class="fc" id="L733">        repGermConDefectos.setDuras(0);</span>
+<span class="fc" id="L734">        repGermConDefectos.setFrescas(0);</span>
+<span class="fc" id="L735">        repGermConDefectos.setMuertas(0);</span>
+<span class="fc" id="L736">        repGermConDefectos.setTotal(75);</span>
+<span class="fc" id="L737">        repGermConDefectos.setTablaGerm(tablaGerm);</span>
+
+<span class="fc" id="L739">        when(tablaGermRepository.findById(1L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L740">        when(repGermRepository.countByTablaGermId(1L)).thenReturn(0L);</span>
+<span class="fc" id="L741">        when(repGermRepository.save(any(RepGerm.class))).thenReturn(repGermConDefectos);</span>
+<span class="fc" id="L742">        when(repGermRepository.findByTablaGermId(1L)).thenReturn(Arrays.asList(repGermConDefectos));</span>
+<span class="fc" id="L743">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+
+        // ACT
+<span class="fc" id="L746">        RepGermDTO resultado = repGermService.crearRepGerm(1L, requestConNulls);</span>
+
+        // ASSERT
+<span class="fc" id="L749">        assertEquals(Arrays.asList(75, 0, 0), resultado.getNormales(), </span>
+                &quot;Debe completar con 0 los valores null en normales&quot;);
+<span class="fc" id="L751">        assertEquals(0, resultado.getAnormales(), &quot;Debe asignar 0 cuando anormales es null&quot;);</span>
+<span class="fc" id="L752">        assertEquals(0, resultado.getDuras(), &quot;Debe asignar 0 cuando duras es null&quot;);</span>
+<span class="fc" id="L753">        assertEquals(0, resultado.getFrescas(), &quot;Debe asignar 0 cuando frescas es null&quot;);</span>
+<span class="fc" id="L754">        assertEquals(0, resultado.getMuertas(), &quot;Debe asignar 0 cuando muertas es null&quot;);</span>
+<span class="fc" id="L755">        assertEquals(75, resultado.getTotal(), &quot;El total debe calcularse correctamente&quot;);</span>
+<span class="fc" id="L756">    }</span>
+
+    // Método auxiliar para crear repeticiones de prueba
+    private RepGerm crearRepeticion(int numRep, List&lt;Integer&gt; normales, int anormales, 
+                                    int duras, int frescas, int muertas) {
+<span class="fc" id="L761">        RepGerm rep = new RepGerm();</span>
+<span class="fc" id="L762">        rep.setRepGermID((long) numRep);</span>
+<span class="fc" id="L763">        rep.setNumRep(numRep);</span>
+<span class="fc" id="L764">        rep.setNormales(normales);</span>
+<span class="fc" id="L765">        rep.setAnormales(anormales);</span>
+<span class="fc" id="L766">        rep.setDuras(duras);</span>
+<span class="fc" id="L767">        rep.setFrescas(frescas);</span>
+<span class="fc" id="L768">        rep.setMuertas(muertas);</span>
+        
+<span class="fc" id="L770">        int total = normales.stream().mapToInt(Integer::intValue).sum() + </span>
+                   anormales + duras + frescas + muertas;
+<span class="fc" id="L772">        rep.setTotal(total);</span>
+<span class="fc" id="L773">        rep.setTablaGerm(tablaGerm);</span>
+        
+<span class="fc" id="L775">        return rep;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

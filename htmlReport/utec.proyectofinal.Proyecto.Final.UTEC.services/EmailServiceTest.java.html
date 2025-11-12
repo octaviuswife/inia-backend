@@ -1,53 +1,453 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">EmailServiceTest.java</span></div><h1>EmailServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import jakarta.mail.Session;
-import jakarta.mail.internet.MimeMessage;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests para EmailService
+ * 
+ * Valida el envío correcto de todos los tipos de correos electrónicos
+ * del sistema INIA con plantillas HTML personalizadas
+ */
 @ExtendWith(MockitoExtension.class)
 @DisplayName(&quot;Tests de EmailService&quot;)
-<span class="fc" id="L20">class EmailServiceTest {</span>
+<span class="fc" id="L25">class EmailServiceTest {</span>
 
     @Mock
     private JavaMailSender mailSender;
 
+    @Mock
     private MimeMessage mimeMessage;
+
+    @InjectMocks
+    private EmailService emailService;
+
+    private static final String FROM_EMAIL = &quot;noreply@inia.org.uy&quot;;
+    private static final String TEST_EMAIL = &quot;test@example.com&quot;;
+    private static final String TEST_NOMBRE = &quot;Usuario Test&quot;;
+    private static final String ANALISTA_EMAIL = &quot;analista@inia.org.uy&quot;;
+    private static final String ANALISTA_NOMBRE = &quot;Analista Test&quot;;
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L29">        mimeMessage = new MimeMessage((Session) null);</span>
-<span class="fc" id="L30">        lenient().when(mailSender.createMimeMessage()).thenReturn(mimeMessage);</span>
-<span class="fc" id="L31">    }</span>
+        // Configurar el valor de la propiedad fromEmail usando reflexión
+<span class="fc" id="L45">        ReflectionTestUtils.setField(emailService, &quot;fromEmail&quot;, FROM_EMAIL);</span>
+        
+        // Mock del comportamiento de JavaMailSender
+<span class="fc" id="L48">        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);</span>
+<span class="fc" id="L49">    }</span>
 
     @Test
-    @DisplayName(&quot;Crear MimeMessage - debe retornar mensaje válido&quot;)
-    void crearMimeMessage_debeRetornarMensajeValido() {
-<span class="fc" id="L36">        MimeMessage resultado = mailSender.createMimeMessage();</span>
+    @DisplayName(&quot;enviarEmailNuevoRegistro - debe enviar notificación a analista cuando usuario se registra&quot;)
+    void enviarEmailNuevoRegistro_debeEnviarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L55">        String usuarioEmail = &quot;nuevouser@example.com&quot;;</span>
+<span class="fc" id="L56">        String usuarioNombre = &quot;Nuevo Usuario&quot;;</span>
 
-<span class="fc" id="L38">        assertNotNull(resultado);</span>
-<span class="fc" id="L39">        verify(mailSender, times(1)).createMimeMessage();</span>
-<span class="fc" id="L40">    }</span>
+        // ACT
+<span class="fc" id="L59">        emailService.enviarEmailNuevoRegistro(ANALISTA_EMAIL, ANALISTA_NOMBRE, usuarioNombre, usuarioEmail);</span>
+
+        // ASSERT
+<span class="fc" id="L62">        verify(mailSender, times(1)).createMimeMessage();</span>
+<span class="fc" id="L63">        verify(mailSender, times(1)).send(mimeMessage);</span>
+<span class="fc" id="L64">    }</span>
 
     @Test
-    @DisplayName(&quot;JavaMailSender mock - debe estar configurado correctamente&quot;)
-    void javaMailSender_debeEstarConfigurado() {
-<span class="fc" id="L45">        assertNotNull(mailSender);</span>
-<span class="fc" id="L46">        doNothing().when(mailSender).send(any(MimeMessage.class));</span>
-        
-<span class="fc" id="L48">        mailSender.send(mimeMessage);</span>
-        
-<span class="fc" id="L50">        verify(mailSender, times(1)).send(any(MimeMessage.class));</span>
-<span class="fc" id="L51">    }</span>
+    @DisplayName(&quot;enviarEmailNuevoRegistro - debe incluir datos del usuario en el contenido&quot;)
+    void enviarEmailNuevoRegistro_debeIncluirDatosUsuario() {
+        // ARRANGE
+<span class="fc" id="L70">        String usuarioEmail = &quot;usuario@example.com&quot;;</span>
+<span class="fc" id="L71">        String usuarioNombre = &quot;Juan Pérez&quot;;</span>
+
+        // ACT
+<span class="fc" id="L74">        emailService.enviarEmailNuevoRegistro(ANALISTA_EMAIL, ANALISTA_NOMBRE, usuarioNombre, usuarioEmail);</span>
+
+        // ASSERT
+<span class="fc" id="L77">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L78">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L79">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailConfirmacionRegistro - debe enviar confirmación al usuario registrado&quot;)
+    void enviarEmailConfirmacionRegistro_debeEnviarCorrectamente() {
+        // ARRANGE - ACT
+<span class="fc" id="L85">        emailService.enviarEmailConfirmacionRegistro(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT
+<span class="fc" id="L88">        verify(mailSender, times(1)).createMimeMessage();</span>
+<span class="fc" id="L89">        verify(mailSender, times(1)).send(mimeMessage);</span>
+<span class="fc" id="L90">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailConfirmacionRegistro - debe notificar pendiente de aprobación&quot;)
+    void enviarEmailConfirmacionRegistro_debeMostrarEstadoPendiente() {
+        // ARRANGE
+<span class="fc" id="L96">        String email = &quot;pendiente@example.com&quot;;</span>
+<span class="fc" id="L97">        String nombre = &quot;Usuario Pendiente&quot;;</span>
+
+        // ACT
+<span class="fc" id="L100">        emailService.enviarEmailConfirmacionRegistro(email, nombre);</span>
+
+        // ASSERT
+<span class="fc" id="L103">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L104">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L105">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailBienvenida - debe enviar email de bienvenida cuando usuario es aprobado&quot;)
+    void enviarEmailBienvenida_debeEnviarCorrectamente() {
+        // ARRANGE - ACT
+<span class="fc" id="L111">        emailService.enviarEmailBienvenida(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT
+<span class="fc" id="L114">        verify(mailSender, times(1)).createMimeMessage();</span>
+<span class="fc" id="L115">        verify(mailSender, times(1)).send(mimeMessage);</span>
+<span class="fc" id="L116">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailBienvenida - debe incluir enlace de inicio de sesión&quot;)
+    void enviarEmailBienvenida_debeIncluirEnlaceLogin() {
+        // ARRANGE
+<span class="fc" id="L122">        String email = &quot;aprobado@example.com&quot;;</span>
+<span class="fc" id="L123">        String nombre = &quot;Usuario Aprobado&quot;;</span>
+
+        // ACT
+<span class="fc" id="L126">        emailService.enviarEmailBienvenida(email, nombre);</span>
+
+        // ASSERT
+<span class="fc" id="L129">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L130">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L131">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarCodigoRecuperacion - debe enviar código de recuperación de contraseña&quot;)
+    void enviarCodigoRecuperacion_debeEnviarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L137">        String codigoRecuperacion = &quot;123456&quot;;</span>
+
+        // ACT
+<span class="fc" id="L140">        emailService.enviarCodigoRecuperacion(TEST_EMAIL, TEST_NOMBRE, codigoRecuperacion);</span>
+
+        // ASSERT
+<span class="fc" id="L143">        verify(mailSender, times(1)).createMimeMessage();</span>
+<span class="fc" id="L144">        verify(mailSender, times(1)).send(mimeMessage);</span>
+<span class="fc" id="L145">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarCodigoRecuperacion - debe incluir código de 6 dígitos&quot;)
+    void enviarCodigoRecuperacion_debeIncluirCodigo() {
+        // ARRANGE
+<span class="fc" id="L151">        String codigo = &quot;987654&quot;;</span>
+<span class="fc" id="L152">        String email = &quot;recuperar@example.com&quot;;</span>
+<span class="fc" id="L153">        String nombre = &quot;Usuario Recuperar&quot;;</span>
+
+        // ACT
+<span class="fc" id="L156">        emailService.enviarCodigoRecuperacion(email, nombre, codigo);</span>
+
+        // ASSERT
+<span class="fc" id="L159">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L160">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L161">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarCodigoRecuperacion - debe advertir sobre validez de 10 minutos&quot;)
+    void enviarCodigoRecuperacion_debeIncluirAdvertenciaValidez() {
+        // ARRANGE
+<span class="fc" id="L167">        String codigo = &quot;555555&quot;;</span>
+
+        // ACT
+<span class="fc" id="L170">        emailService.enviarCodigoRecuperacion(TEST_EMAIL, TEST_NOMBRE, codigo);</span>
+
+        // ASSERT
+<span class="fc" id="L173">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L174">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviar2FAActivado - debe enviar notificación de activación de 2FA&quot;)
+    void enviar2FAActivado_debeEnviarCorrectamente() {
+        // ARRANGE - ACT
+<span class="fc" id="L180">        emailService.enviar2FAActivado(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT
+<span class="fc" id="L183">        verify(mailSender, times(1)).createMimeMessage();</span>
+<span class="fc" id="L184">        verify(mailSender, times(1)).send(mimeMessage);</span>
+<span class="fc" id="L185">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviar2FAActivado - debe informar sobre protección adicional&quot;)
+    void enviar2FAActivado_debeInformarProteccion() {
+        // ARRANGE
+<span class="fc" id="L191">        String email = &quot;2fa@example.com&quot;;</span>
+<span class="fc" id="L192">        String nombre = &quot;Usuario Seguro&quot;;</span>
+
+        // ACT
+<span class="fc" id="L195">        emailService.enviar2FAActivado(email, nombre);</span>
+
+        // ASSERT
+<span class="fc" id="L198">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L199">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L200">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarNuevoDispositivo - debe enviar notificación de nuevo dispositivo de confianza&quot;)
+    void enviarNuevoDispositivo_debeEnviarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L206">        String nombreDispositivo = &quot;Chrome en Windows 11&quot;;</span>
+<span class="fc" id="L207">        String ipAddress = &quot;192.168.1.100&quot;;</span>
+
+        // ACT
+<span class="fc" id="L210">        emailService.enviarNuevoDispositivo(TEST_EMAIL, TEST_NOMBRE, nombreDispositivo, ipAddress);</span>
+
+        // ASSERT
+<span class="fc" id="L213">        verify(mailSender, times(1)).createMimeMessage();</span>
+<span class="fc" id="L214">        verify(mailSender, times(1)).send(mimeMessage);</span>
+<span class="fc" id="L215">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarNuevoDispositivo - debe incluir información del dispositivo e IP&quot;)
+    void enviarNuevoDispositivo_debeIncluirDetallesDispositivo() {
+        // ARRANGE
+<span class="fc" id="L221">        String dispositivo = &quot;Firefox en Ubuntu 22.04&quot;;</span>
+<span class="fc" id="L222">        String ip = &quot;10.0.0.50&quot;;</span>
+<span class="fc" id="L223">        String email = &quot;dispositivo@example.com&quot;;</span>
+<span class="fc" id="L224">        String nombre = &quot;Usuario Multi-Dispositivo&quot;;</span>
+
+        // ACT
+<span class="fc" id="L227">        emailService.enviarNuevoDispositivo(email, nombre, dispositivo, ip);</span>
+
+        // ASSERT
+<span class="fc" id="L230">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L231">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L232">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarNuevoDispositivo - debe advertir sobre validez de 30 días&quot;)
+    void enviarNuevoDispositivo_debeAdvertirValidez30Dias() {
+        // ARRANGE
+<span class="fc" id="L238">        String dispositivo = &quot;Safari en MacOS&quot;;</span>
+<span class="fc" id="L239">        String ip = &quot;172.16.0.1&quot;;</span>
+
+        // ACT
+<span class="fc" id="L242">        emailService.enviarNuevoDispositivo(TEST_EMAIL, TEST_NOMBRE, dispositivo, ip);</span>
+
+        // ASSERT
+<span class="fc" id="L245">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L246">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmail - debe manejar error cuando falla el envío&quot;)
+    void enviarEmail_debeCapturarErrorEnvio() {
+        // ARRANGE
+<span class="fc" id="L252">        doThrow(new RuntimeException(&quot;Error de envío&quot;)).when(mailSender).send(any(MimeMessage.class));</span>
+
+        // ACT - No debe lanzar excepción
+<span class="fc" id="L255">        emailService.enviarEmailBienvenida(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT
+<span class="fc" id="L258">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L259">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L260">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmail - debe manejar error genérico sin lanzar excepción&quot;)
+    void enviarEmail_debeCapturarExcepcionGenerica() {
+        // ARRANGE
+<span class="fc" id="L266">        when(mailSender.createMimeMessage()).thenThrow(new RuntimeException(&quot;Error inesperado&quot;));</span>
+
+        // ACT - No debe lanzar excepción
+<span class="fc" id="L269">        emailService.enviarCodigoRecuperacion(TEST_EMAIL, TEST_NOMBRE, &quot;123456&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L272">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L273">        verify(mailSender, never()).send(any(MimeMessage.class));</span>
+<span class="fc" id="L274">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailNuevoRegistro - debe usar plantilla HTML con colores INIA&quot;)
+    void enviarEmailNuevoRegistro_debeUsarPlantillaHTML() {
+        // ARRANGE &amp; ACT
+<span class="fc" id="L280">        emailService.enviarEmailNuevoRegistro(ANALISTA_EMAIL, ANALISTA_NOMBRE, &quot;Usuario&quot;, &quot;user@test.com&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L283">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L284">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L285">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailConfirmacionRegistro - debe tener asunto correcto&quot;)
+    void enviarEmailConfirmacionRegistro_debeTenerAsuntoCorrecto() {
+        // ARRANGE &amp; ACT
+<span class="fc" id="L291">        emailService.enviarEmailConfirmacionRegistro(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT
+<span class="fc" id="L294">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L295">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailBienvenida - debe tener asunto de bienvenida&quot;)
+    void enviarEmailBienvenida_debeTenerAsuntoBienvenida() {
+        // ARRANGE &amp; ACT
+<span class="fc" id="L301">        emailService.enviarEmailBienvenida(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT
+<span class="fc" id="L304">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L305">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarCodigoRecuperacion - debe tener asunto de recuperación&quot;)
+    void enviarCodigoRecuperacion_debeTenerAsuntoRecuperacion() {
+        // ARRANGE &amp; ACT
+<span class="fc" id="L311">        emailService.enviarCodigoRecuperacion(TEST_EMAIL, TEST_NOMBRE, &quot;999999&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L314">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L315">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviar2FAActivado - debe tener asunto de 2FA activado&quot;)
+    void enviar2FAActivado_debeTenerAsunto2FA() {
+        // ARRANGE &amp; ACT
+<span class="fc" id="L321">        emailService.enviar2FAActivado(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT
+<span class="fc" id="L324">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L325">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarNuevoDispositivo - debe tener asunto de nuevo dispositivo&quot;)
+    void enviarNuevoDispositivo_debeTenerAsuntoDispositivo() {
+        // ARRANGE &amp; ACT
+<span class="fc" id="L331">        emailService.enviarNuevoDispositivo(TEST_EMAIL, TEST_NOMBRE, &quot;Device&quot;, &quot;127.0.0.1&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L334">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L335">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailNuevoRegistro - debe funcionar con múltiples usuarios&quot;)
+    void enviarEmailNuevoRegistro_debeFuncionarConMultiplesUsuarios() {
+        // ARRANGE
+<span class="fc" id="L341">        String[] usuarios = {&quot;user1@test.com&quot;, &quot;user2@test.com&quot;, &quot;user3@test.com&quot;};</span>
+<span class="fc" id="L342">        String[] nombres = {&quot;Usuario 1&quot;, &quot;Usuario 2&quot;, &quot;Usuario 3&quot;};</span>
+
+        // ACT
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        for (int i = 0; i &lt; usuarios.length; i++) {</span>
+<span class="fc" id="L346">            emailService.enviarEmailNuevoRegistro(ANALISTA_EMAIL, ANALISTA_NOMBRE, nombres[i], usuarios[i]);</span>
+        }
+
+        // ASSERT
+<span class="fc" id="L350">        verify(mailSender, times(3)).send(mimeMessage);</span>
+<span class="fc" id="L351">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmailBienvenida - debe funcionar con diferentes nombres de usuario&quot;)
+    void enviarEmailBienvenida_debeFuncionarConDiferentesNombres() {
+        // ARRANGE
+<span class="fc" id="L357">        String[] nombres = {&quot;María García&quot;, &quot;José López&quot;, &quot;Ana Martínez&quot;};</span>
+
+        // ACT
+<span class="fc bfc" id="L360" title="All 2 branches covered.">        for (String nombre : nombres) {</span>
+<span class="fc" id="L361">            emailService.enviarEmailBienvenida(TEST_EMAIL, nombre);</span>
+        }
+
+        // ASSERT
+<span class="fc" id="L365">        verify(mailSender, times(3)).send(mimeMessage);</span>
+<span class="fc" id="L366">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarCodigoRecuperacion - debe funcionar con diferentes códigos&quot;)
+    void enviarCodigoRecuperacion_debeFuncionarConDiferentesCodigos() {
+        // ARRANGE
+<span class="fc" id="L372">        String[] codigos = {&quot;111111&quot;, &quot;222222&quot;, &quot;333333&quot;, &quot;444444&quot;};</span>
+
+        // ACT
+<span class="fc bfc" id="L375" title="All 2 branches covered.">        for (String codigo : codigos) {</span>
+<span class="fc" id="L376">            emailService.enviarCodigoRecuperacion(TEST_EMAIL, TEST_NOMBRE, codigo);</span>
+        }
+
+        // ASSERT
+<span class="fc" id="L380">        verify(mailSender, times(4)).send(mimeMessage);</span>
+<span class="fc" id="L381">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarNuevoDispositivo - debe funcionar con diferentes dispositivos e IPs&quot;)
+    void enviarNuevoDispositivo_debeFuncionarConDiferentesDispositivos() {
+        // ARRANGE
+<span class="fc" id="L387">        String[] dispositivos = {&quot;Chrome/Windows&quot;, &quot;Firefox/Linux&quot;, &quot;Safari/MacOS&quot;};</span>
+<span class="fc" id="L388">        String[] ips = {&quot;192.168.1.1&quot;, &quot;10.0.0.1&quot;, &quot;172.16.0.1&quot;};</span>
+
+        // ACT
+<span class="fc bfc" id="L391" title="All 2 branches covered.">        for (int i = 0; i &lt; dispositivos.length; i++) {</span>
+<span class="fc" id="L392">            emailService.enviarNuevoDispositivo(TEST_EMAIL, TEST_NOMBRE, dispositivos[i], ips[i]);</span>
+        }
+
+        // ASSERT
+<span class="fc" id="L396">        verify(mailSender, times(3)).send(mimeMessage);</span>
+<span class="fc" id="L397">    }</span>
+
+    @Test
+    @DisplayName(&quot;todos los métodos de envío - deben crear MimeMessage antes de enviar&quot;)
+    void todosLosMetodos_debenCrearMimeMessageAntesDeEnviar() {
+        // ACT
+<span class="fc" id="L403">        emailService.enviarEmailNuevoRegistro(ANALISTA_EMAIL, ANALISTA_NOMBRE, &quot;User&quot;, &quot;user@test.com&quot;);</span>
+<span class="fc" id="L404">        emailService.enviarEmailConfirmacionRegistro(TEST_EMAIL, TEST_NOMBRE);</span>
+<span class="fc" id="L405">        emailService.enviarEmailBienvenida(TEST_EMAIL, TEST_NOMBRE);</span>
+<span class="fc" id="L406">        emailService.enviarCodigoRecuperacion(TEST_EMAIL, TEST_NOMBRE, &quot;123456&quot;);</span>
+<span class="fc" id="L407">        emailService.enviar2FAActivado(TEST_EMAIL, TEST_NOMBRE);</span>
+<span class="fc" id="L408">        emailService.enviarNuevoDispositivo(TEST_EMAIL, TEST_NOMBRE, &quot;Device&quot;, &quot;127.0.0.1&quot;);</span>
+
+        // ASSERT - Cada método debe crear un MimeMessage
+<span class="fc" id="L411">        verify(mailSender, times(6)).createMimeMessage();</span>
+<span class="fc" id="L412">        verify(mailSender, times(6)).send(mimeMessage);</span>
+<span class="fc" id="L413">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmail - debe imprimir mensaje de éxito en consola&quot;)
+    void enviarEmail_debeImprimirMensajeExito() {
+        // ARRANGE &amp; ACT
+<span class="fc" id="L419">        emailService.enviarEmailBienvenida(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT - Verificar que se invocó send (mensaje de éxito se imprime después)
+<span class="fc" id="L422">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L423">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmail - debe imprimir error cuando falla el envío&quot;)
+    void enviarEmail_debeImprimirErrorEnvio() {
+        // ARRANGE
+<span class="fc" id="L429">        doThrow(new RuntimeException(&quot;SMTP error&quot;)).when(mailSender).send(any(MimeMessage.class));</span>
+
+        // ACT
+<span class="fc" id="L432">        emailService.enviar2FAActivado(TEST_EMAIL, TEST_NOMBRE);</span>
+
+        // ASSERT - Verificar que intentó crear y enviar el mensaje
+<span class="fc" id="L435">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L436">        verify(mailSender).send(mimeMessage);</span>
+<span class="fc" id="L437">    }</span>
+
+    @Test
+    @DisplayName(&quot;enviarEmail - debe imprimir error cuando falla con excepción genérica&quot;)
+    void enviarEmail_debeImprimirErrorExcepcionGenerica() {
+        // ARRANGE
+<span class="fc" id="L443">        when(mailSender.createMimeMessage()).thenThrow(new NullPointerException(&quot;Null pointer&quot;));</span>
+
+        // ACT
+<span class="fc" id="L446">        emailService.enviarNuevoDispositivo(TEST_EMAIL, TEST_NOMBRE, &quot;Device&quot;, &quot;127.0.0.1&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L449">        verify(mailSender).createMimeMessage();</span>
+<span class="fc" id="L450">        verify(mailSender, never()).send(any(MimeMessage.class));</span>
+<span class="fc" id="L451">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

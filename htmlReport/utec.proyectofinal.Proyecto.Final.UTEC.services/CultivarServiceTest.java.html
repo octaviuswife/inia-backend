@@ -7,6 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
@@ -24,7 +28,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName(&quot;Tests de CultivarService&quot;)
-<span class="fc" id="L27">class CultivarServiceTest {</span>
+<span class="fc" id="L31">class CultivarServiceTest {</span>
 
     @Mock
     private CultivarRepository cultivarRepository;
@@ -41,231 +45,427 @@ import static org.mockito.Mockito.*;
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L44">        especie = new Especie();</span>
-<span class="fc" id="L45">        especie.setEspecieID(1L);</span>
-<span class="fc" id="L46">        especie.setNombreComun(&quot;Trigo&quot;);</span>
+<span class="fc" id="L48">        especie = new Especie();</span>
+<span class="fc" id="L49">        especie.setEspecieID(1L);</span>
+<span class="fc" id="L50">        especie.setNombreComun(&quot;Trigo&quot;);</span>
 
-<span class="fc" id="L48">        cultivarRequestDTO = new CultivarRequestDTO();</span>
-<span class="fc" id="L49">        cultivarRequestDTO.setNombre(&quot;Cultivar Test&quot;);</span>
-<span class="fc" id="L50">        cultivarRequestDTO.setEspecieID(1L);</span>
+<span class="fc" id="L52">        cultivarRequestDTO = new CultivarRequestDTO();</span>
+<span class="fc" id="L53">        cultivarRequestDTO.setNombre(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L54">        cultivarRequestDTO.setEspecieID(1L);</span>
 
-<span class="fc" id="L52">        cultivar = new Cultivar();</span>
-<span class="fc" id="L53">        cultivar.setCultivarID(1L);</span>
-<span class="fc" id="L54">        cultivar.setNombre(&quot;Cultivar Test&quot;);</span>
-<span class="fc" id="L55">        cultivar.setEspecie(especie);</span>
-<span class="fc" id="L56">        cultivar.setActivo(true);</span>
-<span class="fc" id="L57">    }</span>
+<span class="fc" id="L56">        cultivar = new Cultivar();</span>
+<span class="fc" id="L57">        cultivar.setCultivarID(1L);</span>
+<span class="fc" id="L58">        cultivar.setNombre(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L59">        cultivar.setEspecie(especie);</span>
+<span class="fc" id="L60">        cultivar.setActivo(true);</span>
+<span class="fc" id="L61">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener todos los cultivares activos - debe retornar lista&quot;)
     void obtenerTodos_debeRetornarListaActivos() {
-<span class="fc" id="L62">        when(cultivarRepository.findByActivoTrue()).thenReturn(Arrays.asList(cultivar));</span>
+<span class="fc" id="L66">        when(cultivarRepository.findByActivoTrue()).thenReturn(Arrays.asList(cultivar));</span>
 
-<span class="fc" id="L64">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerTodos();</span>
+<span class="fc" id="L68">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerTodos();</span>
 
-<span class="fc" id="L66">        assertNotNull(resultado);</span>
-<span class="fc" id="L67">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L68">        verify(cultivarRepository, times(1)).findByActivoTrue();</span>
-<span class="fc" id="L69">    }</span>
+<span class="fc" id="L70">        assertNotNull(resultado);</span>
+<span class="fc" id="L71">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L72">        verify(cultivarRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L73">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener cultivares inactivos - debe retornar solo inactivos&quot;)
     void obtenerInactivos_debeRetornarSoloInactivos() {
-<span class="fc" id="L74">        cultivar.setActivo(false);</span>
-<span class="fc" id="L75">        when(cultivarRepository.findByActivoFalse()).thenReturn(Arrays.asList(cultivar));</span>
+<span class="fc" id="L78">        cultivar.setActivo(false);</span>
+<span class="fc" id="L79">        when(cultivarRepository.findByActivoFalse()).thenReturn(Arrays.asList(cultivar));</span>
 
-<span class="fc" id="L77">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerInactivos();</span>
+<span class="fc" id="L81">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerInactivos();</span>
 
-<span class="fc" id="L79">        assertNotNull(resultado);</span>
-<span class="fc" id="L80">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L81">        verify(cultivarRepository, times(1)).findByActivoFalse();</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L83">        assertNotNull(resultado);</span>
+<span class="fc" id="L84">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L85">        verify(cultivarRepository, times(1)).findByActivoFalse();</span>
+<span class="fc" id="L86">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener todos con filtro null - debe retornar todos&quot;)
     void obtenerTodos_conFiltroNull_debeRetornarTodos() {
-<span class="fc" id="L87">        when(cultivarRepository.findAll()).thenReturn(Arrays.asList(cultivar));</span>
+<span class="fc" id="L91">        when(cultivarRepository.findAll()).thenReturn(Arrays.asList(cultivar));</span>
 
-<span class="fc" id="L89">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerTodos(null);</span>
+<span class="fc" id="L93">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerTodos(null);</span>
 
-<span class="fc" id="L91">        assertNotNull(resultado);</span>
-<span class="fc" id="L92">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L93">        verify(cultivarRepository, times(1)).findAll();</span>
-<span class="fc" id="L94">    }</span>
+<span class="fc" id="L95">        assertNotNull(resultado);</span>
+<span class="fc" id="L96">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L97">        verify(cultivarRepository, times(1)).findAll();</span>
+<span class="fc" id="L98">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener cultivares por especie - debe retornar cultivares de la especie&quot;)
     void obtenerPorEspecie_debeRetornarCultivaresDeLaEspecie() {
-<span class="fc" id="L99">        when(cultivarRepository.findByEspecieEspecieIDAndActivoTrue(1L)).thenReturn(Arrays.asList(cultivar));</span>
+<span class="fc" id="L103">        when(cultivarRepository.findByEspecieEspecieIDAndActivoTrue(1L)).thenReturn(Arrays.asList(cultivar));</span>
 
-<span class="fc" id="L101">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerPorEspecie(1L);</span>
+<span class="fc" id="L105">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerPorEspecie(1L);</span>
 
-<span class="fc" id="L103">        assertNotNull(resultado);</span>
-<span class="fc" id="L104">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L105">        assertEquals(1L, resultado.get(0).getEspecieID());</span>
-<span class="fc" id="L106">        verify(cultivarRepository, times(1)).findByEspecieEspecieIDAndActivoTrue(1L);</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L107">        assertNotNull(resultado);</span>
+<span class="fc" id="L108">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L109">        assertEquals(1L, resultado.get(0).getEspecieID());</span>
+<span class="fc" id="L110">        verify(cultivarRepository, times(1)).findByEspecieEspecieIDAndActivoTrue(1L);</span>
+<span class="fc" id="L111">    }</span>
 
     @Test
     @DisplayName(&quot;Buscar por nombre - debe retornar coincidencias&quot;)
     void buscarPorNombre_debeRetornarCoincidencias() {
-<span class="fc" id="L112">        when(cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Test&quot;)).thenReturn(Arrays.asList(cultivar));</span>
+<span class="fc" id="L116">        when(cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Test&quot;)).thenReturn(Arrays.asList(cultivar));</span>
 
-<span class="fc" id="L114">        List&lt;CultivarDTO&gt; resultado = cultivarService.buscarPorNombre(&quot;Test&quot;);</span>
+<span class="fc" id="L118">        List&lt;CultivarDTO&gt; resultado = cultivarService.buscarPorNombre(&quot;Test&quot;);</span>
 
-<span class="fc" id="L116">        assertNotNull(resultado);</span>
-<span class="fc" id="L117">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L118">        assertTrue(resultado.get(0).getNombre().contains(&quot;Test&quot;));</span>
-<span class="fc" id="L119">        verify(cultivarRepository, times(1)).findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Test&quot;);</span>
-<span class="fc" id="L120">    }</span>
+<span class="fc" id="L120">        assertNotNull(resultado);</span>
+<span class="fc" id="L121">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L122">        assertTrue(resultado.get(0).getNombre().contains(&quot;Test&quot;));</span>
+<span class="fc" id="L123">        verify(cultivarRepository, times(1)).findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Test&quot;);</span>
+<span class="fc" id="L124">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener por ID - debe retornar cultivar existente&quot;)
     void obtenerPorId_cultivarExistente_debeRetornarCultivar() {
-<span class="fc" id="L125">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L129">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
 
-<span class="fc" id="L127">        CultivarDTO resultado = cultivarService.obtenerPorId(1L);</span>
+<span class="fc" id="L131">        CultivarDTO resultado = cultivarService.obtenerPorId(1L);</span>
 
-<span class="fc" id="L129">        assertNotNull(resultado);</span>
-<span class="fc" id="L130">        assertEquals(1L, resultado.getCultivarID());</span>
-<span class="fc" id="L131">        assertEquals(&quot;Cultivar Test&quot;, resultado.getNombre());</span>
-<span class="fc" id="L132">        verify(cultivarRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L133">    }</span>
+<span class="fc" id="L133">        assertNotNull(resultado);</span>
+<span class="fc" id="L134">        assertEquals(1L, resultado.getCultivarID());</span>
+<span class="fc" id="L135">        assertEquals(&quot;Cultivar Test&quot;, resultado.getNombre());</span>
+<span class="fc" id="L136">        verify(cultivarRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L137">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener por ID inexistente - debe retornar null&quot;)
     void obtenerPorId_cultivarInexistente_debeRetornarNull() {
-<span class="fc" id="L138">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L142">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L140">        CultivarDTO resultado = cultivarService.obtenerPorId(999L);</span>
+<span class="fc" id="L144">        CultivarDTO resultado = cultivarService.obtenerPorId(999L);</span>
 
-<span class="fc" id="L142">        assertNull(resultado);</span>
-<span class="fc" id="L143">        verify(cultivarRepository, times(1)).findById(999L);</span>
-<span class="fc" id="L144">    }</span>
+<span class="fc" id="L146">        assertNull(resultado);</span>
+<span class="fc" id="L147">        verify(cultivarRepository, times(1)).findById(999L);</span>
+<span class="fc" id="L148">    }</span>
 
     @Test
     @DisplayName(&quot;Crear cultivar válido - debe guardar y retornar DTO&quot;)
     void crear_cultivarValido_debeGuardarYRetornarDTO() {
-<span class="fc" id="L149">        when(especieService.obtenerEntidadPorId(1L)).thenReturn(especie);</span>
-<span class="fc" id="L150">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
+<span class="fc" id="L153">        when(especieService.obtenerEntidadPorId(1L)).thenReturn(especie);</span>
+<span class="fc" id="L154">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
 
-<span class="fc" id="L152">        CultivarDTO resultado = cultivarService.crear(cultivarRequestDTO);</span>
+<span class="fc" id="L156">        CultivarDTO resultado = cultivarService.crear(cultivarRequestDTO);</span>
 
-<span class="fc" id="L154">        assertNotNull(resultado);</span>
-<span class="fc" id="L155">        assertEquals(&quot;Cultivar Test&quot;, resultado.getNombre());</span>
-<span class="fc" id="L156">        verify(especieService, times(1)).obtenerEntidadPorId(1L);</span>
-<span class="fc" id="L157">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
-<span class="fc" id="L158">    }</span>
+<span class="fc" id="L158">        assertNotNull(resultado);</span>
+<span class="fc" id="L159">        assertEquals(&quot;Cultivar Test&quot;, resultado.getNombre());</span>
+<span class="fc" id="L160">        verify(especieService, times(1)).obtenerEntidadPorId(1L);</span>
+<span class="fc" id="L161">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
+<span class="fc" id="L162">    }</span>
 
     @Test
     @DisplayName(&quot;Crear cultivar con especie inexistente - debe lanzar excepción&quot;)
     void crear_especieInexistente_debeLanzarExcepcion() {
-<span class="fc" id="L163">        when(especieService.obtenerEntidadPorId(999L)).thenReturn(null);</span>
-<span class="fc" id="L164">        cultivarRequestDTO.setEspecieID(999L);</span>
+<span class="fc" id="L167">        when(especieService.obtenerEntidadPorId(999L)).thenReturn(null);</span>
+<span class="fc" id="L168">        cultivarRequestDTO.setEspecieID(999L);</span>
 
-<span class="fc" id="L166">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
-<span class="nc" id="L167">            cultivarService.crear(cultivarRequestDTO);</span>
-<span class="nc" id="L168">        });</span>
+<span class="fc" id="L170">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L171">            cultivarService.crear(cultivarRequestDTO);</span>
+<span class="nc" id="L172">        });</span>
 
-<span class="fc" id="L170">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
-<span class="fc" id="L171">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
-<span class="fc" id="L172">    }</span>
+<span class="fc" id="L174">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
+<span class="fc" id="L175">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
+<span class="fc" id="L176">    }</span>
 
     @Test
     @DisplayName(&quot;Actualizar cultivar - debe actualizar y retornar DTO&quot;)
     void actualizar_debeActualizarYRetornarDTO() {
-<span class="fc" id="L177">        cultivarRequestDTO.setNombre(&quot;Cultivar Actualizado&quot;);</span>
-<span class="fc" id="L178">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
-<span class="fc" id="L179">        when(especieService.obtenerEntidadPorId(1L)).thenReturn(especie);</span>
-<span class="fc" id="L180">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
+<span class="fc" id="L181">        cultivarRequestDTO.setNombre(&quot;Cultivar Actualizado&quot;);</span>
+<span class="fc" id="L182">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L183">        when(especieService.obtenerEntidadPorId(1L)).thenReturn(especie);</span>
+<span class="fc" id="L184">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
 
-<span class="fc" id="L182">        CultivarDTO resultado = cultivarService.actualizar(1L, cultivarRequestDTO);</span>
+<span class="fc" id="L186">        CultivarDTO resultado = cultivarService.actualizar(1L, cultivarRequestDTO);</span>
 
-<span class="fc" id="L184">        assertNotNull(resultado);</span>
-<span class="fc" id="L185">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
-<span class="fc" id="L186">    }</span>
+<span class="fc" id="L188">        assertNotNull(resultado);</span>
+<span class="fc" id="L189">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
+<span class="fc" id="L190">    }</span>
 
     @Test
     @DisplayName(&quot;Actualizar cultivar inexistente - debe retornar null&quot;)
     void actualizar_cultivarInexistente_debeRetornarNull() {
-<span class="fc" id="L191">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L195">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L193">        CultivarDTO resultado = cultivarService.actualizar(999L, cultivarRequestDTO);</span>
+<span class="fc" id="L197">        CultivarDTO resultado = cultivarService.actualizar(999L, cultivarRequestDTO);</span>
 
-<span class="fc" id="L195">        assertNull(resultado);</span>
-<span class="fc" id="L196">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
-<span class="fc" id="L197">    }</span>
+<span class="fc" id="L199">        assertNull(resultado);</span>
+<span class="fc" id="L200">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
+<span class="fc" id="L201">    }</span>
 
     @Test
     @DisplayName(&quot;Eliminar cultivar - debe cambiar activo a false&quot;)
     void eliminar_debeCambiarActivoAFalse() {
-<span class="fc" id="L202">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
-<span class="fc" id="L203">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
+<span class="fc" id="L206">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L207">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
 
-<span class="fc" id="L205">        cultivarService.eliminar(1L);</span>
+<span class="fc" id="L209">        cultivarService.eliminar(1L);</span>
 
-<span class="fc" id="L207">        verify(cultivarRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L208">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
-<span class="fc" id="L209">    }</span>
+<span class="fc" id="L211">        verify(cultivarRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L212">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
+<span class="fc" id="L213">    }</span>
 
     @Test
     @DisplayName(&quot;Reactivar cultivar - debe cambiar activo a true&quot;)
     void reactivar_debeCambiarActivoATrue() {
-<span class="fc" id="L214">        cultivar.setActivo(false);</span>
-<span class="fc" id="L215">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
-<span class="fc" id="L216">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
+<span class="fc" id="L218">        cultivar.setActivo(false);</span>
+<span class="fc" id="L219">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L220">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
 
-<span class="fc" id="L218">        CultivarDTO resultado = cultivarService.reactivar(1L);</span>
+<span class="fc" id="L222">        CultivarDTO resultado = cultivarService.reactivar(1L);</span>
 
-<span class="fc" id="L220">        assertNotNull(resultado);</span>
-<span class="fc" id="L221">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
-<span class="fc" id="L222">    }</span>
+<span class="fc" id="L224">        assertNotNull(resultado);</span>
+<span class="fc" id="L225">        verify(cultivarRepository, times(1)).save(any(Cultivar.class));</span>
+<span class="fc" id="L226">    }</span>
 
     @Test
     @DisplayName(&quot;Reactivar cultivar ya activo - debe lanzar excepción&quot;)
     void reactivar_cultivarYaActivo_debeLanzarExcepcion() {
-<span class="fc" id="L227">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L231">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
 
-<span class="fc" id="L229">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
-<span class="nc" id="L230">            cultivarService.reactivar(1L);</span>
-<span class="nc" id="L231">        });</span>
+<span class="fc" id="L233">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L234">            cultivarService.reactivar(1L);</span>
+<span class="nc" id="L235">        });</span>
 
-<span class="fc" id="L233">        assertTrue(exception.getMessage().contains(&quot;ya está activo&quot;));</span>
-<span class="fc" id="L234">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
-<span class="fc" id="L235">    }</span>
+<span class="fc" id="L237">        assertTrue(exception.getMessage().contains(&quot;ya está activo&quot;));</span>
+<span class="fc" id="L238">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
+<span class="fc" id="L239">    }</span>
 
     @Test
     @DisplayName(&quot;Reactivar cultivar inexistente - debe retornar null&quot;)
     void reactivar_cultivarInexistente_debeRetornarNull() {
-<span class="fc" id="L240">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L244">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L242">        CultivarDTO resultado = cultivarService.reactivar(999L);</span>
+<span class="fc" id="L246">        CultivarDTO resultado = cultivarService.reactivar(999L);</span>
 
-<span class="fc" id="L244">        assertNull(resultado);</span>
-<span class="fc" id="L245">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
-<span class="fc" id="L246">    }</span>
+<span class="fc" id="L248">        assertNull(resultado);</span>
+<span class="fc" id="L249">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
+<span class="fc" id="L250">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener entidad por ID - debe retornar entidad&quot;)
     void obtenerEntidadPorId_debeRetornarEntidad() {
-<span class="fc" id="L251">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L255">        when(cultivarRepository.findById(1L)).thenReturn(Optional.of(cultivar));</span>
 
-<span class="fc" id="L253">        Cultivar resultado = cultivarService.obtenerEntidadPorId(1L);</span>
+<span class="fc" id="L257">        Cultivar resultado = cultivarService.obtenerEntidadPorId(1L);</span>
 
-<span class="fc" id="L255">        assertNotNull(resultado);</span>
-<span class="fc" id="L256">        assertEquals(1L, resultado.getCultivarID());</span>
-<span class="fc" id="L257">        verify(cultivarRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L258">    }</span>
+<span class="fc" id="L259">        assertNotNull(resultado);</span>
+<span class="fc" id="L260">        assertEquals(1L, resultado.getCultivarID());</span>
+<span class="fc" id="L261">        verify(cultivarRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L262">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener entidad por ID inexistente - debe retornar null&quot;)
     void obtenerEntidadPorId_inexistente_debeRetornarNull() {
-<span class="fc" id="L263">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L267">        when(cultivarRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L265">        Cultivar resultado = cultivarService.obtenerEntidadPorId(999L);</span>
+<span class="fc" id="L269">        Cultivar resultado = cultivarService.obtenerEntidadPorId(999L);</span>
 
-<span class="fc" id="L267">        assertNull(resultado);</span>
-<span class="fc" id="L268">        verify(cultivarRepository, times(1)).findById(999L);</span>
-<span class="fc" id="L269">    }</span>
+<span class="fc" id="L271">        assertNull(resultado);</span>
+<span class="fc" id="L272">        verify(cultivarRepository, times(1)).findById(999L);</span>
+<span class="fc" id="L273">    }</span>
+
+    // ========== Tests para obtenerTodos(Boolean activo) ==========
+
+    @Test
+    @DisplayName(&quot;obtenerTodos con activo=true - debe retornar solo activos&quot;)
+    void obtenerTodos_activoTrue_debeRetornarSoloActivos() {
+        // ARRANGE
+<span class="fc" id="L281">        when(cultivarRepository.findByActivoTrue()).thenReturn(Arrays.asList(cultivar));</span>
+
+        // ACT
+<span class="fc" id="L284">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerTodos(true);</span>
+
+        // ASSERT
+<span class="fc" id="L287">        assertNotNull(resultado);</span>
+<span class="fc" id="L288">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L289">        verify(cultivarRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L290">        verify(cultivarRepository, never()).findAll();</span>
+<span class="fc" id="L291">        verify(cultivarRepository, never()).findByActivoFalse();</span>
+<span class="fc" id="L292">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerTodos con activo=false - debe retornar solo inactivos&quot;)
+    void obtenerTodos_activoFalse_debeRetornarSoloInactivos() {
+        // ARRANGE
+<span class="fc" id="L298">        cultivar.setActivo(false);</span>
+<span class="fc" id="L299">        when(cultivarRepository.findByActivoFalse()).thenReturn(Arrays.asList(cultivar));</span>
+
+        // ACT
+<span class="fc" id="L302">        List&lt;CultivarDTO&gt; resultado = cultivarService.obtenerTodos(false);</span>
+
+        // ASSERT
+<span class="fc" id="L305">        assertNotNull(resultado);</span>
+<span class="fc" id="L306">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L307">        verify(cultivarRepository, times(1)).findByActivoFalse();</span>
+<span class="fc" id="L308">        verify(cultivarRepository, never()).findAll();</span>
+<span class="fc" id="L309">        verify(cultivarRepository, never()).findByActivoTrue();</span>
+<span class="fc" id="L310">    }</span>
+
+    // ========== Tests para obtenerCultivaresPaginadosConFiltros ==========
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - sin filtros, retorna todos ordenados&quot;)
+    void obtenerCultivaresPaginadosConFiltros_sinFiltros_retornaTodos() {
+        // ARRANGE
+<span class="fc" id="L318">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L319">        Page&lt;Cultivar&gt; cultivarPage = new PageImpl&lt;&gt;(Arrays.asList(cultivar), pageable, 1);</span>
+        
+<span class="fc" id="L321">        when(cultivarRepository.findAllByOrderByNombreAsc(pageable)).thenReturn(cultivarPage);</span>
+
+        // ACT
+<span class="fc" id="L324">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, null, null);</span>
+
+        // ASSERT
+<span class="fc" id="L327">        assertNotNull(resultado);</span>
+<span class="fc" id="L328">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L329">        assertEquals(1, resultado.getContent().size());</span>
+<span class="fc" id="L330">        verify(cultivarRepository, times(1)).findAllByOrderByNombreAsc(pageable);</span>
+<span class="fc" id="L331">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - filtro activo=true, sin búsqueda&quot;)
+    void obtenerCultivaresPaginadosConFiltros_soloActivos_retornaActivos() {
+        // ARRANGE
+<span class="fc" id="L337">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L338">        Page&lt;Cultivar&gt; cultivarPage = new PageImpl&lt;&gt;(Arrays.asList(cultivar), pageable, 1);</span>
+        
+<span class="fc" id="L340">        when(cultivarRepository.findByActivoTrueOrderByNombreAsc(pageable)).thenReturn(cultivarPage);</span>
+
+        // ACT
+<span class="fc" id="L343">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, null, true);</span>
+
+        // ASSERT
+<span class="fc" id="L346">        assertNotNull(resultado);</span>
+<span class="fc" id="L347">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L348">        verify(cultivarRepository, times(1)).findByActivoTrueOrderByNombreAsc(pageable);</span>
+<span class="fc" id="L349">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - filtro activo=false, sin búsqueda&quot;)
+    void obtenerCultivaresPaginadosConFiltros_soloInactivos_retornaInactivos() {
+        // ARRANGE
+<span class="fc" id="L355">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L356">        cultivar.setActivo(false);</span>
+<span class="fc" id="L357">        Page&lt;Cultivar&gt; cultivarPage = new PageImpl&lt;&gt;(Arrays.asList(cultivar), pageable, 1);</span>
+        
+<span class="fc" id="L359">        when(cultivarRepository.findByActivoFalseOrderByNombreAsc(pageable)).thenReturn(cultivarPage);</span>
+
+        // ACT
+<span class="fc" id="L362">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, null, false);</span>
+
+        // ASSERT
+<span class="fc" id="L365">        assertNotNull(resultado);</span>
+<span class="fc" id="L366">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L367">        verify(cultivarRepository, times(1)).findByActivoFalseOrderByNombreAsc(pageable);</span>
+<span class="fc" id="L368">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - con término de búsqueda y activo=null&quot;)
+    void obtenerCultivaresPaginadosConFiltros_conBusquedaSinFiltroActivo_retornaTodosCoincidentes() {
+        // ARRANGE
+<span class="fc" id="L374">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L375">        Cultivar cultivar2 = new Cultivar();</span>
+<span class="fc" id="L376">        cultivar2.setCultivarID(2L);</span>
+<span class="fc" id="L377">        cultivar2.setNombre(&quot;Test Cultivar&quot;);</span>
+<span class="fc" id="L378">        cultivar2.setEspecie(especie);</span>
+<span class="fc" id="L379">        cultivar2.setActivo(false);</span>
+        
+<span class="fc" id="L381">        when(cultivarRepository.findAll()).thenReturn(Arrays.asList(cultivar, cultivar2));</span>
+
+        // ACT
+<span class="fc" id="L384">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, &quot;Test&quot;, null);</span>
+
+        // ASSERT
+<span class="fc" id="L387">        assertNotNull(resultado);</span>
+<span class="fc" id="L388">        assertEquals(2, resultado.getTotalElements()); // Ambos contienen &quot;Test&quot;</span>
+<span class="fc" id="L389">        verify(cultivarRepository, times(1)).findAll();</span>
+<span class="fc" id="L390">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - con término de búsqueda y activo=true&quot;)
+    void obtenerCultivaresPaginadosConFiltros_conBusquedaYActivoTrue_retornaSoloActivosCoincidentes() {
+        // ARRANGE
+<span class="fc" id="L396">        Pageable pageable = PageRequest.of(0, 10);</span>
+        
+<span class="fc" id="L398">        when(cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Test&quot;)).thenReturn(Arrays.asList(cultivar));</span>
+
+        // ACT
+<span class="fc" id="L401">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, &quot;Test&quot;, true);</span>
+
+        // ASSERT
+<span class="fc" id="L404">        assertNotNull(resultado);</span>
+<span class="fc" id="L405">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L406">        assertTrue(resultado.getContent().get(0).getActivo());</span>
+<span class="fc" id="L407">        verify(cultivarRepository, times(1)).findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Test&quot;);</span>
+<span class="fc" id="L408">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - con término de búsqueda y activo=false&quot;)
+    void obtenerCultivaresPaginadosConFiltros_conBusquedaYActivoFalse_retornaSoloInactivosCoincidentes() {
+        // ARRANGE
+<span class="fc" id="L414">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L415">        cultivar.setActivo(false);</span>
+        
+<span class="fc" id="L417">        when(cultivarRepository.findByActivoFalse()).thenReturn(Arrays.asList(cultivar));</span>
+
+        // ACT
+<span class="fc" id="L420">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, &quot;Test&quot;, false);</span>
+
+        // ASSERT
+<span class="fc" id="L423">        assertNotNull(resultado);</span>
+<span class="fc" id="L424">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L425">        assertFalse(resultado.getContent().get(0).getActivo());</span>
+<span class="fc" id="L426">        verify(cultivarRepository, times(1)).findByActivoFalse();</span>
+<span class="fc" id="L427">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - con búsqueda vacía, trata como sin filtro&quot;)
+    void obtenerCultivaresPaginadosConFiltros_busquedaVacia_trataSinFiltro() {
+        // ARRANGE
+<span class="fc" id="L433">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L434">        Page&lt;Cultivar&gt; cultivarPage = new PageImpl&lt;&gt;(Arrays.asList(cultivar), pageable, 1);</span>
+        
+<span class="fc" id="L436">        when(cultivarRepository.findAllByOrderByNombreAsc(pageable)).thenReturn(cultivarPage);</span>
+
+        // ACT
+<span class="fc" id="L439">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, &quot;   &quot;, null);</span>
+
+        // ASSERT
+<span class="fc" id="L442">        assertNotNull(resultado);</span>
+<span class="fc" id="L443">        verify(cultivarRepository, times(1)).findAllByOrderByNombreAsc(pageable);</span>
+<span class="fc" id="L444">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerCultivaresPaginadosConFiltros - paginación correcta con búsqueda&quot;)
+    void obtenerCultivaresPaginadosConFiltros_paginacionCorrecta() {
+        // ARRANGE
+<span class="fc" id="L450">        Pageable pageable = PageRequest.of(0, 1); // Solo 1 elemento por página</span>
+        
+<span class="fc" id="L452">        Cultivar cultivar2 = new Cultivar();</span>
+<span class="fc" id="L453">        cultivar2.setCultivarID(2L);</span>
+<span class="fc" id="L454">        cultivar2.setNombre(&quot;Test 2&quot;);</span>
+<span class="fc" id="L455">        cultivar2.setEspecie(especie);</span>
+<span class="fc" id="L456">        cultivar2.setActivo(true);</span>
+        
+<span class="fc" id="L458">        when(cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Test&quot;))</span>
+<span class="fc" id="L459">            .thenReturn(Arrays.asList(cultivar, cultivar2));</span>
+
+        // ACT
+<span class="fc" id="L462">        Page&lt;CultivarDTO&gt; resultado = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, &quot;Test&quot;, true);</span>
+
+        // ASSERT
+<span class="fc" id="L465">        assertNotNull(resultado);</span>
+<span class="fc" id="L466">        assertEquals(2, resultado.getTotalElements()); // Total de elementos</span>
+<span class="fc" id="L467">        assertEquals(1, resultado.getContent().size()); // Solo 1 en la primera página</span>
+<span class="fc" id="L468">        assertEquals(2, resultado.getTotalPages()); // 2 páginas en total</span>
+<span class="fc" id="L469">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

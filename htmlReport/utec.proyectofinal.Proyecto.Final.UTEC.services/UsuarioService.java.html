@@ -188,23 +188,23 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
      * Rechazar solicitud de usuario
      */
     public void rechazarSolicitud(Integer usuarioId) {
-<span class="nc" id="L191">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
-<span class="nc" id="L192">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+<span class="fc" id="L191">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
+<span class="pc" id="L192">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
 
-<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (usuario.getEstado() != EstadoUsuario.PENDIENTE) {</span>
-<span class="nc" id="L195">            throw new RuntimeException(&quot;Solo se pueden rechazar usuarios en estado PENDIENTE&quot;);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (usuario.getEstado() != EstadoUsuario.PENDIENTE) {</span>
+<span class="fc" id="L195">            throw new RuntimeException(&quot;Solo se pueden rechazar usuarios en estado PENDIENTE&quot;);</span>
         }
 
         // Crear notificación automática para rechazo de usuario
         try {
-<span class="nc" id="L200">            notificacionService.notificarUsuarioRechazado(usuario.getUsuarioID().longValue());</span>
+<span class="fc" id="L200">            notificacionService.notificarUsuarioRechazado(usuario.getUsuarioID().longValue());</span>
 <span class="nc" id="L201">        } catch (Exception e) {</span>
             // Log error but continue with rejection
 <span class="nc" id="L203">            System.err.println(&quot;Error creating notification for user rejection: &quot; + e.getMessage());</span>
-<span class="nc" id="L204">        }</span>
+<span class="fc" id="L204">        }</span>
 
-<span class="nc" id="L206">        usuarioRepository.delete(usuario);</span>
-<span class="nc" id="L207">    }</span>
+<span class="fc" id="L206">        usuarioRepository.delete(usuario);</span>
+<span class="fc" id="L207">    }</span>
 
     /**
      * Listar todos los usuarios (para administración)
@@ -221,40 +221,40 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
      */
     public Page&lt;UsuarioDTO&gt; listarTodosUsuariosPaginados(int page, int size, String search, Rol rol, Boolean activo) {
         // Crear Pageable con ordenamiento alfabético por nombres y apellidos
-<span class="nc" id="L224">        Pageable pageable = PageRequest.of(page, size, </span>
-<span class="nc" id="L225">            Sort.by(Sort.Direction.ASC, &quot;apellidos&quot;, &quot;nombres&quot;));</span>
+<span class="fc" id="L224">        Pageable pageable = PageRequest.of(page, size, </span>
+<span class="fc" id="L225">            Sort.by(Sort.Direction.ASC, &quot;apellidos&quot;, &quot;nombres&quot;));</span>
         Page&lt;Usuario&gt; usuariosPage;
         
-<span class="nc bnc" id="L228" title="All 4 branches missed.">        boolean hasSearch = search != null &amp;&amp; !search.trim().isEmpty();</span>
+<span class="pc bpc" id="L228" title="1 of 4 branches missed.">        boolean hasSearch = search != null &amp;&amp; !search.trim().isEmpty();</span>
         
         // Combinaciones de filtros
-<span class="nc bnc" id="L231" title="All 6 branches missed.">        if (rol != null &amp;&amp; activo != null &amp;&amp; hasSearch) {</span>
+<span class="pc bpc" id="L231" title="3 of 6 branches missed.">        if (rol != null &amp;&amp; activo != null &amp;&amp; hasSearch) {</span>
             // Rol + Activo + Búsqueda
 <span class="nc" id="L233">            usuariosPage = usuarioRepository.findByRolAndActivoAndSearchTerm(rol, activo, search, pageable);</span>
-<span class="nc bnc" id="L234" title="All 4 branches missed.">        } else if (rol != null &amp;&amp; activo != null) {</span>
+<span class="pc bpc" id="L234" title="1 of 4 branches missed.">        } else if (rol != null &amp;&amp; activo != null) {</span>
             // Rol + Activo (sin búsqueda)
 <span class="nc" id="L236">            usuariosPage = usuarioRepository.findByRolAndActivo(rol, activo, pageable);</span>
-<span class="nc bnc" id="L237" title="All 4 branches missed.">        } else if (rol != null &amp;&amp; hasSearch) {</span>
+<span class="pc bpc" id="L237" title="1 of 4 branches missed.">        } else if (rol != null &amp;&amp; hasSearch) {</span>
             // Rol + Búsqueda
 <span class="nc" id="L239">            usuariosPage = usuarioRepository.findBySearchTermAndRol(search, rol, pageable);</span>
-<span class="nc bnc" id="L240" title="All 4 branches missed.">        } else if (activo != null &amp;&amp; hasSearch) {</span>
+<span class="pc bpc" id="L240" title="1 of 4 branches missed.">        } else if (activo != null &amp;&amp; hasSearch) {</span>
             // Activo + Búsqueda
 <span class="nc" id="L242">            usuariosPage = usuarioRepository.findByActivoAndSearchTerm(activo, search, pageable);</span>
-<span class="nc bnc" id="L243" title="All 2 branches missed.">        } else if (rol != null) {</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        } else if (rol != null) {</span>
             // Solo Rol
-<span class="nc" id="L245">            usuariosPage = usuarioRepository.findByRol(rol, pageable);</span>
-<span class="nc bnc" id="L246" title="All 2 branches missed.">        } else if (activo != null) {</span>
+<span class="fc" id="L245">            usuariosPage = usuarioRepository.findByRol(rol, pageable);</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        } else if (activo != null) {</span>
             // Solo Activo
-<span class="nc" id="L248">            usuariosPage = usuarioRepository.findByActivo(activo, pageable);</span>
-<span class="nc bnc" id="L249" title="All 2 branches missed.">        } else if (hasSearch) {</span>
+<span class="fc" id="L248">            usuariosPage = usuarioRepository.findByActivo(activo, pageable);</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">        } else if (hasSearch) {</span>
             // Solo Búsqueda
-<span class="nc" id="L251">            usuariosPage = usuarioRepository.findBySearchTerm(search, pageable);</span>
+<span class="fc" id="L251">            usuariosPage = usuarioRepository.findBySearchTerm(search, pageable);</span>
         } else {
             // Sin filtros
-<span class="nc" id="L254">            usuariosPage = usuarioRepository.findAll(pageable);</span>
+<span class="fc" id="L254">            usuariosPage = usuarioRepository.findAll(pageable);</span>
         }
         
-<span class="nc" id="L257">        return usuariosPage.map(this::mapearEntidadADTO);</span>
+<span class="fc" id="L257">        return usuariosPage.map(this::mapearEntidadADTO);</span>
     }
 
     /**
@@ -290,7 +290,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 <span class="pc bpc" id="L290" title="1 of 2 branches missed.">        if (solicitud.getActivo() != null) {</span>
 <span class="fc" id="L291">            usuario.setActivo(solicitud.getActivo());</span>
             // Sincronizar estado con activo
-<span class="pc bpc" id="L293" title="1 of 2 branches missed.">            usuario.setEstado(solicitud.getActivo() ? EstadoUsuario.ACTIVO : EstadoUsuario.INACTIVO);</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">            usuario.setEstado(solicitud.getActivo() ? EstadoUsuario.ACTIVO : EstadoUsuario.INACTIVO);</span>
         }
 
 <span class="fc" id="L296">        Usuario usuarioActualizado = usuarioRepository.save(usuario);</span>
@@ -301,61 +301,61 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
      * Obtener perfil del usuario actual
      */
     public UsuarioDTO obtenerPerfil() {
-<span class="nc" id="L304">        Usuario usuario = obtenerUsuarioActual();</span>
-<span class="nc" id="L305">        return mapearEntidadADTO(usuario);</span>
+<span class="fc" id="L304">        Usuario usuario = obtenerUsuarioActual();</span>
+<span class="fc" id="L305">        return mapearEntidadADTO(usuario);</span>
     }
 
     /**
      * Actualizar perfil del usuario actual
      */
     public UsuarioDTO actualizarPerfil(ActualizarPerfilRequestDTO solicitud) {
-<span class="nc" id="L312">        Usuario usuario = obtenerUsuarioActual();</span>
+<span class="fc" id="L312">        Usuario usuario = obtenerUsuarioActual();</span>
 
         // Verificar contraseña actual si se va a cambiar
-<span class="nc bnc" id="L315" title="All 4 branches missed.">        if (solicitud.getContraseniaNueva() != null &amp;&amp; !solicitud.getContraseniaNueva().isEmpty()) {</span>
-<span class="nc bnc" id="L316" title="All 4 branches missed.">            if (solicitud.getContraseniaActual() == null || solicitud.getContraseniaActual().isEmpty()) {</span>
+<span class="pc bpc" id="L315" title="1 of 4 branches missed.">        if (solicitud.getContraseniaNueva() != null &amp;&amp; !solicitud.getContraseniaNueva().isEmpty()) {</span>
+<span class="pc bpc" id="L316" title="2 of 4 branches missed.">            if (solicitud.getContraseniaActual() == null || solicitud.getContraseniaActual().isEmpty()) {</span>
 <span class="nc" id="L317">                throw new RuntimeException(&quot;Debe proporcionar la contraseña actual para cambiarla&quot;);</span>
             }
             
-<span class="nc bnc" id="L320" title="All 2 branches missed.">            if (!passwordEncoder.matches(solicitud.getContraseniaActual(), usuario.getContrasenia())) {</span>
-<span class="nc" id="L321">                throw new RuntimeException(&quot;Contraseña actual incorrecta&quot;);</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">            if (!passwordEncoder.matches(solicitud.getContraseniaActual(), usuario.getContrasenia())) {</span>
+<span class="fc" id="L321">                throw new RuntimeException(&quot;Contraseña actual incorrecta&quot;);</span>
             }
             
-<span class="nc" id="L324">            usuario.setContrasenia(passwordEncoder.encode(solicitud.getContraseniaNueva()));</span>
+<span class="fc" id="L324">            usuario.setContrasenia(passwordEncoder.encode(solicitud.getContraseniaNueva()));</span>
         }
 
         // Actualizar nombre de usuario (username) si se proporciona
-<span class="nc bnc" id="L328" title="All 4 branches missed.">        if (solicitud.getNombre() != null &amp;&amp; !solicitud.getNombre().trim().isEmpty() </span>
-<span class="nc bnc" id="L329" title="All 2 branches missed.">            &amp;&amp; !solicitud.getNombre().equalsIgnoreCase(usuario.getNombre())) {</span>
+<span class="pc bpc" id="L328" title="1 of 4 branches missed.">        if (solicitud.getNombre() != null &amp;&amp; !solicitud.getNombre().trim().isEmpty() </span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">            &amp;&amp; !solicitud.getNombre().equalsIgnoreCase(usuario.getNombre())) {</span>
             // Verificar que el nuevo nombre de usuario no exista
-<span class="nc" id="L331">            Optional&lt;Usuario&gt; usuarioExistente = usuarioRepository.findByNombreIgnoreCase(solicitud.getNombre());</span>
-<span class="nc bnc" id="L332" title="All 4 branches missed.">            if (usuarioExistente.isPresent() &amp;&amp; !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {</span>
-<span class="nc" id="L333">                throw new RuntimeException(&quot;El nombre de usuario ya está en uso por otro usuario&quot;);</span>
+<span class="fc" id="L331">            Optional&lt;Usuario&gt; usuarioExistente = usuarioRepository.findByNombreIgnoreCase(solicitud.getNombre());</span>
+<span class="pc bpc" id="L332" title="1 of 4 branches missed.">            if (usuarioExistente.isPresent() &amp;&amp; !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {</span>
+<span class="fc" id="L333">                throw new RuntimeException(&quot;El nombre de usuario ya está en uso por otro usuario&quot;);</span>
             }
-<span class="nc" id="L335">            usuario.setNombre(solicitud.getNombre());</span>
+<span class="fc" id="L335">            usuario.setNombre(solicitud.getNombre());</span>
         }
 
         // Actualizar datos del perfil
-<span class="nc bnc" id="L339" title="All 4 branches missed.">        if (solicitud.getNombres() != null &amp;&amp; !solicitud.getNombres().trim().isEmpty()) {</span>
-<span class="nc" id="L340">            usuario.setNombres(solicitud.getNombres());</span>
+<span class="pc bpc" id="L339" title="1 of 4 branches missed.">        if (solicitud.getNombres() != null &amp;&amp; !solicitud.getNombres().trim().isEmpty()) {</span>
+<span class="fc" id="L340">            usuario.setNombres(solicitud.getNombres());</span>
         }
         
-<span class="nc bnc" id="L343" title="All 4 branches missed.">        if (solicitud.getApellidos() != null &amp;&amp; !solicitud.getApellidos().trim().isEmpty()) {</span>
-<span class="nc" id="L344">            usuario.setApellidos(solicitud.getApellidos());</span>
+<span class="pc bpc" id="L343" title="1 of 4 branches missed.">        if (solicitud.getApellidos() != null &amp;&amp; !solicitud.getApellidos().trim().isEmpty()) {</span>
+<span class="fc" id="L344">            usuario.setApellidos(solicitud.getApellidos());</span>
         }
         
-<span class="nc bnc" id="L347" title="All 4 branches missed.">        if (solicitud.getEmail() != null &amp;&amp; !solicitud.getEmail().trim().isEmpty() </span>
-<span class="nc bnc" id="L348" title="All 2 branches missed.">            &amp;&amp; !solicitud.getEmail().equalsIgnoreCase(usuario.getEmail())) {</span>
+<span class="pc bpc" id="L347" title="1 of 4 branches missed.">        if (solicitud.getEmail() != null &amp;&amp; !solicitud.getEmail().trim().isEmpty() </span>
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">            &amp;&amp; !solicitud.getEmail().equalsIgnoreCase(usuario.getEmail())) {</span>
             // Verificar que el nuevo email no exista (case-insensitive)
-<span class="nc" id="L350">            Optional&lt;Usuario&gt; usuarioExistente = usuarioRepository.findByEmailIgnoreCase(solicitud.getEmail());</span>
-<span class="nc bnc" id="L351" title="All 4 branches missed.">            if (usuarioExistente.isPresent() &amp;&amp; !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {</span>
-<span class="nc" id="L352">                throw new RuntimeException(&quot;El email ya está en uso por otro usuario&quot;);</span>
+<span class="fc" id="L350">            Optional&lt;Usuario&gt; usuarioExistente = usuarioRepository.findByEmailIgnoreCase(solicitud.getEmail());</span>
+<span class="pc bpc" id="L351" title="1 of 4 branches missed.">            if (usuarioExistente.isPresent() &amp;&amp; !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {</span>
+<span class="fc" id="L352">                throw new RuntimeException(&quot;El email ya está en uso por otro usuario&quot;);</span>
             }
-<span class="nc" id="L354">            usuario.setEmail(solicitud.getEmail());</span>
+<span class="fc" id="L354">            usuario.setEmail(solicitud.getEmail());</span>
         }
 
-<span class="nc" id="L357">        Usuario usuarioActualizado = usuarioRepository.save(usuario);</span>
-<span class="nc" id="L358">        return mapearEntidadADTO(usuarioActualizado);</span>
+<span class="fc" id="L357">        Usuario usuarioActualizado = usuarioRepository.save(usuario);</span>
+<span class="fc" id="L358">        return mapearEntidadADTO(usuarioActualizado);</span>
     }
 
     /**
@@ -364,8 +364,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
      */
     public UsuarioDTO crearAdminPredeterminado() {
         // Verificar si ya existe al menos un admin
-<span class="pc bpc" id="L367" title="1 of 2 branches missed.">        if (usuarioRepository.existsByRol(Rol.ADMIN)) {</span>
-<span class="nc" id="L368">            throw new RuntimeException(&quot;Ya existe un administrador en el sistema&quot;);</span>
+<span class="fc bfc" id="L367" title="All 2 branches covered.">        if (usuarioRepository.existsByRol(Rol.ADMIN)) {</span>
+<span class="fc" id="L368">            throw new RuntimeException(&quot;Ya existe un administrador en el sistema&quot;);</span>
         }
 
 <span class="fc" id="L371">        System.out.println(&quot;=&quot; .repeat(80));</span>
@@ -422,50 +422,50 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
      * Guardar usuario (método público para uso desde controladores 2FA)
      */
     public Usuario guardar(Usuario usuario) {
-<span class="nc" id="L425">        return usuarioRepository.save(usuario);</span>
+<span class="fc" id="L425">        return usuarioRepository.save(usuario);</span>
     }
 
     /**
      * Buscar usuario por email
      */
     public Optional&lt;Usuario&gt; buscarPorEmail(String email) {
-<span class="nc" id="L432">        return usuarioRepository.findByEmail(email);</span>
+<span class="fc" id="L432">        return usuarioRepository.findByEmail(email);</span>
     }
 
     /**
      * Cambiar contraseña de un usuario (para recuperación de contraseña)
      */
     public void cambiarContrasenia(Integer usuarioId, String nuevaContrasenia) {
-<span class="nc" id="L439">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
-<span class="nc" id="L440">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+<span class="fc" id="L439">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
+<span class="pc" id="L440">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
         
         // Validar que la nueva contraseña no esté vacía
-<span class="nc bnc" id="L443" title="All 4 branches missed.">        if (nuevaContrasenia == null || nuevaContrasenia.trim().isEmpty()) {</span>
-<span class="nc" id="L444">            throw new RuntimeException(&quot;La nueva contraseña no puede estar vacía&quot;);</span>
+<span class="pc bpc" id="L443" title="1 of 4 branches missed.">        if (nuevaContrasenia == null || nuevaContrasenia.trim().isEmpty()) {</span>
+<span class="fc" id="L444">            throw new RuntimeException(&quot;La nueva contraseña no puede estar vacía&quot;);</span>
         }
         
         // Validar longitud mínima de contraseña
-<span class="nc bnc" id="L448" title="All 2 branches missed.">        if (nuevaContrasenia.length() &lt; 8) {</span>
-<span class="nc" id="L449">            throw new RuntimeException(&quot;La contraseña debe tener al menos 8 caracteres&quot;);</span>
+<span class="fc bfc" id="L448" title="All 2 branches covered.">        if (nuevaContrasenia.length() &lt; 8) {</span>
+<span class="fc" id="L449">            throw new RuntimeException(&quot;La contraseña debe tener al menos 8 caracteres&quot;);</span>
         }
         
         // Hashear y guardar la nueva contraseña
-<span class="nc" id="L453">        usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));</span>
-<span class="nc" id="L454">        usuarioRepository.save(usuario);</span>
+<span class="fc" id="L453">        usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));</span>
+<span class="fc" id="L454">        usuarioRepository.save(usuario);</span>
         
-<span class="nc" id="L456">        System.out.println(&quot;✅ Contraseña cambiada para usuario: &quot; + usuario.getNombre());</span>
-<span class="nc" id="L457">    }</span>
+<span class="fc" id="L456">        System.out.println(&quot;✅ Contraseña cambiada para usuario: &quot; + usuario.getNombre());</span>
+<span class="fc" id="L457">    }</span>
 
     // === Métodos auxiliares ===
 
     private Usuario obtenerUsuarioActual() {
-<span class="nc" id="L462">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="nc bnc" id="L463" title="All 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
+<span class="fc" id="L462">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L463" title="2 of 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
 <span class="nc" id="L464">            throw new RuntimeException(&quot;No hay usuario autenticado&quot;);</span>
         }
 
-<span class="nc" id="L467">        return usuarioRepository.findByNombre(auth.getName())</span>
-<span class="nc" id="L468">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario autenticado no encontrado en base de datos&quot;));</span>
+<span class="fc" id="L467">        return usuarioRepository.findByNombre(auth.getName())</span>
+<span class="pc" id="L468">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario autenticado no encontrado en base de datos&quot;));</span>
     }
 
     private UsuarioDTO mapearEntidadADTO(Usuario usuario) {

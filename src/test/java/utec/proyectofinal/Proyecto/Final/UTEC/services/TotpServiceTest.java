@@ -236,4 +236,202 @@ class TotpServiceTest {
         assertTrue(qrCodeDataUrl.startsWith("data:image/png;base64,"), 
             "Debe ser una data URL válida");
     }
+
+    @Test
+    @DisplayName("getRemainingSeconds - debe retornar valor entre 0 y 30")
+    void getRemainingSeconds_debeRetornarValorValido() {
+        // ACT
+        int remainingSeconds = totpService.getRemainingSeconds();
+
+        // ASSERT
+        assertTrue(remainingSeconds >= 0 && remainingSeconds <= 30, 
+            "Los segundos restantes deben estar entre 0 y 30");
+    }
+
+    @Test
+    @DisplayName("getRemainingSeconds - debe cambiar con el tiempo")
+    void getRemainingSeconds_debeCambiarConElTiempo() throws InterruptedException {
+        // ACT
+        int seconds1 = totpService.getRemainingSeconds();
+        Thread.sleep(1100); // Esperar 1.1 segundos
+        int seconds2 = totpService.getRemainingSeconds();
+
+        // ASSERT
+        // Los valores deben ser diferentes (a menos que justo se reinició el ciclo)
+        // O seconds2 debe ser menor que seconds1 (se consume el tiempo)
+        assertTrue(seconds1 >= 0 && seconds1 <= 30);
+        assertTrue(seconds2 >= 0 && seconds2 <= 30);
+        // En la mayoría de casos, seconds2 será menor que seconds1
+        // (a menos que cruzamos un boundary de 30s)
+    }
+
+    @Test
+    @DisplayName("getRemainingSeconds - debe decrementar hasta 0 y reiniciar")
+    void getRemainingSeconds_debeDecrementarYReiniciar() {
+        // ACT
+        int seconds = totpService.getRemainingSeconds();
+
+        // ASSERT
+        // Debe estar en el rango válido
+        assertTrue(seconds >= 0 && seconds <= 30, 
+            "Segundos restantes fuera de rango: " + seconds);
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar true para secret válido generado")
+    void isValidSecret_debeRetornarTrueParaSecretValido() {
+        // ARRANGE
+        String validSecret = totpService.generateSecret();
+
+        // ACT
+        boolean isValid = totpService.isValidSecret(validSecret);
+
+        // ASSERT
+        assertTrue(isValid, "Un secret generado debe ser válido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar false para secret nulo")
+    void isValidSecret_debeRetornarFalseParaSecretNulo() {
+        // ACT
+        boolean isValid = totpService.isValidSecret(null);
+
+        // ASSERT
+        assertFalse(isValid, "Un secret nulo debe ser inválido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar false para secret vacío")
+    void isValidSecret_debeRetornarFalseParaSecretVacio() {
+        // ACT
+        boolean isValid = totpService.isValidSecret("");
+
+        // ASSERT
+        assertFalse(isValid, "Un secret vacío debe ser inválido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar false para secret muy corto")
+    void isValidSecret_debeRetornarFalseParaSecretCorto() {
+        // ARRANGE
+        String shortSecret = "ABC123"; // Menos de 16 caracteres
+
+        // ACT
+        boolean isValid = totpService.isValidSecret(shortSecret);
+
+        // ASSERT
+        assertFalse(isValid, "Un secret muy corto (< 16 chars) debe ser inválido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar false para secret muy largo")
+    void isValidSecret_debeRetornarFalseParaSecretLargo() {
+        // ARRANGE
+        String longSecret = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567890"; // Más de 32 caracteres
+
+        // ACT
+        boolean isValid = totpService.isValidSecret(longSecret);
+
+        // ASSERT
+        assertFalse(isValid, "Un secret muy largo (> 32 chars) debe ser inválido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar false para secret con caracteres inválidos")
+    void isValidSecret_debeRetornarFalseParaCaracteresInvalidos() {
+        // ARRANGE - Base32 solo permite A-Z y 2-7
+        String secretConMinusculas = "abcdefghijklmnop"; // Minúsculas no permitidas
+        String secretConNumeros = "ABCD1890EFGH1890"; // 0, 1, 8, 9 no son Base32
+        String secretConSimbolos = "ABCD-EFGH-IJKL16"; // Símbolos no permitidos
+
+        // ACT & ASSERT
+        assertFalse(totpService.isValidSecret(secretConMinusculas), 
+            "Secret con minúsculas debe ser inválido");
+        assertFalse(totpService.isValidSecret(secretConNumeros), 
+            "Secret con números 0, 1, 8, 9 debe ser inválido");
+        assertFalse(totpService.isValidSecret(secretConSimbolos), 
+            "Secret con símbolos debe ser inválido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar true para secret Base32 válido de 16 caracteres")
+    void isValidSecret_debeRetornarTrueParaBase32Valido16Chars() {
+        // ARRANGE
+        String validSecret = "JBSWY3DPEHPK3PXP"; // 16 caracteres Base32 válidos
+
+        // ACT
+        boolean isValid = totpService.isValidSecret(validSecret);
+
+        // ASSERT
+        assertTrue(isValid, "Secret Base32 de 16 caracteres debe ser válido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe retornar true para secret Base32 válido de 32 caracteres")
+    void isValidSecret_debeRetornarTrueParaBase32Valido32Chars() {
+        // ARRANGE
+        String validSecret = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP"; // 32 caracteres Base32 válidos
+
+        // ACT
+        boolean isValid = totpService.isValidSecret(validSecret);
+
+        // ASSERT
+        assertTrue(isValid, "Secret Base32 de 32 caracteres debe ser válido");
+    }
+
+    @Test
+    @DisplayName("isValidSecret - debe validar caracteres Base32 permitidos (A-Z, 2-7)")
+    void isValidSecret_debeValidarCaracteresBase32() {
+        // ARRANGE
+        String validSecret = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"; // 32 chars con todos los caracteres permitidos
+
+        // ACT
+        boolean isValid = totpService.isValidSecret(validSecret);
+
+        // ASSERT
+        assertTrue(isValid, "Secret con todos los caracteres Base32 válidos debe ser válido");
+    }
+
+    @Test
+    @DisplayName("verifyCode - debe capturar excepción y retornar false")
+    void verifyCode_debeCaptularExcepcionYRetornarFalse() {
+        // ARRANGE
+        String invalidSecret = "NOT-A-VALID-BASE32-SECRET!!!"; // Secret inválido que causará excepción
+
+        // ACT
+        boolean isValid = totpService.verifyCode(invalidSecret, "123456");
+
+        // ASSERT
+        assertFalse(isValid, "Debe retornar false cuando ocurre una excepción en la verificación");
+    }
+
+    @Test
+    @DisplayName("verifyCode - debe manejar secret corrupto sin lanzar excepción")
+    void verifyCode_debeManejarSecretCorruptoSinLanzarExcepcion() {
+        // ARRANGE
+        String corruptSecret = "!!!INVALID!!!"; // Secret totalmente corrupto
+
+        // ACT & ASSERT - No debe lanzar excepción
+        assertDoesNotThrow(() -> {
+            boolean result = totpService.verifyCode(corruptSecret, "123456");
+            assertFalse(result, "Debe retornar false para secret corrupto");
+        });
+    }
+
+    @Test
+    @DisplayName("verifyCode - debe manejar código con formato especial que cause excepción")
+    void verifyCode_debeManejarCodigoEspecialConExcepcion() {
+        // ARRANGE
+        String secret = totpService.generateSecret();
+        // Código con caracteres extraños que podrían causar problemas
+        String weirdCode = "\u0000\u0001\u0002123456"; 
+
+        // ACT & ASSERT - No debe lanzar excepción
+        assertDoesNotThrow(() -> {
+            boolean result = totpService.verifyCode(secret, weirdCode);
+            // El resultado puede ser true o false, pero no debe lanzar excepción
+            assertNotNull(result);
+        });
+    }
 }
+

@@ -11,23 +11,33 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepPmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.AnalisisHistorialDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -42,6 +52,7 @@ import static org.mockito.Mockito.*;
  * - Validación de límites de repeticiones
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @DisplayName("Tests de PmsService")
 class PmsServiceTest {
 
@@ -494,5 +505,603 @@ class PmsServiceTest {
         )).thenThrow(new RuntimeException("El análisis ya está activo"));
         
         assertThrows(RuntimeException.class, () -> pmsService.reactivarPms(2L));
+    }
+
+    @Test
+    @DisplayName("procesarCalculosTanda - tanda incompleta solo actualiza estadísticas")
+    void procesarCalculosTanda_tandaIncompleta_soloActualizaEstadisticas() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(8);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false);
+        
+        // Crear solo 4 repeticiones (menos de las esperadas)
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10.0"));
+            rep.setValido(true);
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.procesarCalculosTanda(1L, 1);
+        
+        // ASSERT
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+        verify(repPmsRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("procesarCalculosTanda - tanda completa con CV aceptable")
+    void procesarCalculosTanda_tandaCompleta_CVAceptable() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false); // Umbral CV = 4.0
+        
+        // Crear 4 repeticiones válidas con pesos similares
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10." + i)); // 10.1, 10.2, 10.3, 10.4
+            rep.setValido(null);
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.procesarCalculosTanda(1L, 1);
+        
+        // ASSERT
+        verify(repPmsRepository, times(1)).saveAll(anyList());
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("procesarCalculosTanda - tanda completa con CV no aceptable incrementa tandas")
+    void procesarCalculosTanda_CVNoAceptable_incrementaTandas() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false); // Umbral CV = 4.0
+        
+        // Crear repeticiones con mucha variación para CV alto
+        List<RepPms> repeticiones = new ArrayList<>();
+        BigDecimal[] pesos = {new BigDecimal("8.0"), new BigDecimal("10.0"), 
+                             new BigDecimal("12.0"), new BigDecimal("14.0")};
+        for (int i = 0; i < 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i + 1);
+            rep.setNumTanda(1);
+            rep.setPeso(pesos[i]);
+            rep.setValido(null);
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(4L);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.procesarCalculosTanda(1L, 1);
+        
+        // ASSERT
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("procesarCalculosTanda - sin repeticiones válidas incrementa tandas")
+    void procesarCalculosTanda_sinRepeticionesValidas_incrementaTandas() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false);
+        
+        // Crear repeticiones que serán marcadas como inválidas
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("100.0")); // Outlier extremo
+            rep.setValido(false);
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(4L);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.procesarCalculosTanda(1L, 1);
+        
+        // ASSERT
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("validarTodasLasRepeticiones - sin repeticiones no hace nada")
+    void validarTodasLasRepeticiones_sinRepeticiones_noHaceNada() {
+        // ARRANGE
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(Collections.emptyList());
+        
+        // ACT
+        pmsService.validarTodasLasRepeticiones(1L);
+        
+        // ASSERT
+        verify(repPmsRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("validarTodasLasRepeticiones - repeticiones insuficientes marca como indeterminadas")
+    void validarTodasLasRepeticiones_repeticionesInsuficientes_marcaIndeterminadas() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(8);
+        
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) { // Menos de las esperadas
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setPeso(new BigDecimal("10.0"));
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.validarTodasLasRepeticiones(1L);
+        
+        // ASSERT
+        verify(repPmsRepository, times(1)).saveAll(anyList());
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("validarTodasLasRepeticiones - con repeticiones suficientes valida correctamente")
+    void validarTodasLasRepeticiones_repeticionesSuficientes_validaCorrectamente() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false);
+        
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10." + i));
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(4L);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.validarTodasLasRepeticiones(1L);
+        
+        // ASSERT
+        verify(repPmsRepository, times(1)).saveAll(anyList());
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("actualizarPmsConRedondeo - actualiza correctamente en estado EN_PROCESO")
+    void actualizarPmsConRedondeo_estadoEnProceso_actualizaCorrectamente() {
+        // ARRANGE
+        pms.setEstado(Estado.EN_PROCESO);
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false);
+        
+        // Crear repeticiones válidas completas
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10.0"));
+            rep.setValido(true);
+            repeticiones.add(rep);
+        }
+        
+        PmsRedondeoRequestDTO request = new PmsRedondeoRequestDTO();
+        request.setPmsconRedon(new BigDecimal("100.5"));
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        PmsDTO resultado = pmsService.actualizarPmsConRedondeo(1L, request);
+        
+        // ASSERT
+        assertNotNull(resultado);
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("actualizarPmsConRedondeo - falla con estado REGISTRADO")
+    void actualizarPmsConRedondeo_estadoRegistrado_lanzaExcepcion() {
+        // ARRANGE
+        pms.setEstado(Estado.REGISTRADO);
+        
+        PmsRedondeoRequestDTO request = new PmsRedondeoRequestDTO();
+        request.setPmsconRedon(new BigDecimal("100.5"));
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            pmsService.actualizarPmsConRedondeo(1L, request);
+        });
+        
+        assertTrue(exception.getMessage().contains("EN_PROCESO"));
+        verify(pmsRepository, never()).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("actualizarPmsConRedondeo - falla si repeticiones incompletas")
+    void actualizarPmsConRedondeo_repeticionesIncompletas_lanzaExcepcion() {
+        // ARRANGE
+        pms.setEstado(Estado.EN_PROCESO);
+        pms.setNumRepeticionesEsperadas(8);
+        pms.setNumTandas(1);
+        
+        // Solo 4 repeticiones (incompletas)
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10.0"));
+            rep.setValido(true);
+            repeticiones.add(rep);
+        }
+        
+        PmsRedondeoRequestDTO request = new PmsRedondeoRequestDTO();
+        request.setPmsconRedon(new BigDecimal("100.5"));
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            pmsService.actualizarPmsConRedondeo(1L, request);
+        });
+        
+        assertTrue(exception.getMessage().contains("repeticiones válidas"));
+        verify(pmsRepository, never()).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("actualizarEstadisticasPms - actualiza estadísticas públicamente")
+    void actualizarEstadisticasPms_actualizaCorrectamente() {
+        // ARRANGE
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(Collections.emptyList());
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.actualizarEstadisticasPms(1L);
+        
+        // ASSERT
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("obtenerPmsPaginadasConFiltro - filtro 'activos'")
+    void obtenerPmsPaginadasConFiltro_activos() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Pms> pmsPage = new PageImpl<>(Arrays.asList(pms));
+        
+        when(pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable))
+            .thenReturn(pmsPage);
+        
+        // ACT
+        var resultado = pmsService.obtenerPmsPaginadasConFiltro(pageable, "activos");
+        
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+        verify(pmsRepository, times(1)).findByActivoTrueOrderByFechaInicioDesc(pageable);
+    }
+
+    @Test
+    @DisplayName("obtenerPmsPaginadasConFiltro - filtro 'inactivos'")
+    void obtenerPmsPaginadasConFiltro_inactivos() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        pms.setActivo(false);
+        Page<Pms> pmsPage = new PageImpl<>(Arrays.asList(pms));
+        
+        when(pmsRepository.findByActivoFalseOrderByFechaInicioDesc(pageable))
+            .thenReturn(pmsPage);
+        
+        // ACT
+        var resultado = pmsService.obtenerPmsPaginadasConFiltro(pageable, "inactivos");
+        
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+        verify(pmsRepository, times(1)).findByActivoFalseOrderByFechaInicioDesc(pageable);
+    }
+
+    @Test
+    @DisplayName("obtenerPmsPaginadasConFiltro - filtro 'todos'")
+    void obtenerPmsPaginadasConFiltro_todos() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Pms> pmsPage = new PageImpl<>(Arrays.asList(pms));
+        
+        when(pmsRepository.findAllByOrderByFechaInicioDesc(pageable))
+            .thenReturn(pmsPage);
+        
+        // ACT
+        var resultado = pmsService.obtenerPmsPaginadasConFiltro(pageable, "todos");
+        
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+        verify(pmsRepository, times(1)).findAllByOrderByFechaInicioDesc(pageable);
+    }
+
+    @Test
+    @DisplayName("obtenerPmsPaginadasConFiltros - con filtros dinámicos")
+    void obtenerPmsPaginadasConFiltros_conFiltrosDinamicos() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Pms> pmsPage = new PageImpl<>(Arrays.asList(pms));
+        
+        @SuppressWarnings("unchecked")
+        Specification<Pms> anySpec = any(Specification.class);
+        when(pmsRepository.findAll(anySpec, eq(pageable)))
+            .thenReturn(pmsPage);
+        
+        // ACT
+        var resultado = pmsService.obtenerPmsPaginadasConFiltros(
+            pageable, "LOTE-001", true, "EN_PROCESO", 1L);
+        
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("crear PMS con lote inactivo - debe lanzar excepción")
+    void crearPms_conLoteInactivo_debeLanzarExcepcion() {
+        // ARRANGE
+        lote.setActivo(false);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        
+        // ACT & ASSERT
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            pmsService.crearPms(pmsRequestDTO);
+        });
+        
+        assertTrue(exception.getMessage().contains("activo"));
+        verify(pmsRepository, never()).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("mapeo DTO completo - con cultivar y especie")
+    void mapeoDTO_conCultivarYEspecie() {
+        // ARRANGE
+        Especie especie = new Especie();
+        especie.setNombreComun("Trigo");
+        especie.setNombreCientifico("Triticum aestivum");
+        
+        Cultivar cultivar = new Cultivar();
+        cultivar.setNombre("Cultivar Test");
+        cultivar.setEspecie(especie);
+        
+        lote.setCultivar(cultivar);
+        lote.setFicha("FICHA-001");
+        
+        pms.setLote(lote);
+        pms.setPromedio100g(new BigDecimal("10.5"));
+        pms.setDesvioStd(new BigDecimal("0.5"));
+        pms.setCoefVariacion(new BigDecimal("4.76"));
+        pms.setPmssinRedon(new BigDecimal("105.0"));
+        pms.setPmsconRedon(new BigDecimal("105"));
+        
+        List<AnalisisHistorialDTO> historial = new ArrayList<>();
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(analisisHistorialService.obtenerHistorialAnalisis(1L)).thenReturn(historial);
+        
+        // ACT
+        PmsDTO resultado = pmsService.obtenerPorId(1L);
+        
+        // ASSERT
+        assertNotNull(resultado);
+        assertEquals("Cultivar Test", resultado.getCultivarNombre());
+        assertEquals("Trigo", resultado.getEspecieNombre());
+        assertEquals("FICHA-001", resultado.getFicha());
+    }
+
+    @Test
+    @DisplayName("actualizarPmsConRedondeo - con estado PENDIENTE_APROBACION")
+    void actualizarPmsConRedondeo_estadoPendienteAprobacion() {
+        // ARRANGE
+        pms.setEstado(Estado.PENDIENTE_APROBACION);
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false);
+        
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10.0"));
+            rep.setValido(true);
+            repeticiones.add(rep);
+        }
+        
+        PmsRedondeoRequestDTO request = new PmsRedondeoRequestDTO();
+        request.setPmsconRedon(new BigDecimal("100.0"));
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        PmsDTO resultado = pmsService.actualizarPmsConRedondeo(1L, request);
+        
+        // ASSERT
+        assertNotNull(resultado);
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("actualizarPmsConRedondeo - con estado APROBADO")
+    void actualizarPmsConRedondeo_estadoAprobado() {
+        // ARRANGE
+        pms.setEstado(Estado.APROBADO);
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false);
+        
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10.0"));
+            rep.setValido(true);
+            repeticiones.add(rep);
+        }
+        
+        PmsRedondeoRequestDTO request = new PmsRedondeoRequestDTO();
+        request.setPmsconRedon(new BigDecimal("100.0"));
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        PmsDTO resultado = pmsService.actualizarPmsConRedondeo(1L, request);
+        
+        // ASSERT
+        assertNotNull(resultado);
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("validarTodasLasRepeticiones - con CV alto incrementa tandas")
+    void validarTodasLasRepeticiones_CVAlto_incrementaTandas() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(false);
+        
+        // Crear repeticiones con mucha variación
+        List<RepPms> repeticiones = new ArrayList<>();
+        BigDecimal[] pesos = {new BigDecimal("8.0"), new BigDecimal("10.0"), 
+                             new BigDecimal("12.0"), new BigDecimal("14.0")};
+        for (int i = 0; i < 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i + 1);
+            rep.setNumTanda(1);
+            rep.setPeso(pesos[i]);
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(4L);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.validarTodasLasRepeticiones(1L);
+        
+        // ASSERT
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("procesarCalculosTanda - con semilla brozosa usa umbral CV 6.0")
+    void procesarCalculosTanda_semillaBrozosa_umbralCV6() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(1);
+        pms.setEsSemillaBrozosa(true); // Umbral CV = 6.0
+        
+        List<RepPms> repeticiones = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i);
+            rep.setNumTanda(1);
+            rep.setPeso(new BigDecimal("10." + i));
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.procesarCalculosTanda(1L, 1);
+        
+        // ASSERT
+        verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("procesarCalculosTanda - alcanza límite de 16 repeticiones")
+    void procesarCalculosTanda_alcanzaLimite16_noIncrementaTandas() {
+        // ARRANGE
+        pms.setNumRepeticionesEsperadas(4);
+        pms.setNumTandas(4);
+        pms.setEsSemillaBrozosa(false);
+        
+        List<RepPms> repeticiones = new ArrayList<>();
+        BigDecimal[] pesos = {new BigDecimal("8.0"), new BigDecimal("10.0"), 
+                             new BigDecimal("12.0"), new BigDecimal("14.0")};
+        for (int i = 0; i < 4; i++) {
+            RepPms rep = new RepPms();
+            rep.setNumRep(i + 1);
+            rep.setNumTanda(4);
+            rep.setPeso(pesos[i]);
+            repeticiones.add(rep);
+        }
+        
+        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));
+        when(repPmsRepository.findByPmsId(1L)).thenReturn(repeticiones);
+        when(repPmsRepository.saveAll(anyList())).thenReturn(repeticiones);
+        when(repPmsRepository.countByPmsId(1L)).thenReturn(16L); // 16 repeticiones totales
+        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);
+        
+        // ACT
+        pmsService.procesarCalculosTanda(1L, 4);
+        
+        // ASSERT
+        verify(pmsRepository, times(1)).save(any(Pms.class));
     }
 }

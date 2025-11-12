@@ -33,245 +33,245 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
     // Crear nueva repetición asociada a una tabla
     public RepGermDTO crearRepGerm(Long tablaGermId, RepGermRequestDTO solicitud) {
         try {
-<span class="nc" id="L36">            System.out.println(&quot;Creando repetición para tabla ID: &quot; + tablaGermId);</span>
+<span class="fc" id="L36">            System.out.println(&quot;Creando repetición para tabla ID: &quot; + tablaGermId);</span>
             
             // Validar que la tabla existe
-<span class="nc" id="L39">            Optional&lt;TablaGerm&gt; tablaGermOpt = tablaGermRepository.findById(tablaGermId);</span>
-<span class="nc bnc" id="L40" title="All 2 branches missed.">            if (tablaGermOpt.isEmpty()) {</span>
-<span class="nc" id="L41">                throw new RuntimeException(&quot;Tabla no encontrada con ID: &quot; + tablaGermId);</span>
+<span class="fc" id="L39">            Optional&lt;TablaGerm&gt; tablaGermOpt = tablaGermRepository.findById(tablaGermId);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            if (tablaGermOpt.isEmpty()) {</span>
+<span class="fc" id="L41">                throw new RuntimeException(&quot;Tabla no encontrada con ID: &quot; + tablaGermId);</span>
             }
             
-<span class="nc" id="L44">            TablaGerm tablaGerm = tablaGermOpt.get();</span>
+<span class="fc" id="L44">            TablaGerm tablaGerm = tablaGermOpt.get();</span>
             
             //validar numero de repeticiones permitidas
-<span class="nc bnc" id="L47" title="All 4 branches missed.">            if (tablaGerm != null &amp;&amp; tablaGerm.getNumeroRepeticiones() != null) {</span>
-<span class="nc" id="L48">                Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);</span>
-<span class="nc bnc" id="L49" title="All 2 branches missed.">                if (repeticionesExistentes &gt;= tablaGerm.getNumeroRepeticiones()) {</span>
-<span class="nc" id="L50">                    throw new RuntimeException(&quot;No se pueden agregar más repeticiones. El número máximo de repeticiones permitidas es: &quot; + </span>
-<span class="nc" id="L51">                        tablaGerm.getNumeroRepeticiones());</span>
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">            if (tablaGerm != null &amp;&amp; tablaGerm.getNumeroRepeticiones() != null) {</span>
+<span class="fc" id="L48">                Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGermId);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">                if (repeticionesExistentes &gt;= tablaGerm.getNumeroRepeticiones()) {</span>
+<span class="fc" id="L50">                    throw new RuntimeException(&quot;No se pueden agregar más repeticiones. El número máximo de repeticiones permitidas es: &quot; + </span>
+<span class="fc" id="L51">                        tablaGerm.getNumeroRepeticiones());</span>
                 }
             }
 
             // Crear la repetición
-<span class="nc" id="L56">            RepGerm repGerm = mapearSolicitudAEntidad(solicitud, tablaGerm);</span>
-<span class="nc" id="L57">            RepGerm repGermGuardada = repGermRepository.save(repGerm);</span>
+<span class="fc" id="L56">            RepGerm repGerm = mapearSolicitudAEntidad(solicitud, tablaGerm);</span>
+<span class="fc" id="L57">            RepGerm repGermGuardada = repGermRepository.save(repGerm);</span>
             
             // Actualizar totales de la tabla padre cuando se crea una nueva repetición
-<span class="nc" id="L60">            actualizarTotalesTablaGerm(tablaGerm);</span>
+<span class="fc" id="L60">            actualizarTotalesTablaGerm(tablaGerm);</span>
             
-<span class="nc" id="L62">            System.out.println(&quot;Repetición creada exitosamente con ID: &quot; + repGermGuardada.getRepGermID());</span>
-<span class="nc" id="L63">            return mapearEntidadADTO(repGermGuardada);</span>
-<span class="nc" id="L64">        } catch (Exception e) {</span>
-<span class="nc" id="L65">            System.err.println(&quot;Error al crear repetición: &quot; + e.getMessage());</span>
-<span class="nc" id="L66">            throw new RuntimeException(&quot;Error al crear la repetición: &quot; + e.getMessage());</span>
+<span class="fc" id="L62">            System.out.println(&quot;Repetición creada exitosamente con ID: &quot; + repGermGuardada.getRepGermID());</span>
+<span class="fc" id="L63">            return mapearEntidadADTO(repGermGuardada);</span>
+<span class="fc" id="L64">        } catch (Exception e) {</span>
+<span class="fc" id="L65">            System.err.println(&quot;Error al crear repetición: &quot; + e.getMessage());</span>
+<span class="fc" id="L66">            throw new RuntimeException(&quot;Error al crear la repetición: &quot; + e.getMessage());</span>
         }
     }
 
     // Obtener repetición por ID
     public RepGermDTO obtenerRepGermPorId(Long id) {
-<span class="nc" id="L72">        Optional&lt;RepGerm&gt; repGerm = repGermRepository.findById(id);</span>
-<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (repGerm.isPresent()) {</span>
-<span class="nc" id="L74">            return mapearEntidadADTO(repGerm.get());</span>
+<span class="fc" id="L72">        Optional&lt;RepGerm&gt; repGerm = repGermRepository.findById(id);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (repGerm.isPresent()) {</span>
+<span class="fc" id="L74">            return mapearEntidadADTO(repGerm.get());</span>
         } else {
-<span class="nc" id="L76">            throw new RuntimeException(&quot;Repetición no encontrada con ID: &quot; + id);</span>
+<span class="fc" id="L76">            throw new RuntimeException(&quot;Repetición no encontrada con ID: &quot; + id);</span>
         }
     }
 
     // Actualizar repetición
     public RepGermDTO actualizarRepGerm(Long id, RepGermRequestDTO solicitud) {
-<span class="nc" id="L82">        Optional&lt;RepGerm&gt; repGermExistente = repGermRepository.findById(id);</span>
+<span class="fc" id="L82">        Optional&lt;RepGerm&gt; repGermExistente = repGermRepository.findById(id);</span>
         
-<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (repGermExistente.isPresent()) {</span>
-<span class="nc" id="L85">            RepGerm repGerm = repGermExistente.get();</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (repGermExistente.isPresent()) {</span>
+<span class="fc" id="L85">            RepGerm repGerm = repGermExistente.get();</span>
             
             // Manejar edición de análisis finalizado según el rol del usuario
-<span class="nc" id="L88">            analisisService.manejarEdicionAnalisisFinalizado(repGerm.getTablaGerm().getGerminacion());</span>
+<span class="fc" id="L88">            analisisService.manejarEdicionAnalisisFinalizado(repGerm.getTablaGerm().getGerminacion());</span>
         
             // Validar datos de la solicitud
-<span class="nc" id="L91">            validarDatosRepeticion(solicitud, repGerm.getTablaGerm());</span>
+<span class="fc" id="L91">            validarDatosRepeticion(solicitud, repGerm.getTablaGerm());</span>
             
-<span class="nc" id="L93">            actualizarEntidadDesdeSolicitud(repGerm, solicitud);</span>
-<span class="nc" id="L94">            RepGerm repGermActualizada = repGermRepository.save(repGerm);</span>
+<span class="fc" id="L93">            actualizarEntidadDesdeSolicitud(repGerm, solicitud);</span>
+<span class="fc" id="L94">            RepGerm repGermActualizada = repGermRepository.save(repGerm);</span>
             
             // Actualizar totales de la tabla padre cuando se actualiza una repetición
-<span class="nc" id="L97">            actualizarTotalesTablaGerm(repGermActualizada.getTablaGerm());</span>
+<span class="fc" id="L97">            actualizarTotalesTablaGerm(repGermActualizada.getTablaGerm());</span>
             
-<span class="nc" id="L99">            return mapearEntidadADTO(repGermActualizada);</span>
+<span class="fc" id="L99">            return mapearEntidadADTO(repGermActualizada);</span>
         } else {
-<span class="nc" id="L101">            throw new RuntimeException(&quot;Repetición no encontrada con ID: &quot; + id);</span>
+<span class="fc" id="L101">            throw new RuntimeException(&quot;Repetición no encontrada con ID: &quot; + id);</span>
         }
     }
 
     // Eliminar repetición (eliminar realmente, no cambio de estado)
     public void eliminarRepGerm(Long id) {
-<span class="nc" id="L107">        Optional&lt;RepGerm&gt; repGermExistente = repGermRepository.findById(id);</span>
+<span class="fc" id="L107">        Optional&lt;RepGerm&gt; repGermExistente = repGermRepository.findById(id);</span>
         
-<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (repGermExistente.isPresent()) {</span>
-<span class="nc" id="L110">            repGermRepository.deleteById(id);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (repGermExistente.isPresent()) {</span>
+<span class="fc" id="L110">            repGermRepository.deleteById(id);</span>
             
-<span class="nc" id="L112">            System.out.println(&quot;Repetición eliminada con ID: &quot; + id);</span>
+<span class="fc" id="L112">            System.out.println(&quot;Repetición eliminada con ID: &quot; + id);</span>
         } else {
-<span class="nc" id="L114">            throw new RuntimeException(&quot;Repetición no encontrada con ID: &quot; + id);</span>
+<span class="fc" id="L114">            throw new RuntimeException(&quot;Repetición no encontrada con ID: &quot; + id);</span>
         }
-<span class="nc" id="L116">    }</span>
+<span class="fc" id="L116">    }</span>
 
     // Obtener todas las repeticiones de una tabla
     public List&lt;RepGermDTO&gt; obtenerRepeticionesPorTabla(Long tablaGermId) {
-<span class="nc" id="L120">        List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGermId);</span>
-<span class="nc" id="L121">        return repeticiones.stream()</span>
-<span class="nc" id="L122">                .map(this::mapearEntidadADTO)</span>
-<span class="nc" id="L123">                .collect(Collectors.toList());</span>
+<span class="fc" id="L120">        List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGermId);</span>
+<span class="fc" id="L121">        return repeticiones.stream()</span>
+<span class="fc" id="L122">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L123">                .collect(Collectors.toList());</span>
     }
 
     // Contar repeticiones de una tabla
     public Long contarRepeticionesPorTabla(Long tablaGermId) {
-<span class="nc" id="L128">        return repGermRepository.countByTablaGermId(tablaGermId);</span>
+<span class="fc" id="L128">        return repGermRepository.countByTablaGermId(tablaGermId);</span>
     }
 
     // Mapear de RequestDTO a Entity
     private RepGerm mapearSolicitudAEntidad(RepGermRequestDTO solicitud, TablaGerm tablaGerm) {
         // Validar datos de la solicitud
-<span class="nc" id="L134">        validarDatosRepeticion(solicitud, tablaGerm);</span>
+<span class="fc" id="L134">        validarDatosRepeticion(solicitud, tablaGerm);</span>
         
-<span class="nc" id="L136">        RepGerm repGerm = new RepGerm();</span>
+<span class="fc" id="L136">        RepGerm repGerm = new RepGerm();</span>
         
         // Asignar la tabla asociada
-<span class="nc" id="L139">        repGerm.setTablaGerm(tablaGerm);</span>
+<span class="fc" id="L139">        repGerm.setTablaGerm(tablaGerm);</span>
         
         // Generar numRep automáticamente (siguiente número disponible)
-<span class="nc" id="L142">        Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGerm.getTablaGermID());</span>
-<span class="nc" id="L143">        repGerm.setNumRep(repeticionesExistentes.intValue() + 1);</span>
+<span class="fc" id="L142">        Long repeticionesExistentes = repGermRepository.countByTablaGermId(tablaGerm.getTablaGermID());</span>
+<span class="fc" id="L143">        repGerm.setNumRep(repeticionesExistentes.intValue() + 1);</span>
         
         // Inicializar lista normales con el número de conteos definido en la tabla
-<span class="nc bnc" id="L146" title="All 4 branches missed.">        Integer numeroConteos = (tablaGerm != null &amp;&amp; tablaGerm.getNumeroConteos() != null) </span>
-<span class="nc" id="L147">            ? tablaGerm.getNumeroConteos() </span>
+<span class="pc bpc" id="L146" title="2 of 4 branches missed.">        Integer numeroConteos = (tablaGerm != null &amp;&amp; tablaGerm.getNumeroConteos() != null) </span>
+<span class="fc" id="L147">            ? tablaGerm.getNumeroConteos() </span>
 <span class="nc" id="L148">            : 1; // valor por defecto</span>
             
-<span class="nc" id="L150">        List&lt;Integer&gt; normalesInicializadas = new ArrayList&lt;&gt;(Collections.nCopies(numeroConteos, 0));</span>
+<span class="fc" id="L150">        List&lt;Integer&gt; normalesInicializadas = new ArrayList&lt;&gt;(Collections.nCopies(numeroConteos, 0));</span>
         
         // Si el usuario envió valores para normales, preservar su posición y completar con 0 el resto
-<span class="nc bnc" id="L153" title="All 4 branches missed.">        if (solicitud.getNormales() != null &amp;&amp; !solicitud.getNormales().isEmpty()) {</span>
-<span class="nc bnc" id="L154" title="All 2 branches missed.">            for (int i = 0; i &lt; Math.min(solicitud.getNormales().size(), numeroConteos); i++) {</span>
-<span class="nc bnc" id="L155" title="All 2 branches missed.">                if (solicitud.getNormales().get(i) != null) {</span>
-<span class="nc" id="L156">                    normalesInicializadas.set(i, solicitud.getNormales().get(i));</span>
+<span class="pc bpc" id="L153" title="2 of 4 branches missed.">        if (solicitud.getNormales() != null &amp;&amp; !solicitud.getNormales().isEmpty()) {</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            for (int i = 0; i &lt; Math.min(solicitud.getNormales().size(), numeroConteos); i++) {</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">                if (solicitud.getNormales().get(i) != null) {</span>
+<span class="fc" id="L156">                    normalesInicializadas.set(i, solicitud.getNormales().get(i));</span>
                 }
             }
         }
         
-<span class="nc" id="L161">        repGerm.setNormales(normalesInicializadas);</span>
+<span class="fc" id="L161">        repGerm.setNormales(normalesInicializadas);</span>
         
-<span class="nc bnc" id="L163" title="All 2 branches missed.">        repGerm.setAnormales(solicitud.getAnormales() != null ? solicitud.getAnormales() : 0);</span>
-<span class="nc bnc" id="L164" title="All 2 branches missed.">        repGerm.setDuras(solicitud.getDuras() != null ? solicitud.getDuras() : 0);</span>
-<span class="nc bnc" id="L165" title="All 2 branches missed.">        repGerm.setFrescas(solicitud.getFrescas() != null ? solicitud.getFrescas() : 0);</span>
-<span class="nc bnc" id="L166" title="All 2 branches missed.">        repGerm.setMuertas(solicitud.getMuertas() != null ? solicitud.getMuertas() : 0);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        repGerm.setAnormales(solicitud.getAnormales() != null ? solicitud.getAnormales() : 0);</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        repGerm.setDuras(solicitud.getDuras() != null ? solicitud.getDuras() : 0);</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        repGerm.setFrescas(solicitud.getFrescas() != null ? solicitud.getFrescas() : 0);</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        repGerm.setMuertas(solicitud.getMuertas() != null ? solicitud.getMuertas() : 0);</span>
         
         // Calcular total automáticamente
-<span class="nc" id="L169">        Integer totalCalculado = calcularTotal(normalesInicializadas, repGerm.getAnormales(), </span>
-<span class="nc" id="L170">                                             repGerm.getDuras(), repGerm.getFrescas(), repGerm.getMuertas());</span>
-<span class="nc" id="L171">        repGerm.setTotal(totalCalculado);</span>
+<span class="fc" id="L169">        Integer totalCalculado = calcularTotal(normalesInicializadas, repGerm.getAnormales(), </span>
+<span class="fc" id="L170">                                             repGerm.getDuras(), repGerm.getFrescas(), repGerm.getMuertas());</span>
+<span class="fc" id="L171">        repGerm.setTotal(totalCalculado);</span>
         
-<span class="nc" id="L173">        repGerm.setTotal(totalCalculado);</span>
+<span class="fc" id="L173">        repGerm.setTotal(totalCalculado);</span>
         
         // Validar que haya al menos un valor
-<span class="nc bnc" id="L176" title="All 2 branches missed.">        if (totalCalculado == 0) {</span>
-<span class="nc" id="L177">            throw new RuntimeException(&quot;Debe ingresar al menos un valor&quot;);</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        if (totalCalculado == 0) {</span>
+<span class="fc" id="L177">            throw new RuntimeException(&quot;Debe ingresar al menos un valor&quot;);</span>
         }
         
         // Validar solo el límite máximo
         // El mínimo no se valida aquí para permitir guardar repeticiones incompletas
         // (se validará al finalizar la tabla)
-<span class="nc bnc" id="L183" title="All 2 branches missed.">        if (tablaGerm.getNumSemillasPRep() != null) {</span>
-<span class="nc" id="L184">            int limiteMaximo = (int) Math.floor(tablaGerm.getNumSemillasPRep() * 1.05);</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">        if (tablaGerm.getNumSemillasPRep() != null) {</span>
+<span class="fc" id="L184">            int limiteMaximo = (int) Math.floor(tablaGerm.getNumSemillasPRep() * 1.05);</span>
             
-<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (totalCalculado &gt; limiteMaximo) {</span>
-<span class="nc" id="L187">                throw new RuntimeException(&quot;El total de la repetición (&quot; + totalCalculado + </span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">            if (totalCalculado &gt; limiteMaximo) {</span>
+<span class="fc" id="L187">                throw new RuntimeException(&quot;El total de la repetición (&quot; + totalCalculado + </span>
                     &quot;) excede el límite máximo permitido (&quot; + limiteMaximo + 
-<span class="nc" id="L189">                    &quot; - con 5% de tolerancia sobre &quot; + tablaGerm.getNumSemillasPRep() + &quot; semillas)&quot;);</span>
+<span class="fc" id="L189">                    &quot; - con 5% de tolerancia sobre &quot; + tablaGerm.getNumSemillasPRep() + &quot; semillas)&quot;);</span>
             }
         }
         
-<span class="nc" id="L193">        return repGerm;</span>
+<span class="fc" id="L193">        return repGerm;</span>
     }
     
     /**
      * Validar datos de la repetición
      */
     private void validarDatosRepeticion(RepGermRequestDTO solicitud, TablaGerm tablaGerm) {
-<span class="nc" id="L200">        Integer numSemillasPRep = tablaGerm.getNumSemillasPRep();</span>
+<span class="fc" id="L200">        Integer numSemillasPRep = tablaGerm.getNumSemillasPRep();</span>
         
         // Validar que los valores no sean negativos ni excedan numSemillasPRep
-<span class="nc bnc" id="L203" title="All 2 branches missed.">        if (solicitud.getAnormales() != null) {</span>
-<span class="nc bnc" id="L204" title="All 2 branches missed.">            if (solicitud.getAnormales() &lt; 0) {</span>
-<span class="nc" id="L205">                throw new RuntimeException(&quot;El número de semillas anormales no puede ser negativo&quot;);</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (solicitud.getAnormales() != null) {</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">            if (solicitud.getAnormales() &lt; 0) {</span>
+<span class="fc" id="L205">                throw new RuntimeException(&quot;El número de semillas anormales no puede ser negativo&quot;);</span>
             }
-<span class="nc bnc" id="L207" title="All 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getAnormales() &gt; numSemillasPRep) {</span>
-<span class="nc" id="L208">                throw new RuntimeException(&quot;El número de semillas anormales no puede exceder &quot; + numSemillasPRep);</span>
+<span class="pc bpc" id="L207" title="1 of 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getAnormales() &gt; numSemillasPRep) {</span>
+<span class="fc" id="L208">                throw new RuntimeException(&quot;El número de semillas anormales no puede exceder &quot; + numSemillasPRep);</span>
             }
         }
         
-<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (solicitud.getDuras() != null) {</span>
-<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (solicitud.getDuras() &lt; 0) {</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        if (solicitud.getDuras() != null) {</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">            if (solicitud.getDuras() &lt; 0) {</span>
 <span class="nc" id="L214">                throw new RuntimeException(&quot;El número de semillas duras no puede ser negativo&quot;);</span>
             }
-<span class="nc bnc" id="L216" title="All 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getDuras() &gt; numSemillasPRep) {</span>
+<span class="pc bpc" id="L216" title="2 of 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getDuras() &gt; numSemillasPRep) {</span>
 <span class="nc" id="L217">                throw new RuntimeException(&quot;El número de semillas duras no puede exceder &quot; + numSemillasPRep);</span>
             }
         }
         
-<span class="nc bnc" id="L221" title="All 2 branches missed.">        if (solicitud.getFrescas() != null) {</span>
-<span class="nc bnc" id="L222" title="All 2 branches missed.">            if (solicitud.getFrescas() &lt; 0) {</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (solicitud.getFrescas() != null) {</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">            if (solicitud.getFrescas() &lt; 0) {</span>
 <span class="nc" id="L223">                throw new RuntimeException(&quot;El número de semillas frescas no puede ser negativo&quot;);</span>
             }
-<span class="nc bnc" id="L225" title="All 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getFrescas() &gt; numSemillasPRep) {</span>
+<span class="pc bpc" id="L225" title="2 of 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getFrescas() &gt; numSemillasPRep) {</span>
 <span class="nc" id="L226">                throw new RuntimeException(&quot;El número de semillas frescas no puede exceder &quot; + numSemillasPRep);</span>
             }
         }
         
-<span class="nc bnc" id="L230" title="All 2 branches missed.">        if (solicitud.getMuertas() != null) {</span>
-<span class="nc bnc" id="L231" title="All 2 branches missed.">            if (solicitud.getMuertas() &lt; 0) {</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (solicitud.getMuertas() != null) {</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">            if (solicitud.getMuertas() &lt; 0) {</span>
 <span class="nc" id="L232">                throw new RuntimeException(&quot;El número de semillas muertas no puede ser negativo&quot;);</span>
             }
-<span class="nc bnc" id="L234" title="All 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getMuertas() &gt; numSemillasPRep) {</span>
+<span class="pc bpc" id="L234" title="2 of 4 branches missed.">            if (numSemillasPRep != null &amp;&amp; solicitud.getMuertas() &gt; numSemillasPRep) {</span>
 <span class="nc" id="L235">                throw new RuntimeException(&quot;El número de semillas muertas no puede exceder &quot; + numSemillasPRep);</span>
             }
         }
         
         // Validar valores de normales
-<span class="nc bnc" id="L240" title="All 2 branches missed.">        if (solicitud.getNormales() != null) {</span>
-<span class="nc bnc" id="L241" title="All 2 branches missed.">            for (int i = 0; i &lt; solicitud.getNormales().size(); i++) {</span>
-<span class="nc" id="L242">                Integer valor = solicitud.getNormales().get(i);</span>
-<span class="nc bnc" id="L243" title="All 2 branches missed.">                if (valor != null) {</span>
-<span class="nc bnc" id="L244" title="All 2 branches missed.">                    if (valor &lt; 0) {</span>
-<span class="nc" id="L245">                        throw new RuntimeException(&quot;El valor del conteo &quot; + (i + 1) + &quot; de normales no puede ser negativo&quot;);</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        if (solicitud.getNormales() != null) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">            for (int i = 0; i &lt; solicitud.getNormales().size(); i++) {</span>
+<span class="fc" id="L242">                Integer valor = solicitud.getNormales().get(i);</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">                if (valor != null) {</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">                    if (valor &lt; 0) {</span>
+<span class="fc" id="L245">                        throw new RuntimeException(&quot;El valor del conteo &quot; + (i + 1) + &quot; de normales no puede ser negativo&quot;);</span>
                     }
-<span class="nc bnc" id="L247" title="All 4 branches missed.">                    if (numSemillasPRep != null &amp;&amp; valor &gt; numSemillasPRep) {</span>
+<span class="pc bpc" id="L247" title="2 of 4 branches missed.">                    if (numSemillasPRep != null &amp;&amp; valor &gt; numSemillasPRep) {</span>
 <span class="nc" id="L248">                        throw new RuntimeException(&quot;El valor del conteo &quot; + (i + 1) + &quot; de normales no puede exceder &quot; + numSemillasPRep);</span>
                     }
                 }
             }
         }
-<span class="nc" id="L253">    }</span>
+<span class="fc" id="L253">    }</span>
     
     // Método para calcular el total de una repetición
     private Integer calcularTotal(List&lt;Integer&gt; normales, Integer anormales, Integer duras, Integer frescas, Integer muertas) {
-<span class="nc" id="L257">        int total = 0;</span>
+<span class="fc" id="L257">        int total = 0;</span>
         
         // Sumar todos los valores de normales
-<span class="nc bnc" id="L260" title="All 2 branches missed.">        if (normales != null) {</span>
-<span class="nc bnc" id="L261" title="All 2 branches missed.">            for (Integer normal : normales) {</span>
-<span class="nc bnc" id="L262" title="All 2 branches missed.">                if (normal != null) {</span>
-<span class="nc" id="L263">                    total += normal;</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (normales != null) {</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">            for (Integer normal : normales) {</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">                if (normal != null) {</span>
+<span class="fc" id="L263">                    total += normal;</span>
                 }
-<span class="nc" id="L265">            }</span>
+<span class="fc" id="L265">            }</span>
         }
         
         // Sumar los demás campos
-<span class="nc bnc" id="L269" title="All 2 branches missed.">        total += (anormales != null ? anormales : 0);</span>
-<span class="nc bnc" id="L270" title="All 2 branches missed.">        total += (duras != null ? duras : 0);</span>
-<span class="nc bnc" id="L271" title="All 2 branches missed.">        total += (frescas != null ? frescas : 0);</span>
-<span class="nc bnc" id="L272" title="All 2 branches missed.">        total += (muertas != null ? muertas : 0);</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">        total += (anormales != null ? anormales : 0);</span>
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        total += (duras != null ? duras : 0);</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        total += (frescas != null ? frescas : 0);</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">        total += (muertas != null ? muertas : 0);</span>
         
-<span class="nc" id="L274">        return total;</span>
+<span class="fc" id="L274">        return total;</span>
     }
 
     // Actualizar Entity desde RequestDTO
@@ -279,46 +279,46 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
         // numRep NO se actualiza, es generado automáticamente y es inmutable
         
         // Gestionar la lista normales preservando el tamaño según numeroConteos
-<span class="nc bnc" id="L282" title="All 2 branches missed.">        Integer numeroConteos = (repGerm.getTablaGerm() != null &amp;&amp; </span>
-<span class="nc bnc" id="L283" title="All 2 branches missed.">                               repGerm.getTablaGerm().getNumeroConteos() != null) </span>
-<span class="nc" id="L284">            ? repGerm.getTablaGerm().getNumeroConteos() </span>
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">        Integer numeroConteos = (repGerm.getTablaGerm() != null &amp;&amp; </span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">                               repGerm.getTablaGerm().getNumeroConteos() != null) </span>
+<span class="fc" id="L284">            ? repGerm.getTablaGerm().getNumeroConteos() </span>
 <span class="nc" id="L285">            : 1;</span>
         
-<span class="nc" id="L287">        List&lt;Integer&gt; normalesActualizadas = new ArrayList&lt;&gt;(Collections.nCopies(numeroConteos, 0));</span>
+<span class="fc" id="L287">        List&lt;Integer&gt; normalesActualizadas = new ArrayList&lt;&gt;(Collections.nCopies(numeroConteos, 0));</span>
         
         // Si el usuario envió valores para normales, preservar su posición y completar con 0 el resto
-<span class="nc bnc" id="L290" title="All 4 branches missed.">        if (solicitud.getNormales() != null &amp;&amp; !solicitud.getNormales().isEmpty()) {</span>
-<span class="nc bnc" id="L291" title="All 2 branches missed.">            for (int i = 0; i &lt; Math.min(solicitud.getNormales().size(), numeroConteos); i++) {</span>
-<span class="nc bnc" id="L292" title="All 2 branches missed.">                if (solicitud.getNormales().get(i) != null) {</span>
-<span class="nc" id="L293">                    normalesActualizadas.set(i, solicitud.getNormales().get(i));</span>
+<span class="pc bpc" id="L290" title="2 of 4 branches missed.">        if (solicitud.getNormales() != null &amp;&amp; !solicitud.getNormales().isEmpty()) {</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">            for (int i = 0; i &lt; Math.min(solicitud.getNormales().size(), numeroConteos); i++) {</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">                if (solicitud.getNormales().get(i) != null) {</span>
+<span class="fc" id="L293">                    normalesActualizadas.set(i, solicitud.getNormales().get(i));</span>
                 }
             }
         }
         
-<span class="nc" id="L298">        repGerm.setNormales(normalesActualizadas);</span>
+<span class="fc" id="L298">        repGerm.setNormales(normalesActualizadas);</span>
         
-<span class="nc bnc" id="L300" title="All 2 branches missed.">        repGerm.setAnormales(solicitud.getAnormales() != null ? solicitud.getAnormales() : 0);</span>
-<span class="nc bnc" id="L301" title="All 2 branches missed.">        repGerm.setDuras(solicitud.getDuras() != null ? solicitud.getDuras() : 0);</span>
-<span class="nc bnc" id="L302" title="All 2 branches missed.">        repGerm.setFrescas(solicitud.getFrescas() != null ? solicitud.getFrescas() : 0);</span>
-<span class="nc bnc" id="L303" title="All 2 branches missed.">        repGerm.setMuertas(solicitud.getMuertas() != null ? solicitud.getMuertas() : 0);</span>
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">        repGerm.setAnormales(solicitud.getAnormales() != null ? solicitud.getAnormales() : 0);</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">        repGerm.setDuras(solicitud.getDuras() != null ? solicitud.getDuras() : 0);</span>
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">        repGerm.setFrescas(solicitud.getFrescas() != null ? solicitud.getFrescas() : 0);</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        repGerm.setMuertas(solicitud.getMuertas() != null ? solicitud.getMuertas() : 0);</span>
         
         // Calcular total automáticamente
-<span class="nc" id="L306">        Integer totalCalculado = calcularTotal(normalesActualizadas, repGerm.getAnormales(), </span>
-<span class="nc" id="L307">                                             repGerm.getDuras(), repGerm.getFrescas(), repGerm.getMuertas());</span>
+<span class="fc" id="L306">        Integer totalCalculado = calcularTotal(normalesActualizadas, repGerm.getAnormales(), </span>
+<span class="fc" id="L307">                                             repGerm.getDuras(), repGerm.getFrescas(), repGerm.getMuertas());</span>
         
         // Validar que haya al menos un valor 
-<span class="nc bnc" id="L310" title="All 2 branches missed.">        if (totalCalculado == 0) {</span>
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">        if (totalCalculado == 0) {</span>
 <span class="nc" id="L311">            throw new RuntimeException(&quot;Debe ingresar al menos un valor&quot;);</span>
         }
-<span class="nc" id="L313">        repGerm.setTotal(totalCalculado);</span>
+<span class="fc" id="L313">        repGerm.setTotal(totalCalculado);</span>
         
         // Validar solo el límite máximo
         // El mínimo no se valida aquí para permitir guardar repeticiones incompletas
         // (se validará al finalizar la tabla)
-<span class="nc bnc" id="L318" title="All 2 branches missed.">        if (repGerm.getTablaGerm().getNumSemillasPRep() != null) {</span>
-<span class="nc" id="L319">            int limiteMaximo = (int) Math.floor(repGerm.getTablaGerm().getNumSemillasPRep() * 1.05);</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">        if (repGerm.getTablaGerm().getNumSemillasPRep() != null) {</span>
+<span class="fc" id="L319">            int limiteMaximo = (int) Math.floor(repGerm.getTablaGerm().getNumSemillasPRep() * 1.05);</span>
             
-<span class="nc bnc" id="L321" title="All 2 branches missed.">            if (totalCalculado &gt; limiteMaximo) {</span>
+<span class="pc bpc" id="L321" title="1 of 2 branches missed.">            if (totalCalculado &gt; limiteMaximo) {</span>
 <span class="nc" id="L322">                throw new RuntimeException(&quot;El total de la repetición (&quot; + totalCalculado + </span>
                     &quot;) excede el límite máximo permitido (&quot; + limiteMaximo + 
 <span class="nc" id="L324">                    &quot; - con 5% de tolerancia sobre &quot; + repGerm.getTablaGerm().getNumSemillasPRep() + &quot; semillas)&quot;);</span>
@@ -326,181 +326,181 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
         }
         
         // El total se calcula automáticamente, no se toma del DTO
-<span class="nc" id="L329">        repGerm.setTotal(totalCalculado);</span>
+<span class="fc" id="L329">        repGerm.setTotal(totalCalculado);</span>
         // La tabla asociada no se cambia en actualizaciones
-<span class="nc" id="L331">    }</span>
+<span class="fc" id="L331">    }</span>
 
     // Mapear de Entity a DTO
     private RepGermDTO mapearEntidadADTO(RepGerm repGerm) {
-<span class="nc" id="L335">        RepGermDTO dto = new RepGermDTO();</span>
-<span class="nc" id="L336">        dto.setRepGermID(repGerm.getRepGermID());</span>
-<span class="nc" id="L337">        dto.setNumRep(repGerm.getNumRep());</span>
-<span class="nc" id="L338">        dto.setNormales(repGerm.getNormales());</span>
-<span class="nc" id="L339">        dto.setAnormales(repGerm.getAnormales());</span>
-<span class="nc" id="L340">        dto.setDuras(repGerm.getDuras());</span>
-<span class="nc" id="L341">        dto.setFrescas(repGerm.getFrescas());</span>
-<span class="nc" id="L342">        dto.setMuertas(repGerm.getMuertas());</span>
-<span class="nc" id="L343">        dto.setTotal(repGerm.getTotal());</span>
+<span class="fc" id="L335">        RepGermDTO dto = new RepGermDTO();</span>
+<span class="fc" id="L336">        dto.setRepGermID(repGerm.getRepGermID());</span>
+<span class="fc" id="L337">        dto.setNumRep(repGerm.getNumRep());</span>
+<span class="fc" id="L338">        dto.setNormales(repGerm.getNormales());</span>
+<span class="fc" id="L339">        dto.setAnormales(repGerm.getAnormales());</span>
+<span class="fc" id="L340">        dto.setDuras(repGerm.getDuras());</span>
+<span class="fc" id="L341">        dto.setFrescas(repGerm.getFrescas());</span>
+<span class="fc" id="L342">        dto.setMuertas(repGerm.getMuertas());</span>
+<span class="fc" id="L343">        dto.setTotal(repGerm.getTotal());</span>
         
         // Incluir ID de la tabla asociada
-<span class="nc bnc" id="L346" title="All 2 branches missed.">        if (repGerm.getTablaGerm() != null) {</span>
-<span class="nc" id="L347">            dto.setTablaGermId(repGerm.getTablaGerm().getTablaGermID());</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">        if (repGerm.getTablaGerm() != null) {</span>
+<span class="fc" id="L347">            dto.setTablaGermId(repGerm.getTablaGerm().getTablaGermID());</span>
         }
         
-<span class="nc" id="L350">        return dto;</span>
+<span class="fc" id="L350">        return dto;</span>
     }
     
     // Actualizar totales de la tabla padre cuando cambia una repetición
     private void actualizarTotalesTablaGerm(TablaGerm tablaGerm) {
         // Obtener todas las repeticiones de esta tabla
-<span class="nc" id="L356">        List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());</span>
+<span class="fc" id="L356">        List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());</span>
         
         // Calcular total como suma de todos los totales de repeticiones
-<span class="nc" id="L359">        int totalCalculado = repeticiones.stream()</span>
-<span class="nc bnc" id="L360" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getTotal() != null ? rep.getTotal() : 0)</span>
-<span class="nc" id="L361">            .sum();</span>
+<span class="fc" id="L359">        int totalCalculado = repeticiones.stream()</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getTotal() != null ? rep.getTotal() : 0)</span>
+<span class="fc" id="L361">            .sum();</span>
             
-<span class="nc" id="L363">        tablaGerm.setTotal(totalCalculado);</span>
+<span class="fc" id="L363">        tablaGerm.setTotal(totalCalculado);</span>
         
         // Verificar si todas las repeticiones están completas para calcular promedio
-<span class="nc bnc" id="L366" title="All 2 branches missed.">        if (todasLasRepeticionesCompletas(tablaGerm, repeticiones)) {</span>
-<span class="nc" id="L367">            calcularPromediosSinRedondeo(tablaGerm, repeticiones);</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">        if (todasLasRepeticionesCompletas(tablaGerm, repeticiones)) {</span>
+<span class="fc" id="L367">            calcularPromediosSinRedondeo(tablaGerm, repeticiones);</span>
         }
         
         // Guardar la tabla actualizada
-<span class="nc" id="L371">        tablaGermRepository.save(tablaGerm);</span>
-<span class="nc" id="L372">    }</span>
+<span class="fc" id="L371">        tablaGermRepository.save(tablaGerm);</span>
+<span class="fc" id="L372">    }</span>
     
     // Verificar si todas las repeticiones están completas
     private boolean todasLasRepeticionesCompletas(TablaGerm tablaGerm, List&lt;RepGerm&gt; repeticiones) {
-<span class="nc bnc" id="L376" title="All 4 branches missed.">        if (tablaGerm == null || tablaGerm.getNumeroRepeticiones() == null) {</span>
+<span class="pc bpc" id="L376" title="2 of 4 branches missed.">        if (tablaGerm == null || tablaGerm.getNumeroRepeticiones() == null) {</span>
 <span class="nc" id="L377">            return false;</span>
         }
         
         // Verificar que tenemos el número esperado de repeticiones
-<span class="nc bnc" id="L381" title="All 2 branches missed.">        if (repeticiones.size() &lt; tablaGerm.getNumeroRepeticiones()) {</span>
-<span class="nc" id="L382">            return false;</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">        if (repeticiones.size() &lt; tablaGerm.getNumeroRepeticiones()) {</span>
+<span class="fc" id="L382">            return false;</span>
         }
         
         // Verificar que todas las repeticiones tienen datos completos
-<span class="nc" id="L386">        return repeticiones.stream().allMatch(rep -&gt; </span>
-<span class="nc bnc" id="L387" title="All 4 branches missed.">            rep.getTotal() != null &amp;&amp; rep.getTotal() &gt; 0</span>
+<span class="fc" id="L386">        return repeticiones.stream().allMatch(rep -&gt; </span>
+<span class="pc bpc" id="L387" title="2 of 4 branches missed.">            rep.getTotal() != null &amp;&amp; rep.getTotal() &gt; 0</span>
         );
     }
     
     // Calcular promedios sin redondeo automáticamente
     // 5 promedios: normales (suma de todos los valores de todas las listas), anormales, duras, frescas, muertas
     private void calcularPromediosSinRedondeo(TablaGerm tablaGerm, List&lt;RepGerm&gt; repeticiones) {
-<span class="nc bnc" id="L394" title="All 2 branches missed.">        if (repeticiones.isEmpty()) {</span>
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">        if (repeticiones.isEmpty()) {</span>
 <span class="nc" id="L395">            tablaGerm.setPromedioSinRedondeo(new ArrayList&lt;&gt;());</span>
 <span class="nc" id="L396">            return;</span>
         }
         
-<span class="nc" id="L399">        int numRepeticiones = repeticiones.size();</span>
-<span class="nc" id="L400">        List&lt;BigDecimal&gt; promedios = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L399">        int numRepeticiones = repeticiones.size();</span>
+<span class="fc" id="L400">        List&lt;BigDecimal&gt; promedios = new ArrayList&lt;&gt;();</span>
         
         // 1. Promedio de normales (suma de todos los valores de todas las listas de normales)
-<span class="nc" id="L403">        int sumaNormales = repeticiones.stream()</span>
-<span class="nc bnc" id="L404" title="All 2 branches missed.">            .flatMapToInt(rep -&gt; rep.getNormales() != null ? rep.getNormales().stream().mapToInt(Integer::intValue) : java.util.stream.IntStream.empty())</span>
-<span class="nc" id="L405">            .sum();</span>
-<span class="nc" id="L406">        BigDecimal promedioNormales = BigDecimal.valueOf(sumaNormales).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L407">        promedios.add(promedioNormales);</span>
+<span class="fc" id="L403">        int sumaNormales = repeticiones.stream()</span>
+<span class="pc bpc" id="L404" title="1 of 2 branches missed.">            .flatMapToInt(rep -&gt; rep.getNormales() != null ? rep.getNormales().stream().mapToInt(Integer::intValue) : java.util.stream.IntStream.empty())</span>
+<span class="fc" id="L405">            .sum();</span>
+<span class="fc" id="L406">        BigDecimal promedioNormales = BigDecimal.valueOf(sumaNormales).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L407">        promedios.add(promedioNormales);</span>
         
         // 2. Promedio de anormales
-<span class="nc" id="L410">        int sumaAnormales = repeticiones.stream()</span>
-<span class="nc bnc" id="L411" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getAnormales() != null ? rep.getAnormales() : 0)</span>
-<span class="nc" id="L412">            .sum();</span>
-<span class="nc" id="L413">        BigDecimal promedioAnormales = BigDecimal.valueOf(sumaAnormales).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L414">        promedios.add(promedioAnormales);</span>
+<span class="fc" id="L410">        int sumaAnormales = repeticiones.stream()</span>
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getAnormales() != null ? rep.getAnormales() : 0)</span>
+<span class="fc" id="L412">            .sum();</span>
+<span class="fc" id="L413">        BigDecimal promedioAnormales = BigDecimal.valueOf(sumaAnormales).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L414">        promedios.add(promedioAnormales);</span>
         
         // 3. Promedio de duras
-<span class="nc" id="L417">        int sumaDuras = repeticiones.stream()</span>
-<span class="nc bnc" id="L418" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getDuras() != null ? rep.getDuras() : 0)</span>
-<span class="nc" id="L419">            .sum();</span>
-<span class="nc" id="L420">        BigDecimal promedioDuras = BigDecimal.valueOf(sumaDuras).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L421">        promedios.add(promedioDuras);</span>
+<span class="fc" id="L417">        int sumaDuras = repeticiones.stream()</span>
+<span class="pc bpc" id="L418" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getDuras() != null ? rep.getDuras() : 0)</span>
+<span class="fc" id="L419">            .sum();</span>
+<span class="fc" id="L420">        BigDecimal promedioDuras = BigDecimal.valueOf(sumaDuras).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L421">        promedios.add(promedioDuras);</span>
         
         // 4. Promedio de frescas
-<span class="nc" id="L424">        int sumaFrescas = repeticiones.stream()</span>
-<span class="nc bnc" id="L425" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getFrescas() != null ? rep.getFrescas() : 0)</span>
-<span class="nc" id="L426">            .sum();</span>
-<span class="nc" id="L427">        BigDecimal promedioFrescas = BigDecimal.valueOf(sumaFrescas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L428">        promedios.add(promedioFrescas);</span>
+<span class="fc" id="L424">        int sumaFrescas = repeticiones.stream()</span>
+<span class="pc bpc" id="L425" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getFrescas() != null ? rep.getFrescas() : 0)</span>
+<span class="fc" id="L426">            .sum();</span>
+<span class="fc" id="L427">        BigDecimal promedioFrescas = BigDecimal.valueOf(sumaFrescas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L428">        promedios.add(promedioFrescas);</span>
         
         // 5. Promedio de muertas
-<span class="nc" id="L431">        int sumaMuertas = repeticiones.stream()</span>
-<span class="nc bnc" id="L432" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getMuertas() != null ? rep.getMuertas() : 0)</span>
-<span class="nc" id="L433">            .sum();</span>
-<span class="nc" id="L434">        BigDecimal promedioMuertas = BigDecimal.valueOf(sumaMuertas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L435">        promedios.add(promedioMuertas);</span>
+<span class="fc" id="L431">        int sumaMuertas = repeticiones.stream()</span>
+<span class="pc bpc" id="L432" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getMuertas() != null ? rep.getMuertas() : 0)</span>
+<span class="fc" id="L433">            .sum();</span>
+<span class="fc" id="L434">        BigDecimal promedioMuertas = BigDecimal.valueOf(sumaMuertas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L435">        promedios.add(promedioMuertas);</span>
         
-<span class="nc" id="L437">        tablaGerm.setPromedioSinRedondeo(promedios);</span>
+<span class="fc" id="L437">        tablaGerm.setPromedioSinRedondeo(promedios);</span>
         
         // Calcular promediosSinRedPorConteo
-<span class="nc" id="L440">        calcularPromediosPorConteo(tablaGerm, repeticiones);</span>
-<span class="nc" id="L441">    }</span>
+<span class="fc" id="L440">        calcularPromediosPorConteo(tablaGerm, repeticiones);</span>
+<span class="fc" id="L441">    }</span>
     
     // Calcular promedios por cada conteo individual de normales + los otros campos
     private void calcularPromediosPorConteo(TablaGerm tablaGerm, List&lt;RepGerm&gt; repeticiones) {
-<span class="nc bnc" id="L445" title="All 2 branches missed.">        if (repeticiones.isEmpty()) {</span>
+<span class="pc bpc" id="L445" title="1 of 2 branches missed.">        if (repeticiones.isEmpty()) {</span>
 <span class="nc" id="L446">            tablaGerm.setPromediosSinRedPorConteo(new ArrayList&lt;&gt;());</span>
 <span class="nc" id="L447">            return;</span>
         }
         
-<span class="nc" id="L450">        int numRepeticiones = repeticiones.size();</span>
-<span class="nc" id="L451">        List&lt;BigDecimal&gt; promediosPorConteo = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L450">        int numRepeticiones = repeticiones.size();</span>
+<span class="fc" id="L451">        List&lt;BigDecimal&gt; promediosPorConteo = new ArrayList&lt;&gt;();</span>
         
         // Obtener el número de conteos desde la tabla
-<span class="nc bnc" id="L454" title="All 2 branches missed.">        Integer numConteos = tablaGerm != null ? tablaGerm.getNumeroConteos() : null;</span>
+<span class="pc bpc" id="L454" title="1 of 2 branches missed.">        Integer numConteos = tablaGerm != null ? tablaGerm.getNumeroConteos() : null;</span>
             
-<span class="nc bnc" id="L456" title="All 4 branches missed.">        if (numConteos != null &amp;&amp; numConteos &gt; 0) {</span>
+<span class="pc bpc" id="L456" title="2 of 4 branches missed.">        if (numConteos != null &amp;&amp; numConteos &gt; 0) {</span>
             // Calcular promedio para cada conteo de normales por separado
-<span class="nc bnc" id="L458" title="All 2 branches missed.">            for (int conteo = 0; conteo &lt; numConteos; conteo++) {</span>
-<span class="nc" id="L459">                final int conteoIndex = conteo;</span>
-<span class="nc" id="L460">                int sumaNormalesConteo = repeticiones.stream()</span>
-<span class="nc" id="L461">                    .mapToInt(rep -&gt; {</span>
-<span class="nc bnc" id="L462" title="All 4 branches missed.">                        if (rep.getNormales() != null &amp;&amp; rep.getNormales().size() &gt; conteoIndex) {</span>
-<span class="nc" id="L463">                            return rep.getNormales().get(conteoIndex);</span>
+<span class="fc bfc" id="L458" title="All 2 branches covered.">            for (int conteo = 0; conteo &lt; numConteos; conteo++) {</span>
+<span class="fc" id="L459">                final int conteoIndex = conteo;</span>
+<span class="fc" id="L460">                int sumaNormalesConteo = repeticiones.stream()</span>
+<span class="fc" id="L461">                    .mapToInt(rep -&gt; {</span>
+<span class="pc bpc" id="L462" title="2 of 4 branches missed.">                        if (rep.getNormales() != null &amp;&amp; rep.getNormales().size() &gt; conteoIndex) {</span>
+<span class="fc" id="L463">                            return rep.getNormales().get(conteoIndex);</span>
                         }
 <span class="nc" id="L465">                        return 0;</span>
                     })
-<span class="nc" id="L467">                    .sum();</span>
-<span class="nc" id="L468">                BigDecimal promedioConteo = BigDecimal.valueOf(sumaNormalesConteo)</span>
-<span class="nc" id="L469">                    .divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L470">                promediosPorConteo.add(promedioConteo);</span>
+<span class="fc" id="L467">                    .sum();</span>
+<span class="fc" id="L468">                BigDecimal promedioConteo = BigDecimal.valueOf(sumaNormalesConteo)</span>
+<span class="fc" id="L469">                    .divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L470">                promediosPorConteo.add(promedioConteo);</span>
             }
         }
         
         // Agregar los otros campos (anormales, duras, frescas, muertas) igual que antes
         // 2. Promedio de anormales
-<span class="nc" id="L476">        int sumaAnormales = repeticiones.stream()</span>
-<span class="nc bnc" id="L477" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getAnormales() != null ? rep.getAnormales() : 0)</span>
-<span class="nc" id="L478">            .sum();</span>
-<span class="nc" id="L479">        BigDecimal promedioAnormales = BigDecimal.valueOf(sumaAnormales).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L480">        promediosPorConteo.add(promedioAnormales);</span>
+<span class="fc" id="L476">        int sumaAnormales = repeticiones.stream()</span>
+<span class="pc bpc" id="L477" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getAnormales() != null ? rep.getAnormales() : 0)</span>
+<span class="fc" id="L478">            .sum();</span>
+<span class="fc" id="L479">        BigDecimal promedioAnormales = BigDecimal.valueOf(sumaAnormales).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L480">        promediosPorConteo.add(promedioAnormales);</span>
         
         // 3. Promedio de duras
-<span class="nc" id="L483">        int sumaDuras = repeticiones.stream()</span>
-<span class="nc bnc" id="L484" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getDuras() != null ? rep.getDuras() : 0)</span>
-<span class="nc" id="L485">            .sum();</span>
-<span class="nc" id="L486">        BigDecimal promedioDuras = BigDecimal.valueOf(sumaDuras).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L487">        promediosPorConteo.add(promedioDuras);</span>
+<span class="fc" id="L483">        int sumaDuras = repeticiones.stream()</span>
+<span class="pc bpc" id="L484" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getDuras() != null ? rep.getDuras() : 0)</span>
+<span class="fc" id="L485">            .sum();</span>
+<span class="fc" id="L486">        BigDecimal promedioDuras = BigDecimal.valueOf(sumaDuras).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L487">        promediosPorConteo.add(promedioDuras);</span>
         
         // 4. Promedio de frescas
-<span class="nc" id="L490">        int sumaFrescas = repeticiones.stream()</span>
-<span class="nc bnc" id="L491" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getFrescas() != null ? rep.getFrescas() : 0)</span>
-<span class="nc" id="L492">            .sum();</span>
-<span class="nc" id="L493">        BigDecimal promedioFrescas = BigDecimal.valueOf(sumaFrescas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L494">        promediosPorConteo.add(promedioFrescas);</span>
+<span class="fc" id="L490">        int sumaFrescas = repeticiones.stream()</span>
+<span class="pc bpc" id="L491" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getFrescas() != null ? rep.getFrescas() : 0)</span>
+<span class="fc" id="L492">            .sum();</span>
+<span class="fc" id="L493">        BigDecimal promedioFrescas = BigDecimal.valueOf(sumaFrescas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L494">        promediosPorConteo.add(promedioFrescas);</span>
         
         // 5. Promedio de muertas
-<span class="nc" id="L497">        int sumaMuertas = repeticiones.stream()</span>
-<span class="nc bnc" id="L498" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getMuertas() != null ? rep.getMuertas() : 0)</span>
-<span class="nc" id="L499">            .sum();</span>
-<span class="nc" id="L500">        BigDecimal promedioMuertas = BigDecimal.valueOf(sumaMuertas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
-<span class="nc" id="L501">        promediosPorConteo.add(promedioMuertas);</span>
+<span class="fc" id="L497">        int sumaMuertas = repeticiones.stream()</span>
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getMuertas() != null ? rep.getMuertas() : 0)</span>
+<span class="fc" id="L499">            .sum();</span>
+<span class="fc" id="L500">        BigDecimal promedioMuertas = BigDecimal.valueOf(sumaMuertas).divide(BigDecimal.valueOf(numRepeticiones), 2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L501">        promediosPorConteo.add(promedioMuertas);</span>
         
-<span class="nc" id="L503">        tablaGerm.setPromediosSinRedPorConteo(promediosPorConteo);</span>
-<span class="nc" id="L504">    }</span>
+<span class="fc" id="L503">        tablaGerm.setPromediosSinRedPorConteo(promediosPorConteo);</span>
+<span class="fc" id="L504">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -239,7 +239,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L239">        Page&lt;MalezasCatalogoDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L240">            Arrays.asList(malezasCatalogoDTO),</span>
 <span class="fc" id="L241">            PageRequest.of(0, 10),</span>
-            1
+<span class="fc" id="L242">            1</span>
         );
         
 <span class="fc" id="L245">        when(malezasCatalogoService.obtenerMalezasPaginadasConFiltros(any(), any(), any())).thenReturn(page);</span>
@@ -260,7 +260,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L260">        Page&lt;MalezasCatalogoDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L261">            Arrays.asList(malezasCatalogoDTO),</span>
 <span class="fc" id="L262">            PageRequest.of(0, 10),</span>
-            1
+<span class="fc" id="L263">            1</span>
         );
         
 <span class="fc" id="L266">        when(malezasCatalogoService.obtenerMalezasPaginadasConFiltros(any(), eq(&quot;Yuyo&quot;), any())).thenReturn(page);</span>
@@ -281,7 +281,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L281">        Page&lt;MalezasCatalogoDTO&gt; page = new PageImpl&lt;&gt;(</span>
 <span class="fc" id="L282">            Arrays.asList(malezasCatalogoDTO),</span>
 <span class="fc" id="L283">            PageRequest.of(0, 10),</span>
-            1
+<span class="fc" id="L284">            1</span>
         );
         
 <span class="fc" id="L287">        when(malezasCatalogoService.obtenerMalezasPaginadasConFiltros(any(), any(), eq(true))).thenReturn(page);</span>

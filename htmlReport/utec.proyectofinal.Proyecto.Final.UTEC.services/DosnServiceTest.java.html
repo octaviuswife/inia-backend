@@ -7,21 +7,46 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Dosn;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.CuscutaRegistro;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasCatalogo;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.EspecieRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DosnRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CuscutaRegistroRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CuscutaRegistroDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.AnalisisHistorialDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoDosn;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -35,8 +60,9 @@ import static org.mockito.Mockito.*;
  * - Desactivación y reactivación
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName(&quot;Tests de DosnService&quot;)
-<span class="fc" id="L39">class DosnServiceTest {</span>
+<span class="fc" id="L65">class DosnServiceTest {</span>
 
     @Mock
     private DosnRepository dosnRepository;
@@ -50,6 +76,12 @@ import static org.mockito.Mockito.*;
     @Mock
     private AnalisisHistorialService analisisHistorialService;
 
+    @Mock
+    private MalezasCatalogoRepository malezasCatalogoRepository;
+
+    @Mock
+    private EspecieRepository especieRepository;
+
     @InjectMocks
     private DosnService dosnService;
 
@@ -60,244 +92,842 @@ import static org.mockito.Mockito.*;
     @BeforeEach
     void setUp() {
         // ARRANGE: Preparar datos de prueba
-<span class="fc" id="L63">        lote = new Lote();</span>
-<span class="fc" id="L64">        lote.setLoteID(1L);</span>
-<span class="fc" id="L65">        lote.setNomLote(&quot;LOTE-DOSN-001&quot;);</span>
-<span class="fc" id="L66">        lote.setActivo(true);</span>
+<span class="fc" id="L95">        lote = new Lote();</span>
+<span class="fc" id="L96">        lote.setLoteID(1L);</span>
+<span class="fc" id="L97">        lote.setNomLote(&quot;LOTE-DOSN-001&quot;);</span>
+<span class="fc" id="L98">        lote.setActivo(true);</span>
 
-<span class="fc" id="L68">        dosnRequestDTO = new DosnRequestDTO();</span>
-<span class="fc" id="L69">        dosnRequestDTO.setIdLote(1L);</span>
-<span class="fc" id="L70">        dosnRequestDTO.setFechaINIA(LocalDate.now());</span>
-<span class="fc" id="L71">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
-<span class="fc" id="L72">        dosnRequestDTO.setCumpleEstandar(true);</span>
-<span class="fc" id="L73">        dosnRequestDTO.setComentarios(&quot;Test DOSN&quot;);</span>
+<span class="fc" id="L100">        dosnRequestDTO = new DosnRequestDTO();</span>
+<span class="fc" id="L101">        dosnRequestDTO.setIdLote(1L);</span>
+<span class="fc" id="L102">        dosnRequestDTO.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L103">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L104">        dosnRequestDTO.setCumpleEstandar(true);</span>
+<span class="fc" id="L105">        dosnRequestDTO.setComentarios(&quot;Test DOSN&quot;);</span>
 
-<span class="fc" id="L75">        dosn = new Dosn();</span>
-<span class="fc" id="L76">        dosn.setAnalisisID(1L);</span>
-<span class="fc" id="L77">        dosn.setLote(lote);</span>
-<span class="fc" id="L78">        dosn.setFechaINIA(LocalDate.now());</span>
-<span class="fc" id="L79">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
-<span class="fc" id="L80">        dosn.setEstado(Estado.EN_PROCESO);</span>
-<span class="fc" id="L81">        dosn.setActivo(true);</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L107">        dosn = new Dosn();</span>
+<span class="fc" id="L108">        dosn.setAnalisisID(1L);</span>
+<span class="fc" id="L109">        dosn.setLote(lote);</span>
+<span class="fc" id="L110">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L111">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L112">        dosn.setEstado(Estado.EN_PROCESO);</span>
+<span class="fc" id="L113">        dosn.setActivo(true);</span>
+<span class="fc" id="L114">    }</span>
 
     @Test
     @DisplayName(&quot;Crear DOSN - debe asignar estado EN_PROCESO&quot;)
     void crearDosn_debeAsignarEstadoEnProceso() {
         // ARRANGE
-<span class="fc" id="L88">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
-<span class="fc" id="L89">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
-<span class="fc" id="L90">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
-<span class="fc" id="L91">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+<span class="fc" id="L120">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L121">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L122">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L123">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
 
         // ACT
-<span class="fc" id="L94">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+<span class="fc" id="L126">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
 
         // ASSERT
-<span class="fc" id="L97">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
-<span class="fc" id="L98">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
-<span class="fc" id="L99">        verify(analisisHistorialService, times(1)).registrarCreacion(any(Dosn.class));</span>
-<span class="fc" id="L100">        verify(analisisService, times(1)).establecerFechaInicio(any(Dosn.class));</span>
-<span class="fc" id="L101">    }</span>
+<span class="fc" id="L129">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L130">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L131">        verify(analisisHistorialService, times(1)).registrarCreacion(any(Dosn.class));</span>
+<span class="fc" id="L132">        verify(analisisService, times(1)).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L133">    }</span>
 
     @Test
     @DisplayName(&quot;Crear DOSN con lote inexistente - debe lanzar excepción&quot;)
     void crearDosn_conLoteInexistente_debeLanzarExcepcion() {
         // ARRANGE
-<span class="fc" id="L107">        when(loteRepository.findById(999L)).thenReturn(Optional.empty());</span>
-<span class="fc" id="L108">        dosnRequestDTO.setIdLote(999L);</span>
+<span class="fc" id="L139">        when(loteRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L140">        dosnRequestDTO.setIdLote(999L);</span>
 
         // ACT &amp; ASSERT
-<span class="fc" id="L111">        assertThrows(RuntimeException.class, () -&gt; {</span>
-<span class="nc" id="L112">            dosnService.crearDosn(dosnRequestDTO);</span>
-<span class="nc" id="L113">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
-<span class="fc" id="L114">    }</span>
+<span class="fc" id="L143">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L144">            dosnService.crearDosn(dosnRequestDTO);</span>
+<span class="nc" id="L145">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
+<span class="fc" id="L146">    }</span>
 
     @Test
     @DisplayName(&quot;Validar gramos analizados - debe aceptar valores positivos&quot;)
     void validarGramosAnalizados_debeAceptarValoresPositivos() {
         // ARRANGE
-<span class="fc" id="L120">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L152">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
         
-<span class="fc" id="L122">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
-<span class="fc" id="L123">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
-<span class="fc" id="L124">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
-<span class="fc" id="L125">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+<span class="fc" id="L154">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L155">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L156">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L157">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
 
         // ACT
-<span class="fc" id="L128">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+<span class="fc" id="L160">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
 
         // ASSERT
-<span class="fc" id="L131">        assertNotNull(resultado);</span>
-<span class="fc" id="L132">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
-<span class="fc" id="L133">    }</span>
+<span class="fc" id="L163">        assertNotNull(resultado);</span>
+<span class="fc" id="L164">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L165">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener DOSN por ID - debe retornar el análisis si existe&quot;)
     void obtenerDosnPorId_cuandoExiste_debeRetornarDosn() {
         // ARRANGE
-<span class="fc" id="L139">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L171">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
 
         // ACT
-<span class="fc" id="L142">        DosnDTO resultado = dosnService.obtenerDosnPorId(1L);</span>
+<span class="fc" id="L174">        DosnDTO resultado = dosnService.obtenerDosnPorId(1L);</span>
 
         // ASSERT
-<span class="fc" id="L145">        assertNotNull(resultado);</span>
-<span class="fc" id="L146">        assertEquals(1L, resultado.getAnalisisID());</span>
-<span class="fc" id="L147">        verify(dosnRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L148">    }</span>
+<span class="fc" id="L177">        assertNotNull(resultado);</span>
+<span class="fc" id="L178">        assertEquals(1L, resultado.getAnalisisID());</span>
+<span class="fc" id="L179">        verify(dosnRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L180">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener DOSN por ID inexistente - debe lanzar excepción&quot;)
     void obtenerDosnPorId_cuandoNoExiste_debeLanzarExcepcion() {
         // ARRANGE
-<span class="fc" id="L154">        when(dosnRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L186">        when(dosnRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
         // ACT &amp; ASSERT
-<span class="fc" id="L157">        assertThrows(RuntimeException.class, () -&gt; {</span>
-<span class="nc" id="L158">            dosnService.obtenerDosnPorId(999L);</span>
-<span class="nc" id="L159">        }, &quot;Debe lanzar excepción cuando el análisis no existe&quot;);</span>
-<span class="fc" id="L160">    }</span>
+<span class="fc" id="L189">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L190">            dosnService.obtenerDosnPorId(999L);</span>
+<span class="nc" id="L191">        }, &quot;Debe lanzar excepción cuando el análisis no existe&quot;);</span>
+<span class="fc" id="L192">    }</span>
 
     @Test
     @DisplayName(&quot;Actualizar DOSN - debe actualizar correctamente&quot;)
     void actualizarDosn_debeActualizarCorrectamente() {
         // ARRANGE
-<span class="fc" id="L166">        dosnRequestDTO.setComentarios(&quot;Comentarios actualizados&quot;);</span>
+<span class="fc" id="L198">        dosnRequestDTO.setComentarios(&quot;Comentarios actualizados&quot;);</span>
         
-<span class="fc" id="L168">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
-<span class="fc" id="L169">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
-<span class="fc" id="L170">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
-<span class="fc" id="L171">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
+<span class="fc" id="L200">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L201">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L202">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L203">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
 
         // ACT
-<span class="fc" id="L174">        DosnDTO resultado = dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
+<span class="fc" id="L206">        DosnDTO resultado = dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
 
         // ASSERT
-<span class="fc" id="L177">        assertNotNull(resultado);</span>
-<span class="fc" id="L178">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
-<span class="fc" id="L179">        verify(analisisHistorialService, times(1)).registrarModificacion(any(Dosn.class));</span>
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L209">        assertNotNull(resultado);</span>
+<span class="fc" id="L210">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L211">        verify(analisisHistorialService, times(1)).registrarModificacion(any(Dosn.class));</span>
+<span class="fc" id="L212">    }</span>
 
     @Test
     @DisplayName(&quot;Actualizar DOSN APROBADA por ANALISTA - debe cambiar a PENDIENTE_APROBACION&quot;)
     void actualizarDosn_aprobadaPorAnalista_debeCambiarAPendiente() {
         // ARRANGE
-<span class="fc" id="L186">        dosn.setEstado(Estado.APROBADO);</span>
+<span class="fc" id="L218">        dosn.setEstado(Estado.APROBADO);</span>
         
-<span class="fc" id="L188">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
-<span class="fc" id="L189">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
-<span class="fc" id="L190">        when(analisisService.esAnalista()).thenReturn(true);</span>
-<span class="fc" id="L191">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
-<span class="fc" id="L192">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
+<span class="fc" id="L220">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L221">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L222">        when(analisisService.esAnalista()).thenReturn(true);</span>
+<span class="fc" id="L223">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L224">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
 
         // ACT
-<span class="fc" id="L195">        dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
+<span class="fc" id="L227">        dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
 
         // ASSERT
-<span class="fc" id="L198">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
-<span class="fc" id="L199">        verify(analisisService, times(1)).esAnalista();</span>
-<span class="fc" id="L200">    }</span>
+<span class="fc" id="L230">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L231">        verify(analisisService, times(1)).esAnalista();</span>
+<span class="fc" id="L232">    }</span>
 
     @Test
     @DisplayName(&quot;Actualizar DOSN inexistente - debe lanzar excepción&quot;)
     void actualizarDosn_noExistente_debeLanzarExcepcion() {
         // ARRANGE
-<span class="fc" id="L206">        when(dosnRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L238">        when(dosnRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
         // ACT &amp; ASSERT
-<span class="fc" id="L209">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
-<span class="nc" id="L210">            dosnService.actualizarDosn(999L, dosnRequestDTO);</span>
-<span class="nc" id="L211">        });</span>
+<span class="fc" id="L241">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L242">            dosnService.actualizarDosn(999L, dosnRequestDTO);</span>
+<span class="nc" id="L243">        });</span>
         
-<span class="fc" id="L213">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
-<span class="fc" id="L214">        verify(dosnRepository, never()).save(any(Dosn.class));</span>
-<span class="fc" id="L215">    }</span>
+<span class="fc" id="L245">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
+<span class="fc" id="L246">        verify(dosnRepository, never()).save(any(Dosn.class));</span>
+<span class="fc" id="L247">    }</span>
 
     @Test
     @DisplayName(&quot;Desactivar DOSN - debe cambiar activo a false&quot;)
     void desactivarDosn_debeCambiarActivoAFalse() {
         // ARRANGE
-<span class="fc" id="L221">        doNothing().when(analisisService).desactivarAnalisis(eq(1L), any());</span>
+<span class="fc" id="L253">        doNothing().when(analisisService).desactivarAnalisis(eq(1L), any());</span>
 
         // ACT
-<span class="fc" id="L224">        dosnService.desactivarDosn(1L);</span>
+<span class="fc" id="L256">        dosnService.desactivarDosn(1L);</span>
 
         // ASSERT
-<span class="fc" id="L227">        verify(analisisService, times(1)).desactivarAnalisis(eq(1L), any());</span>
-<span class="fc" id="L228">    }</span>
+<span class="fc" id="L259">        verify(analisisService, times(1)).desactivarAnalisis(eq(1L), any());</span>
+<span class="fc" id="L260">    }</span>
 
     @Test
     @DisplayName(&quot;Reactivar DOSN - debe cambiar activo a true&quot;)
     void reactivarDosn_debeCambiarActivoATrue() {
         // ARRANGE
-<span class="fc" id="L234">        dosn.setActivo(false);</span>
-<span class="fc" id="L235">        DosnDTO dosnDTO = new DosnDTO();</span>
-<span class="fc" id="L236">        dosnDTO.setAnalisisID(1L);</span>
-<span class="fc" id="L237">        dosnDTO.setActivo(true);</span>
+<span class="fc" id="L266">        dosn.setActivo(false);</span>
+<span class="fc" id="L267">        DosnDTO dosnDTO = new DosnDTO();</span>
+<span class="fc" id="L268">        dosnDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L269">        dosnDTO.setActivo(true);</span>
         
-<span class="fc" id="L239">        when(analisisService.reactivarAnalisis(any(Long.class), any(), any())).thenReturn(dosnDTO);</span>
+<span class="fc" id="L271">        when(analisisService.reactivarAnalisis(any(Long.class), any(), any())).thenReturn(dosnDTO);</span>
 
         // ACT
-<span class="fc" id="L242">        dosnService.reactivarDosn(1L);</span>
+<span class="fc" id="L274">        dosnService.reactivarDosn(1L);</span>
 
         // ASSERT
-<span class="fc" id="L245">        verify(analisisService, times(1)).reactivarAnalisis(any(Long.class), any(), any());</span>
-<span class="fc" id="L246">    }</span>
+<span class="fc" id="L277">        verify(analisisService, times(1)).reactivarAnalisis(any(Long.class), any(), any());</span>
+<span class="fc" id="L278">    }</span>
 
     @Test
     @DisplayName(&quot;Eliminar DOSN - debe desactivar el análisis&quot;)
     void eliminarDosn_debeDesactivarAnalisis() {
         // ARRANGE
-<span class="fc" id="L252">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
-<span class="fc" id="L253">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L284">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L285">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
 
         // ACT
-<span class="fc" id="L256">        dosnService.eliminarDosn(1L);</span>
+<span class="fc" id="L288">        dosnService.eliminarDosn(1L);</span>
 
         // ASSERT
-<span class="fc" id="L259">        verify(dosnRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L260">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
-<span class="fc" id="L261">    }</span>
+<span class="fc" id="L291">        verify(dosnRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L292">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L293">    }</span>
 
     @Test
     @DisplayName(&quot;Crear DOSN con cumple estándar true - debe guardar correctamente&quot;)
     void crearDosn_conCumpleEstandarTrue_debeGuardar() {
         // ARRANGE
-<span class="fc" id="L267">        dosnRequestDTO.setCumpleEstandar(true);</span>
-<span class="fc" id="L268">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L299">        dosnRequestDTO.setCumpleEstandar(true);</span>
+<span class="fc" id="L300">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
         
-<span class="fc" id="L270">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
-<span class="fc" id="L271">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
-<span class="fc" id="L272">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
-<span class="fc" id="L273">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+<span class="fc" id="L302">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L303">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L304">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L305">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
 
         // ACT
-<span class="fc" id="L276">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+<span class="fc" id="L308">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
 
         // ASSERT
-<span class="fc" id="L279">        assertNotNull(resultado);</span>
-<span class="fc" id="L280">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
-<span class="fc" id="L281">    }</span>
+<span class="fc" id="L311">        assertNotNull(resultado);</span>
+<span class="fc" id="L312">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L313">    }</span>
 
     @Test
     @DisplayName(&quot;Crear DOSN con cumple estándar false - debe guardar correctamente&quot;)
     void crearDosn_conCumpleEstandarFalse_debeGuardar() {
         // ARRANGE
-<span class="fc" id="L287">        dosnRequestDTO.setCumpleEstandar(false);</span>
-<span class="fc" id="L288">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L319">        dosnRequestDTO.setCumpleEstandar(false);</span>
+<span class="fc" id="L320">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
         
-<span class="fc" id="L290">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
-<span class="fc" id="L291">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
-<span class="fc" id="L292">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
-<span class="fc" id="L293">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+<span class="fc" id="L322">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L323">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L324">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L325">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
 
         // ACT
-<span class="fc" id="L296">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+<span class="fc" id="L328">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
 
         // ASSERT
-<span class="fc" id="L299">        assertNotNull(resultado);</span>
-<span class="fc" id="L300">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
-<span class="fc" id="L301">    }</span>
+<span class="fc" id="L331">        assertNotNull(resultado);</span>
+<span class="fc" id="L332">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L333">    }</span>
+
+    @Test
+    @DisplayName(&quot;mapearEntidadAListadoDTO - mapea todos los atributos correctamente&quot;)
+    void mapearEntidadAListadoDTO_mapeaTodosLosAtributos() {
+        // ARRANGE
+<span class="fc" id="L339">        Cultivar cultivar = new Cultivar();</span>
+<span class="fc" id="L340">        Especie especie = new Especie();</span>
+<span class="fc" id="L341">        especie.setNombreComun(&quot;Trigo&quot;);</span>
+<span class="fc" id="L342">        especie.setNombreCientifico(&quot;Triticum aestivum&quot;);</span>
+<span class="fc" id="L343">        cultivar.setEspecie(especie);</span>
+        
+<span class="fc" id="L345">        lote.setCultivar(cultivar);</span>
+<span class="fc" id="L346">        dosn.setLote(lote);</span>
+<span class="fc" id="L347">        dosn.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L348">        dosn.setFechaFin(LocalDateTime.now().plusDays(7));</span>
+<span class="fc" id="L349">        dosn.setCumpleEstandar(true);</span>
+        
+<span class="fc" id="L351">        AnalisisHistorialDTO historial1 = new AnalisisHistorialDTO();</span>
+<span class="fc" id="L352">        historial1.setUsuario(&quot;admin&quot;);</span>
+<span class="fc" id="L353">        AnalisisHistorialDTO historial2 = new AnalisisHistorialDTO();</span>
+<span class="fc" id="L354">        historial2.setUsuario(&quot;analista&quot;);</span>
+        
+<span class="fc" id="L356">        when(analisisHistorialService.obtenerHistorialAnalisis(1L))</span>
+<span class="fc" id="L357">            .thenReturn(Arrays.asList(historial2, historial1));</span>
+        
+<span class="fc" id="L359">        Page&lt;Dosn&gt; page = new PageImpl&lt;&gt;(Arrays.asList(dosn));</span>
+<span class="fc" id="L360">        when(dosnRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class))).thenReturn(page);</span>
+        
+        // ACT
+<span class="fc" id="L363">        Page&lt;DosnListadoDTO&gt; resultado = dosnService.obtenerDosnPaginadas(Pageable.unpaged());</span>
+        
+        // ASSERT - verificamos que se llame al historial y que el resultado tenga elementos
+<span class="fc" id="L366">        assertNotNull(resultado);</span>
+<span class="fc" id="L367">        verify(analisisHistorialService, atLeastOnce()).obtenerHistorialAnalisis(any());</span>
+<span class="fc" id="L368">    }</span>
+
+    @Test
+    @DisplayName(&quot;mapearEntidadAListadoDTO - usa nombreCientifico si nombreComun está vacío&quot;)
+    void mapearEntidadAListadoDTO_usaNombreCientificoSiComunVacio() {
+        // ARRANGE
+<span class="fc" id="L374">        Cultivar cultivar = new Cultivar();</span>
+<span class="fc" id="L375">        Especie especie = new Especie();</span>
+<span class="fc" id="L376">        especie.setNombreComun(&quot;&quot;); // Vacío</span>
+<span class="fc" id="L377">        especie.setNombreCientifico(&quot;Triticum aestivum&quot;);</span>
+<span class="fc" id="L378">        cultivar.setEspecie(especie);</span>
+        
+<span class="fc" id="L380">        lote.setCultivar(cultivar);</span>
+<span class="fc" id="L381">        dosn.setLote(lote);</span>
+        
+<span class="fc" id="L383">        Page&lt;Dosn&gt; page = new PageImpl&lt;&gt;(Arrays.asList(dosn));</span>
+<span class="fc" id="L384">        when(dosnRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class))).thenReturn(page);</span>
+        
+        // ACT
+<span class="fc" id="L387">        Page&lt;DosnListadoDTO&gt; resultado = dosnService.obtenerDosnPaginadas(Pageable.unpaged());</span>
+        
+        // ASSERT
+<span class="fc" id="L390">        assertNotNull(resultado);</span>
+<span class="fc" id="L391">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L392">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - lanza excepción si no hay evidencia&quot;)
+    void validarAntesDeFinalizar_sinEvidencia_lanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L398">        Dosn dosnSinEvidencia = new Dosn();</span>
+<span class="fc" id="L399">        dosnSinEvidencia.setAnalisisID(1L);</span>
+<span class="fc" id="L400">        dosnSinEvidencia.setLote(lote);</span>
+<span class="fc" id="L401">        dosnSinEvidencia.setEstado(Estado.EN_PROCESO);</span>
+        // No tiene datos INIA, INASE, cuscuta ni listados
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L405">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L406">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT
+<span class="fc" id="L409">        Exception exception = assertThrows(Exception.class, () -&gt; {</span>
+<span class="nc" id="L410">            validarMethod.invoke(dosnService, dosnSinEvidencia);</span>
+<span class="nc" id="L411">        });</span>
+        
+<span class="fc" id="L413">        assertTrue(exception.getCause().getMessage().contains(&quot;carece de evidencia&quot;));</span>
+<span class="fc" id="L414">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - acepta con datos INIA válidos&quot;)
+    void validarAntesDeFinalizar_conDatosINIAValidos_nolanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L420">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L421">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L422">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L425">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L426">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT - no debe lanzar excepción
+<span class="fc" id="L429">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L430">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="fc" id="L431">        });</span>
+<span class="fc" id="L432">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - lanza excepción si gramos INIA &lt;= 0&quot;)
+    void validarAntesDeFinalizar_gramosINIACero_lanzaExcepcion() throws Exception {
+        // ARRANGE - tiene INASE válido pero INIA con gramos cero
+<span class="fc" id="L438">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L439">        dosn.setGramosAnalizadosINIA(BigDecimal.ZERO);</span>
+        // Agregar INASE válido para que pase la primera validación
+<span class="fc" id="L441">        dosn.setFechaINASE(LocalDate.now());</span>
+<span class="fc" id="L442">        dosn.setGramosAnalizadosINASE(BigDecimal.valueOf(100.0));</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L445">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L446">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT
+<span class="fc" id="L449">        Exception exception = assertThrows(Exception.class, () -&gt; {</span>
+<span class="nc" id="L450">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="nc" id="L451">        });</span>
+        
+<span class="fc" id="L453">        assertTrue(exception.getCause().getMessage().contains(&quot;Gramos analizados INIA&quot;));</span>
+<span class="fc" id="L454">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - acepta con datos INASE válidos&quot;)
+    void validarAntesDeFinalizar_conDatosINASEValidos_noLanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L460">        dosn.setFechaINASE(LocalDate.now());</span>
+<span class="fc" id="L461">        dosn.setGramosAnalizadosINASE(BigDecimal.valueOf(200.0));</span>
+<span class="fc" id="L462">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L465">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L466">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT - no debe lanzar excepción
+<span class="fc" id="L469">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L470">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="fc" id="L471">        });</span>
+<span class="fc" id="L472">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - lanza excepción si gramos INASE &lt;= 0&quot;)
+    void validarAntesDeFinalizar_gramosINASECero_lanzaExcepcion() throws Exception {
+        // ARRANGE - tiene INIA válido pero INASE con gramos cero
+<span class="fc" id="L478">        dosn.setFechaINASE(LocalDate.now());</span>
+<span class="fc" id="L479">        dosn.setGramosAnalizadosINASE(BigDecimal.ZERO);</span>
+        // Agregar INIA válido para que pase la primera validación
+<span class="fc" id="L481">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L482">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L485">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L486">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT
+<span class="fc" id="L489">        Exception exception = assertThrows(Exception.class, () -&gt; {</span>
+<span class="nc" id="L490">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="nc" id="L491">        });</span>
+        
+<span class="fc" id="L493">        assertTrue(exception.getCause().getMessage().contains(&quot;Gramos analizados INASE&quot;));</span>
+<span class="fc" id="L494">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - acepta con datos de cuscuta válidos&quot;)
+    void validarAntesDeFinalizar_conDatosCuscutaValidos_noLanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L500">        CuscutaRegistro cuscuta = new CuscutaRegistro();</span>
+<span class="fc" id="L501">        cuscuta.setId(1L);</span>
+<span class="fc" id="L502">        cuscuta.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L503">        cuscuta.setCuscuta_g(BigDecimal.valueOf(5.0));</span>
+<span class="fc" id="L504">        cuscuta.setCuscutaNum(2);</span>
+        
+<span class="fc" id="L506">        dosn.setCuscutaRegistros(Arrays.asList(cuscuta));</span>
+<span class="fc" id="L507">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L510">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L511">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT - no debe lanzar excepción
+<span class="fc" id="L514">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L515">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="fc" id="L516">        });</span>
+<span class="fc" id="L517">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - acepta con listados válidos&quot;)
+    void validarAntesDeFinalizar_conListadosValidos_noLanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L523">        Listado listado = new Listado();</span>
+<span class="fc" id="L524">        listado.setListadoID(1L);</span>
+<span class="fc" id="L525">        listado.setListadoNum(5);</span>
+        
+<span class="fc" id="L527">        dosn.setListados(Arrays.asList(listado));</span>
+<span class="fc" id="L528">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L531">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L532">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT - no debe lanzar excepción
+<span class="fc" id="L535">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L536">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="fc" id="L537">        });</span>
+<span class="fc" id="L538">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - acepta cuscuta con solo gramos mayores a cero&quot;)
+    void validarAntesDeFinalizar_cuscutaConSoloGramos_noLanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L544">        CuscutaRegistro cuscuta = new CuscutaRegistro();</span>
+<span class="fc" id="L545">        cuscuta.setId(1L);</span>
+<span class="fc" id="L546">        cuscuta.setInstituto(Instituto.INASE);</span>
+<span class="fc" id="L547">        cuscuta.setCuscuta_g(BigDecimal.valueOf(3.5));</span>
+<span class="fc" id="L548">        cuscuta.setCuscutaNum(null); // Sin número</span>
+        
+<span class="fc" id="L550">        dosn.setCuscutaRegistros(Arrays.asList(cuscuta));</span>
+<span class="fc" id="L551">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L554">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L555">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT - no debe lanzar excepción
+<span class="fc" id="L558">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L559">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="fc" id="L560">        });</span>
+<span class="fc" id="L561">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - acepta cuscuta con solo número mayor a cero&quot;)
+    void validarAntesDeFinalizar_cuscutaConSoloNumero_noLanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L567">        CuscutaRegistro cuscuta = new CuscutaRegistro();</span>
+<span class="fc" id="L568">        cuscuta.setId(1L);</span>
+<span class="fc" id="L569">        cuscuta.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L570">        cuscuta.setCuscuta_g(null); // Sin gramos</span>
+<span class="fc" id="L571">        cuscuta.setCuscutaNum(5);</span>
+        
+<span class="fc" id="L573">        dosn.setCuscutaRegistros(Arrays.asList(cuscuta));</span>
+<span class="fc" id="L574">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L577">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L578">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT - no debe lanzar excepción
+<span class="fc" id="L581">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L582">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="fc" id="L583">        });</span>
+<span class="fc" id="L584">    }</span>
+
+    @Test
+    @DisplayName(&quot;validarAntesDeFinalizar - rechaza cuscuta sin datos válidos&quot;)
+    void validarAntesDeFinalizar_cuscutaSinDatosValidos_lanzaExcepcion() throws Exception {
+        // ARRANGE
+<span class="fc" id="L590">        CuscutaRegistro cuscuta = new CuscutaRegistro();</span>
+<span class="fc" id="L591">        cuscuta.setId(1L);</span>
+<span class="fc" id="L592">        cuscuta.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L593">        cuscuta.setCuscuta_g(BigDecimal.ZERO); // Cero gramos</span>
+<span class="fc" id="L594">        cuscuta.setCuscutaNum(0); // Cero número</span>
+        
+        // Limpiar datos INIA que vienen del setUp para que solo tenga cuscuta inválida
+<span class="fc" id="L597">        dosn.setFechaINIA(null);</span>
+<span class="fc" id="L598">        dosn.setGramosAnalizadosINIA(null);</span>
+<span class="fc" id="L599">        dosn.setFechaINASE(null);</span>
+<span class="fc" id="L600">        dosn.setGramosAnalizadosINASE(null);</span>
+<span class="fc" id="L601">        dosn.setListados(null);</span>
+        
+<span class="fc" id="L603">        dosn.setCuscutaRegistros(Arrays.asList(cuscuta));</span>
+<span class="fc" id="L604">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+        // Usar reflexión para acceder al método privado
+<span class="fc" id="L607">        Method validarMethod = DosnService.class.getDeclaredMethod(&quot;validarAntesDeFinalizar&quot;, Dosn.class);</span>
+<span class="fc" id="L608">        validarMethod.setAccessible(true);</span>
+        
+        // ACT &amp; ASSERT
+<span class="fc" id="L611">        Exception exception = assertThrows(Exception.class, () -&gt; {</span>
+<span class="nc" id="L612">            validarMethod.invoke(dosnService, dosn);</span>
+<span class="nc" id="L613">        });</span>
+        
+<span class="fc" id="L615">        assertTrue(exception.getCause().getMessage().contains(&quot;carece de evidencia&quot;));</span>
+<span class="fc" id="L616">    }</span>
+
+    @Test
+    @DisplayName(&quot;actualizarEntidadDesdeSolicitud - limpia y agrega nuevos listados&quot;)
+    void actualizarEntidadDesdeSolicitud_limpiaYAgregaNuevosListados() {
+        // ARRANGE
+<span class="fc" id="L622">        Listado listadoViejo = new Listado();</span>
+<span class="fc" id="L623">        listadoViejo.setListadoID(1L);</span>
+<span class="fc" id="L624">        dosn.setListados(new ArrayList&lt;&gt;(Arrays.asList(listadoViejo)));</span>
+        
+<span class="fc" id="L626">        ListadoRequestDTO nuevoListadoRequest = new ListadoRequestDTO();</span>
+<span class="fc" id="L627">        nuevoListadoRequest.setIdCatalogo(1L);</span>
+<span class="fc" id="L628">        nuevoListadoRequest.setListadoNum(10);</span>
+<span class="fc" id="L629">        dosnRequestDTO.setListados(Arrays.asList(nuevoListadoRequest));</span>
+        
+        // Mock del catálogo para evitar que falle la búsqueda
+<span class="fc" id="L632">        MalezasCatalogo catalogo = new MalezasCatalogo();</span>
+<span class="fc" id="L633">        catalogo.setCatalogoID(1L);</span>
+<span class="fc" id="L634">        when(malezasCatalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));</span>
+        
+<span class="fc" id="L636">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L637">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L638">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L639">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
+        
+        // ACT
+<span class="fc" id="L642">        DosnDTO resultado = dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
+        
+        // ASSERT
+<span class="fc" id="L645">        assertNotNull(resultado);</span>
+<span class="fc" id="L646">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L647">    }</span>
+
+    @Test
+    @DisplayName(&quot;actualizarEntidadDesdeSolicitud - limpia y agrega nuevos registros de cuscuta&quot;)
+    void actualizarEntidadDesdeSolicitud_limpiaYAgregaNuevosCuscuta() {
+        // ARRANGE
+<span class="fc" id="L653">        CuscutaRegistro cuscutaViejo = new CuscutaRegistro();</span>
+<span class="fc" id="L654">        cuscutaViejo.setId(1L);</span>
+<span class="fc" id="L655">        dosn.setCuscutaRegistros(new ArrayList&lt;&gt;(Arrays.asList(cuscutaViejo)));</span>
+        
+<span class="fc" id="L657">        CuscutaRegistroRequestDTO nuevoCuscutaRequest = new CuscutaRegistroRequestDTO();</span>
+<span class="fc" id="L658">        nuevoCuscutaRequest.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L659">        nuevoCuscutaRequest.setCuscuta_g(BigDecimal.valueOf(5.0));</span>
+<span class="fc" id="L660">        nuevoCuscutaRequest.setCuscutaNum(3);</span>
+<span class="fc" id="L661">        nuevoCuscutaRequest.setFechaCuscuta(LocalDate.now());</span>
+<span class="fc" id="L662">        dosnRequestDTO.setCuscutaRegistros(Arrays.asList(nuevoCuscutaRequest));</span>
+        
+<span class="fc" id="L664">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L665">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L666">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L667">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
+        
+        // ACT
+<span class="fc" id="L670">        DosnDTO resultado = dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
+        
+        // ASSERT
+<span class="fc" id="L673">        assertNotNull(resultado);</span>
+<span class="fc" id="L674">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L675">    }</span>
+
+    @Test
+    @DisplayName(&quot;mapearEntidadADTO - mapea cuscuta correctamente&quot;)
+    void mapearEntidadADTO_mapeaCuscutaCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L681">        CuscutaRegistro cuscuta = new CuscutaRegistro();</span>
+<span class="fc" id="L682">        cuscuta.setId(1L);</span>
+<span class="fc" id="L683">        cuscuta.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L684">        cuscuta.setCuscuta_g(BigDecimal.valueOf(5.0));</span>
+<span class="fc" id="L685">        cuscuta.setCuscutaNum(3);</span>
+<span class="fc" id="L686">        cuscuta.setFechaCuscuta(LocalDate.now());</span>
+        
+<span class="fc" id="L688">        dosn.setCuscutaRegistros(Arrays.asList(cuscuta));</span>
+<span class="fc" id="L689">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L690">        when(analisisHistorialService.obtenerHistorialAnalisis(1L)).thenReturn(new ArrayList&lt;&gt;());</span>
+        
+        // ACT
+<span class="fc" id="L693">        DosnDTO resultado = dosnService.obtenerDosnPorId(1L);</span>
+        
+        // ASSERT
+<span class="fc" id="L696">        assertNotNull(resultado);</span>
+<span class="fc" id="L697">        assertNotNull(resultado.getCuscutaRegistros());</span>
+<span class="fc" id="L698">        assertFalse(resultado.getCuscutaRegistros().isEmpty());</span>
+<span class="fc" id="L699">    }</span>
+
+    @Test
+    @DisplayName(&quot;mapearEntidadADTO - mapea listados correctamente&quot;)
+    void mapearEntidadADTO_mapeaListadosCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L705">        Listado listado = new Listado();</span>
+<span class="fc" id="L706">        listado.setListadoID(1L);</span>
+<span class="fc" id="L707">        listado.setListadoNum(10);</span>
+        
+<span class="fc" id="L709">        dosn.setListados(Arrays.asList(listado));</span>
+<span class="fc" id="L710">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L711">        when(analisisHistorialService.obtenerHistorialAnalisis(1L)).thenReturn(new ArrayList&lt;&gt;());</span>
+        
+        // ACT
+<span class="fc" id="L714">        DosnDTO resultado = dosnService.obtenerDosnPorId(1L);</span>
+        
+        // ASSERT
+<span class="fc" id="L717">        assertNotNull(resultado);</span>
+<span class="fc" id="L718">        assertNotNull(resultado.getListados());</span>
+<span class="fc" id="L719">        assertFalse(resultado.getListados().isEmpty());</span>
+<span class="fc" id="L720">    }</span>
+
+    @Test
+    @DisplayName(&quot;mapearCuscutaRegistroADTO - mapea todos los atributos&quot;)
+    void mapearCuscutaRegistroADTO_mapeaTodosLosAtributos() {
+        // ARRANGE
+<span class="fc" id="L726">        CuscutaRegistro cuscuta = new CuscutaRegistro();</span>
+<span class="fc" id="L727">        cuscuta.setId(1L);</span>
+<span class="fc" id="L728">        cuscuta.setInstituto(Instituto.INASE);</span>
+<span class="fc" id="L729">        cuscuta.setCuscuta_g(BigDecimal.valueOf(10.5));</span>
+<span class="fc" id="L730">        cuscuta.setCuscutaNum(5);</span>
+<span class="fc" id="L731">        cuscuta.setFechaCuscuta(LocalDate.now());</span>
+        
+<span class="fc" id="L733">        dosn.setCuscutaRegistros(Arrays.asList(cuscuta));</span>
+<span class="fc" id="L734">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L735">        when(analisisHistorialService.obtenerHistorialAnalisis(1L)).thenReturn(new ArrayList&lt;&gt;());</span>
+        
+        // ACT
+<span class="fc" id="L738">        DosnDTO resultado = dosnService.obtenerDosnPorId(1L);</span>
+        
+        // ASSERT
+<span class="fc" id="L741">        assertNotNull(resultado.getCuscutaRegistros());</span>
+<span class="fc" id="L742">        CuscutaRegistroDTO cuscutaDTO = resultado.getCuscutaRegistros().get(0);</span>
+<span class="fc" id="L743">        assertEquals(1L, cuscutaDTO.getId());</span>
+<span class="fc" id="L744">        assertEquals(Instituto.INASE, cuscutaDTO.getInstituto());</span>
+<span class="fc" id="L745">    }</span>
+
+    @Test
+    @DisplayName(&quot;crearCuscutaRegistroDesdeSolicitud - crea registro correctamente&quot;)
+    void crearCuscutaRegistroDesdeSolicitud_creaCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L751">        CuscutaRegistroRequestDTO cuscutaRequest = new CuscutaRegistroRequestDTO();</span>
+<span class="fc" id="L752">        cuscutaRequest.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L753">        cuscutaRequest.setCuscuta_g(BigDecimal.valueOf(7.5));</span>
+<span class="fc" id="L754">        cuscutaRequest.setCuscutaNum(4);</span>
+<span class="fc" id="L755">        cuscutaRequest.setFechaCuscuta(LocalDate.now());</span>
+        
+<span class="fc" id="L757">        dosnRequestDTO.setCuscutaRegistros(Arrays.asList(cuscutaRequest));</span>
+        
+<span class="fc" id="L759">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L760">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L761">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L762">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+        
+        // ACT
+<span class="fc" id="L765">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+        
+        // ASSERT
+<span class="fc" id="L768">        assertNotNull(resultado);</span>
+<span class="fc" id="L769">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L770">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerTodasDosnActivas - retorna lista de DOSN activas&quot;)
+    void obtenerTodasDosnActivas_retornaListaActivas() {
+        // ARRANGE
+<span class="fc" id="L776">        Dosn dosn2 = new Dosn();</span>
+<span class="fc" id="L777">        dosn2.setAnalisisID(2L);</span>
+<span class="fc" id="L778">        dosn2.setLote(lote);</span>
+<span class="fc" id="L779">        dosn2.setActivo(true);</span>
+        
+<span class="fc" id="L781">        when(dosnRepository.findByActivoTrue()).thenReturn(Arrays.asList(dosn, dosn2));</span>
+<span class="fc" id="L782">        when(analisisHistorialService.obtenerHistorialAnalisis(any())).thenReturn(new ArrayList&lt;&gt;());</span>
+        
+        // ACT
+<span class="fc" id="L785">        ResponseListadoDosn resultado = dosnService.obtenerTodasDosnActivas();</span>
+        
+        // ASSERT
+<span class="fc" id="L788">        assertNotNull(resultado);</span>
+<span class="fc" id="L789">        assertNotNull(resultado.getDosns());</span>
+<span class="fc" id="L790">        assertEquals(2, resultado.getDosns().size());</span>
+<span class="fc" id="L791">        verify(dosnRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L792">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerDosnPaginadasConFiltro - filtro activos&quot;)
+    void obtenerDosnPaginadasConFiltro_filtroActivos() {
+        // ARRANGE
+<span class="fc" id="L798">        Page&lt;Dosn&gt; page = new PageImpl&lt;&gt;(Arrays.asList(dosn));</span>
+<span class="fc" id="L799">        when(dosnRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class))).thenReturn(page);</span>
+        
+        // ACT
+<span class="fc" id="L802">        Page&lt;DosnListadoDTO&gt; resultado = dosnService.obtenerDosnPaginadasConFiltro(Pageable.unpaged(), &quot;activos&quot;);</span>
+        
+        // ASSERT
+<span class="fc" id="L805">        assertNotNull(resultado);</span>
+<span class="fc" id="L806">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L807">        verify(dosnRepository, times(1)).findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class));</span>
+<span class="fc" id="L808">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerDosnPaginadasConFiltro - filtro inactivos&quot;)
+    void obtenerDosnPaginadasConFiltro_filtroInactivos() {
+        // ARRANGE
+<span class="fc" id="L814">        dosn.setActivo(false);</span>
+<span class="fc" id="L815">        Page&lt;Dosn&gt; page = new PageImpl&lt;&gt;(Arrays.asList(dosn));</span>
+<span class="fc" id="L816">        when(dosnRepository.findByActivoFalseOrderByFechaInicioDesc(any(Pageable.class))).thenReturn(page);</span>
+        
+        // ACT
+<span class="fc" id="L819">        Page&lt;DosnListadoDTO&gt; resultado = dosnService.obtenerDosnPaginadasConFiltro(Pageable.unpaged(), &quot;inactivos&quot;);</span>
+        
+        // ASSERT
+<span class="fc" id="L822">        assertNotNull(resultado);</span>
+<span class="fc" id="L823">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L824">        verify(dosnRepository, times(1)).findByActivoFalseOrderByFechaInicioDesc(any(Pageable.class));</span>
+<span class="fc" id="L825">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerDosnPaginadasConFiltro - filtro todos&quot;)
+    void obtenerDosnPaginadasConFiltro_filtroTodos() {
+        // ARRANGE
+<span class="fc" id="L831">        Page&lt;Dosn&gt; page = new PageImpl&lt;&gt;(Arrays.asList(dosn));</span>
+<span class="fc" id="L832">        when(dosnRepository.findAllByOrderByFechaInicioDesc(any(Pageable.class))).thenReturn(page);</span>
+        
+        // ACT
+<span class="fc" id="L835">        Page&lt;DosnListadoDTO&gt; resultado = dosnService.obtenerDosnPaginadasConFiltro(Pageable.unpaged(), &quot;todos&quot;);</span>
+        
+        // ASSERT
+<span class="fc" id="L838">        assertNotNull(resultado);</span>
+<span class="fc" id="L839">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L840">        verify(dosnRepository, times(1)).findAllByOrderByFechaInicioDesc(any(Pageable.class));</span>
+<span class="fc" id="L841">    }</span>
+
+    @Test
+    @DisplayName(&quot;crearListadoDesdeSolicitud - crea listado correctamente&quot;)
+    void crearListadoDesdeSolicitud_creaCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L847">        ListadoRequestDTO listadoRequest = new ListadoRequestDTO();</span>
+<span class="fc" id="L848">        listadoRequest.setIdCatalogo(1L);</span>
+<span class="fc" id="L849">        listadoRequest.setListadoNum(15);</span>
+        
+<span class="fc" id="L851">        dosnRequestDTO.setListados(Arrays.asList(listadoRequest));</span>
+        
+        // Mock del catálogo para evitar que falle la búsqueda
+<span class="fc" id="L854">        MalezasCatalogo catalogo = new MalezasCatalogo();</span>
+<span class="fc" id="L855">        catalogo.setCatalogoID(1L);</span>
+<span class="fc" id="L856">        when(malezasCatalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));</span>
+        
+<span class="fc" id="L858">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L859">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L860">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L861">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+        
+        // ACT
+<span class="fc" id="L864">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+        
+        // ASSERT
+<span class="fc" id="L867">        assertNotNull(resultado);</span>
+<span class="fc" id="L868">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L869">    }</span>
+
+    @Test
+    @DisplayName(&quot;finalizarAnalisis - finaliza DOSN correctamente&quot;)
+    void finalizarAnalisis_finalizaCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L875">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L876">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L877">        dosn.setEstado(Estado.EN_PROCESO);</span>
+        
+<span class="fc" id="L879">        DosnDTO dosnDTO = new DosnDTO();</span>
+<span class="fc" id="L880">        dosnDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L881">        dosnDTO.setEstado(Estado.PENDIENTE_APROBACION);</span>
+        
+<span class="fc" id="L883">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L884">        when(analisisService.finalizarAnalisisGenerico(any(), any(), any(), any())).thenReturn(dosnDTO);</span>
+        
+        // ACT
+<span class="fc" id="L887">        DosnDTO resultado = dosnService.finalizarAnalisis(1L);</span>
+        
+        // ASSERT
+<span class="fc" id="L890">        assertNotNull(resultado);</span>
+<span class="fc" id="L891">        verify(analisisService, times(1)).finalizarAnalisisGenerico(any(), any(), any(), any());</span>
+<span class="fc" id="L892">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerDosnPaginadas - retorna página de DOSN&quot;)
+    void obtenerDosnPaginadas_retornaPagina() {
+        // ARRANGE
+<span class="fc" id="L898">        Page&lt;Dosn&gt; page = new PageImpl&lt;&gt;(Arrays.asList(dosn));</span>
+<span class="fc" id="L899">        when(dosnRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class))).thenReturn(page);</span>
+        
+        // ACT
+<span class="fc" id="L902">        Page&lt;DosnListadoDTO&gt; resultado = dosnService.obtenerDosnPaginadas(Pageable.unpaged());</span>
+        
+        // ASSERT
+<span class="fc" id="L905">        assertNotNull(resultado);</span>
+<span class="fc" id="L906">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L907">        verify(dosnRepository, times(1)).findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class));</span>
+<span class="fc" id="L908">    }</span>
+
+    @Test
+    @DisplayName(&quot;aprobarAnalisis - aprueba DOSN correctamente&quot;)
+    void aprobarAnalisis_apruebaCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L914">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L915">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L916">        dosn.setEstado(Estado.PENDIENTE_APROBACION);</span>
+        
+<span class="fc" id="L918">        DosnDTO dosnDTO = new DosnDTO();</span>
+<span class="fc" id="L919">        dosnDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L920">        dosnDTO.setEstado(Estado.APROBADO);</span>
+        
+<span class="fc" id="L922">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L923">        when(analisisService.aprobarAnalisisGenerico(any(), any(), any(), any(), any())).thenReturn(dosnDTO);</span>
+        
+        // ACT
+<span class="fc" id="L926">        DosnDTO resultado = dosnService.aprobarAnalisis(1L);</span>
+        
+        // ASSERT
+<span class="fc" id="L929">        assertNotNull(resultado);</span>
+<span class="fc" id="L930">        verify(analisisService, times(1)).aprobarAnalisisGenerico(any(), any(), any(), any(), any());</span>
+<span class="fc" id="L931">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

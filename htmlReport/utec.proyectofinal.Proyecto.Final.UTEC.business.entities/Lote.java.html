@@ -93,9 +93,9 @@ public class Lote {
     
     // Métodos personalizados para manejar tipos de análisis sin duplicados
     public void setTiposAnalisisAsignados(List&lt;TipoAnalisis&gt; tipos) {
-<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        if (tipos == null) {</span>
-<span class="nc" id="L97">            this.tiposAnalisisAsignados = null;</span>
-<span class="nc" id="L98">            return;</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (tipos == null) {</span>
+<span class="fc" id="L97">            this.tiposAnalisisAsignados = null;</span>
+<span class="fc" id="L98">            return;</span>
         }
         
         // Usar LinkedHashSet para mantener el orden y eliminar duplicados
