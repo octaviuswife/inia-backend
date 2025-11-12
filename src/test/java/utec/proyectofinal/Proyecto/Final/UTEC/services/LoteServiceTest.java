@@ -10,6 +10,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PurezaRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
 
@@ -34,6 +39,21 @@ class LoteServiceTest {
 
     @Mock
     private LoteRepository loteRepository;
+
+    @Mock
+    private PmsRepository pmsRepository;
+
+    @Mock
+    private GerminacionRepository germinacionRepository;
+
+    @Mock
+    private DosnRepository dosnRepository;
+
+    @Mock
+    private TetrazolioRepository tetrazolioRepository;
+
+    @Mock
+    private PurezaRepository purezaRepository;
 
     @InjectMocks
     private LoteService loteService;
@@ -117,6 +137,13 @@ class LoteServiceTest {
     }
 
     @Test
+    @DisplayName("Eliminar lote inexistente - lanza excepción")
+    void eliminarLote_inexistente_lanzaExcepcion() {
+        when(loteRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> loteService.eliminarLote(99L));
+    }
+
+    @Test
     @DisplayName("Reactivar lote - debe cambiar activo a true")
     void reactivarLote_debeCambiarActivoATrue() {
         // ARRANGE
@@ -131,5 +158,89 @@ class LoteServiceTest {
         assertNotNull(resultado);
         verify(loteRepository, times(1)).findById(1L);
         verify(loteRepository, times(1)).save(any(Lote.class));
+    }
+
+    @Test
+    @DisplayName("Reactivar lote ya activo - lanza excepción")
+    void reactivarLote_yaActivo_lanzaExcepcion() {
+        lote.setActivo(true);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        assertThrows(RuntimeException.class, () -> loteService.reactivarLote(1L));
+    }
+
+    @Test
+    @DisplayName("Actualizar lote inactivo - debe lanzar excepción")
+    void actualizarLote_inactivo_lanzaExcepcion() {
+        lote.setActivo(false);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        LoteRequestDTO req = new LoteRequestDTO();
+        req.setFechaRecibo(LocalDate.now());
+        assertThrows(RuntimeException.class, () -> loteService.actualizarLote(1L, req));
+    }
+
+    @Test
+    @DisplayName("Actualizar lote cambiando tipos con análisis existente - bloquea remoción")
+    void actualizarLote_removerTipoNoPermitido_lanza() {
+        lote.setActivo(true);
+        lote.setTiposAnalisisAsignados(java.util.List.of(utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis.PMS));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(pmsRepository.existsByLoteLoteID(1L)).thenReturn(true);
+        LoteRequestDTO req = new LoteRequestDTO();
+        req.setTiposAnalisisAsignados(java.util.List.of()); // intentar remover PMS
+        req.setFechaRecibo(LocalDate.now());
+        assertThrows(RuntimeException.class, () -> loteService.actualizarLote(1L, req));
+    }
+
+    @Test
+    @DisplayName("Puede remover tipo analisis cuando no hay análisis creados")
+    void puedeRemoverTipoAnalisis_sinAnalisis_true() {
+        when(pmsRepository.existsByLoteLoteID(1L)).thenReturn(false);
+        boolean result = loteService.puedeRemoverTipoAnalisis(1L, utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis.PMS);
+        assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("esLoteElegibleParaTipoAnalisis - requiere activo, tipo asignado y puede crear")
+    void esLoteElegible_paraCrear() {
+        lote.setActivo(true);
+        lote.setTiposAnalisisAsignados(java.util.List.of(utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis.PMS));
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(pmsRepository.existsByLoteLoteID(1L)).thenReturn(false); // permite crear
+        assertTrue(loteService.esLoteElegibleParaTipoAnalisis(1L, utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis.PMS));
+    }
+
+    @Test
+    @DisplayName("esLoteElegibleParaTipoAnalisis - falso si lote inactivo")
+    void esLoteElegible_inactivo_false() {
+        lote.setActivo(false);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        assertFalse(loteService.esLoteElegibleParaTipoAnalisis(1L, utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis.PMS));
+    }
+
+    @Test
+    @DisplayName("contarAnalisisPendientes - cuenta tipos sin análisis")
+    void contarAnalisisPendientes_casos() {
+        Lote lote2 = new Lote();
+        lote2.setLoteID(2L);
+        lote2.setActivo(true);
+        lote.setTiposAnalisisAsignados(java.util.List.of(utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis.PMS));
+        lote2.setTiposAnalisisAsignados(java.util.List.of(utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis.GERMINACION));
+        when(loteRepository.findByActivoTrue()).thenReturn(java.util.List.of(lote, lote2));
+        when(pmsRepository.existsByLoteLoteID(1L)).thenReturn(false);
+        when(germinacionRepository.existsByLoteLoteID(2L)).thenReturn(false);
+        long count = loteService.contarAnalisisPendientes();
+        assertEquals(2L, count);
+    }
+
+    @Test
+    @DisplayName("obtenerEstadisticasLotes - retorna mapa con claves esperadas")
+    void obtenerEstadisticasLotes_ok() {
+        when(loteRepository.count()).thenReturn(10L);
+        when(loteRepository.countLotesActivos()).thenReturn(7L);
+        when(loteRepository.countLotesInactivos()).thenReturn(3L);
+        var stats = loteService.obtenerEstadisticasLotes();
+        assertEquals(10L, stats.get("total"));
+        assertEquals(7L, stats.get("activos"));
+        assertEquals(3L, stats.get("inactivos"));
     }
 }

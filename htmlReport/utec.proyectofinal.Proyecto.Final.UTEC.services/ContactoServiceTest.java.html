@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContactoServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">ContactoServiceTest.java</span></div><h1>ContactoServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Contacto;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ContactoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ContactoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ContactoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoContacto;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de ContactoService&quot;)
+<span class="fc" id="L28">class ContactoServiceTest {</span>
+
+    @Mock
+    private ContactoRepository contactoRepository;
+
+    @InjectMocks
+    private ContactoService contactoService;
+
+    private ContactoRequestDTO contactoRequestDTO;
+    private Contacto contacto;
+    private Contacto empresa;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L42">        contactoRequestDTO = new ContactoRequestDTO();</span>
+<span class="fc" id="L43">        contactoRequestDTO.setNombre(&quot;Juan Pérez&quot;);</span>
+<span class="fc" id="L44">        contactoRequestDTO.setContacto(&quot;juan@example.com&quot;);</span>
+<span class="fc" id="L45">        contactoRequestDTO.setTipo(TipoContacto.CLIENTE);</span>
+
+<span class="fc" id="L47">        contacto = new Contacto();</span>
+<span class="fc" id="L48">        contacto.setContactoID(1L);</span>
+<span class="fc" id="L49">        contacto.setNombre(&quot;Juan Pérez&quot;);</span>
+<span class="fc" id="L50">        contacto.setContacto(&quot;juan@example.com&quot;);</span>
+<span class="fc" id="L51">        contacto.setTipo(TipoContacto.CLIENTE);</span>
+<span class="fc" id="L52">        contacto.setActivo(true);</span>
+
+<span class="fc" id="L54">        empresa = new Contacto();</span>
+<span class="fc" id="L55">        empresa.setContactoID(2L);</span>
+<span class="fc" id="L56">        empresa.setNombre(&quot;Empresa SA&quot;);</span>
+<span class="fc" id="L57">        empresa.setContacto(&quot;empresa@example.com&quot;);</span>
+<span class="fc" id="L58">        empresa.setTipo(TipoContacto.EMPRESA);</span>
+<span class="fc" id="L59">        empresa.setActivo(true);</span>
+<span class="fc" id="L60">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener todos los contactos activos - debe retornar lista&quot;)
+    void obtenerTodosLosContactos_debeRetornarLista() {
+<span class="fc" id="L65">        when(contactoRepository.findByActivoTrue()).thenReturn(Arrays.asList(contacto, empresa));</span>
+
+<span class="fc" id="L67">        List&lt;ContactoDTO&gt; resultado = contactoService.obtenerTodosLosContactos();</span>
+
+<span class="fc" id="L69">        assertNotNull(resultado);</span>
+<span class="fc" id="L70">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L71">        verify(contactoRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L72">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener contactos por tipo - debe retornar solo clientes&quot;)
+    void obtenerContactosPorTipo_debeRetornarSoloClientes() {
+<span class="fc" id="L77">        when(contactoRepository.findByTipoAndActivoTrue(TipoContacto.CLIENTE)).thenReturn(Arrays.asList(contacto));</span>
+
+<span class="fc" id="L79">        List&lt;ContactoDTO&gt; resultado = contactoService.obtenerContactosPorTipo(TipoContacto.CLIENTE);</span>
+
+<span class="fc" id="L81">        assertNotNull(resultado);</span>
+<span class="fc" id="L82">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L83">        assertEquals(TipoContacto.CLIENTE, resultado.get(0).getTipo());</span>
+<span class="fc" id="L84">        verify(contactoRepository, times(1)).findByTipoAndActivoTrue(TipoContacto.CLIENTE);</span>
+<span class="fc" id="L85">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener clientes - debe retornar solo clientes activos&quot;)
+    void obtenerClientes_debeRetornarSoloClientes() {
+<span class="fc" id="L90">        when(contactoRepository.findByTipoAndActivoTrue(TipoContacto.CLIENTE)).thenReturn(Arrays.asList(contacto));</span>
+
+<span class="fc" id="L92">        List&lt;ContactoDTO&gt; resultado = contactoService.obtenerClientes();</span>
+
+<span class="fc" id="L94">        assertNotNull(resultado);</span>
+<span class="fc" id="L95">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L96">        assertEquals(TipoContacto.CLIENTE, resultado.get(0).getTipo());</span>
+<span class="fc" id="L97">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener empresas - debe retornar solo empresas activas&quot;)
+    void obtenerEmpresas_debeRetornarSoloEmpresas() {
+<span class="fc" id="L102">        when(contactoRepository.findByTipoAndActivoTrue(TipoContacto.EMPRESA)).thenReturn(Arrays.asList(empresa));</span>
+
+<span class="fc" id="L104">        List&lt;ContactoDTO&gt; resultado = contactoService.obtenerEmpresas();</span>
+
+<span class="fc" id="L106">        assertNotNull(resultado);</span>
+<span class="fc" id="L107">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L108">        assertEquals(TipoContacto.EMPRESA, resultado.get(0).getTipo());</span>
+<span class="fc" id="L109">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener contacto por ID - debe retornar contacto existente&quot;)
+    void obtenerContactoPorId_contactoExistente_debeRetornarContacto() {
+<span class="fc" id="L114">        when(contactoRepository.findByContactoIDAndActivoTrue(1L)).thenReturn(Optional.of(contacto));</span>
+
+<span class="fc" id="L116">        ContactoDTO resultado = contactoService.obtenerContactoPorId(1L);</span>
+
+<span class="fc" id="L118">        assertNotNull(resultado);</span>
+<span class="fc" id="L119">        assertEquals(1L, resultado.getContactoID());</span>
+<span class="fc" id="L120">        assertEquals(&quot;Juan Pérez&quot;, resultado.getNombre());</span>
+<span class="fc" id="L121">        verify(contactoRepository, times(1)).findByContactoIDAndActivoTrue(1L);</span>
+<span class="fc" id="L122">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener contacto por ID inexistente - debe lanzar excepción&quot;)
+    void obtenerContactoPorId_contactoInexistente_debeLanzarExcepcion() {
+<span class="fc" id="L127">        when(contactoRepository.findByContactoIDAndActivoTrue(999L)).thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L129">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L130">            contactoService.obtenerContactoPorId(999L);</span>
+<span class="nc" id="L131">        });</span>
+
+<span class="fc" id="L133">        assertTrue(exception.getMessage().contains(&quot;no encontrado&quot;));</span>
+<span class="fc" id="L134">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear contacto válido - debe guardar y retornar DTO&quot;)
+    void crearContacto_valido_debeGuardarYRetornarDTO() {
+<span class="fc" id="L139">        when(contactoRepository.existsByNombreIgnoreCaseAndTipo(anyString(), any(TipoContacto.class))).thenReturn(false);</span>
+<span class="fc" id="L140">        when(contactoRepository.save(any(Contacto.class))).thenReturn(contacto);</span>
+
+<span class="fc" id="L142">        ContactoDTO resultado = contactoService.crearContacto(contactoRequestDTO);</span>
+
+<span class="fc" id="L144">        assertNotNull(resultado);</span>
+<span class="fc" id="L145">        assertEquals(&quot;Juan Pérez&quot;, resultado.getNombre());</span>
+<span class="fc" id="L146">        verify(contactoRepository, times(1)).save(any(Contacto.class));</span>
+<span class="fc" id="L147">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear contacto con nombre duplicado - debe lanzar excepción&quot;)
+    void crearContacto_nombreDuplicado_debeLanzarExcepcion() {
+<span class="fc" id="L152">        when(contactoRepository.existsByNombreIgnoreCaseAndTipo(anyString(), any(TipoContacto.class))).thenReturn(true);</span>
+
+<span class="fc" id="L154">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L155">            contactoService.crearContacto(contactoRequestDTO);</span>
+<span class="nc" id="L156">        });</span>
+
+<span class="fc" id="L158">        assertTrue(exception.getMessage().contains(&quot;Ya existe&quot;));</span>
+<span class="fc" id="L159">        verify(contactoRepository, never()).save(any(Contacto.class));</span>
+<span class="fc" id="L160">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear contacto sin nombre - debe lanzar excepción&quot;)
+    void crearContacto_sinNombre_debeLanzarExcepcion() {
+<span class="fc" id="L165">        contactoRequestDTO.setNombre(&quot;&quot;);</span>
+
+<span class="fc" id="L167">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L168">            contactoService.crearContacto(contactoRequestDTO);</span>
+<span class="nc" id="L169">        });</span>
+
+<span class="fc" id="L171">        assertTrue(exception.getMessage().contains(&quot;requerido&quot;));</span>
+<span class="fc" id="L172">        verify(contactoRepository, never()).save(any(Contacto.class));</span>
+<span class="fc" id="L173">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar contacto - debe actualizar y retornar DTO&quot;)
+    void actualizarContacto_debeActualizarYRetornarDTO() {
+<span class="fc" id="L178">        contactoRequestDTO.setNombre(&quot;Juan Pérez Actualizado&quot;);</span>
+<span class="fc" id="L179">        when(contactoRepository.findByContactoIDAndActivoTrue(1L)).thenReturn(Optional.of(contacto));</span>
+<span class="fc" id="L180">        when(contactoRepository.existsByNombreIgnoreCaseAndTipoAndContactoIDNot(anyString(), any(TipoContacto.class), anyLong())).thenReturn(false);</span>
+<span class="fc" id="L181">        when(contactoRepository.save(any(Contacto.class))).thenReturn(contacto);</span>
+
+<span class="fc" id="L183">        ContactoDTO resultado = contactoService.actualizarContacto(1L, contactoRequestDTO);</span>
+
+<span class="fc" id="L185">        assertNotNull(resultado);</span>
+<span class="fc" id="L186">        verify(contactoRepository, times(1)).save(any(Contacto.class));</span>
+<span class="fc" id="L187">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar contacto - debe cambiar activo a false&quot;)
+    void eliminarContacto_debeCambiarActivoAFalse() {
+<span class="fc" id="L192">        when(contactoRepository.findByContactoIDAndActivoTrue(1L)).thenReturn(Optional.of(contacto));</span>
+<span class="fc" id="L193">        when(contactoRepository.save(any(Contacto.class))).thenReturn(contacto);</span>
+
+<span class="fc" id="L195">        contactoService.eliminarContacto(1L);</span>
+
+<span class="fc" id="L197">        verify(contactoRepository, times(1)).save(any(Contacto.class));</span>
+<span class="fc" id="L198">    }</span>
+
+    @Test
+    @DisplayName(&quot;Reactivar contacto - debe cambiar activo a true&quot;)
+    void reactivarContacto_debeCambiarActivoATrue() {
+<span class="fc" id="L203">        contacto.setActivo(false);</span>
+<span class="fc" id="L204">        when(contactoRepository.findById(1L)).thenReturn(Optional.of(contacto));</span>
+<span class="fc" id="L205">        when(contactoRepository.save(any(Contacto.class))).thenReturn(contacto);</span>
+
+<span class="fc" id="L207">        ContactoDTO resultado = contactoService.reactivarContacto(1L);</span>
+
+<span class="fc" id="L209">        assertNotNull(resultado);</span>
+<span class="fc" id="L210">        verify(contactoRepository, times(1)).save(any(Contacto.class));</span>
+<span class="fc" id="L211">    }</span>
+
+    @Test
+    @DisplayName(&quot;Reactivar contacto ya activo - debe lanzar excepción&quot;)
+    void reactivarContacto_yaActivo_debeLanzarExcepcion() {
+<span class="fc" id="L216">        when(contactoRepository.findById(1L)).thenReturn(Optional.of(contacto));</span>
+
+<span class="fc" id="L218">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L219">            contactoService.reactivarContacto(1L);</span>
+<span class="nc" id="L220">        });</span>
+
+<span class="fc" id="L222">        assertTrue(exception.getMessage().contains(&quot;ya está activo&quot;));</span>
+<span class="fc" id="L223">    }</span>
+
+    @Test
+    @DisplayName(&quot;Buscar contactos por nombre - debe retornar coincidencias&quot;)
+    void buscarContactosPorNombre_debeRetornarCoincidencias() {
+<span class="fc" id="L228">        when(contactoRepository.findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Juan&quot;)).thenReturn(Arrays.asList(contacto));</span>
+
+<span class="fc" id="L230">        List&lt;ContactoDTO&gt; resultado = contactoService.buscarContactosPorNombre(&quot;Juan&quot;);</span>
+
+<span class="fc" id="L232">        assertNotNull(resultado);</span>
+<span class="fc" id="L233">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L234">        verify(contactoRepository, times(1)).findByNombreContainingIgnoreCaseAndActivoTrue(&quot;Juan&quot;);</span>
+<span class="fc" id="L235">    }</span>
+
+    @Test
+    @DisplayName(&quot;Buscar clientes por nombre - debe retornar solo clientes&quot;)
+    void buscarClientes_debeRetornarSoloClientes() {
+<span class="fc" id="L240">        when(contactoRepository.findByNombreContainingIgnoreCaseAndTipoAndActivoTrue(&quot;Juan&quot;, TipoContacto.CLIENTE))</span>
+<span class="fc" id="L241">            .thenReturn(Arrays.asList(contacto));</span>
+
+<span class="fc" id="L243">        List&lt;ContactoDTO&gt; resultado = contactoService.buscarClientes(&quot;Juan&quot;);</span>
+
+<span class="fc" id="L245">        assertNotNull(resultado);</span>
+<span class="fc" id="L246">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L247">        assertEquals(TipoContacto.CLIENTE, resultado.get(0).getTipo());</span>
+<span class="fc" id="L248">    }</span>
+
+    @Test
+    @DisplayName(&quot;Buscar empresas por nombre - debe retornar solo empresas&quot;)
+    void buscarEmpresas_debeRetornarSoloEmpresas() {
+<span class="fc" id="L253">        when(contactoRepository.findByNombreContainingIgnoreCaseAndTipoAndActivoTrue(&quot;Empresa&quot;, TipoContacto.EMPRESA))</span>
+<span class="fc" id="L254">            .thenReturn(Arrays.asList(empresa));</span>
+
+<span class="fc" id="L256">        List&lt;ContactoDTO&gt; resultado = contactoService.buscarEmpresas(&quot;Empresa&quot;);</span>
+
+<span class="fc" id="L258">        assertNotNull(resultado);</span>
+<span class="fc" id="L259">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L260">        assertEquals(TipoContacto.EMPRESA, resultado.get(0).getTipo());</span>
+<span class="fc" id="L261">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

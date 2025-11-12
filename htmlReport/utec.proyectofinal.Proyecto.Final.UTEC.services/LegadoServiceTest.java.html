@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LegadoServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">LegadoServiceTest.java</span></div><h1>LegadoServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Legado;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LegadoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LegadoSimpleDTO;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de LegadoService&quot;)
+<span class="fc" id="L29">class LegadoServiceTest {</span>
+
+    @Mock
+    private LegadoRepository legadoRepository;
+
+    @Mock
+    private LoteService loteService;
+
+    @InjectMocks
+    private LegadoService legadoService;
+
+    private Legado legado;
+    private Lote lote;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L45">        lote = new Lote();</span>
+<span class="fc" id="L46">        lote.setLoteID(1L);</span>
+<span class="fc" id="L47">        lote.setNomLote(&quot;LOTE-001&quot;);</span>
+<span class="fc" id="L48">        lote.setFicha(&quot;FICHA-001&quot;);</span>
+<span class="fc" id="L49">        lote.setFechaRecibo(LocalDate.now());</span>
+
+<span class="fc" id="L51">        legado = new Legado();</span>
+<span class="fc" id="L52">        legado.setLegadoID(1L);</span>
+<span class="fc" id="L53">        legado.setLote(lote);</span>
+<span class="fc" id="L54">        legado.setCodDoc(&quot;COD-001&quot;);</span>
+<span class="fc" id="L55">        legado.setNomDoc(&quot;DOC-001&quot;);</span>
+<span class="fc" id="L56">        legado.setFamilia(&quot;Gramíneas&quot;);</span>
+<span class="fc" id="L57">        legado.setGermC(95);</span>
+<span class="fc" id="L58">        legado.setGermSC(92);</span>
+<span class="fc" id="L59">        legado.setPeso1000(new BigDecimal(&quot;45.5&quot;));</span>
+<span class="fc" id="L60">        legado.setPura(new BigDecimal(&quot;98.5&quot;));</span>
+<span class="fc" id="L61">        legado.setPuraI(new BigDecimal(&quot;98.0&quot;));</span>
+<span class="fc" id="L62">        legado.setActivo(true);</span>
+<span class="fc" id="L63">        legado.setArchivoOrigen(&quot;archivo.xlsx&quot;);</span>
+<span class="fc" id="L64">        legado.setFilaExcel(5);</span>
+<span class="fc" id="L65">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener todos los legados simples - debe retornar lista&quot;)
+    void obtenerTodosSimple_debeRetornarLista() {
+<span class="fc" id="L70">        when(legadoRepository.findByActivoTrue()).thenReturn(Arrays.asList(legado));</span>
+
+<span class="fc" id="L72">        List&lt;LegadoSimpleDTO&gt; resultado = legadoService.obtenerTodosSimple();</span>
+
+<span class="fc" id="L74">        assertNotNull(resultado);</span>
+<span class="fc" id="L75">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L76">        verify(legadoRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L77">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener legado por ID - debe retornar legado completo&quot;)
+    void obtenerPorId_legadoExistente_debeRetornarLegado() {
+<span class="fc" id="L82">        when(legadoRepository.findById(1L)).thenReturn(Optional.of(legado));</span>
+
+<span class="fc" id="L84">        LegadoDTO resultado = legadoService.obtenerPorId(1L);</span>
+
+<span class="fc" id="L86">        assertNotNull(resultado);</span>
+<span class="fc" id="L87">        assertEquals(1L, resultado.getLegadoID());</span>
+<span class="fc" id="L88">        assertEquals(&quot;COD-001&quot;, resultado.getCodDoc());</span>
+<span class="fc" id="L89">        verify(legadoRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L90">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener legado por ID inexistente - debe lanzar excepción&quot;)
+    void obtenerPorId_legadoInexistente_debeLanzarExcepcion() {
+<span class="fc" id="L95">        when(legadoRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L97">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L98">            legadoService.obtenerPorId(999L);</span>
+<span class="nc" id="L99">        });</span>
+
+<span class="fc" id="L101">        assertTrue(exception.getMessage().contains(&quot;no encontrado&quot;));</span>
+<span class="fc" id="L102">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener legados por archivo - debe retornar lista&quot;)
+    void obtenerPorArchivo_debeRetornarLista() {
+<span class="fc" id="L107">        when(legadoRepository.findByArchivoOrigen(&quot;archivo.xlsx&quot;)).thenReturn(Arrays.asList(legado));</span>
+
+<span class="fc" id="L109">        List&lt;LegadoSimpleDTO&gt; resultado = legadoService.obtenerPorArchivo(&quot;archivo.xlsx&quot;);</span>
+
+<span class="fc" id="L111">        assertNotNull(resultado);</span>
+<span class="fc" id="L112">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L113">        verify(legadoRepository, times(1)).findByArchivoOrigen(&quot;archivo.xlsx&quot;);</span>
+<span class="fc" id="L114">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener legados por ficha - debe retornar lista&quot;)
+    void obtenerPorFicha_debeRetornarLista() {
+<span class="fc" id="L119">        when(legadoRepository.findByFicha(&quot;FICHA-001&quot;)).thenReturn(Arrays.asList(legado));</span>
+
+<span class="fc" id="L121">        List&lt;LegadoSimpleDTO&gt; resultado = legadoService.obtenerPorFicha(&quot;FICHA-001&quot;);</span>
+
+<span class="fc" id="L123">        assertNotNull(resultado);</span>
+<span class="fc" id="L124">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L125">        verify(legadoRepository, times(1)).findByFicha(&quot;FICHA-001&quot;);</span>
+<span class="fc" id="L126">    }</span>
+
+    @Test
+    @DisplayName(&quot;Desactivar legado - debe cambiar activo a false&quot;)
+    void desactivar_debeCambiarActivoAFalse() {
+<span class="fc" id="L131">        when(legadoRepository.findById(1L)).thenReturn(Optional.of(legado));</span>
+<span class="fc" id="L132">        when(legadoRepository.save(any(Legado.class))).thenReturn(legado);</span>
+
+<span class="fc" id="L134">        legadoService.desactivar(1L);</span>
+
+<span class="fc" id="L136">        verify(legadoRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L137">        verify(legadoRepository, times(1)).save(any(Legado.class));</span>
+<span class="fc" id="L138">    }</span>
+
+    @Test
+    @DisplayName(&quot;Desactivar legado inexistente - debe lanzar excepción&quot;)
+    void desactivar_legadoInexistente_debeLanzarExcepcion() {
+<span class="fc" id="L143">        when(legadoRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L145">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L146">            legadoService.desactivar(999L);</span>
+<span class="nc" id="L147">        });</span>
+
+<span class="fc" id="L149">        assertTrue(exception.getMessage().contains(&quot;no encontrado&quot;));</span>
+<span class="fc" id="L150">        verify(legadoRepository, never()).save(any(Legado.class));</span>
+<span class="fc" id="L151">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies únicas - debe retornar lista de especies&quot;)
+    void obtenerEspeciesUnicas_debeRetornarListaEspecies() {
+<span class="fc" id="L156">        when(legadoRepository.findByActivoTrue()).thenReturn(Arrays.asList(legado));</span>
+
+<span class="fc" id="L158">        List&lt;String&gt; resultado = legadoService.obtenerEspeciesUnicas();</span>
+
+<span class="fc" id="L160">        assertNotNull(resultado);</span>
+<span class="fc" id="L161">        verify(legadoRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L162">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener legados con lista vacía - debe retornar lista vacía&quot;)
+    void obtenerTodosSimple_listaVacia_debeRetornarListaVacia() {
+<span class="fc" id="L167">        when(legadoRepository.findByActivoTrue()).thenReturn(Arrays.asList());</span>
+
+<span class="fc" id="L169">        List&lt;LegadoSimpleDTO&gt; resultado = legadoService.obtenerTodosSimple();</span>
+
+<span class="fc" id="L171">        assertNotNull(resultado);</span>
+<span class="fc" id="L172">        assertTrue(resultado.isEmpty());</span>
+<span class="fc" id="L173">        verify(legadoRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L174">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener legado con lote nulo - debe manejar correctamente&quot;)
+    void obtenerPorId_conLoteNulo_debeRetornarLegado() {
+<span class="fc" id="L179">        legado.setLote(null);</span>
+<span class="fc" id="L180">        when(legadoRepository.findById(1L)).thenReturn(Optional.of(legado));</span>
+
+<span class="fc" id="L182">        LegadoDTO resultado = legadoService.obtenerPorId(1L);</span>
+
+<span class="fc" id="L184">        assertNotNull(resultado);</span>
+<span class="fc" id="L185">        assertNull(resultado.getLote());</span>
+<span class="fc" id="L186">        verify(legadoRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L187">    }</span>
+
+    @Test
+    @DisplayName(&quot;Convertir a DTO simple - debe mapear correctamente&quot;)
+    void convertirASimpleDTO_debeMapejarCorrectamente() {
+<span class="fc" id="L192">        when(legadoRepository.findByActivoTrue()).thenReturn(Arrays.asList(legado));</span>
+
+<span class="fc" id="L194">        List&lt;LegadoSimpleDTO&gt; resultado = legadoService.obtenerTodosSimple();</span>
+
+<span class="fc" id="L196">        assertNotNull(resultado);</span>
+<span class="fc" id="L197">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L198">        LegadoSimpleDTO dto = resultado.get(0);</span>
+<span class="fc" id="L199">        assertEquals(1L, dto.getLegadoID());</span>
+<span class="fc" id="L200">        assertEquals(&quot;LOTE-001&quot;, dto.getNomLote());</span>
+<span class="fc" id="L201">        assertEquals(&quot;FICHA-001&quot;, dto.getFicha());</span>
+<span class="fc" id="L202">        assertEquals(&quot;COD-001&quot;, dto.getCodDoc());</span>
+<span class="fc" id="L203">        assertEquals(&quot;DOC-001&quot;, dto.getNomDoc());</span>
+<span class="fc" id="L204">        assertEquals(&quot;Gramíneas&quot;, dto.getFamilia());</span>
+<span class="fc" id="L205">        assertTrue(dto.getActivo());</span>
+<span class="fc" id="L206">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

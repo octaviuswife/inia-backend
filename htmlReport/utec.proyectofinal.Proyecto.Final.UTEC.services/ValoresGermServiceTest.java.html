@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValoresGermServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">ValoresGermServiceTest.java</span></div><h1>ValoresGermServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.ValoresGerm;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ValoresGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ValoresGermRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ValoresGermDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests unitarios para ValoresGermService&quot;)
+<span class="fc" id="L30">class ValoresGermServiceTest {</span>
+
+    @Mock
+    private ValoresGermRepository valoresGermRepository;
+
+    @Mock
+    private AnalisisService analisisService;
+
+    @InjectMocks
+    private ValoresGermService valoresGermService;
+
+    private ValoresGerm valoresGerm;
+    private TablaGerm tablaGerm;
+    private Germinacion germinacion;
+    private ValoresGermRequestDTO requestDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L48">        germinacion = new Germinacion();</span>
+<span class="fc" id="L49">        germinacion.setAnalisisID(1L);</span>
+
+<span class="fc" id="L51">        tablaGerm = new TablaGerm();</span>
+<span class="fc" id="L52">        tablaGerm.setTablaGermID(1L);</span>
+<span class="fc" id="L53">        tablaGerm.setGerminacion(germinacion);</span>
+
+<span class="fc" id="L55">        valoresGerm = new ValoresGerm();</span>
+<span class="fc" id="L56">        valoresGerm.setValoresGermID(1L);</span>
+<span class="fc" id="L57">        valoresGerm.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L58">        valoresGerm.setNormales(new BigDecimal(&quot;80.00&quot;));</span>
+<span class="fc" id="L59">        valoresGerm.setAnormales(new BigDecimal(&quot;10.00&quot;));</span>
+<span class="fc" id="L60">        valoresGerm.setDuras(new BigDecimal(&quot;5.00&quot;));</span>
+<span class="fc" id="L61">        valoresGerm.setFrescas(new BigDecimal(&quot;3.00&quot;));</span>
+<span class="fc" id="L62">        valoresGerm.setMuertas(new BigDecimal(&quot;2.00&quot;));</span>
+<span class="fc" id="L63">        valoresGerm.setGerminacion(new BigDecimal(&quot;90.00&quot;));</span>
+<span class="fc" id="L64">        valoresGerm.setTablaGerm(tablaGerm);</span>
+
+<span class="fc" id="L66">        requestDTO = new ValoresGermRequestDTO();</span>
+<span class="fc" id="L67">        requestDTO.setNormales(new BigDecimal(&quot;75.00&quot;));</span>
+<span class="fc" id="L68">        requestDTO.setAnormales(new BigDecimal(&quot;15.00&quot;));</span>
+<span class="fc" id="L69">        requestDTO.setDuras(new BigDecimal(&quot;5.00&quot;));</span>
+<span class="fc" id="L70">        requestDTO.setFrescas(new BigDecimal(&quot;3.00&quot;));</span>
+<span class="fc" id="L71">        requestDTO.setMuertas(new BigDecimal(&quot;2.00&quot;));</span>
+<span class="fc" id="L72">        requestDTO.setGerminacion(new BigDecimal(&quot;85.00&quot;));</span>
+<span class="fc" id="L73">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe obtener valores por ID exitosamente&quot;)
+    void obtenerValoresPorId_conIdExistente_debeRetornarValores() {
+<span class="fc" id="L78">        when(valoresGermRepository.findById(1L)).thenReturn(Optional.of(valoresGerm));</span>
+
+<span class="fc" id="L80">        ValoresGermDTO resultado = valoresGermService.obtenerValoresPorId(1L);</span>
+
+<span class="fc" id="L82">        assertNotNull(resultado);</span>
+<span class="fc" id="L83">        assertEquals(1L, resultado.getValoresGermID());</span>
+<span class="fc" id="L84">        assertEquals(Instituto.INIA, resultado.getInstituto());</span>
+<span class="fc" id="L85">        assertEquals(new BigDecimal(&quot;80.00&quot;), resultado.getNormales());</span>
+<span class="fc" id="L86">        assertEquals(1L, resultado.getTablaGermId());</span>
+<span class="fc" id="L87">        verify(valoresGermRepository).findById(1L);</span>
+<span class="fc" id="L88">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe lanzar excepción cuando el ID no existe&quot;)
+    void obtenerValoresPorId_conIdInexistente_debeLanzarExcepcion() {
+<span class="fc" id="L93">        when(valoresGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L95">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
+<span class="nc" id="L96">            () -&gt; valoresGermService.obtenerValoresPorId(999L));</span>
+
+<span class="fc" id="L98">        assertTrue(exception.getMessage().contains(&quot;no encontrados&quot;));</span>
+<span class="fc" id="L99">        verify(valoresGermRepository).findById(999L);</span>
+<span class="fc" id="L100">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe actualizar valores exitosamente&quot;)
+    void actualizarValores_conDatosValidos_debeRetornarValoresActualizados() {
+<span class="fc" id="L105">        when(valoresGermRepository.findById(1L)).thenReturn(Optional.of(valoresGerm));</span>
+<span class="fc" id="L106">        when(valoresGermRepository.save(any(ValoresGerm.class))).thenReturn(valoresGerm);</span>
+<span class="fc" id="L107">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any(Germinacion.class));</span>
+
+<span class="fc" id="L109">        ValoresGermDTO resultado = valoresGermService.actualizarValores(1L, requestDTO);</span>
+
+<span class="fc" id="L111">        assertNotNull(resultado);</span>
+<span class="fc" id="L112">        verify(analisisService).manejarEdicionAnalisisFinalizado(germinacion);</span>
+<span class="fc" id="L113">        verify(valoresGermRepository).findById(1L);</span>
+<span class="fc" id="L114">        verify(valoresGermRepository).save(any(ValoresGerm.class));</span>
+<span class="fc" id="L115">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe validar que la suma no supere 100&quot;)
+    void actualizarValores_conSumaSuperior100_debeLanzarExcepcion() {
+<span class="fc" id="L120">        requestDTO.setNormales(new BigDecimal(&quot;50.00&quot;));</span>
+<span class="fc" id="L121">        requestDTO.setAnormales(new BigDecimal(&quot;30.00&quot;));</span>
+<span class="fc" id="L122">        requestDTO.setDuras(new BigDecimal(&quot;15.00&quot;));</span>
+<span class="fc" id="L123">        requestDTO.setFrescas(new BigDecimal(&quot;10.00&quot;));</span>
+<span class="fc" id="L124">        requestDTO.setMuertas(new BigDecimal(&quot;10.00&quot;)); // Suma = 115</span>
+
+<span class="fc" id="L126">        when(valoresGermRepository.findById(1L)).thenReturn(Optional.of(valoresGerm));</span>
+
+<span class="fc" id="L128">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
+<span class="nc" id="L129">            () -&gt; valoresGermService.actualizarValores(1L, requestDTO));</span>
+
+<span class="fc" id="L131">        assertTrue(exception.getMessage().contains(&quot;no puede superar 100&quot;));</span>
+<span class="fc" id="L132">        verify(valoresGermRepository, never()).save(any(ValoresGerm.class));</span>
+<span class="fc" id="L133">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe obtener valores por tabla e instituto&quot;)
+    void obtenerValoresPorTablaEInstituto_conDatosValidos_debeRetornarValores() {
+<span class="fc" id="L138">        when(valoresGermRepository.findByTablaGermIdAndInstituto(1L, Instituto.INIA))</span>
+<span class="fc" id="L139">            .thenReturn(Optional.of(valoresGerm));</span>
+
+<span class="fc" id="L141">        ValoresGermDTO resultado = valoresGermService.obtenerValoresPorTablaEInstituto(1L, Instituto.INIA);</span>
+
+<span class="fc" id="L143">        assertNotNull(resultado);</span>
+<span class="fc" id="L144">        assertEquals(Instituto.INIA, resultado.getInstituto());</span>
+<span class="fc" id="L145">        assertEquals(1L, resultado.getTablaGermId());</span>
+<span class="fc" id="L146">        verify(valoresGermRepository).findByTablaGermIdAndInstituto(1L, Instituto.INIA);</span>
+<span class="fc" id="L147">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe obtener todos los valores de una tabla&quot;)
+    void obtenerValoresPorTabla_debeRetornarListaDeValores() {
+<span class="fc" id="L152">        ValoresGerm valoresInase = new ValoresGerm();</span>
+<span class="fc" id="L153">        valoresInase.setValoresGermID(2L);</span>
+<span class="fc" id="L154">        valoresInase.setInstituto(Instituto.INASE);</span>
+<span class="fc" id="L155">        valoresInase.setTablaGerm(tablaGerm);</span>
+
+<span class="fc" id="L157">        List&lt;ValoresGerm&gt; listaValores = Arrays.asList(valoresGerm, valoresInase);</span>
+<span class="fc" id="L158">        when(valoresGermRepository.findByTablaGermId(1L)).thenReturn(listaValores);</span>
+
+<span class="fc" id="L160">        List&lt;ValoresGermDTO&gt; resultado = valoresGermService.obtenerValoresPorTabla(1L);</span>
+
+<span class="fc" id="L162">        assertNotNull(resultado);</span>
+<span class="fc" id="L163">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L164">        assertEquals(Instituto.INIA, resultado.get(0).getInstituto());</span>
+<span class="fc" id="L165">        assertEquals(Instituto.INASE, resultado.get(1).getInstituto());</span>
+<span class="fc" id="L166">        verify(valoresGermRepository).findByTablaGermId(1L);</span>
+<span class="fc" id="L167">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe obtener valores de INIA por tabla&quot;)
+    void obtenerValoresIniaPorTabla_debeRetornarValoresDeInia() {
+<span class="fc" id="L172">        when(valoresGermRepository.findByTablaGermIdAndInstituto(1L, Instituto.INIA))</span>
+<span class="fc" id="L173">            .thenReturn(Optional.of(valoresGerm));</span>
+
+<span class="fc" id="L175">        ValoresGermDTO resultado = valoresGermService.obtenerValoresIniaPorTabla(1L);</span>
+
+<span class="fc" id="L177">        assertNotNull(resultado);</span>
+<span class="fc" id="L178">        assertEquals(Instituto.INIA, resultado.getInstituto());</span>
+<span class="fc" id="L179">        verify(valoresGermRepository).findByTablaGermIdAndInstituto(1L, Instituto.INIA);</span>
+<span class="fc" id="L180">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe obtener valores de INASE por tabla&quot;)
+    void obtenerValoresInasePorTabla_debeRetornarValoresDeInase() {
+<span class="fc" id="L185">        valoresGerm.setInstituto(Instituto.INASE);</span>
+<span class="fc" id="L186">        when(valoresGermRepository.findByTablaGermIdAndInstituto(1L, Instituto.INASE))</span>
+<span class="fc" id="L187">            .thenReturn(Optional.of(valoresGerm));</span>
+
+<span class="fc" id="L189">        ValoresGermDTO resultado = valoresGermService.obtenerValoresInasePorTabla(1L);</span>
+
+<span class="fc" id="L191">        assertNotNull(resultado);</span>
+<span class="fc" id="L192">        assertEquals(Instituto.INASE, resultado.getInstituto());</span>
+<span class="fc" id="L193">        verify(valoresGermRepository).findByTablaGermIdAndInstituto(1L, Instituto.INASE);</span>
+<span class="fc" id="L194">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe eliminar valores exitosamente&quot;)
+    void eliminarValores_conIdExistente_debeEliminarValores() {
+<span class="fc" id="L199">        when(valoresGermRepository.findById(1L)).thenReturn(Optional.of(valoresGerm));</span>
+<span class="fc" id="L200">        doNothing().when(valoresGermRepository).deleteById(1L);</span>
+
+<span class="fc" id="L202">        assertDoesNotThrow(() -&gt; valoresGermService.eliminarValores(1L));</span>
+
+<span class="fc" id="L204">        verify(valoresGermRepository).findById(1L);</span>
+<span class="fc" id="L205">        verify(valoresGermRepository).deleteById(1L);</span>
+<span class="fc" id="L206">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe lanzar excepción al eliminar con ID inexistente&quot;)
+    void eliminarValores_conIdInexistente_debeLanzarExcepcion() {
+<span class="fc" id="L211">        when(valoresGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L213">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
+<span class="nc" id="L214">            () -&gt; valoresGermService.eliminarValores(999L));</span>
+
+<span class="fc" id="L216">        assertTrue(exception.getMessage().contains(&quot;no encontrados&quot;));</span>
+<span class="fc" id="L217">        verify(valoresGermRepository).findById(999L);</span>
+<span class="fc" id="L218">        verify(valoresGermRepository, never()).deleteById(anyLong());</span>
+<span class="fc" id="L219">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe aceptar suma de valores igual a 100&quot;)
+    void actualizarValores_conSumaIgual100_debeActualizar() {
+<span class="fc" id="L224">        requestDTO.setNormales(new BigDecimal(&quot;80.00&quot;));</span>
+<span class="fc" id="L225">        requestDTO.setAnormales(new BigDecimal(&quot;10.00&quot;));</span>
+<span class="fc" id="L226">        requestDTO.setDuras(new BigDecimal(&quot;5.00&quot;));</span>
+<span class="fc" id="L227">        requestDTO.setFrescas(new BigDecimal(&quot;3.00&quot;));</span>
+<span class="fc" id="L228">        requestDTO.setMuertas(new BigDecimal(&quot;2.00&quot;)); // Suma = 100</span>
+
+<span class="fc" id="L230">        when(valoresGermRepository.findById(1L)).thenReturn(Optional.of(valoresGerm));</span>
+<span class="fc" id="L231">        when(valoresGermRepository.save(any(ValoresGerm.class))).thenReturn(valoresGerm);</span>
+<span class="fc" id="L232">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any(Germinacion.class));</span>
+
+<span class="fc" id="L234">        assertDoesNotThrow(() -&gt; valoresGermService.actualizarValores(1L, requestDTO));</span>
+
+<span class="fc" id="L236">        verify(valoresGermRepository).save(any(ValoresGerm.class));</span>
+<span class="fc" id="L237">    }</span>
+
+    @Test
+    @DisplayName(&quot;Debe aceptar valores null en la validación&quot;)
+    void actualizarValores_conValoresNull_debeActualizar() {
+<span class="fc" id="L242">        requestDTO.setNormales(new BigDecimal(&quot;50.00&quot;));</span>
+<span class="fc" id="L243">        requestDTO.setAnormales(null);</span>
+<span class="fc" id="L244">        requestDTO.setDuras(null);</span>
+<span class="fc" id="L245">        requestDTO.setFrescas(null);</span>
+<span class="fc" id="L246">        requestDTO.setMuertas(null);</span>
+
+<span class="fc" id="L248">        when(valoresGermRepository.findById(1L)).thenReturn(Optional.of(valoresGerm));</span>
+<span class="fc" id="L249">        when(valoresGermRepository.save(any(ValoresGerm.class))).thenReturn(valoresGerm);</span>
+<span class="fc" id="L250">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any(Germinacion.class));</span>
+
+<span class="fc" id="L252">        assertDoesNotThrow(() -&gt; valoresGermService.actualizarValores(1L, requestDTO));</span>
+
+<span class="fc" id="L254">        verify(valoresGermRepository).save(any(ValoresGerm.class));</span>
+<span class="fc" id="L255">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

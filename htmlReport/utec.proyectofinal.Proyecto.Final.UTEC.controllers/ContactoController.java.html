@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContactoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">ContactoController.java</span></div><h1>ContactoController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ContactoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ContactoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoContacto;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.ContactoService;
+
+import java.util.List;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/contactos&quot;)
+@Tag(name = &quot;Contactos&quot;, description = &quot;API para gestión de contactos y empresas&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L28">public class ContactoController {</span>
+
+    @Autowired
+    private ContactoService contactoService;
+
+    // Obtener todos los contactos activos
+    @Operation(summary = &quot;Listar todos los contactos&quot;, 
+              description = &quot;Obtiene todos los contactos activos, incluyendo clientes y empresas&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;List&lt;ContactoDTO&gt;&gt; obtenerTodosLosContactos() {
+        try {
+<span class="fc" id="L40">            List&lt;ContactoDTO&gt; contactos = contactoService.obtenerTodosLosContactos();</span>
+<span class="fc" id="L41">            return ResponseEntity.ok(contactos);</span>
+<span class="nc" id="L42">        } catch (Exception e) {</span>
+<span class="nc" id="L43">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    // Obtener solo clientes
+    @Operation(summary = &quot;Listar todos los clientes&quot;, 
+              description = &quot;Obtiene todos los contactos que son clientes con filtro opcional de estado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/clientes&quot;)
+    public ResponseEntity&lt;List&lt;ContactoDTO&gt;&gt; obtenerClientes(
+            @RequestParam(required = false) Boolean activo) {
+        try {
+<span class="nc" id="L55">            List&lt;ContactoDTO&gt; clientes = contactoService.obtenerClientes(activo);</span>
+<span class="nc" id="L56">            return ResponseEntity.ok(clientes);</span>
+<span class="nc" id="L57">        } catch (Exception e) {</span>
+<span class="nc" id="L58">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    // Obtener solo empresas
+    @Operation(summary = &quot;Listar todas las empresas&quot;, 
+              description = &quot;Obtiene todos los contactos que son empresas con filtro opcional de estado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/empresas&quot;)
+    public ResponseEntity&lt;List&lt;ContactoDTO&gt;&gt; obtenerEmpresas(
+            @RequestParam(required = false) Boolean activo) {
+        try {
+<span class="fc" id="L70">            List&lt;ContactoDTO&gt; empresas = contactoService.obtenerEmpresas(activo);</span>
+<span class="fc" id="L71">            return ResponseEntity.ok(empresas);</span>
+<span class="nc" id="L72">        } catch (Exception e) {</span>
+<span class="nc" id="L73">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    // Obtener contacto por ID
+    @Operation(summary = &quot;Obtener contacto por ID&quot;, 
+              description = &quot;Obtiene un contacto específico por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{contactoID}&quot;)
+    public ResponseEntity&lt;ContactoDTO&gt; obtenerContactoPorId(@PathVariable Long contactoID) {
+        try {
+<span class="fc" id="L84">            ContactoDTO contacto = contactoService.obtenerContactoPorId(contactoID);</span>
+<span class="fc" id="L85">            return ResponseEntity.ok(contacto);</span>
+<span class="nc" id="L86">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L87">            return ResponseEntity.notFound().build();</span>
+<span class="nc" id="L88">        } catch (Exception e) {</span>
+<span class="nc" id="L89">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    // Crear nuevo contacto
+    @Operation(summary = &quot;Crear nuevo contacto&quot;, 
+              description = &quot;Crea un nuevo contacto o empresa (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;?&gt; crearContacto(@RequestBody ContactoRequestDTO contactoRequestDTO) {
+        try {
+<span class="fc" id="L100">            ContactoDTO contactoCreado = contactoService.crearContacto(contactoRequestDTO);</span>
+<span class="fc" id="L101">            return ResponseEntity.status(HttpStatus.CREATED).body(contactoCreado);</span>
+<span class="nc" id="L102">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L103">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+<span class="nc" id="L104">        } catch (Exception e) {</span>
+<span class="nc" id="L105">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L106">                    .body(&quot;Error interno del servidor&quot;);</span>
+        }
+    }
+
+    // Actualizar contacto existente
+    @Operation(summary = &quot;Actualizar contacto&quot;, 
+              description = &quot;Actualiza un contacto o empresa existente (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{contactoID}&quot;)
+    public ResponseEntity&lt;?&gt; actualizarContacto(@PathVariable Long contactoID, 
+                                              @RequestBody ContactoRequestDTO contactoRequestDTO) {
+        try {
+<span class="fc" id="L118">            ContactoDTO contactoActualizado = contactoService.actualizarContacto(contactoID, contactoRequestDTO);</span>
+<span class="fc" id="L119">            return ResponseEntity.ok(contactoActualizado);</span>
+<span class="nc" id="L120">        } catch (RuntimeException e) {</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (e.getMessage().contains(&quot;no encontrado&quot;)) {</span>
+<span class="nc" id="L122">                return ResponseEntity.notFound().build();</span>
+            }
+<span class="nc" id="L124">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+<span class="nc" id="L125">        } catch (Exception e) {</span>
+<span class="nc" id="L126">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L127">                    .body(&quot;Error interno del servidor&quot;);</span>
+        }
+    }
+
+    // Eliminar contacto (soft delete)
+    @Operation(summary = &quot;Eliminar contacto&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{contactoID}&quot;)
+    public ResponseEntity&lt;?&gt; eliminarContacto(@PathVariable Long contactoID) {
+        try {
+<span class="fc" id="L137">            contactoService.eliminarContacto(contactoID);</span>
+<span class="fc" id="L138">            return ResponseEntity.noContent().build();</span>
+<span class="nc" id="L139">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L140">            return ResponseEntity.notFound().build();</span>
+<span class="nc" id="L141">        } catch (Exception e) {</span>
+<span class="nc" id="L142">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L143">                    .body(&quot;Error interno del servidor&quot;);</span>
+        }
+    }
+
+    // Reactivar contacto
+    @Operation(summary = &quot;Reactivar contacto&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{contactoID}/reactivar&quot;)
+    public ResponseEntity&lt;?&gt; reactivarContacto(@PathVariable Long contactoID) {
+        try {
+<span class="fc" id="L153">            ContactoDTO contactoReactivado = contactoService.reactivarContacto(contactoID);</span>
+<span class="fc" id="L154">            return ResponseEntity.ok(contactoReactivado);</span>
+<span class="nc" id="L155">        } catch (RuntimeException e) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">            if (e.getMessage().contains(&quot;no encontrado&quot;)) {</span>
+<span class="nc" id="L157">                return ResponseEntity.notFound().build();</span>
+            }
+<span class="nc" id="L159">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+<span class="nc" id="L160">        } catch (Exception e) {</span>
+<span class="nc" id="L161">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L162">                    .body(&quot;Error interno del servidor&quot;);</span>
+        }
+    }
+
+    // Buscar contactos por nombre
+    @Operation(summary = &quot;Buscar contactos por nombre&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/buscar&quot;)
+    public ResponseEntity&lt;List&lt;ContactoDTO&gt;&gt; buscarContactosPorNombre(@RequestParam String nombre) {
+        try {
+<span class="fc" id="L172">            List&lt;ContactoDTO&gt; contactos = contactoService.buscarContactosPorNombre(nombre);</span>
+<span class="fc" id="L173">            return ResponseEntity.ok(contactos);</span>
+<span class="nc" id="L174">        } catch (Exception e) {</span>
+<span class="nc" id="L175">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    // Buscar clientes por nombre
+    @Operation(summary = &quot;Buscar clientes por nombre&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/clientes/buscar&quot;)
+    public ResponseEntity&lt;List&lt;ContactoDTO&gt;&gt; buscarClientes(@RequestParam String nombre) {
+        try {
+<span class="nc" id="L185">            List&lt;ContactoDTO&gt; clientes = contactoService.buscarClientes(nombre);</span>
+<span class="nc" id="L186">            return ResponseEntity.ok(clientes);</span>
+<span class="nc" id="L187">        } catch (Exception e) {</span>
+<span class="nc" id="L188">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    // Buscar empresas por nombre
+    @Operation(summary = &quot;Buscar empresas por nombre&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/empresas/buscar&quot;)
+    public ResponseEntity&lt;List&lt;ContactoDTO&gt;&gt; buscarEmpresas(@RequestParam String nombre) {
+        try {
+<span class="nc" id="L198">            List&lt;ContactoDTO&gt; empresas = contactoService.buscarEmpresas(nombre);</span>
+<span class="nc" id="L199">            return ResponseEntity.ok(empresas);</span>
+<span class="nc" id="L200">        } catch (Exception e) {</span>
+<span class="nc" id="L201">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    // Obtener Contactos con paginado para listado
+    @Operation(summary = &quot;Obtener contactos paginados&quot;, 
+              description = &quot;Obtiene la lista paginada de contactos para el listado&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/listado&quot;)
+    public ResponseEntity&lt;Page&lt;ContactoDTO&gt;&gt; obtenerContactosPaginados(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) String tipo) {
+<span class="nc" id="L216">        Pageable pageable = PageRequest.of(page, size);</span>
+<span class="nc" id="L217">        TipoContacto tipoContacto = null;</span>
+<span class="nc bnc" id="L218" title="All 4 branches missed.">        if (tipo != null &amp;&amp; !tipo.trim().isEmpty()) {</span>
+            try {
+<span class="nc" id="L220">                tipoContacto = TipoContacto.valueOf(tipo.toUpperCase());</span>
+<span class="nc" id="L221">            } catch (IllegalArgumentException e) {</span>
+                // Tipo inválido, se ignorará
+<span class="nc" id="L223">            }</span>
+        }
+<span class="nc" id="L225">        Page&lt;ContactoDTO&gt; response = contactoService.obtenerContactosPaginadosConFiltros(pageable, search, activo, tipoContacto);</span>
+<span class="nc" id="L226">        return ResponseEntity.ok(response);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

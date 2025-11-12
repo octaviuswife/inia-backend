@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DosnServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">DosnServiceTest.java</span></div><h1>DosnServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Dosn;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.DosnRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DosnRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Tests unitarios para DosnService (Determinación de Otras Semillas por Número)
+ * 
+ * Funcionalidades testeadas:
+ * - Creación de análisis DOSN con estado EN_PROCESO
+ * - Validación de pesos y conteos
+ * - Actualización de análisis
+ * - Gestión de estados según rol de usuario
+ * - Desactivación y reactivación
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de DosnService&quot;)
+<span class="fc" id="L39">class DosnServiceTest {</span>
+
+    @Mock
+    private DosnRepository dosnRepository;
+
+    @Mock
+    private LoteRepository loteRepository;
+
+    @Mock
+    private AnalisisService analisisService;
+
+    @Mock
+    private AnalisisHistorialService analisisHistorialService;
+
+    @InjectMocks
+    private DosnService dosnService;
+
+    private DosnRequestDTO dosnRequestDTO;
+    private Lote lote;
+    private Dosn dosn;
+
+    @BeforeEach
+    void setUp() {
+        // ARRANGE: Preparar datos de prueba
+<span class="fc" id="L63">        lote = new Lote();</span>
+<span class="fc" id="L64">        lote.setLoteID(1L);</span>
+<span class="fc" id="L65">        lote.setNomLote(&quot;LOTE-DOSN-001&quot;);</span>
+<span class="fc" id="L66">        lote.setActivo(true);</span>
+
+<span class="fc" id="L68">        dosnRequestDTO = new DosnRequestDTO();</span>
+<span class="fc" id="L69">        dosnRequestDTO.setIdLote(1L);</span>
+<span class="fc" id="L70">        dosnRequestDTO.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L71">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L72">        dosnRequestDTO.setCumpleEstandar(true);</span>
+<span class="fc" id="L73">        dosnRequestDTO.setComentarios(&quot;Test DOSN&quot;);</span>
+
+<span class="fc" id="L75">        dosn = new Dosn();</span>
+<span class="fc" id="L76">        dosn.setAnalisisID(1L);</span>
+<span class="fc" id="L77">        dosn.setLote(lote);</span>
+<span class="fc" id="L78">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L79">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L80">        dosn.setEstado(Estado.EN_PROCESO);</span>
+<span class="fc" id="L81">        dosn.setActivo(true);</span>
+<span class="fc" id="L82">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear DOSN - debe asignar estado EN_PROCESO&quot;)
+    void crearDosn_debeAsignarEstadoEnProceso() {
+        // ARRANGE
+<span class="fc" id="L88">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L89">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L90">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L91">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+
+        // ACT
+<span class="fc" id="L94">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L97">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L98">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L99">        verify(analisisHistorialService, times(1)).registrarCreacion(any(Dosn.class));</span>
+<span class="fc" id="L100">        verify(analisisService, times(1)).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L101">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear DOSN con lote inexistente - debe lanzar excepción&quot;)
+    void crearDosn_conLoteInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L107">        when(loteRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L108">        dosnRequestDTO.setIdLote(999L);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L111">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L112">            dosnService.crearDosn(dosnRequestDTO);</span>
+<span class="nc" id="L113">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
+<span class="fc" id="L114">    }</span>
+
+    @Test
+    @DisplayName(&quot;Validar gramos analizados - debe aceptar valores positivos&quot;)
+    void validarGramosAnalizados_debeAceptarValoresPositivos() {
+        // ARRANGE
+<span class="fc" id="L120">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+        
+<span class="fc" id="L122">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L123">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L124">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L125">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+
+        // ACT
+<span class="fc" id="L128">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L131">        assertNotNull(resultado);</span>
+<span class="fc" id="L132">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L133">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener DOSN por ID - debe retornar el análisis si existe&quot;)
+    void obtenerDosnPorId_cuandoExiste_debeRetornarDosn() {
+        // ARRANGE
+<span class="fc" id="L139">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+
+        // ACT
+<span class="fc" id="L142">        DosnDTO resultado = dosnService.obtenerDosnPorId(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L145">        assertNotNull(resultado);</span>
+<span class="fc" id="L146">        assertEquals(1L, resultado.getAnalisisID());</span>
+<span class="fc" id="L147">        verify(dosnRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L148">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener DOSN por ID inexistente - debe lanzar excepción&quot;)
+    void obtenerDosnPorId_cuandoNoExiste_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L154">        when(dosnRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L157">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L158">            dosnService.obtenerDosnPorId(999L);</span>
+<span class="nc" id="L159">        }, &quot;Debe lanzar excepción cuando el análisis no existe&quot;);</span>
+<span class="fc" id="L160">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar DOSN - debe actualizar correctamente&quot;)
+    void actualizarDosn_debeActualizarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L166">        dosnRequestDTO.setComentarios(&quot;Comentarios actualizados&quot;);</span>
+        
+<span class="fc" id="L168">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L169">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L170">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L171">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
+
+        // ACT
+<span class="fc" id="L174">        DosnDTO resultado = dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L177">        assertNotNull(resultado);</span>
+<span class="fc" id="L178">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L179">        verify(analisisHistorialService, times(1)).registrarModificacion(any(Dosn.class));</span>
+<span class="fc" id="L180">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar DOSN APROBADA por ANALISTA - debe cambiar a PENDIENTE_APROBACION&quot;)
+    void actualizarDosn_aprobadaPorAnalista_debeCambiarAPendiente() {
+        // ARRANGE
+<span class="fc" id="L186">        dosn.setEstado(Estado.APROBADO);</span>
+        
+<span class="fc" id="L188">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L189">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L190">        when(analisisService.esAnalista()).thenReturn(true);</span>
+<span class="fc" id="L191">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L192">        doNothing().when(analisisHistorialService).registrarModificacion(any(Dosn.class));</span>
+
+        // ACT
+<span class="fc" id="L195">        dosnService.actualizarDosn(1L, dosnRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L198">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L199">        verify(analisisService, times(1)).esAnalista();</span>
+<span class="fc" id="L200">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar DOSN inexistente - debe lanzar excepción&quot;)
+    void actualizarDosn_noExistente_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L206">        when(dosnRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L209">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L210">            dosnService.actualizarDosn(999L, dosnRequestDTO);</span>
+<span class="nc" id="L211">        });</span>
+        
+<span class="fc" id="L213">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
+<span class="fc" id="L214">        verify(dosnRepository, never()).save(any(Dosn.class));</span>
+<span class="fc" id="L215">    }</span>
+
+    @Test
+    @DisplayName(&quot;Desactivar DOSN - debe cambiar activo a false&quot;)
+    void desactivarDosn_debeCambiarActivoAFalse() {
+        // ARRANGE
+<span class="fc" id="L221">        doNothing().when(analisisService).desactivarAnalisis(eq(1L), any());</span>
+
+        // ACT
+<span class="fc" id="L224">        dosnService.desactivarDosn(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L227">        verify(analisisService, times(1)).desactivarAnalisis(eq(1L), any());</span>
+<span class="fc" id="L228">    }</span>
+
+    @Test
+    @DisplayName(&quot;Reactivar DOSN - debe cambiar activo a true&quot;)
+    void reactivarDosn_debeCambiarActivoATrue() {
+        // ARRANGE
+<span class="fc" id="L234">        dosn.setActivo(false);</span>
+<span class="fc" id="L235">        DosnDTO dosnDTO = new DosnDTO();</span>
+<span class="fc" id="L236">        dosnDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L237">        dosnDTO.setActivo(true);</span>
+        
+<span class="fc" id="L239">        when(analisisService.reactivarAnalisis(any(Long.class), any(), any())).thenReturn(dosnDTO);</span>
+
+        // ACT
+<span class="fc" id="L242">        dosnService.reactivarDosn(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L245">        verify(analisisService, times(1)).reactivarAnalisis(any(Long.class), any(), any());</span>
+<span class="fc" id="L246">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar DOSN - debe desactivar el análisis&quot;)
+    void eliminarDosn_debeDesactivarAnalisis() {
+        // ARRANGE
+<span class="fc" id="L252">        when(dosnRepository.findById(1L)).thenReturn(Optional.of(dosn));</span>
+<span class="fc" id="L253">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+
+        // ACT
+<span class="fc" id="L256">        dosnService.eliminarDosn(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L259">        verify(dosnRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L260">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L261">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear DOSN con cumple estándar true - debe guardar correctamente&quot;)
+    void crearDosn_conCumpleEstandarTrue_debeGuardar() {
+        // ARRANGE
+<span class="fc" id="L267">        dosnRequestDTO.setCumpleEstandar(true);</span>
+<span class="fc" id="L268">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+        
+<span class="fc" id="L270">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L271">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L272">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L273">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+
+        // ACT
+<span class="fc" id="L276">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L279">        assertNotNull(resultado);</span>
+<span class="fc" id="L280">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L281">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear DOSN con cumple estándar false - debe guardar correctamente&quot;)
+    void crearDosn_conCumpleEstandarFalse_debeGuardar() {
+        // ARRANGE
+<span class="fc" id="L287">        dosnRequestDTO.setCumpleEstandar(false);</span>
+<span class="fc" id="L288">        dosnRequestDTO.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+        
+<span class="fc" id="L290">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L291">        when(dosnRepository.save(any(Dosn.class))).thenReturn(dosn);</span>
+<span class="fc" id="L292">        doNothing().when(analisisService).establecerFechaInicio(any(Dosn.class));</span>
+<span class="fc" id="L293">        doNothing().when(analisisHistorialService).registrarCreacion(any(Dosn.class));</span>
+
+        // ACT
+<span class="fc" id="L296">        DosnDTO resultado = dosnService.crearDosn(dosnRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L299">        assertNotNull(resultado);</span>
+<span class="fc" id="L300">        verify(dosnRepository, times(1)).save(any(Dosn.class));</span>
+<span class="fc" id="L301">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

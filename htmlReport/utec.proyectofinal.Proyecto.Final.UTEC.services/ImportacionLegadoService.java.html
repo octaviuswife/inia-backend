@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportacionLegadoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">ImportacionLegadoService.java</span></div><h1>ImportacionLegadoService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ImportacionLegadoResponseDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ImportacionLegadoResponseDTO.ErrorImportacionDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoContacto;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Servicio para importar datos legados desde archivos Excel
+ */
+@Service
+<span class="fc" id="L28">@Slf4j</span>
+@RequiredArgsConstructor
+public class ImportacionLegadoService {
+
+    private final LegadoRepository legadoRepository;
+    private final LoteRepository loteRepository;
+    private final EspecieRepository especieRepository;
+    private final CultivarRepository cultivarRepository;
+    private final CatalogoCrudRepository catalogoRepository;
+    private final ContactoRepository contactoRepository;
+
+    // Mapeo de columnas del Excel (índice basado en 0)
+    private static final int COL_EMPRESA = 0;           // A
+    private static final int COL_COD_DOC = 1;           // B
+    private static final int COL_NOM_DOC = 2;           // C
+    private static final int COL_NRO_DOC = 3;           // D
+    private static final int COL_DEPOSITO = 4;          // E
+    private static final int COL_FAMILIA = 5;           // F
+    private static final int COL_ESPECIE = 6;           // G
+    private static final int COL_VARIEDAD = 7;          // H
+    private static final int COL_LOTE = 8;              // I
+    private static final int COL_TIPO_SEMILLA = 9;     // J
+    private static final int COL_CANTIDAD = 10;         // K
+    private static final int COL_PRECIO_UNIT = 11;      // L
+    private static final int COL_ORIGEN = 12;           // M
+    private static final int COL_UNIDAD = 13;           // N
+    private static final int COL_NRO_FICHA = 14;        // O
+    private static final int COL_FECHA_R = 15;          // P
+    private static final int COL_GERM_C = 16;           // Q
+    private static final int COL_GERM_SC = 17;          // R
+    private static final int COL_PESO_1000 = 18;        // S
+    private static final int COL_PURA = 19;             // T
+    private static final int COL_OC = 20;               // U
+    private static final int COL_PORC_OC = 21;          // V
+    private static final int COL_MALEZA = 22;           // W
+    private static final int COL_MALEZA_TOL = 23;       // X
+    private static final int COL_MAT_INERTE = 24;       // Y
+    private static final int COL_PURA_I = 25;           // Z
+    private static final int COL_OC_I = 26;             // AA
+    private static final int COL_MALEZA_I = 27;         // AB
+    private static final int COL_MALEZA_TOL_I = 28;     // AC
+    private static final int COL_MAT_INERTE_I = 29;     // AD
+    private static final int COL_PESO_HEC = 30;         // AE
+    private static final int COL_TRATADA = 31;          // AF
+    private static final int COL_NRO_TRANS = 32;        // AG
+    private static final int COL_FEC_DOC = 33;          // AH
+    private static final int COL_CTA_MOV = 34;          // AI
+    private static final int COL_CA_CC = 35;            // AJ
+    private static final int COL_FF = 36;               // AK
+    private static final int COL_TITULAR = 37;          // AL
+    private static final int COL_CTA_ART = 38;          // AM
+    private static final int COL_PROVEEDOR = 39;        // AN
+    private static final int COL_DOC_AFECT = 40;        // AO
+    private static final int COL_NRO_AFECT = 41;        // AP
+    private static final int COL_MONEDA = 42;           // AQ
+    private static final int COL_IMPORTE_MN = 43;       // AR
+    private static final int COL_IMPORTE_MO = 44;       // AS
+    private static final int COL_OBS_LOTE = 45;         // AT
+    private static final int COL_STK = 46;              // AU
+    private static final int COL_REFERENCIA = 47;       // AV
+    private static final int COL_TIPO_TRAT_GERM = 48;   // AW
+    private static final int COL_FECHA_SC_I = 49;       // AX
+    private static final int COL_FECHA_C_I = 50;        // AY
+    private static final int COL_GERM_TOTAL_SC_I = 51;  // AZ
+    private static final int COL_GERM_TOTAL_C_I = 52;   // BA
+    private static final int COL_OBS_TRANS = 53;        // BB
+    private static final int COL_OTRAS_SEMILLAS_OBSER = 54; // BC
+    private static final int COL_SEMILLA_PURA = 55;     // BD
+    private static final int COL_SEMILLA_OTROS_CULTIVOS = 56; // BE
+    private static final int COL_SEMILLA_MALEZAS = 57;  // BF
+    private static final int COL_SEMILLA_MALEZAS_TOL = 58; // BG
+    private static final int COL_MATERIA_INERTE = 59;   // BH
+
+    /**
+     * Importa datos desde un archivo Excel
+     */
+    @Transactional
+    public ImportacionLegadoResponseDTO importarDesdeExcel(MultipartFile archivo, boolean soloValidar) {
+<span class="fc" id="L106">        ImportacionLegadoResponseDTO response = new ImportacionLegadoResponseDTO();</span>
+<span class="fc" id="L107">        response.setExitoso(false);</span>
+<span class="fc" id="L108">        response.setTotalFilas(0);</span>
+<span class="fc" id="L109">        response.setFilasImportadas(0);</span>
+<span class="fc" id="L110">        response.setFilasConErrores(0);</span>
+        
+<span class="nc" id="L112">        try (Workbook workbook = new XSSFWorkbook(archivo.getInputStream())) {</span>
+<span class="nc" id="L113">            Sheet sheet = workbook.getSheetAt(0);</span>
+            
+<span class="nc" id="L115">            int totalFilas = 0;</span>
+<span class="nc" id="L116">            int filasImportadas = 0;</span>
+<span class="nc" id="L117">            int filasConErrores = 0;</span>
+            
+            // Empezar desde la fila 1 (asumiendo que la fila 0 son encabezados)
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            for (int i = 1; i &lt;= sheet.getLastRowNum(); i++) {</span>
+<span class="nc" id="L121">                Row row = sheet.getRow(i);</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">                if (row == null || esFilaVacia(row)) {</span>
+<span class="nc" id="L123">                    continue;</span>
+                }
+                
+<span class="nc" id="L126">                totalFilas++;</span>
+                
+                try {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">                    if (!soloValidar) {</span>
+<span class="nc" id="L130">                        procesarFila(row, i, archivo.getOriginalFilename());</span>
+                    }
+<span class="nc" id="L132">                    filasImportadas++;</span>
+<span class="nc" id="L133">                } catch (Exception e) {</span>
+<span class="nc" id="L134">                    filasConErrores++;</span>
+<span class="nc" id="L135">                    response.getErrores().add(new ErrorImportacionDTO(</span>
+<span class="nc" id="L136">                        i + 1, // +1 para mostrar número de fila en Excel (1-based)</span>
+                        &quot;General&quot;,
+<span class="nc" id="L138">                        e.getMessage(),</span>
+                        &quot;&quot;
+                    ));
+<span class="nc" id="L141">                    log.error(&quot;Error procesando fila {}: {}&quot;, i, e.getMessage(), e);</span>
+<span class="nc" id="L142">                }</span>
+            }
+            
+<span class="nc" id="L145">            response.setTotalFilas(totalFilas);</span>
+<span class="nc" id="L146">            response.setFilasImportadas(filasImportadas);</span>
+<span class="nc" id="L147">            response.setFilasConErrores(filasConErrores);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">            response.setExitoso(filasConErrores == 0);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">            response.setMensaje(soloValidar ? </span>
+<span class="nc" id="L150">                &quot;Validación completada: &quot; + totalFilas + &quot; filas validadas&quot; :</span>
+<span class="nc" id="L151">                &quot;Importación completada: &quot; + filasImportadas + &quot; filas importadas, &quot; + filasConErrores + &quot; con errores&quot;</span>
+            );
+            
+<span class="fc" id="L154">        } catch (IOException e) {</span>
+<span class="fc" id="L155">            response.setMensaje(&quot;Error al leer el archivo Excel: &quot; + e.getMessage());</span>
+<span class="fc" id="L156">            log.error(&quot;Error al leer archivo Excel&quot;, e);</span>
+<span class="nc" id="L157">        }</span>
+        
+<span class="fc" id="L159">        return response;</span>
+    }
+
+    /**
+     * Procesa una fila del Excel y crea las entidades necesarias
+     */
+    private void procesarFila(Row row, int numeroFila, String nombreArchivo) {
+        // 1. Extraer y/o crear entidades relacionadas
+<span class="nc" id="L167">        Contacto empresa = obtenerOCrearEmpresa(getCellValueAsString(row, COL_EMPRESA));</span>
+<span class="nc" id="L168">        Catalogo deposito = obtenerOCrearCatalogo(TipoCatalogo.DEPOSITO, getCellValueAsString(row, COL_DEPOSITO));</span>
+<span class="nc" id="L169">        Especie especie = obtenerOCrearEspecie(getCellValueAsString(row, COL_ESPECIE));</span>
+<span class="nc" id="L170">        Cultivar cultivar = obtenerOCrearCultivar(getCellValueAsString(row, COL_VARIEDAD), especie);</span>
+<span class="nc" id="L171">        Catalogo origen = obtenerOCrearCatalogo(TipoCatalogo.ORIGEN, getCellValueAsString(row, COL_ORIGEN));</span>
+
+        // 2. Crear o actualizar Lote
+<span class="nc" id="L174">        Lote lote = crearLote(row, empresa, cultivar, deposito, origen);</span>
+<span class="nc" id="L175">        lote = loteRepository.save(lote);</span>
+
+        // 3. Crear registro Legado con el resto de la información
+<span class="nc" id="L178">        Legado legado = crearLegado(row, lote, numeroFila, nombreArchivo);</span>
+<span class="nc" id="L179">        legadoRepository.save(legado);</span>
+<span class="nc" id="L180">    }</span>
+
+    /**
+     * Obtiene o crea una empresa (Contacto tipo EMPRESA)
+     */
+    private Contacto obtenerOCrearEmpresa(String nombreEmpresa) {
+<span class="nc bnc" id="L186" title="All 4 branches missed.">        if (nombreEmpresa == null || nombreEmpresa.trim().isEmpty()) {</span>
+<span class="nc" id="L187">            return null;</span>
+        }
+        
+        // Buscar si ya existe
+<span class="nc" id="L191">        Optional&lt;Contacto&gt; existente = contactoRepository.findByNombreAndTipoAndActivoTrue(</span>
+<span class="nc" id="L192">            nombreEmpresa.trim(), TipoContacto.EMPRESA</span>
+        );
+        
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (existente.isPresent()) {</span>
+<span class="nc" id="L196">            return existente.get();</span>
+        }
+        
+        // Crear nueva empresa
+<span class="nc" id="L200">        Contacto empresa = new Contacto();</span>
+<span class="nc" id="L201">        empresa.setNombre(nombreEmpresa.trim());</span>
+<span class="nc" id="L202">        empresa.setContacto(&quot;Importado desde legado&quot;); // Contacto por defecto</span>
+<span class="nc" id="L203">        empresa.setTipo(TipoContacto.EMPRESA);</span>
+<span class="nc" id="L204">        empresa.setActivo(true);</span>
+        
+<span class="nc" id="L206">        return contactoRepository.save(empresa);</span>
+    }
+
+    /**
+     * Obtiene o crea un catálogo
+     */
+    private Catalogo obtenerOCrearCatalogo(TipoCatalogo tipo, String valorCompleto) {
+<span class="nc bnc" id="L213" title="All 4 branches missed.">        if (valorCompleto == null || valorCompleto.trim().isEmpty()) {</span>
+<span class="nc" id="L214">            return null;</span>
+        }
+        
+        // Parsear el valor (quitar código si existe, ej: &quot;207 - Planta de Procesamiento&quot; -&gt; &quot;Planta de Procesamiento&quot;)
+<span class="nc" id="L218">        String valor = parsearValorCatalogo(valorCompleto);</span>
+        
+        // Buscar si ya existe
+<span class="nc" id="L221">        Optional&lt;Catalogo&gt; existente = catalogoRepository.findByTipoAndValorAndActivoTrue(tipo, valor);</span>
+        
+<span class="nc bnc" id="L223" title="All 2 branches missed.">        if (existente.isPresent()) {</span>
+<span class="nc" id="L224">            return existente.get();</span>
+        }
+        
+        // Crear nuevo catálogo
+<span class="nc" id="L228">        Catalogo catalogo = new Catalogo();</span>
+<span class="nc" id="L229">        catalogo.setTipo(tipo);</span>
+<span class="nc" id="L230">        catalogo.setValor(valor);</span>
+<span class="nc" id="L231">        catalogo.setActivo(true);</span>
+        
+<span class="nc" id="L233">        return catalogoRepository.save(catalogo);</span>
+    }
+
+    /**
+     * Obtiene o crea una especie con búsqueda inteligente para evitar duplicados
+     */
+    private Especie obtenerOCrearEspecie(String nombreCompletoEspecie) {
+<span class="nc bnc" id="L240" title="All 4 branches missed.">        if (nombreCompletoEspecie == null || nombreCompletoEspecie.trim().isEmpty()) {</span>
+<span class="nc" id="L241">            return null;</span>
+        }
+        
+        // Parsear el nombre (quitar código, ej: &quot;1517 - RAIGRAS&quot; -&gt; &quot;RAIGRAS&quot;)
+<span class="nc" id="L245">        String nombreComun = parsearValorCatalogo(nombreCompletoEspecie);</span>
+        
+        // Normalizar el nombre (trim y quitar espacios múltiples)
+<span class="nc" id="L248">        nombreComun = nombreComun.trim().replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+        
+        // 1. Intentar búsqueda exacta (case-insensitive)
+<span class="nc" id="L251">        Optional&lt;Especie&gt; existente = especieRepository.findByNombreComunIgnoreCase(nombreComun);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (existente.isPresent()) {</span>
+<span class="nc" id="L253">            log.debug(&quot;Especie encontrada (búsqueda exacta): {}&quot;, nombreComun);</span>
+<span class="nc" id="L254">            return existente.get();</span>
+        }
+        
+        // 2. Búsqueda flexible: el nombre de la BD puede contener el nombre buscado
+        // Ejemplo: buscamos &quot;Avena blanca&quot; y en BD está &quot;Avena blanca / Avena amarilla&quot;
+<span class="nc" id="L259">        List&lt;Especie&gt; coincidencias = especieRepository.buscarPorNombreComunInicio(nombreComun);</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">        if (!coincidencias.isEmpty()) {</span>
+<span class="nc" id="L261">            log.debug(&quot;Especie encontrada (búsqueda por inicio): {} -&gt; {}&quot;, nombreComun, coincidencias.get(0).getNombreComun());</span>
+<span class="nc" id="L262">            return coincidencias.get(0);</span>
+        }
+        
+        // 3. Búsqueda aún más flexible: buscar por palabras clave
+        // Si buscamos &quot;RAIGRAS&quot; debería encontrar &quot;Raigrás&quot;
+<span class="nc" id="L267">        String nombreSinAcentos = removerAcentos(nombreComun);</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        for (Especie especie : especieRepository.findByActivoTrue()) {</span>
+<span class="nc" id="L269">            String nombreBD = removerAcentos(especie.getNombreComun());</span>
+            
+            // Verificar si el nombre buscado está contenido en el nombre de la BD
+<span class="nc bnc" id="L272" title="All 2 branches missed.">            if (nombreBD.toLowerCase().contains(nombreSinAcentos.toLowerCase())) {</span>
+<span class="nc" id="L273">                log.debug(&quot;Especie encontrada (búsqueda flexible): {} -&gt; {}&quot;, nombreComun, especie.getNombreComun());</span>
+<span class="nc" id="L274">                return especie;</span>
+            }
+            
+            // Verificar si el nombre de la BD está contenido en el nombre buscado
+<span class="nc bnc" id="L278" title="All 2 branches missed.">            if (nombreSinAcentos.toLowerCase().contains(nombreBD.toLowerCase())) {</span>
+<span class="nc" id="L279">                log.debug(&quot;Especie encontrada (búsqueda inversa): {} -&gt; {}&quot;, nombreComun, especie.getNombreComun());</span>
+<span class="nc" id="L280">                return especie;</span>
+            }
+<span class="nc" id="L282">        }</span>
+        
+        // 4. Si no existe, crear nueva especie
+<span class="nc" id="L285">        log.info(&quot;Creando nueva especie: {}&quot;, nombreComun);</span>
+<span class="nc" id="L286">        Especie especie = new Especie();</span>
+<span class="nc" id="L287">        especie.setNombreComun(nombreComun);</span>
+<span class="nc" id="L288">        especie.setNombreCientifico(&quot;&quot;); // Vacío por ahora</span>
+<span class="nc" id="L289">        especie.setActivo(true);</span>
+        
+<span class="nc" id="L291">        return especieRepository.save(especie);</span>
+    }
+    
+    /**
+     * Remueve acentos de un texto para búsqueda flexible
+     */
+    private String removerAcentos(String texto) {
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        if (texto == null) return &quot;&quot;;</span>
+        
+<span class="nc" id="L300">        String normalized = java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD);</span>
+<span class="nc" id="L301">        return normalized.replaceAll(&quot;\\p{InCombiningDiacriticalMarks}+&quot;, &quot;&quot;);</span>
+    }
+
+    /**
+     * Obtiene o crea un cultivar
+     */
+    private Cultivar obtenerOCrearCultivar(String nombreCompletoCultivar, Especie especie) {
+<span class="nc bnc" id="L308" title="All 6 branches missed.">        if (nombreCompletoCultivar == null || nombreCompletoCultivar.trim().isEmpty() || especie == null) {</span>
+<span class="nc" id="L309">            return null;</span>
+        }
+        
+        // Parsear el nombre (quitar código)
+<span class="nc" id="L313">        String nombre = parsearValorCatalogo(nombreCompletoCultivar);</span>
+        
+        // Buscar si ya existe para esta especie
+<span class="nc" id="L316">        Optional&lt;Cultivar&gt; existente = cultivarRepository.findByNombreAndEspecie_EspecieID(nombre, especie.getEspecieID());</span>
+        
+<span class="nc bnc" id="L318" title="All 2 branches missed.">        if (existente.isPresent()) {</span>
+<span class="nc" id="L319">            return existente.get();</span>
+        }
+        
+        // Crear nuevo cultivar
+<span class="nc" id="L323">        Cultivar cultivar = new Cultivar();</span>
+<span class="nc" id="L324">        cultivar.setNombre(nombre);</span>
+<span class="nc" id="L325">        cultivar.setEspecie(especie);</span>
+<span class="nc" id="L326">        cultivar.setActivo(true);</span>
+        
+<span class="nc" id="L328">        return cultivarRepository.save(cultivar);</span>
+    }
+
+    /**
+     * Crea un Lote con los datos extraídos
+     */
+    private Lote crearLote(Row row, Contacto empresa, Cultivar cultivar, 
+                           Catalogo deposito, Catalogo origen) {
+        
+<span class="nc" id="L337">        String ficha = getCellValueAsString(row, COL_NRO_FICHA);</span>
+        
+        // Verificar si ya existe un lote con esta ficha
+<span class="nc" id="L340">        Optional&lt;Lote&gt; existente = loteRepository.findByFicha(ficha);</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">        if (existente.isPresent()) {</span>
+<span class="nc" id="L342">            return existente.get(); // Reutilizar lote existente</span>
+        }
+        
+<span class="nc" id="L345">        Lote lote = new Lote();</span>
+<span class="nc" id="L346">        lote.setFicha(ficha);</span>
+<span class="nc" id="L347">        lote.setCultivar(cultivar);</span>
+<span class="nc" id="L348">        lote.setEmpresa(empresa);</span>
+<span class="nc" id="L349">        lote.setDeposito(deposito);</span>
+<span class="nc" id="L350">        lote.setOrigen(origen);</span>
+        
+        // Kilos limpios
+<span class="nc" id="L353">        BigDecimal cantidad = getCellValueAsBigDecimal(row, COL_CANTIDAD);</span>
+<span class="nc" id="L354">        lote.setKilosLimpios(cantidad);</span>
+        
+        // Observaciones
+<span class="nc" id="L357">        lote.setObservaciones(getCellValueAsString(row, COL_OBS_LOTE));</span>
+        
+        // Fecha de registro (Fecha R.)
+<span class="nc" id="L360">        LocalDate fechaRegistro = getCellValueAsDate(row, COL_FECHA_R);</span>
+<span class="nc" id="L361">        lote.setFechaRecibo(fechaRegistro);</span>
+        
+<span class="nc" id="L363">        lote.setActivo(true);</span>
+        
+<span class="nc" id="L365">        return lote;</span>
+    }
+
+    /**
+     * Crea un registro Legado con todos los campos restantes
+     */
+    private Legado crearLegado(Row row, Lote lote, int numeroFila, String nombreArchivo) {
+<span class="nc" id="L372">        Legado legado = new Legado();</span>
+        
+<span class="nc" id="L374">        legado.setLote(lote);</span>
+        
+        // Datos del documento
+<span class="nc" id="L377">        legado.setCodDoc(getCellValueAsString(row, COL_COD_DOC));</span>
+<span class="nc" id="L378">        legado.setNomDoc(getCellValueAsString(row, COL_NOM_DOC));</span>
+<span class="nc" id="L379">        legado.setNroDoc(getCellValueAsString(row, COL_NRO_DOC));</span>
+<span class="nc" id="L380">        legado.setFechaDoc(getCellValueAsDate(row, COL_FEC_DOC));</span>
+<span class="nc" id="L381">        legado.setFamilia(getCellValueAsString(row, COL_FAMILIA));</span>
+        
+        // Tipo de semilla y tratamiento
+<span class="nc" id="L384">        legado.setTipoSemilla(getCellValueAsString(row, COL_TIPO_SEMILLA));</span>
+<span class="nc" id="L385">        legado.setTipoTratGerm(getCellValueAsString(row, COL_TIPO_TRAT_GERM));</span>
+        
+
+        // Datos de germinación
+<span class="nc" id="L389">        legado.setGermC(getCellValueAsInteger(row, COL_GERM_C));</span>
+<span class="nc" id="L390">        legado.setGermSC(getCellValueAsInteger(row, COL_GERM_SC));</span>
+<span class="nc" id="L391">        legado.setPeso1000(getCellValueAsBigDecimal(row, COL_PESO_1000));</span>
+        
+        // Datos de pureza
+<span class="nc" id="L394">        legado.setPura(getCellValueAsBigDecimal(row, COL_PURA));</span>
+<span class="nc" id="L395">        legado.setOc(getCellValueAsBigDecimal(row, COL_OC));</span>
+<span class="nc" id="L396">        legado.setPorcOC(getCellValueAsBigDecimal(row, COL_PORC_OC));</span>
+<span class="nc" id="L397">        legado.setMaleza(getCellValueAsBigDecimal(row, COL_MALEZA));</span>
+<span class="nc" id="L398">        legado.setMalezaTol(getCellValueAsBigDecimal(row, COL_MALEZA_TOL));</span>
+<span class="nc" id="L399">        legado.setMatInerte(getCellValueAsBigDecimal(row, COL_MAT_INERTE));</span>
+        
+        // Datos de pureza I
+<span class="nc" id="L402">        legado.setPuraI(getCellValueAsBigDecimal(row, COL_PURA_I));</span>
+<span class="nc" id="L403">        legado.setOcI(getCellValueAsBigDecimal(row, COL_OC_I));</span>
+<span class="nc" id="L404">        legado.setMalezaI(getCellValueAsBigDecimal(row, COL_MALEZA_I));</span>
+<span class="nc" id="L405">        legado.setMalezaTolI(getCellValueAsBigDecimal(row, COL_MALEZA_TOL_I));</span>
+<span class="nc" id="L406">        legado.setMatInerteI(getCellValueAsBigDecimal(row, COL_MAT_INERTE_I));</span>
+        
+        // Peso HEC
+<span class="nc" id="L409">        legado.setPesoHEC(getCellValueAsBigDecimal(row, COL_PESO_HEC));</span>
+        
+        // Datos de transacción
+<span class="nc" id="L412">        legado.setNroTrans(getCellValueAsString(row, COL_NRO_TRANS));</span>
+<span class="nc" id="L413">        legado.setCtaMov(getCellValueAsString(row, COL_CTA_MOV));</span>
+        
+        // Stock
+<span class="nc" id="L416">        legado.setStk(getCellValueAsBigDecimal(row, COL_STK));</span>
+        
+        // Fechas adicionales
+<span class="nc" id="L419">        legado.setFechaSC_I(getCellValueAsDate(row, COL_FECHA_SC_I));</span>
+<span class="nc" id="L420">        legado.setFechaC_I(getCellValueAsDate(row, COL_FECHA_C_I));</span>
+        
+        // Germinación total
+<span class="nc" id="L423">        legado.setGermTotalSC_I(getCellValueAsInteger(row, COL_GERM_TOTAL_SC_I));</span>
+<span class="nc" id="L424">        legado.setGermTotalC_I(getCellValueAsInteger(row, COL_GERM_TOTAL_C_I));</span>
+        
+        // Observaciones
+<span class="nc" id="L427">        legado.setOtrasSemillasObser(getCellValueAsString(row, COL_OTRAS_SEMILLAS_OBSER));</span>
+        
+        // Análisis de semillas
+<span class="nc" id="L430">        legado.setSemillaPura(getCellValueAsString(row, COL_SEMILLA_PURA));</span>
+<span class="nc" id="L431">        legado.setSemillaOtrosCultivos(getCellValueAsString(row, COL_SEMILLA_OTROS_CULTIVOS));</span>
+<span class="nc" id="L432">        legado.setSemillaMalezas(getCellValueAsString(row, COL_SEMILLA_MALEZAS));</span>
+<span class="nc" id="L433">        legado.setSemillaMalezasToleradas(getCellValueAsString(row, COL_SEMILLA_MALEZAS_TOL));</span>
+<span class="nc" id="L434">        legado.setMateriaInerte(getCellValueAsString(row, COL_MATERIA_INERTE));</span>
+        
+        // Metadatos
+<span class="nc" id="L437">        legado.setFechaImportacion(LocalDate.now());</span>
+<span class="nc" id="L438">        legado.setArchivoOrigen(nombreArchivo);</span>
+<span class="nc" id="L439">        legado.setFilaExcel(numeroFila);</span>
+<span class="nc" id="L440">        legado.setActivo(true);</span>
+        
+<span class="nc" id="L442">        return legado;</span>
+    }
+
+    // ==================== MÉTODOS AUXILIARES ====================
+
+    /**
+     * Parsea un valor de catálogo eliminando el código inicial
+     * Ej: &quot;207 - Planta de Procesamiento&quot; -&gt; &quot;Planta de Procesamiento&quot;
+     * Ej: &quot;1517 - RAIGRAS&quot; -&gt; &quot;RAIGRAS&quot;
+     */
+    private String parsearValorCatalogo(String valorCompleto) {
+<span class="nc bnc" id="L453" title="All 4 branches missed.">        if (valorCompleto == null || valorCompleto.trim().isEmpty()) {</span>
+<span class="nc" id="L454">            return &quot;&quot;;</span>
+        }
+        
+        // Buscar patrón: número - texto
+<span class="nc" id="L458">        Pattern pattern = Pattern.compile(&quot;^\\d+\\s*-\\s*(.+)$&quot;);</span>
+<span class="nc" id="L459">        Matcher matcher = pattern.matcher(valorCompleto.trim());</span>
+        
+<span class="nc bnc" id="L461" title="All 2 branches missed.">        if (matcher.find()) {</span>
+<span class="nc" id="L462">            return matcher.group(1).trim();</span>
+        }
+        
+<span class="nc" id="L465">        return valorCompleto.trim();</span>
+    }
+
+    /**
+     * Extrae solo el código de un valor
+     * Ej: &quot;0522 - Procesamiento y almacenaje de Semillas LE&quot; -&gt; &quot;0522&quot;
+     * Ej: &quot;050 - INIA&quot; -&gt; &quot;050&quot;
+     */
+    private String parsearCodigo(String valorCompleto) {
+<span class="nc bnc" id="L474" title="All 4 branches missed.">        if (valorCompleto == null || valorCompleto.trim().isEmpty()) {</span>
+<span class="nc" id="L475">            return null;</span>
+        }
+        
+<span class="nc" id="L478">        Pattern pattern = Pattern.compile(&quot;^(\\d+)\\s*-&quot;);</span>
+<span class="nc" id="L479">        Matcher matcher = pattern.matcher(valorCompleto.trim());</span>
+        
+<span class="nc bnc" id="L481" title="All 2 branches missed.">        if (matcher.find()) {</span>
+<span class="nc" id="L482">            return matcher.group(1).trim();</span>
+        }
+        
+        // Si no hay guión, intentar devolver solo números al inicio
+<span class="nc" id="L486">        pattern = Pattern.compile(&quot;^(\\d+)&quot;);</span>
+<span class="nc" id="L487">        matcher = pattern.matcher(valorCompleto.trim());</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">        if (matcher.find()) {</span>
+<span class="nc" id="L489">            return matcher.group(1).trim();</span>
+        }
+        
+<span class="nc" id="L492">        return valorCompleto.trim();</span>
+    }
+
+    /**
+     * Verifica si una fila está vacía
+     */
+    private boolean esFilaVacia(Row row) {
+<span class="nc bnc" id="L499" title="All 2 branches missed.">        if (row == null) {</span>
+<span class="nc" id="L500">            return true;</span>
+        }
+        
+<span class="nc bnc" id="L503" title="All 2 branches missed.">        for (int i = 0; i &lt; row.getLastCellNum(); i++) {</span>
+<span class="nc" id="L504">            Cell cell = row.getCell(i);</span>
+<span class="nc bnc" id="L505" title="All 4 branches missed.">            if (cell != null &amp;&amp; cell.getCellType() != CellType.BLANK) {</span>
+<span class="nc" id="L506">                String value = getCellValueAsString(row, i);</span>
+<span class="nc bnc" id="L507" title="All 4 branches missed.">                if (value != null &amp;&amp; !value.trim().isEmpty()) {</span>
+<span class="nc" id="L508">                    return false;</span>
+                }
+            }
+        }
+<span class="nc" id="L512">        return true;</span>
+    }
+
+    /**
+     * Obtiene el valor de una celda como String
+     */
+    private String getCellValueAsString(Row row, int columnIndex) {
+<span class="nc" id="L519">        Cell cell = row.getCell(columnIndex);</span>
+<span class="nc bnc" id="L520" title="All 2 branches missed.">        if (cell == null) {</span>
+<span class="nc" id="L521">            return null;</span>
+        }
+        
+<span class="nc bnc" id="L524" title="All 5 branches missed.">        switch (cell.getCellType()) {</span>
+            case STRING:
+<span class="nc" id="L526">                return cell.getStringCellValue();</span>
+            case NUMERIC:
+<span class="nc bnc" id="L528" title="All 2 branches missed.">                if (DateUtil.isCellDateFormatted(cell)) {</span>
+<span class="nc" id="L529">                    return cell.getLocalDateTimeCellValue().toString();</span>
+                }
+                // Formatear número como string sin notación científica
+<span class="nc" id="L532">                return String.valueOf(cell.getNumericCellValue());</span>
+            case BOOLEAN:
+<span class="nc" id="L534">                return String.valueOf(cell.getBooleanCellValue());</span>
+            case FORMULA:
+<span class="nc" id="L536">                return cell.getCellFormula();</span>
+            default:
+<span class="nc" id="L538">                return null;</span>
+        }
+    }
+
+    /**
+     * Obtiene el valor de una celda como BigDecimal
+     */
+    private BigDecimal getCellValueAsBigDecimal(Row row, int columnIndex) {
+<span class="nc" id="L546">        Cell cell = row.getCell(columnIndex);</span>
+<span class="nc bnc" id="L547" title="All 4 branches missed.">        if (cell == null || cell.getCellType() == CellType.BLANK) {</span>
+<span class="nc" id="L548">            return null;</span>
+        }
+        
+        try {
+<span class="nc bnc" id="L552" title="All 2 branches missed.">            if (cell.getCellType() == CellType.NUMERIC) {</span>
+<span class="nc" id="L553">                return BigDecimal.valueOf(cell.getNumericCellValue());</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">            } else if (cell.getCellType() == CellType.STRING) {</span>
+<span class="nc" id="L555">                String value = cell.getStringCellValue().trim();</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">                if (value.isEmpty()) {</span>
+<span class="nc" id="L557">                    return null;</span>
+                }
+                // Reemplazar coma por punto para decimales
+<span class="nc" id="L560">                value = value.replace(&quot;,&quot;, &quot;.&quot;);</span>
+<span class="nc" id="L561">                return new BigDecimal(value);</span>
+            }
+<span class="nc" id="L563">        } catch (Exception e) {</span>
+<span class="nc" id="L564">            log.warn(&quot;Error convirtiendo celda a BigDecimal en columna {}: {}&quot;, columnIndex, e.getMessage());</span>
+<span class="nc" id="L565">        }</span>
+        
+<span class="nc" id="L567">        return null;</span>
+    }
+
+    /**
+     * Obtiene el valor de una celda como Integer
+     */
+    private Integer getCellValueAsInteger(Row row, int columnIndex) {
+<span class="nc" id="L574">        BigDecimal value = getCellValueAsBigDecimal(row, columnIndex);</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">        return value != null ? value.intValue() : null;</span>
+    }
+
+    /**
+     * Obtiene el valor de una celda como LocalDate
+     */
+    private LocalDate getCellValueAsDate(Row row, int columnIndex) {
+<span class="nc" id="L582">        Cell cell = row.getCell(columnIndex);</span>
+<span class="nc bnc" id="L583" title="All 4 branches missed.">        if (cell == null || cell.getCellType() == CellType.BLANK) {</span>
+<span class="nc" id="L584">            return null;</span>
+        }
+        
+        try {
+<span class="nc bnc" id="L588" title="All 4 branches missed.">            if (cell.getCellType() == CellType.NUMERIC &amp;&amp; DateUtil.isCellDateFormatted(cell)) {</span>
+<span class="nc" id="L589">                return cell.getLocalDateTimeCellValue().toLocalDate();</span>
+<span class="nc bnc" id="L590" title="All 2 branches missed.">            } else if (cell.getCellType() == CellType.STRING) {</span>
+                // Intentar parsear string como fecha
+<span class="nc" id="L592">                String dateStr = cell.getStringCellValue().trim();</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">                if (dateStr.isEmpty()) {</span>
+<span class="nc" id="L594">                    return null;</span>
+                }
+                // Formato esperado: d/M/yyyy (ej: 7/11/2005)
+<span class="nc" id="L597">                String[] parts = dateStr.split(&quot;/&quot;);</span>
+<span class="nc bnc" id="L598" title="All 2 branches missed.">                if (parts.length == 3) {</span>
+<span class="nc" id="L599">                    int day = Integer.parseInt(parts[0]);</span>
+<span class="nc" id="L600">                    int month = Integer.parseInt(parts[1]);</span>
+<span class="nc" id="L601">                    int year = Integer.parseInt(parts[2]);</span>
+<span class="nc" id="L602">                    return LocalDate.of(year, month, day);</span>
+                }
+            }
+<span class="nc" id="L605">        } catch (Exception e) {</span>
+<span class="nc" id="L606">            log.warn(&quot;Error convirtiendo celda a LocalDate en columna {}: {}&quot;, columnIndex, e.getMessage());</span>
+<span class="nc" id="L607">        }</span>
+        
+<span class="nc" id="L609">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

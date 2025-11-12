@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PmsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">PmsController.java</span></div><h1>PmsController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/pms&quot;)
+@Tag(name = &quot;PMS&quot;, description = &quot;API para gestión del análisis de Peso de Mil Semillas&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L31">public class PmsController {</span>
+
+    @Autowired
+    private PmsService pmsService;
+
+    // Crear nuevo Pms
+    @Operation(summary = &quot;Crear análisis de peso de mil semillas (PMS)&quot;, 
+              description = &quot;Crea un nuevo análisis de peso de mil semillas (PMS)&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;PmsDTO&gt; crearPms(@RequestBody PmsRequestDTO solicitud) {
+<span class="fc" id="L42">        PmsDTO creado = pmsService.crearPms(solicitud);</span>
+<span class="fc" id="L43">        return ResponseEntity.status(HttpStatus.CREATED).body(creado);</span>
+    }
+
+    // Obtener todos los Pms activos
+    @Operation(summary = &quot;Listar todos los análisis de peso de mil semillas (PMS)&quot;, 
+              description = &quot;Obtiene todos los análisis de peso de mil semillas (PMS) activos&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;List&lt;PmsDTO&gt;&gt; obtenerTodos() {
+<span class="fc" id="L52">        List&lt;PmsDTO&gt; lista = pmsService.obtenerTodos();</span>
+<span class="fc" id="L53">        return ResponseEntity.ok(lista);</span>
+    }
+
+    // Obtener Pms por ID
+    @Operation(summary = &quot;Obtener análisis de peso de mil semillas (PMS) por ID&quot;, 
+              description = &quot;Obtiene un análisis de peso de mil semillas (PMS) específico por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;PmsDTO&gt; obtenerPorId(@PathVariable Long id) {
+<span class="fc" id="L62">        PmsDTO dto = pmsService.obtenerPorId(id);</span>
+<span class="fc" id="L63">        return ResponseEntity.ok(dto);</span>
+    }
+    
+    // Obtener PMS con paginado para listado
+    @Operation(summary = &quot;Obtener PMS paginadas&quot;, 
+              description = &quot;Obtiene la lista paginada de análisis de PMS para el listado&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/listado&quot;)
+    public ResponseEntity&lt;org.springframework.data.domain.Page&lt;utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO&gt;&gt; obtenerPmsPaginadas(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = &quot;0&quot;) int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = &quot;10&quot;) int size,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String search,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Boolean activo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String estado,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long loteId) {
+<span class="fc" id="L78">        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);</span>
+<span class="fc" id="L79">        org.springframework.data.domain.Page&lt;utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO&gt; response = pmsService.obtenerPmsPaginadasConFiltros(pageable, search, activo, estado, loteId);</span>
+<span class="fc" id="L80">        return ResponseEntity.ok(response);</span>
+    }
+
+    // Actualizar Pms
+    @Operation(summary = &quot;Actualizar análisis de peso de mil semillas (PMS)&quot;, 
+              description = &quot;Actualiza un análisis de peso de mil semillas (PMS) existente&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;PmsDTO&gt; actualizarPms(@PathVariable Long id, @RequestBody PmsRequestDTO solicitud) {
+<span class="fc" id="L89">        PmsDTO actualizado = pmsService.actualizarPms(id, solicitud);</span>
+<span class="fc" id="L90">        return ResponseEntity.ok(actualizado);</span>
+    }
+
+    // Eliminar Pms (cambiar estado a INACTIVO)
+    @Operation(summary = &quot;Eliminar análisis de peso de mil semillas (PMS)&quot;, 
+              description = &quot;Elimina (cambia a inactivo) un análisis de peso de mil semillas (PMS) existente&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminarPms(@PathVariable Long id) {
+<span class="fc" id="L99">        pmsService.eliminarPms(id);</span>
+<span class="fc" id="L100">        return ResponseEntity.noContent().build();</span>
+    }
+
+    // Desactivar PMS (soft delete)
+    @Operation(summary = &quot;Desactivar análisis PMS&quot;, 
+              description = &quot;Desactiva un análisis PMS (cambiar activo a false)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/desactivar&quot;)
+    public ResponseEntity&lt;Void&gt; desactivarPms(@PathVariable Long id) {
+<span class="fc" id="L109">        pmsService.desactivarPms(id);</span>
+<span class="fc" id="L110">        return ResponseEntity.ok().build();</span>
+    }
+
+    // Reactivar PMS
+    @Operation(summary = &quot;Reactivar análisis PMS&quot;, 
+              description = &quot;Reactiva un análisis PMS desactivado (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/reactivar&quot;)
+    public ResponseEntity&lt;PmsDTO&gt; reactivarPms(@PathVariable Long id) {
+<span class="fc" id="L119">        PmsDTO pmsReactivado = pmsService.reactivarPms(id);</span>
+<span class="fc" id="L120">        return ResponseEntity.ok(pmsReactivado);</span>
+    }
+
+    // Obtener Pms por Lote
+    @Operation(summary = &quot;Obtener análisis de peso de mil semillas (PMS) por ID de lote&quot;, 
+              description = &quot;Obtiene todos los análisis de peso de mil semillas (PMS) asociados a un lote específico&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/lote/{idLote}&quot;)
+    public ResponseEntity&lt;List&lt;PmsDTO&gt;&gt; obtenerPmsPorIdLote(@PathVariable Long idLote) {
+<span class="fc" id="L129">        List&lt;PmsDTO&gt; lista = pmsService.obtenerPmsPorIdLote(idLote);</span>
+<span class="fc" id="L130">        return ResponseEntity.ok(lista);</span>
+    }
+
+    // Actualizar PMS con valor redondeado (solo cuando todas las repeticiones estén completas)
+    @Operation(summary = &quot;Actualizar análisis de peso de mil semillas (PMS) con redondeo&quot;, 
+              description = &quot;Actualiza un análisis de peso de mil semillas (PMS) existente con valores redondeados&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/redondeo&quot;)
+    public ResponseEntity&lt;PmsDTO&gt; actualizarPmsConRedondeo(@PathVariable Long id, @RequestBody PmsRedondeoRequestDTO solicitud) {
+<span class="fc" id="L139">        PmsDTO actualizado = pmsService.actualizarPmsConRedondeo(id, solicitud);</span>
+<span class="fc" id="L140">        return ResponseEntity.ok(actualizado);</span>
+    }
+
+    // Finalizar análisis PMS
+    @Operation(summary = &quot;Finalizar análisis de peso de mil semillas (PMS)&quot;, 
+              description = &quot;Finaliza un análisis de peso de mil semillas (PMS), marcándolo como completado&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/finalizar&quot;)
+    public ResponseEntity&lt;PmsDTO&gt; finalizarAnalisis(@PathVariable Long id) {
+<span class="fc" id="L149">        PmsDTO analisisFinalizado = pmsService.finalizarAnalisis(id);</span>
+<span class="fc" id="L150">        return ResponseEntity.ok(analisisFinalizado);</span>
+    }
+
+    // Aprobar análisis (solo admin)
+    @Operation(summary = &quot;Aprobar análisis de peso de mil semillas (PMS)&quot;, 
+              description = &quot;Aprueba un análisis de peso de mil semillas (PMS) - solo administradores&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/aprobar&quot;)
+    public ResponseEntity&lt;PmsDTO&gt; aprobarAnalisis(@PathVariable Long id) {
+<span class="fc" id="L159">        PmsDTO analisisAprobado = pmsService.aprobarAnalisis(id);</span>
+<span class="fc" id="L160">        return ResponseEntity.ok(analisisAprobado);</span>
+    }
+
+    // Marcar análisis para repetir (solo admin)
+    @Operation(summary = &quot;Marcar análisis de peso de mil semillas (PMS) para repetir&quot;, 
+              description = &quot;Marca un análisis de peso de mil semillas (PMS) para repetir - solo administradores&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/repetir&quot;)
+    public ResponseEntity&lt;PmsDTO&gt; marcarParaRepetir(@PathVariable Long id) {
+<span class="fc" id="L169">        PmsDTO analisisRepetir = pmsService.marcarParaRepetir(id);</span>
+<span class="fc" id="L170">        return ResponseEntity.ok(analisisRepetir);</span>
+    }
+    }
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,1208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Auth2FAController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">Auth2FAController.java</span></div><h1>Auth2FAController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ForgotPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Login2FARequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ResetPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Verify2FARequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.Setup2FAResponseDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TrustedDeviceDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.EmailService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.RecoveryCodeService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TotpService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TrustedDeviceService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.BackupCodeService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.SetupTokenService;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Controlador para 2FA y Recuperación de Contraseña
+ * 
+ * Este controlador maneja:
+ * - Configuración y gestión de Google Authenticator (2FA)
+ * - Dispositivos de confianza
+ * - Recuperación segura de contraseña
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/auth&quot;)
+@CrossOrigin(origins = &quot;http://localhost:3000&quot;)
+@Tag(name = &quot;Autenticación 2FA y Recuperación&quot;, description = &quot;Endpoints para 2FA y recuperación de contraseña&quot;)
+<span class="fc" id="L53">public class Auth2FAController {</span>
+
+    @Autowired
+    private SeguridadService seguridadService;
+
+    @Autowired
+    private UsuarioService usuarioService;
+
+    @Autowired
+    private TotpService totpService;
+
+    @Autowired
+    private RecoveryCodeService recoveryCodeService;
+
+    @Autowired
+    private TrustedDeviceService trustedDeviceService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private BackupCodeService backupCodeService;
+
+    @Autowired
+    private SetupTokenService setupTokenService;
+
+    // ===== ENDPOINT DE LOGIN CON SOPORTE 2FA =====
+
+    @PostMapping(&quot;/login-2fa&quot;)
+    @Operation(summary = &quot;Login con soporte 2FA&quot;, description = &quot;Autentica usuario con soporte para 2FA y dispositivos de confianza&quot;)
+    public ResponseEntity&lt;?&gt; loginWith2FA(@RequestBody Login2FARequestDTO loginData, 
+                                          HttpServletRequest request, 
+                                          HttpServletResponse response) {
+<span class="fc" id="L89">        System.out.println(&quot;🔐 [LOGIN-2FA] Iniciando proceso de login con 2FA...&quot;);</span>
+<span class="fc" id="L90">        System.out.println(&quot;📧 [LOGIN-2FA] Usuario: &quot; + loginData.getUsuario());</span>
+        
+        try {
+            // PASO 1: Autenticar credenciales básicas (usuario + contraseña)
+<span class="fc" id="L94">            Optional&lt;Usuario&gt; usuarioOpt = seguridadService.autenticarUsuario(</span>
+<span class="fc" id="L95">                loginData.getUsuario(), </span>
+<span class="fc" id="L96">                loginData.getPassword()</span>
+            );
+            
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="fc" id="L100">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L101">                        .body(Map.of(&quot;error&quot;, &quot;Credenciales incorrectas&quot;));</span>
+            }
+            
+<span class="fc" id="L104">            Usuario user = usuarioOpt.get();</span>
+<span class="fc" id="L105">            System.out.println(&quot;✅ [LOGIN-2FA] Credenciales válidas para: &quot; + user.getNombre());</span>
+            
+            // PASO 2: Verificar si el usuario requiere cambio de credenciales (primer login del admin)
+<span class="pc bpc" id="L108" title="2 of 4 branches missed.">            if (user.getRequiereCambioCredenciales() != null &amp;&amp; user.getRequiereCambioCredenciales()) {</span>
+<span class="nc" id="L109">                System.out.println(&quot;⚠️ [LOGIN-2FA] Usuario requiere cambio de credenciales (primer login)&quot;);</span>
+<span class="nc" id="L110">                System.out.println(&quot;🔑 [LOGIN-2FA] TOTP Secret del usuario en BD: &quot; + user.getTotpSecret());</span>
+                
+                // Generar QR code
+<span class="nc" id="L113">                String qrCodeDataUrl = totpService.generateQrCodeDataUrl(user.getTotpSecret(), &quot;admin@temporal.local&quot;);</span>
+                
+<span class="nc" id="L115">                System.out.println(&quot;🎫 [LOGIN-2FA] Creando token con secret: &quot; + user.getTotpSecret());</span>
+                
+                // Crear token temporal seguro (expira en 5 minutos, un solo uso)
+<span class="nc" id="L118">                String setupToken = setupTokenService.createSetupToken(</span>
+<span class="nc" id="L119">                    user.getUsuarioID(),</span>
+<span class="nc" id="L120">                    user.getNombre(),</span>
+                    qrCodeDataUrl,
+<span class="nc" id="L122">                    user.getTotpSecret()</span>
+                );
+                
+<span class="nc" id="L125">                System.out.println(&quot;✅ [LOGIN-2FA] Token creado, secret enviado en JWT&quot;);</span>
+                
+                // Devolver SOLO el token (no los datos sensibles)
+<span class="nc" id="L128">                return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
+<span class="nc" id="L129">                        .body(Map.of(</span>
+<span class="nc" id="L130">                            &quot;requiresCredentialChange&quot;, true,</span>
+                            &quot;mensaje&quot;, &quot;Debes configurar tus credenciales y 2FA en el primer acceso&quot;,
+                            &quot;setupToken&quot;, setupToken  // Solo el token, no los datos
+                        ));
+            }
+            
+            // PASO 3: Verificar si el usuario tiene 2FA habilitado
+<span class="pc bpc" id="L137" title="1 of 4 branches missed.">            boolean has2FAEnabled = user.getTotpEnabled() != null &amp;&amp; user.getTotpEnabled();</span>
+            
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (!has2FAEnabled) {</span>
+                // 2FA OBLIGATORIO - Usuario DEBE activar 2FA antes de poder usar el sistema
+<span class="fc" id="L141">                System.out.println(&quot;⚠️ [LOGIN-2FA] Usuario sin 2FA - Debe activar 2FA (OBLIGATORIO)&quot;);</span>
+<span class="fc" id="L142">                return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
+<span class="fc" id="L143">                        .body(Map.of(</span>
+<span class="fc" id="L144">                            &quot;requires2FASetup&quot;, true,</span>
+                            &quot;mensaje&quot;, &quot;Debes activar la autenticación de dos factores para usar el sistema&quot;,
+<span class="fc" id="L146">                            &quot;userId&quot;, user.getUsuarioID(),</span>
+<span class="fc" id="L147">                            &quot;email&quot;, user.getEmail(),</span>
+<span class="fc" id="L148">                            &quot;nombre&quot;, user.getNombreCompleto()</span>
+                        ));
+            }
+            
+            // PASO 3: Usuario TIENE 2FA habilitado - Verificar dispositivo de confianza
+<span class="fc" id="L153">            String deviceFingerprint = loginData.getDeviceFingerprint();</span>
+<span class="fc" id="L154">            boolean isTrustedDevice = false;</span>
+            
+<span class="pc bpc" id="L156" title="1 of 4 branches missed.">            if (deviceFingerprint != null &amp;&amp; !deviceFingerprint.isEmpty()) {</span>
+<span class="fc" id="L157">                isTrustedDevice = trustedDeviceService.isTrustedDevice(user.getUsuarioID(), deviceFingerprint);</span>
+<span class="fc" id="L158">                System.out.println(&quot;📱 [LOGIN-2FA] Dispositivo de confianza: &quot; + isTrustedDevice);</span>
+            }
+            
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            if (isTrustedDevice) {</span>
+                // Dispositivo de confianza - NO requiere código 2FA
+<span class="fc" id="L163">                System.out.println(&quot;✅ [LOGIN-2FA] Dispositivo de confianza validado, login directo&quot;);</span>
+<span class="fc" id="L164">                return completarLoginExitoso(user, response);</span>
+            }
+            
+            // PASO 4: Dispositivo NO es de confianza - Requiere código 2FA
+<span class="fc" id="L168">            String totpCode = loginData.getTotpCode();</span>
+            
+<span class="pc bpc" id="L170" title="1 of 4 branches missed.">            if (totpCode == null || totpCode.isEmpty()) {</span>
+                // No proporcionó código 2FA - Solicitar código
+<span class="fc" id="L172">                System.out.println(&quot;🔐 [LOGIN-2FA] Código 2FA requerido&quot;);</span>
+<span class="fc" id="L173">                return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
+<span class="fc" id="L174">                        .body(Map.of(</span>
+<span class="fc" id="L175">                            &quot;requires2FA&quot;, true,</span>
+                            &quot;mensaje&quot;, &quot;Se requiere código de autenticación de dos factores&quot;,
+<span class="fc" id="L177">                            &quot;userId&quot;, user.getUsuarioID()</span>
+                        ));
+            }
+            
+            // PASO 5: Verificar código 2FA (TOTP o código de respaldo)
+<span class="fc" id="L182">            boolean isCodeValid = false;</span>
+<span class="fc" id="L183">            boolean usedBackupCode = false;</span>
+            
+            // Primero intentar verificar como código TOTP
+<span class="pc bpc" id="L186" title="1 of 4 branches missed.">            if (totpCode.length() == 6 &amp;&amp; totpCode.matches(&quot;\\d+&quot;)) {</span>
+<span class="fc" id="L187">                isCodeValid = totpService.verifyCode(user.getTotpSecret(), totpCode);</span>
+<span class="fc" id="L188">                System.out.println(&quot;🔑 [LOGIN-2FA] Verificación TOTP: &quot; + isCodeValid);</span>
+            }
+            
+            // Si el TOTP falló, intentar con código de respaldo
+<span class="fc bfc" id="L192" title="All 4 branches covered.">            if (!isCodeValid &amp;&amp; totpCode.length() &gt;= 12) {</span>
+<span class="fc" id="L193">                isCodeValid = backupCodeService.verifyAndUseBackupCode(user.getUsuarioID(), totpCode);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">                if (isCodeValid) {</span>
+<span class="fc" id="L195">                    usedBackupCode = true;</span>
+<span class="fc" id="L196">                    System.out.println(&quot;🎫 [LOGIN-2FA] Código de respaldo usado exitosamente&quot;);</span>
+                    
+                    // Verificar códigos restantes y alertar si quedan pocos
+<span class="fc" id="L199">                    long remaining = backupCodeService.getAvailableCodesCount(user.getUsuarioID());</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">                    if (remaining &lt;= 2) {</span>
+<span class="fc" id="L201">                        System.out.println(&quot;⚠️ [LOGIN-2FA] ALERTA: Solo quedan &quot; + remaining + &quot; códigos de respaldo&quot;);</span>
+                    }
+                }
+            }
+            
+<span class="fc bfc" id="L206" title="All 2 branches covered.">            if (!isCodeValid) {</span>
+<span class="fc" id="L207">                System.err.println(&quot;❌ [LOGIN-2FA] Código inválido (ni TOTP ni código de respaldo)&quot;);</span>
+<span class="fc" id="L208">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L209">                        .body(Map.of(&quot;error&quot;, &quot;Código de autenticación inválido&quot;));</span>
+            }
+            
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            System.out.println(&quot;✅ [LOGIN-2FA] Código válido&quot; + (usedBackupCode ? &quot; (código de respaldo)&quot; : &quot; (TOTP)&quot;));</span>
+            
+            // PASO 6: Si el usuario quiere confiar en este dispositivo, registrarlo
+<span class="pc bpc" id="L215" title="5 of 6 branches missed.">            if (loginData.getTrustDevice() != null &amp;&amp; loginData.getTrustDevice() &amp;&amp; deviceFingerprint != null) {</span>
+                try {
+<span class="nc" id="L217">                    trustedDeviceService.trustDevice(user.getUsuarioID(), deviceFingerprint, request);</span>
+<span class="nc" id="L218">                    System.out.println(&quot;📱 [LOGIN-2FA] Dispositivo registrado como de confianza&quot;);</span>
+                    
+                    // Notificar por email sobre nuevo dispositivo
+<span class="nc" id="L221">                    String deviceName = extractDeviceName(request);</span>
+<span class="nc" id="L222">                    String ipAddress = extractIpAddress(request);</span>
+<span class="nc" id="L223">                    emailService.enviarNuevoDispositivo(</span>
+<span class="nc" id="L224">                        user.getEmail(),</span>
+<span class="nc" id="L225">                        user.getNombreCompleto(),</span>
+                        deviceName,
+                        ipAddress
+                    );
+<span class="nc" id="L229">                } catch (Exception e) {</span>
+                    // No fallar el login si falla el registro del dispositivo
+<span class="nc" id="L231">                    System.err.println(&quot;⚠️ [LOGIN-2FA] Error registrando dispositivo de confianza: &quot; + e.getMessage());</span>
+<span class="nc" id="L232">                }</span>
+            }
+            
+            // PASO 7: Completar login exitoso
+<span class="fc" id="L236">            return completarLoginExitoso(user, response);</span>
+            
+<span class="nc" id="L238">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L239">            System.err.println(&quot;❌ [LOGIN-2FA] Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L240">            e.printStackTrace();</span>
+            
+<span class="nc bnc" id="L242" title="All 6 branches missed.">            String mensaje = switch (e.getMessage()) {</span>
+<span class="nc" id="L243">                case &quot;USUARIO_INCORRECTO&quot; -&gt; &quot;Credenciales incorrectas&quot;;</span>
+<span class="nc" id="L244">                case &quot;USUARIO_INACTIVO&quot; -&gt; &quot;No se puede iniciar sesión. Contacte al administrador&quot;;</span>
+<span class="nc" id="L245">                case &quot;USUARIO_PENDIENTE_APROBACION&quot; -&gt; &quot;Cuenta pendiente de aprobación. Contacte al administrador&quot;;</span>
+<span class="nc" id="L246">                case &quot;USUARIO_SIN_ROL&quot; -&gt; &quot;No se puede iniciar sesión. Contacte al administrador&quot;;</span>
+<span class="nc" id="L247">                case &quot;CONTRASENIA_INCORRECTA&quot; -&gt; &quot;Credenciales incorrectas&quot;;</span>
+<span class="nc" id="L248">                default -&gt; &quot;Error de autenticación&quot;;</span>
+            };
+            
+<span class="nc" id="L251">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L252">                    .body(Map.of(&quot;error&quot;, mensaje));</span>
+<span class="nc" id="L253">        } catch (Exception e) {</span>
+<span class="nc" id="L254">            System.err.println(&quot;❌ [LOGIN-2FA] Error inesperado: &quot; + e.getMessage());</span>
+<span class="nc" id="L255">            e.printStackTrace();</span>
+<span class="nc" id="L256">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L257">                    .body(Map.of(&quot;error&quot;, &quot;Error interno del servidor&quot;));</span>
+        }
+    }
+
+    /**
+     * Completa el login exitoso generando tokens JWT y configurando cookies
+     */
+    private ResponseEntity&lt;?&gt; completarLoginExitoso(Usuario user, HttpServletResponse response) {
+<span class="fc" id="L265">        String[] roles = seguridadService.listarRolesPorUsuario(user);</span>
+        
+        // Generar access token y refresh token
+<span class="fc" id="L268">        String accessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));</span>
+<span class="fc" id="L269">        String refreshToken = jwtUtil.generarRefreshToken(user);</span>
+        
+        // Configurar cookies HttpOnly Secure
+<span class="fc" id="L272">        configurarCookieToken(response, &quot;accessToken&quot;, accessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));</span>
+<span class="fc" id="L273">        configurarCookieToken(response, &quot;refreshToken&quot;, refreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));</span>
+        
+<span class="fc" id="L275">        System.out.println(&quot;✅ [LOGIN-2FA] Login exitoso para: &quot; + user.getNombre());</span>
+        
+        // Respuesta
+<span class="fc" id="L278">        Map&lt;String, Object&gt; responseBody = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L279">        responseBody.put(&quot;mensaje&quot;, &quot;Login exitoso&quot;);</span>
+<span class="fc" id="L280">        responseBody.put(&quot;usuario&quot;, Map.of(</span>
+<span class="fc" id="L281">            &quot;id&quot;, user.getUsuarioID(),</span>
+<span class="fc" id="L282">            &quot;nombre&quot;, user.getNombre(),</span>
+<span class="fc" id="L283">            &quot;nombres&quot;, user.getNombres(),</span>
+<span class="fc" id="L284">            &quot;apellidos&quot;, user.getApellidos(),</span>
+<span class="fc" id="L285">            &quot;email&quot;, user.getEmail(),</span>
+            &quot;roles&quot;, roles,
+<span class="pc bpc" id="L287" title="2 of 4 branches missed.">            &quot;has2FA&quot;, user.getTotpEnabled() != null &amp;&amp; user.getTotpEnabled()</span>
+        ));
+        
+<span class="fc" id="L290">        return ResponseEntity.ok(responseBody);</span>
+    }
+
+    /**
+     * Configura una cookie HttpOnly Secure
+     */
+    private void configurarCookieToken(HttpServletResponse response, String nombre, String valor, int maxAgeSegundos) {
+<span class="fc" id="L297">        String cookieValue = String.format(</span>
+            &quot;%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax&quot;,
+<span class="fc" id="L299">            nombre, valor, maxAgeSegundos</span>
+        );
+<span class="fc" id="L301">        response.addHeader(&quot;Set-Cookie&quot;, cookieValue);</span>
+<span class="fc" id="L302">    }</span>
+
+    /**
+     * Extrae nombre del dispositivo del User-Agent
+     */
+    private String extractDeviceName(HttpServletRequest request) {
+<span class="nc" id="L308">        String userAgent = request.getHeader(&quot;User-Agent&quot;);</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">        if (userAgent == null) return &quot;Dispositivo Desconocido&quot;;</span>
+        
+<span class="nc" id="L311">        String browser = &quot;Navegador&quot;;</span>
+<span class="nc" id="L312">        String os = &quot;SO&quot;;</span>
+        
+<span class="nc bnc" id="L314" title="All 4 branches missed.">        if (userAgent.contains(&quot;Chrome&quot;) &amp;&amp; !userAgent.contains(&quot;Edg&quot;)) browser = &quot;Chrome&quot;;</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        else if (userAgent.contains(&quot;Firefox&quot;)) browser = &quot;Firefox&quot;;</span>
+<span class="nc bnc" id="L316" title="All 4 branches missed.">        else if (userAgent.contains(&quot;Safari&quot;) &amp;&amp; !userAgent.contains(&quot;Chrome&quot;)) browser = &quot;Safari&quot;;</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        else if (userAgent.contains(&quot;Edg&quot;)) browser = &quot;Edge&quot;;</span>
+        
+<span class="nc bnc" id="L319" title="All 2 branches missed.">        if (userAgent.contains(&quot;Windows&quot;)) os = &quot;Windows&quot;;</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">        else if (userAgent.contains(&quot;Mac&quot;)) os = &quot;macOS&quot;;</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">        else if (userAgent.contains(&quot;Linux&quot;)) os = &quot;Linux&quot;;</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        else if (userAgent.contains(&quot;Android&quot;)) os = &quot;Android&quot;;</span>
+<span class="nc bnc" id="L323" title="All 4 branches missed.">        else if (userAgent.contains(&quot;iPhone&quot;) || userAgent.contains(&quot;iPad&quot;)) os = &quot;iOS&quot;;</span>
+        
+<span class="nc" id="L325">        return browser + &quot; en &quot; + os;</span>
+    }
+
+    /**
+     * Extrae IP considerando proxies
+     */
+    private String extractIpAddress(HttpServletRequest request) {
+<span class="nc" id="L332">        String ip = request.getHeader(&quot;X-Forwarded-For&quot;);</span>
+<span class="nc bnc" id="L333" title="All 6 branches missed.">        if (ip == null || ip.isEmpty() || &quot;unknown&quot;.equalsIgnoreCase(ip)) {</span>
+<span class="nc" id="L334">            ip = request.getHeader(&quot;X-Real-IP&quot;);</span>
+        }
+<span class="nc bnc" id="L336" title="All 6 branches missed.">        if (ip == null || ip.isEmpty() || &quot;unknown&quot;.equalsIgnoreCase(ip)) {</span>
+<span class="nc" id="L337">            ip = request.getRemoteAddr();</span>
+        }
+<span class="nc bnc" id="L339" title="All 4 branches missed.">        if (ip != null &amp;&amp; ip.contains(&quot;,&quot;)) {</span>
+<span class="nc" id="L340">            ip = ip.split(&quot;,&quot;)[0].trim();</span>
+        }
+<span class="nc" id="L342">        return ip;</span>
+    }
+
+    // ===== ENDPOINTS DE AUTENTICACIÓN DE DOS FACTORES (2FA) =====
+
+    @PostMapping(&quot;/2fa/setup-initial&quot;)
+    @Operation(summary = &quot;Setup inicial de 2FA (sin autenticación)&quot;, 
+               description = &quot;Genera QR code para usuarios que DEBEN activar 2FA por primera vez&quot;)
+    public ResponseEntity&lt;?&gt; setupInitial2FA(@RequestBody Map&lt;String, String&gt; request) {
+        try {
+<span class="fc" id="L352">            String email = request.get(&quot;email&quot;);</span>
+<span class="fc" id="L353">            String password = request.get(&quot;password&quot;);</span>
+            
+<span class="pc bpc" id="L355" title="2 of 4 branches missed.">            if (email == null || password == null) {</span>
+<span class="nc" id="L356">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L357">                        .body(Map.of(&quot;error&quot;, &quot;Email y contraseña requeridos&quot;));</span>
+            }
+            
+            // Autenticar al usuario
+<span class="fc" id="L361">            Optional&lt;Usuario&gt; userOpt = seguridadService.autenticarUsuario(email, password);</span>
+            
+<span class="pc bpc" id="L363" title="1 of 2 branches missed.">            if (userOpt.isEmpty()) {</span>
+<span class="nc" id="L364">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L365">                        .body(Map.of(&quot;error&quot;, &quot;Credenciales incorrectas&quot;));</span>
+            }
+            
+<span class="fc" id="L368">            Usuario user = userOpt.get();</span>
+<span class="fc" id="L369">            System.out.println(&quot;🔐 [SETUP-INITIAL] Iniciando setup 2FA para: &quot; + user.getNombre());</span>
+            
+            // Si ya tiene 2FA habilitado, redirigir a login normal
+<span class="pc bpc" id="L372" title="1 of 4 branches missed.">            if (user.getTotpEnabled() != null &amp;&amp; user.getTotpEnabled()) {</span>
+<span class="fc" id="L373">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L374">                        .body(Map.of(&quot;error&quot;, &quot;Ya tienes 2FA habilitado. Usa el login normal.&quot;));</span>
+            }
+            
+            // Generar nuevo secret
+<span class="fc" id="L378">            String secret = totpService.generateSecret();</span>
+            
+            // Generar QR code
+<span class="fc" id="L381">            String accountName = user.getEmail();</span>
+<span class="fc" id="L382">            String qrCodeDataUrl = totpService.generateQrCodeDataUrl(secret, accountName);</span>
+            
+            // Guardar el secret (pero NO habilitar 2FA hasta que se verifique)
+<span class="fc" id="L385">            user.setTotpSecret(secret);</span>
+<span class="fc" id="L386">            user.setTotpEnabled(false);</span>
+<span class="fc" id="L387">            usuarioService.guardar(user);</span>
+            
+<span class="fc" id="L389">            Setup2FAResponseDTO response = new Setup2FAResponseDTO(</span>
+                secret,
+                qrCodeDataUrl,
+                &quot;INIA&quot;,
+                accountName
+            );
+            
+<span class="fc" id="L396">            System.out.println(&quot;✅ [SETUP-INITIAL] QR generado para: &quot; + user.getNombre());</span>
+            
+<span class="fc" id="L398">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;Escanea el QR code con Google Authenticator&quot;,
+                &quot;data&quot;, response,
+<span class="fc" id="L401">                &quot;userId&quot;, user.getUsuarioID(),</span>
+<span class="fc" id="L402">                &quot;email&quot;, user.getEmail()</span>
+            ));
+            
+<span class="nc" id="L405">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L406">            System.err.println(&quot;❌ [SETUP-INITIAL] Error: &quot; + e.getMessage());</span>
+            
+<span class="nc bnc" id="L408" title="All 5 branches missed.">            String mensaje = switch (e.getMessage()) {</span>
+<span class="nc" id="L409">                case &quot;USUARIO_INCORRECTO&quot; -&gt; &quot;Credenciales incorrectas&quot;;</span>
+<span class="nc" id="L410">                case &quot;USUARIO_INACTIVO&quot; -&gt; &quot;Usuario inactivo&quot;;</span>
+<span class="nc" id="L411">                case &quot;USUARIO_PENDIENTE_APROBACION&quot; -&gt; &quot;Cuenta pendiente de aprobación&quot;;</span>
+<span class="nc" id="L412">                case &quot;CONTRASENIA_INCORRECTA&quot; -&gt; &quot;Credenciales incorrectas&quot;;</span>
+<span class="nc" id="L413">                default -&gt; &quot;Error de autenticación&quot;;</span>
+            };
+            
+<span class="nc" id="L416">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L417">                    .body(Map.of(&quot;error&quot;, mensaje));</span>
+<span class="nc" id="L418">        } catch (Exception e) {</span>
+<span class="nc" id="L419">            System.err.println(&quot;❌ [SETUP-INITIAL] Error inesperado: &quot; + e.getMessage());</span>
+<span class="nc" id="L420">            e.printStackTrace();</span>
+<span class="nc" id="L421">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L422">                    .body(Map.of(&quot;error&quot;, &quot;Error interno del servidor&quot;));</span>
+        }
+    }
+
+    @PostMapping(&quot;/2fa/verify-initial&quot;)
+    @Operation(summary = &quot;Verificar código 2FA inicial (sin autenticación)&quot;, 
+               description = &quot;Verifica el código TOTP y activa 2FA por primera vez, luego hace login&quot;)
+    public ResponseEntity&lt;?&gt; verifyInitial2FA(
+            @RequestBody Map&lt;String, String&gt; request,
+            HttpServletResponse response) {
+        try {
+<span class="fc" id="L433">            String email = request.get(&quot;email&quot;);</span>
+<span class="fc" id="L434">            String totpCode = request.get(&quot;totpCode&quot;);</span>
+            
+<span class="pc bpc" id="L436" title="2 of 4 branches missed.">            if (email == null || totpCode == null) {</span>
+<span class="nc" id="L437">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L438">                        .body(Map.of(&quot;error&quot;, &quot;Email y código TOTP requeridos&quot;));</span>
+            }
+            
+<span class="fc" id="L441">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorEmail(email);</span>
+            
+<span class="pc bpc" id="L443" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L444">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L445">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L448">            Usuario usuario = usuarioOpt.get();</span>
+            
+<span class="fc" id="L450">            System.out.println(&quot;🔐 [VERIFY-INITIAL] Verificando código para: &quot; + usuario.getNombre());</span>
+            
+            // Verificar que tenga un secret configurado
+<span class="pc bpc" id="L453" title="2 of 4 branches missed.">            if (usuario.getTotpSecret() == null || usuario.getTotpSecret().isEmpty()) {</span>
+<span class="nc" id="L454">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L455">                        .body(Map.of(&quot;error&quot;, &quot;No hay configuración 2FA pendiente. Inicia el setup primero.&quot;));</span>
+            }
+            
+            // Verificar el código TOTP
+<span class="fc" id="L459">            boolean isValid = totpService.verifyCode(usuario.getTotpSecret(), totpCode);</span>
+            
+<span class="fc bfc" id="L461" title="All 2 branches covered.">            if (!isValid) {</span>
+<span class="fc" id="L462">                System.err.println(&quot;❌ [VERIFY-INITIAL] Código inválido&quot;);</span>
+<span class="fc" id="L463">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L464">                        .body(Map.of(&quot;error&quot;, &quot;Código 2FA inválido o expirado&quot;));</span>
+            }
+            
+            // ✅ Código correcto - Activar 2FA
+<span class="fc" id="L468">            usuario.setTotpEnabled(true);</span>
+<span class="fc" id="L469">            usuarioService.guardar(usuario);</span>
+            
+            // Generar códigos de respaldo
+<span class="fc" id="L472">            List&lt;String&gt; backupCodes = backupCodeService.generateBackupCodes(usuario.getUsuarioID());</span>
+<span class="fc" id="L473">            System.out.println(&quot;🔐 [VERIFY-INITIAL] Generados &quot; + backupCodes.size() + &quot; códigos de respaldo&quot;);</span>
+            
+            // Enviar email de notificación
+<span class="fc" id="L476">            emailService.enviar2FAActivado(usuario.getEmail(), usuario.getNombreCompleto());</span>
+            
+<span class="fc" id="L478">            System.out.println(&quot;✅ [VERIFY-INITIAL] 2FA activado para: &quot; + usuario.getNombre());</span>
+            
+            // Ahora hacer login automático
+<span class="fc" id="L481">            String[] roles = seguridadService.listarRolesPorUsuario(usuario);</span>
+<span class="fc" id="L482">            String accessToken = jwtUtil.generarToken(usuario, java.util.Arrays.asList(roles));</span>
+<span class="fc" id="L483">            String refreshToken = jwtUtil.generarRefreshToken(usuario);</span>
+            
+            // Configurar cookies
+<span class="fc" id="L486">            configurarCookieToken(response, &quot;accessToken&quot;, accessToken, 24 * 60 * 60);</span>
+<span class="fc" id="L487">            configurarCookieToken(response, &quot;refreshToken&quot;, refreshToken, 7 * 24 * 60 * 60);</span>
+            
+            // Respuesta con códigos de respaldo y datos de usuario
+<span class="fc" id="L490">            Map&lt;String, Object&gt; responseData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L491">            responseData.put(&quot;mensaje&quot;, &quot;2FA activado exitosamente. GUARDA estos códigos de respaldo.&quot;);</span>
+<span class="fc" id="L492">            responseData.put(&quot;totpEnabled&quot;, true);</span>
+<span class="fc" id="L493">            responseData.put(&quot;backupCodes&quot;, backupCodes);</span>
+<span class="fc" id="L494">            responseData.put(&quot;totalCodes&quot;, backupCodes.size());</span>
+<span class="fc" id="L495">            responseData.put(&quot;usuario&quot;, Map.of(</span>
+<span class="fc" id="L496">                &quot;id&quot;, usuario.getUsuarioID(),</span>
+<span class="fc" id="L497">                &quot;nombre&quot;, usuario.getNombre(),</span>
+<span class="fc" id="L498">                &quot;nombres&quot;, usuario.getNombres(),</span>
+<span class="fc" id="L499">                &quot;apellidos&quot;, usuario.getApellidos(),</span>
+<span class="fc" id="L500">                &quot;email&quot;, usuario.getEmail(),</span>
+                &quot;roles&quot;, roles,
+<span class="fc" id="L502">                &quot;has2FA&quot;, true</span>
+            ));
+            
+<span class="fc" id="L505">            System.out.println(&quot;✅ [VERIFY-INITIAL] Login completado para: &quot; + usuario.getNombre());</span>
+            
+<span class="fc" id="L507">            return ResponseEntity.ok(responseData);</span>
+            
+<span class="nc" id="L509">        } catch (Exception e) {</span>
+<span class="nc" id="L510">            System.err.println(&quot;❌ [VERIFY-INITIAL] Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L511">            e.printStackTrace();</span>
+<span class="nc" id="L512">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L513">                    .body(Map.of(&quot;error&quot;, &quot;Error al verificar 2FA&quot;));</span>
+        }
+    }
+
+    @GetMapping(&quot;/admin/setup-data/{token}&quot;)
+    @Operation(summary = &quot;Obtener datos de configuración con token temporal&quot;, 
+               description = &quot;Recupera datos de configuración usando un token de un solo uso&quot;)
+    public ResponseEntity&lt;?&gt; getSetupData(@PathVariable String token) {
+        try {
+<span class="fc" id="L522">            System.out.println(&quot;🎫 [SETUP-DATA] Solicitando datos para token&quot;);</span>
+            
+            // Consumir token (un solo uso)
+<span class="fc" id="L525">            Map&lt;String, Object&gt; setupData = setupTokenService.consumeSetupToken(token);</span>
+            
+<span class="fc bfc" id="L527" title="All 2 branches covered.">            if (setupData == null) {</span>
+<span class="fc" id="L528">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="fc" id="L529">                        .body(Map.of(&quot;error&quot;, &quot;Token inválido o expirado&quot;));</span>
+            }
+            
+<span class="fc" id="L532">            System.out.println(&quot;✅ [SETUP-DATA] Datos enviados, token consumido&quot;);</span>
+<span class="fc" id="L533">            return ResponseEntity.ok(setupData);</span>
+            
+<span class="nc" id="L535">        } catch (Exception e) {</span>
+<span class="nc" id="L536">            System.err.println(&quot;❌ [SETUP-DATA] Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L537">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L538">                    .body(Map.of(&quot;error&quot;, &quot;Error al obtener datos de configuración&quot;));</span>
+        }
+    }
+
+    @PostMapping(&quot;/admin/complete-setup&quot;)
+    @Operation(summary = &quot;Completar configuración inicial del admin&quot;, 
+               description = &quot;Permite al admin configurar email, contraseña y 2FA en el primer acceso&quot;)
+    public ResponseEntity&lt;?&gt; completeAdminSetup(
+            @RequestBody Map&lt;String, String&gt; request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response) {
+        try {
+<span class="fc" id="L550">            String currentPassword = request.get(&quot;currentPassword&quot;);</span>
+<span class="fc" id="L551">            String newEmail = request.get(&quot;newEmail&quot;);</span>
+<span class="fc" id="L552">            String newPassword = request.get(&quot;newPassword&quot;);</span>
+<span class="fc" id="L553">            String totpCode = request.get(&quot;totpCode&quot;);</span>
+            
+<span class="pc bpc" id="L555" title="4 of 8 branches missed.">            if (currentPassword == null || newEmail == null || newPassword == null || totpCode == null) {</span>
+<span class="nc" id="L556">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L557">                        .body(Map.of(&quot;error&quot;, &quot;Todos los campos son requeridos&quot;));</span>
+            }
+            
+<span class="fc" id="L560">            System.out.println(&quot;🔐 [ADMIN-SETUP] Iniciando configuración del admin...&quot;);</span>
+            
+            // Autenticar con contraseña actual (admin123)
+<span class="fc" id="L563">            Optional&lt;Usuario&gt; userOpt = seguridadService.autenticarUsuario(&quot;admin&quot;, currentPassword);</span>
+            
+<span class="pc bpc" id="L565" title="1 of 2 branches missed.">            if (userOpt.isEmpty()) {</span>
+<span class="nc" id="L566">                System.err.println(&quot;❌ [ADMIN-SETUP] Contraseña actual incorrecta&quot;);</span>
+<span class="nc" id="L567">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L568">                        .body(Map.of(&quot;error&quot;, &quot;Contraseña actual incorrecta&quot;));</span>
+            }
+            
+<span class="fc" id="L571">            Usuario admin = userOpt.get();</span>
+            
+            // Verificar que sea admin y requiera cambio de credenciales
+<span class="pc bpc" id="L574" title="1 of 4 branches missed.">            if (!admin.esAdmin() || !admin.getRequiereCambioCredenciales()) {</span>
+<span class="fc" id="L575">                System.err.println(&quot;❌ [ADMIN-SETUP] Usuario no es admin o no requiere cambio&quot;);</span>
+<span class="fc" id="L576">                return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
+<span class="fc" id="L577">                        .body(Map.of(&quot;error&quot;, &quot;Acceso denegado&quot;));</span>
+            }
+            
+<span class="fc" id="L580">            System.out.println(&quot;🔐 [ADMIN-SETUP] Validando código TOTP...&quot;);</span>
+<span class="fc" id="L581">            System.out.println(&quot;🔑 [ADMIN-SETUP] TOTP Secret: &quot; + admin.getTotpSecret());</span>
+<span class="fc" id="L582">            System.out.println(&quot;🔢 [ADMIN-SETUP] Código recibido: &quot; + totpCode);</span>
+            
+            // Verificar código TOTP (el usuario ya escaneó el QR)
+<span class="fc" id="L585">            boolean isValid = totpService.verifyCode(admin.getTotpSecret(), totpCode);</span>
+            
+<span class="fc" id="L587">            System.out.println(&quot;🔍 [ADMIN-SETUP] Código válido: &quot; + isValid);</span>
+            
+<span class="pc bpc" id="L589" title="1 of 2 branches missed.">            if (!isValid) {</span>
+<span class="nc" id="L590">                System.err.println(&quot;❌ [ADMIN-SETUP] Código 2FA inválido&quot;);</span>
+<span class="nc" id="L591">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L592">                        .body(Map.of(&quot;error&quot;, &quot;Código 2FA inválido. Verifica que hayas escaneado correctamente el código QR.&quot;));</span>
+            }
+            
+<span class="fc" id="L595">            System.out.println(&quot;✅ [ADMIN-SETUP] Código 2FA válido, actualizando credenciales...&quot;);</span>
+            
+            // Actualizar email primero
+<span class="fc" id="L598">            admin.setEmail(newEmail);</span>
+<span class="fc" id="L599">            admin.setTotpEnabled(true);  // AHORA SÍ activamos el 2FA</span>
+<span class="fc" id="L600">            admin.setRequiereCambioCredenciales(false);  // Ya no requiere cambio</span>
+<span class="fc" id="L601">            usuarioService.guardar(admin);</span>
+            
+            // Cambiar contraseña (el servicio la encripta automáticamente)
+<span class="fc" id="L604">            usuarioService.cambiarContrasenia(admin.getUsuarioID(), newPassword);</span>
+            
+<span class="fc" id="L606">            System.out.println(&quot;✅ [ADMIN-SETUP] Credenciales actualizadas&quot;);</span>
+            
+            // Generar códigos de respaldo
+<span class="fc" id="L609">            List&lt;String&gt; backupCodes = backupCodeService.generateBackupCodes(admin.getUsuarioID());</span>
+            
+<span class="fc" id="L611">            System.out.println(&quot;✅ [ADMIN-SETUP] Códigos de respaldo generados: &quot; + backupCodes.size());</span>
+            
+            // Enviar email de notificación
+            try {
+<span class="fc" id="L615">                emailService.enviar2FAActivado(newEmail, admin.getNombreCompleto());</span>
+<span class="fc" id="L616">                System.out.println(&quot;📧 [ADMIN-SETUP] Email de notificación enviado&quot;);</span>
+<span class="nc" id="L617">            } catch (Exception e) {</span>
+<span class="nc" id="L618">                System.err.println(&quot;⚠️ [ADMIN-SETUP] No se pudo enviar email: &quot; + e.getMessage());</span>
+<span class="fc" id="L619">            }</span>
+            
+<span class="fc" id="L621">            System.out.println(&quot;✅ [ADMIN-SETUP] Configuración completada, creando sesión...&quot;);</span>
+            
+            // Login automático: Obtener roles y crear authorities
+<span class="fc" id="L624">            String[] roles = seguridadService.listarRolesPorUsuario(admin);</span>
+            
+<span class="fc" id="L626">            Collection&lt;org.springframework.security.core.GrantedAuthority&gt; authorities = </span>
+<span class="fc" id="L627">                java.util.Arrays.stream(roles)</span>
+<span class="fc" id="L628">                    .map(role -&gt; new org.springframework.security.core.authority.SimpleGrantedAuthority(</span>
+<span class="pc bpc" id="L629" title="1 of 2 branches missed.">                        role.startsWith(&quot;ROLE_&quot;) ? role : &quot;ROLE_&quot; + role))</span>
+<span class="fc" id="L630">                    .collect(java.util.stream.Collectors.toList());</span>
+            
+            // Crear authentication token
+<span class="fc" id="L633">            UsernamePasswordAuthenticationToken authToken = </span>
+<span class="fc" id="L634">                new UsernamePasswordAuthenticationToken(admin.getNombre(), null, authorities);</span>
+            
+<span class="fc" id="L636">            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();</span>
+<span class="fc" id="L637">            securityContext.setAuthentication(authToken);</span>
+<span class="fc" id="L638">            SecurityContextHolder.setContext(securityContext);</span>
+            
+<span class="fc" id="L640">            HttpSession session = httpRequest.getSession(true);</span>
+<span class="fc" id="L641">            session.setAttribute(&quot;SPRING_SECURITY_CONTEXT&quot;, securityContext);</span>
+            
+<span class="fc" id="L643">            System.out.println(&quot;✅ [ADMIN-SETUP] Sesión HTTP creada&quot;);</span>
+            
+            // También generar tokens JWT para compatibilidad
+<span class="fc" id="L646">            String accessToken = jwtUtil.generarToken(admin, java.util.Arrays.asList(roles));</span>
+<span class="fc" id="L647">            String refreshToken = jwtUtil.generarRefreshToken(admin);</span>
+            
+<span class="fc" id="L649">            configurarCookieToken(response, &quot;accessToken&quot;, accessToken, 24 * 60 * 60);</span>
+<span class="fc" id="L650">            configurarCookieToken(response, &quot;refreshToken&quot;, refreshToken, 7 * 24 * 60 * 60);</span>
+            
+<span class="fc" id="L652">            System.out.println(&quot;✅ [ADMIN-SETUP] Tokens JWT configurados&quot;);</span>
+            
+<span class="fc" id="L654">            Map&lt;String, Object&gt; responseData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L655">            responseData.put(&quot;mensaje&quot;, &quot;Configuración completada exitosamente&quot;);</span>
+<span class="fc" id="L656">            responseData.put(&quot;backupCodes&quot;, backupCodes);</span>
+<span class="fc" id="L657">            responseData.put(&quot;totalCodes&quot;, backupCodes.size());</span>
+<span class="fc" id="L658">            responseData.put(&quot;usuario&quot;, Map.of(</span>
+<span class="fc" id="L659">                &quot;id&quot;, admin.getUsuarioID(),</span>
+<span class="fc" id="L660">                &quot;nombre&quot;, admin.getNombre(),</span>
+<span class="fc" id="L661">                &quot;nombres&quot;, admin.getNombres(),</span>
+<span class="fc" id="L662">                &quot;apellidos&quot;, admin.getApellidos(),</span>
+<span class="fc" id="L663">                &quot;email&quot;, admin.getEmail(),</span>
+                &quot;roles&quot;, roles,
+<span class="fc" id="L665">                &quot;has2FA&quot;, true</span>
+            ));
+            
+<span class="fc" id="L668">            System.out.println(&quot;🎉 [ADMIN-SETUP] Setup completado exitosamente&quot;);</span>
+            
+<span class="fc" id="L670">            return ResponseEntity.ok(responseData);</span>
+            
+<span class="nc" id="L672">        } catch (Exception e) {</span>
+<span class="nc" id="L673">            System.err.println(&quot;❌ [ADMIN-SETUP] Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L674">            e.printStackTrace();</span>
+<span class="nc" id="L675">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L676">                    .body(Map.of(&quot;error&quot;, &quot;Error al completar configuración: &quot; + e.getMessage()));</span>
+        }
+    }
+
+    @PostMapping(&quot;/2fa/setup&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Configurar 2FA&quot;, description = &quot;Genera QR code para configurar Google Authenticator&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; setup2FA() {
+        try {
+<span class="fc" id="L686">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L687">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+            
+<span class="pc bpc" id="L689" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L690">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L691">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L694">            Usuario usuario = usuarioOpt.get();</span>
+            
+            // Si ya tiene 2FA habilitado, no permitir reconfigurar sin deshabilitarlo primero
+<span class="pc bpc" id="L697" title="2 of 4 branches missed.">            if (usuario.getTotpEnabled() != null &amp;&amp; usuario.getTotpEnabled()) {</span>
+<span class="nc" id="L698">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L699">                        .body(Map.of(&quot;error&quot;, &quot;2FA ya está habilitado. Deshabilítalo primero si deseas reconfigurarlo.&quot;));</span>
+            }
+            
+            // Generar nuevo secret
+<span class="fc" id="L703">            String secret = totpService.generateSecret();</span>
+            
+            // Generar QR code
+<span class="fc" id="L706">            String accountName = usuario.getEmail();</span>
+<span class="fc" id="L707">            String qrCodeDataUrl = totpService.generateQrCodeDataUrl(secret, accountName);</span>
+            
+            // Guardar el secret (pero NO habilitar 2FA hasta que se verifique)
+<span class="fc" id="L710">            usuario.setTotpSecret(secret);</span>
+<span class="fc" id="L711">            usuario.setTotpEnabled(false); // Todavía no está habilitado</span>
+<span class="fc" id="L712">            usuarioService.guardar(usuario);</span>
+            
+<span class="fc" id="L714">            Setup2FAResponseDTO response = new Setup2FAResponseDTO(</span>
+                secret,
+                qrCodeDataUrl,
+                &quot;INIA&quot;,
+                accountName
+            );
+            
+<span class="fc" id="L721">            System.out.println(&quot;🔐 2FA setup iniciado para usuario: &quot; + usuario.getNombre());</span>
+            
+<span class="fc" id="L723">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;Escanea el QR code con Google Authenticator y verifica el código&quot;,
+                &quot;data&quot;, response
+            ));
+            
+<span class="nc" id="L728">        } catch (Exception e) {</span>
+<span class="nc" id="L729">            System.err.println(&quot;❌ Error configurando 2FA: &quot; + e.getMessage());</span>
+<span class="nc" id="L730">            e.printStackTrace();</span>
+<span class="nc" id="L731">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L732">                    .body(Map.of(&quot;error&quot;, &quot;Error al configurar 2FA&quot;));</span>
+        }
+    }
+
+    @PostMapping(&quot;/2fa/verify&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Verificar y activar 2FA&quot;, description = &quot;Verifica el código de Google Authenticator y activa 2FA&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; verify2FA(@RequestBody Verify2FARequestDTO request) {
+        try {
+<span class="fc" id="L742">            System.out.println(&quot;🔐 [VERIFY-2FA] Verificando código TOTP...&quot;);</span>
+<span class="fc" id="L743">            System.out.println(&quot;📧 [VERIFY-2FA] Código recibido: &quot; + request.getTotpCode());</span>
+            
+<span class="fc" id="L745">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L746">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+            
+<span class="pc bpc" id="L748" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L749">                System.err.println(&quot;❌ [VERIFY-2FA] Usuario no encontrado&quot;);</span>
+<span class="nc" id="L750">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L751">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L754">            Usuario usuario = usuarioOpt.get();</span>
+<span class="fc" id="L755">            System.out.println(&quot;👤 [VERIFY-2FA] Usuario: &quot; + usuario.getNombre());</span>
+            
+            // Verificar que tenga un secret configurado
+<span class="pc bpc" id="L758" title="2 of 4 branches missed.">            if (usuario.getTotpSecret() == null || usuario.getTotpSecret().isEmpty()) {</span>
+<span class="nc" id="L759">                System.err.println(&quot;❌ [VERIFY-2FA] Usuario sin secret configurado&quot;);</span>
+<span class="nc" id="L760">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L761">                        .body(Map.of(&quot;error&quot;, &quot;Debes configurar 2FA primero (llama a /2fa/setup)&quot;));</span>
+            }
+            
+<span class="fc" id="L764">            System.out.println(&quot;🔑 [VERIFY-2FA] Secret del usuario: &quot; + usuario.getTotpSecret().substring(0, 8) + &quot;...&quot;);</span>
+            
+            // DEBUG: Generar código actual para comparar
+<span class="fc" id="L767">            String currentCode = totpService.getCurrentCode(usuario.getTotpSecret());</span>
+<span class="fc" id="L768">            System.out.println(&quot;🎯 [VERIFY-2FA] Código actual esperado: &quot; + currentCode);</span>
+<span class="fc" id="L769">            System.out.println(&quot;⏰ [VERIFY-2FA] Tiempo restante del código: &quot; + totpService.getRemainingSeconds() + &quot;s&quot;);</span>
+            
+            // Verificar el código TOTP
+<span class="fc" id="L772">            boolean isValid = totpService.verifyCode(usuario.getTotpSecret(), request.getTotpCode());</span>
+            
+<span class="fc" id="L774">            System.out.println(&quot;✅ [VERIFY-2FA] Código válido: &quot; + isValid);</span>
+            
+<span class="fc bfc" id="L776" title="All 2 branches covered.">            if (!isValid) {</span>
+<span class="fc" id="L777">                System.err.println(&quot;❌ [VERIFY-2FA] Código inválido o expirado&quot;);</span>
+<span class="fc" id="L778">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L779">                        .body(Map.of(&quot;error&quot;, &quot;Código 2FA inválido o expirado&quot;));</span>
+            }
+            
+            // ¡Código correcto! Activar 2FA
+<span class="fc" id="L783">            usuario.setTotpEnabled(true);</span>
+<span class="fc" id="L784">            usuarioService.guardar(usuario);</span>
+            
+            // Generar códigos de respaldo (solo se muestran una vez)
+<span class="fc" id="L787">            List&lt;String&gt; backupCodes = backupCodeService.generateBackupCodes(userId);</span>
+<span class="fc" id="L788">            System.out.println(&quot;🔐 [VERIFY-2FA] Generados &quot; + backupCodes.size() + &quot; códigos de respaldo&quot;);</span>
+            
+            // Enviar email de notificación
+<span class="fc" id="L791">            emailService.enviar2FAActivado(usuario.getEmail(), usuario.getNombreCompleto());</span>
+            
+<span class="fc" id="L793">            System.out.println(&quot;✅ [VERIFY-2FA] 2FA activado exitosamente para usuario: &quot; + usuario.getNombre());</span>
+            
+            // Respuesta incluye códigos de respaldo (SOLO SE MUESTRAN UNA VEZ)
+<span class="fc" id="L796">            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L797">            response.put(&quot;mensaje&quot;, &quot;2FA activado exitosamente. GUARDA estos códigos de respaldo en un lugar seguro.&quot;);</span>
+<span class="fc" id="L798">            response.put(&quot;totpEnabled&quot;, true);</span>
+<span class="fc" id="L799">            response.put(&quot;backupCodes&quot;, backupCodes);</span>
+<span class="fc" id="L800">            response.put(&quot;totalCodes&quot;, backupCodes.size());</span>
+            
+<span class="fc" id="L802">            return ResponseEntity.ok(response);</span>
+            
+<span class="nc" id="L804">        } catch (Exception e) {</span>
+<span class="nc" id="L805">            System.err.println(&quot;❌ [VERIFY-2FA] Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L806">            e.printStackTrace();</span>
+<span class="nc" id="L807">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L808">                    .body(Map.of(&quot;error&quot;, &quot;Error al verificar 2FA&quot;));</span>
+        }
+    }
+
+    @DeleteMapping(&quot;/2fa/disable&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Deshabilitar 2FA&quot;, description = &quot;Deshabilita 2FA después de verificar el código actual&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; disable2FA(@RequestBody Verify2FARequestDTO request) {
+        try {
+<span class="fc" id="L818">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L819">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+            
+<span class="pc bpc" id="L821" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L822">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L823">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L826">            Usuario usuario = usuarioOpt.get();</span>
+            
+            // Verificar que tenga 2FA habilitado
+<span class="pc bpc" id="L829" title="2 of 4 branches missed.">            if (usuario.getTotpEnabled() == null || !usuario.getTotpEnabled()) {</span>
+<span class="nc" id="L830">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L831">                        .body(Map.of(&quot;error&quot;, &quot;2FA no está habilitado&quot;));</span>
+            }
+            
+            // Verificar el código TOTP antes de deshabilitar (seguridad)
+<span class="fc" id="L835">            boolean isValid = totpService.verifyCode(usuario.getTotpSecret(), request.getTotpCode());</span>
+            
+<span class="fc bfc" id="L837" title="All 2 branches covered.">            if (!isValid) {</span>
+<span class="fc" id="L838">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L839">                        .body(Map.of(&quot;error&quot;, &quot;Código 2FA inválido. Necesitas el código correcto para deshabilitar 2FA&quot;));</span>
+            }
+            
+            // Deshabilitar 2FA
+<span class="fc" id="L843">            usuario.setTotpEnabled(false);</span>
+<span class="fc" id="L844">            usuario.setTotpSecret(null);</span>
+<span class="fc" id="L845">            usuarioService.guardar(usuario);</span>
+            
+            // Eliminar todos los códigos de respaldo
+<span class="fc" id="L848">            backupCodeService.deleteAllUserCodes(userId);</span>
+<span class="fc" id="L849">            System.out.println(&quot;🗑️ Códigos de respaldo eliminados para usuario: &quot; + usuario.getNombre());</span>
+            
+            // Revocar todos los dispositivos de confianza
+<span class="fc" id="L852">            trustedDeviceService.revokeAllUserDevices(userId);</span>
+            
+<span class="fc" id="L854">            System.out.println(&quot;🔓 2FA deshabilitado para usuario: &quot; + usuario.getNombre());</span>
+            
+<span class="fc" id="L856">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;2FA deshabilitado exitosamente&quot;,
+<span class="fc" id="L858">                &quot;totpEnabled&quot;, false</span>
+            ));
+            
+<span class="nc" id="L861">        } catch (Exception e) {</span>
+<span class="nc" id="L862">            System.err.println(&quot;❌ Error deshabilitando 2FA: &quot; + e.getMessage());</span>
+<span class="nc" id="L863">            e.printStackTrace();</span>
+<span class="nc" id="L864">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L865">                    .body(Map.of(&quot;error&quot;, &quot;Error al deshabilitar 2FA&quot;));</span>
+        }
+    }
+
+    @GetMapping(&quot;/2fa/status&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Estado de 2FA&quot;, description = &quot;Verifica si el usuario tiene 2FA habilitado&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; get2FAStatus() {
+        try {
+<span class="fc" id="L875">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L876">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+            
+<span class="pc bpc" id="L878" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L879">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L880">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L883">            Usuario usuario = usuarioOpt.get();</span>
+            
+<span class="fc" id="L885">            return ResponseEntity.ok(Map.of(</span>
+<span class="pc bpc" id="L886" title="2 of 4 branches missed.">                &quot;totpEnabled&quot;, usuario.getTotpEnabled() != null &amp;&amp; usuario.getTotpEnabled(),</span>
+<span class="pc bpc" id="L887" title="2 of 4 branches missed.">                &quot;hasSecret&quot;, usuario.getTotpSecret() != null &amp;&amp; !usuario.getTotpSecret().isEmpty()</span>
+            ));
+            
+<span class="nc" id="L890">        } catch (Exception e) {</span>
+<span class="nc" id="L891">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L892">                    .body(Map.of(&quot;error&quot;, &quot;Error al obtener estado de 2FA&quot;));</span>
+        }
+    }
+
+    // ===== ENDPOINTS DE DISPOSITIVOS DE CONFIANZA =====
+
+    @GetMapping(&quot;/trusted-devices&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Listar dispositivos de confianza&quot;, description = &quot;Lista todos los dispositivos de confianza del usuario&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; listTrustedDevices() {
+        try {
+<span class="fc" id="L904">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L905">            System.out.println(&quot;📱 [TRUSTED-DEVICES] Listando dispositivos para usuario ID: &quot; + userId);</span>
+            
+<span class="fc" id="L907">            List&lt;TrustedDeviceDTO&gt; devices = trustedDeviceService.listUserDevices(userId);</span>
+            
+<span class="fc" id="L909">            System.out.println(&quot;📱 [TRUSTED-DEVICES] Dispositivos encontrados: &quot; + devices.size());</span>
+<span class="fc" id="L910">            devices.forEach(d -&gt; System.out.println(&quot;  - &quot; + d.getDeviceName() + &quot; (ID: &quot; + d.getId() + &quot;)&quot;));</span>
+            
+<span class="fc" id="L912">            return ResponseEntity.ok(Map.of(</span>
+                &quot;devices&quot;, devices,
+<span class="fc" id="L914">                &quot;count&quot;, devices.size()</span>
+            ));
+            
+<span class="nc" id="L917">        } catch (Exception e) {</span>
+<span class="nc" id="L918">            System.err.println(&quot;❌ [TRUSTED-DEVICES] Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L919">            e.printStackTrace();</span>
+<span class="nc" id="L920">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L921">                    .body(Map.of(&quot;error&quot;, &quot;Error al listar dispositivos&quot;));</span>
+        }
+    }
+
+    @DeleteMapping(&quot;/trusted-devices/{deviceId}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Revocar dispositivo de confianza&quot;, description = &quot;Revoca un dispositivo de confianza específico&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; revokeTrustedDevice(@PathVariable Long deviceId) {
+        try {
+<span class="fc" id="L931">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L932">            trustedDeviceService.revokeDevice(deviceId, userId);</span>
+            
+<span class="fc" id="L934">            return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Dispositivo revocado exitosamente&quot;));</span>
+            
+<span class="nc" id="L936">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L937">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L938">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+<span class="nc" id="L939">        } catch (Exception e) {</span>
+<span class="nc" id="L940">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L941">                    .body(Map.of(&quot;error&quot;, &quot;Error al revocar dispositivo&quot;));</span>
+        }
+    }
+
+    @DeleteMapping(&quot;/trusted-devices&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Revocar todos los dispositivos&quot;, description = &quot;Revoca todos los dispositivos de confianza del usuario&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; revokeAllTrustedDevices() {
+        try {
+<span class="fc" id="L951">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L952">            trustedDeviceService.revokeAllUserDevices(userId);</span>
+            
+<span class="fc" id="L954">            return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Todos los dispositivos revocados exitosamente&quot;));</span>
+            
+<span class="nc" id="L956">        } catch (Exception e) {</span>
+<span class="nc" id="L957">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L958">                    .body(Map.of(&quot;error&quot;, &quot;Error al revocar dispositivos&quot;));</span>
+        }
+    }
+
+    // ===== ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA =====
+
+    @PostMapping(&quot;/forgot-password&quot;)
+    @Operation(summary = &quot;Olvidé mi contraseña&quot;, description = &quot;Envía un código de recuperación al email del usuario&quot;)
+    public ResponseEntity&lt;?&gt; forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        try {
+            // Buscar usuario por email
+<span class="fc" id="L969">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorEmail(request.getEmail());</span>
+            
+<span class="fc bfc" id="L971" title="All 2 branches covered.">            if (usuarioOpt.isEmpty()) {</span>
+                // Por seguridad, no revelar si el email existe o no
+<span class="fc" id="L973">                return ResponseEntity.ok(Map.of(</span>
+                    &quot;mensaje&quot;, &quot;Si el email existe, se enviará un código de recuperación&quot;
+                ));
+            }
+            
+<span class="fc" id="L978">            Usuario usuario = usuarioOpt.get();</span>
+            
+            // Verificar que tenga 2FA habilitado
+<span class="pc bpc" id="L981" title="2 of 4 branches missed.">            if (usuario.getTotpEnabled() == null || !usuario.getTotpEnabled()) {</span>
+<span class="nc" id="L982">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L983">                        .body(Map.of(&quot;error&quot;, &quot;Este usuario no tiene 2FA habilitado. Contacte al administrador.&quot;));</span>
+            }
+            
+            // Generar código de recuperación
+<span class="fc" id="L987">            String recoveryCode = recoveryCodeService.generateRecoveryCode();</span>
+<span class="fc" id="L988">            String hashedCode = recoveryCodeService.hashCode(recoveryCode);</span>
+            
+            // Guardar el código hasheado y su expiración
+<span class="fc" id="L991">            usuario.setRecoveryCodeHash(hashedCode);</span>
+<span class="fc" id="L992">            usuario.setRecoveryCodeExpiry(recoveryCodeService.getExpiryTime());</span>
+<span class="fc" id="L993">            usuarioService.guardar(usuario);</span>
+            
+            // Enviar email con el código
+<span class="fc" id="L996">            emailService.enviarCodigoRecuperacion(</span>
+<span class="fc" id="L997">                usuario.getEmail(),</span>
+<span class="fc" id="L998">                usuario.getNombreCompleto(),</span>
+                recoveryCode
+            );
+            
+<span class="fc" id="L1002">            System.out.println(&quot;📧 Código de recuperación enviado a: &quot; + usuario.getEmail());</span>
+            
+<span class="fc" id="L1004">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;Código de recuperación enviado a tu email. Válido por 10 minutos.&quot;,
+<span class="fc" id="L1006">                &quot;expiresIn&quot;, recoveryCodeService.getExpiryMinutes() + &quot; minutos&quot;</span>
+            ));
+            
+<span class="nc" id="L1009">        } catch (Exception e) {</span>
+<span class="nc" id="L1010">            System.err.println(&quot;❌ Error en forgot-password: &quot; + e.getMessage());</span>
+<span class="nc" id="L1011">            e.printStackTrace();</span>
+<span class="nc" id="L1012">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L1013">                    .body(Map.of(&quot;error&quot;, &quot;Error al procesar solicitud&quot;));</span>
+        }
+    }
+
+    @PostMapping(&quot;/reset-password&quot;)
+    @Operation(summary = &quot;Resetear contraseña&quot;, description = &quot;Resetea la contraseña usando código de recuperación + 2FA&quot;)
+    public ResponseEntity&lt;?&gt; resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+        try {
+            // Buscar usuario por email
+<span class="fc" id="L1022">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorEmail(request.getEmail());</span>
+            
+<span class="pc bpc" id="L1024" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L1025">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L1026">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L1029">            Usuario usuario = usuarioOpt.get();</span>
+            
+            // Verificar que tenga un código de recuperación activo
+<span class="pc bpc" id="L1032" title="2 of 4 branches missed.">            if (usuario.getRecoveryCodeHash() == null || usuario.getRecoveryCodeExpiry() == null) {</span>
+<span class="nc" id="L1033">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L1034">                        .body(Map.of(&quot;error&quot;, &quot;No hay código de recuperación activo. Solicita uno nuevo.&quot;));</span>
+            }
+            
+            // Verificar que el código no haya expirado
+<span class="fc bfc" id="L1038" title="All 2 branches covered.">            if (recoveryCodeService.isExpired(usuario.getRecoveryCodeExpiry())) {</span>
+                // Limpiar código expirado
+<span class="fc" id="L1040">                usuario.setRecoveryCodeHash(null);</span>
+<span class="fc" id="L1041">                usuario.setRecoveryCodeExpiry(null);</span>
+<span class="fc" id="L1042">                usuarioService.guardar(usuario);</span>
+                
+<span class="fc" id="L1044">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L1045">                        .body(Map.of(&quot;error&quot;, &quot;Código de recuperación expirado. Solicita uno nuevo.&quot;));</span>
+            }
+            
+            // Verificar el código de recuperación
+<span class="fc" id="L1049">            boolean isRecoveryCodeValid = recoveryCodeService.verifyCode(</span>
+<span class="fc" id="L1050">                request.getRecoveryCode(),</span>
+<span class="fc" id="L1051">                usuario.getRecoveryCodeHash()</span>
+            );
+            
+<span class="pc bpc" id="L1054" title="1 of 2 branches missed.">            if (!isRecoveryCodeValid) {</span>
+<span class="nc" id="L1055">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L1056">                        .body(Map.of(&quot;error&quot;, &quot;Código de recuperación inválido&quot;));</span>
+            }
+            
+            // Verificar el código 2FA (DOBLE SEGURIDAD) - acepta TOTP o código de respaldo
+<span class="fc" id="L1060">            boolean is2FAValid = false;</span>
+<span class="fc" id="L1061">            boolean usedBackupCode = false;</span>
+            
+            // Primero intentar verificar como código TOTP
+<span class="pc bpc" id="L1064" title="2 of 4 branches missed.">            if (request.getTotpCode().length() == 6 &amp;&amp; request.getTotpCode().matches(&quot;\\d+&quot;)) {</span>
+<span class="fc" id="L1065">                is2FAValid = totpService.verifyCode(usuario.getTotpSecret(), request.getTotpCode());</span>
+<span class="fc" id="L1066">                System.out.println(&quot;🔑 [RESET-PASSWORD] Verificación TOTP: &quot; + is2FAValid);</span>
+            }
+            
+            // Si el TOTP falló, intentar con código de respaldo
+<span class="pc bpc" id="L1070" title="1 of 4 branches missed.">            if (!is2FAValid &amp;&amp; request.getTotpCode().length() &gt;= 12) {</span>
+<span class="nc" id="L1071">                is2FAValid = backupCodeService.verifyAndUseBackupCode(usuario.getUsuarioID(), request.getTotpCode());</span>
+<span class="nc bnc" id="L1072" title="All 2 branches missed.">                if (is2FAValid) {</span>
+<span class="nc" id="L1073">                    usedBackupCode = true;</span>
+<span class="nc" id="L1074">                    System.out.println(&quot;🎫 [RESET-PASSWORD] Código de respaldo usado exitosamente&quot;);</span>
+                }
+            }
+            
+<span class="fc bfc" id="L1078" title="All 2 branches covered.">            if (!is2FAValid) {</span>
+<span class="fc" id="L1079">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L1080">                        .body(Map.of(&quot;error&quot;, &quot;Código de autenticación inválido&quot;));</span>
+            }
+            
+<span class="pc bpc" id="L1083" title="1 of 2 branches missed.">            System.out.println(&quot;✅ [RESET-PASSWORD] Código 2FA válido&quot; + (usedBackupCode ? &quot; (código de respaldo)&quot; : &quot; (TOTP)&quot;));</span>
+            
+            // ✅ TODO VÁLIDO - Cambiar contraseña
+<span class="fc" id="L1086">            usuarioService.cambiarContrasenia(usuario.getUsuarioID(), request.getNewPassword());</span>
+            
+            // Limpiar código de recuperación (solo se usa una vez)
+<span class="fc" id="L1089">            usuario.setRecoveryCodeHash(null);</span>
+<span class="fc" id="L1090">            usuario.setRecoveryCodeExpiry(null);</span>
+<span class="fc" id="L1091">            usuarioService.guardar(usuario);</span>
+            
+            // Revocar todos los dispositivos de confianza por seguridad
+<span class="fc" id="L1094">            trustedDeviceService.revokeAllUserDevices(usuario.getUsuarioID());</span>
+            
+<span class="fc" id="L1096">            System.out.println(&quot;🔑 Contraseña reseteada exitosamente para: &quot; + usuario.getEmail());</span>
+            
+<span class="fc" id="L1098">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;Contraseña cambiada exitosamente. Por seguridad, todos tus dispositivos de confianza fueron revocados.&quot;
+            ));
+            
+<span class="nc" id="L1102">        } catch (Exception e) {</span>
+<span class="nc" id="L1103">            System.err.println(&quot;❌ Error en reset-password: &quot; + e.getMessage());</span>
+<span class="nc" id="L1104">            e.printStackTrace();</span>
+<span class="nc" id="L1105">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L1106">                    .body(Map.of(&quot;error&quot;, &quot;Error al resetear contraseña&quot;));</span>
+        }
+    }
+
+    // ============================================
+    // ENDPOINTS DE CÓDIGOS DE RESPALDO
+    // ============================================
+
+    @PostMapping(&quot;/2fa/backup-codes/regenerate&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Regenerar códigos de respaldo&quot;, 
+               description = &quot;Genera un nuevo conjunto de códigos de respaldo, invalidando los anteriores. Requiere código TOTP para seguridad.&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; regenerateBackupCodes(@RequestBody Verify2FARequestDTO request) {
+        try {
+<span class="fc" id="L1121">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L1122">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+            
+<span class="pc bpc" id="L1124" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L1125">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L1126">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L1129">            Usuario usuario = usuarioOpt.get();</span>
+            
+            // Verificar que tenga 2FA habilitado
+<span class="pc bpc" id="L1132" title="1 of 4 branches missed.">            if (usuario.getTotpEnabled() == null || !usuario.getTotpEnabled()) {</span>
+<span class="fc" id="L1133">                return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L1134">                        .body(Map.of(&quot;error&quot;, &quot;2FA no está habilitado&quot;));</span>
+            }
+            
+            // Verificar código TOTP antes de regenerar (seguridad)
+<span class="fc" id="L1138">            boolean isValid = totpService.verifyCode(usuario.getTotpSecret(), request.getTotpCode());</span>
+            
+<span class="pc bpc" id="L1140" title="1 of 2 branches missed.">            if (!isValid) {</span>
+<span class="nc" id="L1141">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L1142">                        .body(Map.of(&quot;error&quot;, &quot;Código 2FA inválido&quot;));</span>
+            }
+            
+            // Regenerar códigos de respaldo
+<span class="fc" id="L1146">            List&lt;String&gt; backupCodes = backupCodeService.regenerateBackupCodes(userId);</span>
+            
+<span class="fc" id="L1148">            System.out.println(&quot;🔄 Códigos de respaldo regenerados para usuario: &quot; + usuario.getNombre() + &quot; (Total: &quot; + backupCodes.size() + &quot;)&quot;);</span>
+            
+<span class="fc" id="L1150">            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L1151">            response.put(&quot;mensaje&quot;, &quot;Códigos de respaldo regenerados exitosamente. GUARDA estos nuevos códigos, los anteriores fueron invalidados.&quot;);</span>
+<span class="fc" id="L1152">            response.put(&quot;backupCodes&quot;, backupCodes);</span>
+<span class="fc" id="L1153">            response.put(&quot;totalCodes&quot;, backupCodes.size());</span>
+            
+<span class="fc" id="L1155">            return ResponseEntity.ok(response);</span>
+            
+<span class="nc" id="L1157">        } catch (Exception e) {</span>
+<span class="nc" id="L1158">            System.err.println(&quot;❌ Error regenerando códigos de respaldo: &quot; + e.getMessage());</span>
+<span class="nc" id="L1159">            e.printStackTrace();</span>
+<span class="nc" id="L1160">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L1161">                    .body(Map.of(&quot;error&quot;, &quot;Error al regenerar códigos de respaldo&quot;));</span>
+        }
+    }
+
+    @GetMapping(&quot;/2fa/backup-codes/count&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Contar códigos de respaldo disponibles&quot;, 
+               description = &quot;Obtiene la cantidad de códigos de respaldo disponibles (no usados)&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; getBackupCodesCount() {
+        try {
+<span class="fc" id="L1172">            Integer userId = seguridadService.obtenerUsuarioAutenticado();</span>
+<span class="fc" id="L1173">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+            
+<span class="pc bpc" id="L1175" title="1 of 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L1176">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L1177">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+            
+<span class="fc" id="L1180">            Usuario usuario = usuarioOpt.get();</span>
+            
+            // Verificar que tenga 2FA habilitado
+<span class="pc bpc" id="L1183" title="2 of 4 branches missed.">            if (usuario.getTotpEnabled() == null || !usuario.getTotpEnabled()) {</span>
+<span class="nc" id="L1184">                return ResponseEntity.ok(Map.of(</span>
+<span class="nc" id="L1185">                    &quot;availableCodes&quot;, 0,</span>
+                    &quot;mensaje&quot;, &quot;2FA no está habilitado&quot;
+                ));
+            }
+            
+<span class="fc" id="L1190">            long availableCodes = backupCodeService.getAvailableCodesCount(userId);</span>
+            
+<span class="fc" id="L1192">            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L1193">            response.put(&quot;availableCodes&quot;, availableCodes);</span>
+            
+<span class="fc bfc" id="L1195" title="All 2 branches covered.">            if (availableCodes &lt;= 2) {</span>
+<span class="fc" id="L1196">                response.put(&quot;warning&quot;, &quot;Quedan pocos códigos de respaldo. Considera regenerarlos.&quot;);</span>
+            }
+            
+<span class="fc" id="L1199">            return ResponseEntity.ok(response);</span>
+            
+<span class="nc" id="L1201">        } catch (Exception e) {</span>
+<span class="nc" id="L1202">            System.err.println(&quot;❌ Error obteniendo conteo de códigos: &quot; + e.getMessage());</span>
+<span class="nc" id="L1203">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L1204">                    .body(Map.of(&quot;error&quot;, &quot;Error al obtener códigos de respaldo&quot;));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Lote.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.business.entities</a> &gt; <span class="el_source">Lote.java</span></div><h1>Lote.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.business.entities;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoLote;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+@Entity
+@Table(name = &quot;Lote&quot;)
+@Data
+public class Lote {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long loteID;
+
+    @Column(unique = true)
+    private String ficha;
+
+
+    @Column(unique = true)
+    private String nomLote;
+
+    @ManyToOne
+    @JoinColumn(name = &quot;cultivarID&quot;)
+    private Cultivar cultivar;
+
+    private TipoLote tipo;
+    
+    @ManyToOne
+    @JoinColumn(name = &quot;empresaID&quot;)
+    private Contacto empresa;
+
+    @ManyToOne
+    @JoinColumn(name = &quot;clienteID&quot;)
+    private Contacto cliente;
+
+    private String codigoCC;
+    private String codigoFF;
+    private LocalDate fechaEntrega;
+    private LocalDate fechaRecibo;
+
+    @ManyToOne
+    @JoinColumn(name = &quot;depositoID&quot;)
+    private Catalogo deposito;
+
+    private String unidadEmbolsado;
+    private String remitente;
+    private String observaciones;
+
+    private BigDecimal kilosLimpios;
+    
+    // Relación con datos de humedad (múltiples conjuntos de tipo + valor)
+    @OneToMany(mappedBy = &quot;lote&quot;, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List&lt;DatosHumedad&gt; datosHumedad;
+    
+    // Relación con datos legados importados
+    @OneToMany(mappedBy = &quot;lote&quot;, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List&lt;Legado&gt; datosLegados;
+    
+    @ManyToOne
+    @JoinColumn(name = &quot;numeroArticuloID&quot;)
+    private Catalogo numeroArticulo;
+
+    @ManyToOne
+    @JoinColumn(name = &quot;origenID&quot;)
+    private Catalogo origen;
+    
+    @ManyToOne
+    @JoinColumn(name = &quot;estadoID&quot;)
+    private Catalogo estado;
+    private LocalDate fechaCosecha;
+    
+    // Lista de tipos de análisis asignados a este lote
+    @ElementCollection(targetClass = TipoAnalisis.class, fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(
+        name = &quot;lote_tipos_analisis&quot;, 
+        joinColumns = @JoinColumn(name = &quot;lote_id&quot;),
+        uniqueConstraints = @UniqueConstraint(columnNames = {&quot;lote_id&quot;, &quot;tipo_analisis&quot;})
+    )
+    @Column(name = &quot;tipo_analisis&quot;)
+    private List&lt;TipoAnalisis&gt; tiposAnalisisAsignados;
+    
+    private Boolean activo;
+    
+    // Métodos personalizados para manejar tipos de análisis sin duplicados
+    public void setTiposAnalisisAsignados(List&lt;TipoAnalisis&gt; tipos) {
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        if (tipos == null) {</span>
+<span class="nc" id="L97">            this.tiposAnalisisAsignados = null;</span>
+<span class="nc" id="L98">            return;</span>
+        }
+        
+        // Usar LinkedHashSet para mantener el orden y eliminar duplicados
+<span class="fc" id="L102">        Set&lt;TipoAnalisis&gt; tiposUnicos = new LinkedHashSet&lt;&gt;(tipos);</span>
+<span class="fc" id="L103">        this.tiposAnalisisAsignados = new ArrayList&lt;&gt;(tiposUnicos);</span>
+<span class="fc" id="L104">    }</span>
+    
+    public List&lt;TipoAnalisis&gt; getTiposAnalisisAsignados() {
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (this.tiposAnalisisAsignados == null) {</span>
+<span class="fc" id="L108">            return new ArrayList&lt;&gt;();</span>
+        }
+        
+        // Asegurar que no hay duplicados al retornar
+<span class="fc" id="L112">        Set&lt;TipoAnalisis&gt; tiposUnicos = new LinkedHashSet&lt;&gt;(this.tiposAnalisisAsignados);</span>
+<span class="fc" id="L113">        return new ArrayList&lt;&gt;(tiposUnicos);</span>
+    }
+    
+    public void agregarTipoAnalisis(TipoAnalisis tipo) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (tipo == null) return;</span>
+        
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        if (this.tiposAnalisisAsignados == null) {</span>
+<span class="nc" id="L120">            this.tiposAnalisisAsignados = new ArrayList&lt;&gt;();</span>
+        }
+        
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (!this.tiposAnalisisAsignados.contains(tipo)) {</span>
+<span class="nc" id="L124">            this.tiposAnalisisAsignados.add(tipo);</span>
+        }
+<span class="nc" id="L126">    }</span>
+    
+    public void removerTipoAnalisis(TipoAnalisis tipo) {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (this.tiposAnalisisAsignados != null) {</span>
+<span class="nc" id="L130">            this.tiposAnalisisAsignados.remove(tipo);</span>
+        }
+<span class="nc" id="L132">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

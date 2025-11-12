@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TetrazolioControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">TetrazolioControllerIntegrationTest.java</span></div><h1>TetrazolioControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeadosRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoTetrazolio;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TetrazolioService;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(TetrazolioController.class)
+@DisplayName(&quot;Tests de integración para TetrazolioController&quot;)
+<span class="fc" id="L37">class TetrazolioControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private TetrazolioService tetrazolioService;
+
+    private TetrazolioDTO tetrazolioDTO;
+    private TetrazolioRequestDTO tetrazolioRequestDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L53">        tetrazolioDTO = new TetrazolioDTO();</span>
+<span class="fc" id="L54">        tetrazolioDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L55">        tetrazolioDTO.setIdLote(100L);</span>
+<span class="fc" id="L56">        tetrazolioDTO.setComentarios(&quot;Test Tetrazolio&quot;);</span>
+<span class="fc" id="L57">        tetrazolioDTO.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L58">        tetrazolioDTO.setEstado(Estado.EN_PROCESO);</span>
+<span class="fc" id="L59">        tetrazolioDTO.setActivo(true);</span>
+
+<span class="fc" id="L61">        tetrazolioRequestDTO = new TetrazolioRequestDTO();</span>
+<span class="fc" id="L62">        tetrazolioRequestDTO.setIdLote(100L);</span>
+<span class="fc" id="L63">        tetrazolioRequestDTO.setComentarios(&quot;Test Tetrazolio&quot;);</span>
+<span class="fc" id="L64">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/tetrazolios - Crear Tetrazolio exitosamente&quot;)
+    void crearTetrazolio_debeRetornarTetrazolioCreado() throws Exception {
+<span class="fc" id="L70">        when(tetrazolioService.crearTetrazolio(any(TetrazolioRequestDTO.class))).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L72">        mockMvc.perform(post(&quot;/api/tetrazolios&quot;)</span>
+<span class="fc" id="L73">                .with(csrf())</span>
+<span class="fc" id="L74">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L75">                .content(objectMapper.writeValueAsString(tetrazolioRequestDTO)))</span>
+<span class="fc" id="L76">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L77">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1))</span>
+<span class="fc" id="L78">                .andExpect(jsonPath(&quot;$.idLote&quot;).value(100))</span>
+<span class="fc" id="L79">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;EN_PROCESO&quot;));</span>
+<span class="fc" id="L80">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios - Obtener todos los Tetrazolios&quot;)
+    void obtenerTodosTetrazolio_debeRetornarRespuesta() throws Exception {
+<span class="fc" id="L86">        ResponseListadoTetrazolio response = new ResponseListadoTetrazolio();</span>
+<span class="fc" id="L87">        response.setTetrazolios(Arrays.asList(tetrazolioDTO));</span>
+<span class="fc" id="L88">        when(tetrazolioService.obtenerTodosTetrazolio()).thenReturn(response);</span>
+
+<span class="fc" id="L90">        mockMvc.perform(get(&quot;/api/tetrazolios&quot;)</span>
+<span class="fc" id="L91">                .with(csrf()))</span>
+<span class="fc" id="L92">                .andExpect(status().isOk())</span>
+<span class="fc" id="L93">                .andExpect(jsonPath(&quot;$.tetrazolios[0].analisisID&quot;).value(1));</span>
+<span class="fc" id="L94">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{id} - Obtener Tetrazolio por ID&quot;)
+    void obtenerTetrazolioPorId_debeRetornarTetrazolio() throws Exception {
+<span class="fc" id="L100">        when(tetrazolioService.obtenerTetrazolioPorId(1L)).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L102">        mockMvc.perform(get(&quot;/api/tetrazolios/1&quot;)</span>
+<span class="fc" id="L103">                .with(csrf()))</span>
+<span class="fc" id="L104">                .andExpect(status().isOk())</span>
+<span class="fc" id="L105">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1))</span>
+<span class="fc" id="L106">                .andExpect(jsonPath(&quot;$.idLote&quot;).value(100));</span>
+<span class="fc" id="L107">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/listado - Obtener Tetrazolios paginados&quot;)
+    void obtenerTetrazoliosPaginadas_debeRetornarPaginacion() throws Exception {
+<span class="fc" id="L113">        TetrazolioListadoDTO listadoDTO = new TetrazolioListadoDTO();</span>
+<span class="fc" id="L114">        listadoDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L115">        listadoDTO.setIdLote(100L);</span>
+<span class="fc" id="L116">        listadoDTO.setEstado(Estado.EN_PROCESO);</span>
+
+<span class="fc" id="L118">        Page&lt;TetrazolioListadoDTO&gt; page = new PageImpl&lt;&gt;(Arrays.asList(listadoDTO), PageRequest.of(0, 10), 1);</span>
+<span class="fc" id="L119">        when(tetrazolioService.obtenerTetrazoliosPaginadasConFiltros(any(), any(), any(), any(), any())).thenReturn(page);</span>
+
+<span class="fc" id="L121">        mockMvc.perform(get(&quot;/api/tetrazolios/listado&quot;)</span>
+<span class="fc" id="L122">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L123">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L124">                .with(csrf()))</span>
+<span class="fc" id="L125">                .andExpect(status().isOk())</span>
+<span class="fc" id="L126">                .andExpect(jsonPath(&quot;$.content[0].analisisID&quot;).value(1))</span>
+<span class="fc" id="L127">                .andExpect(jsonPath(&quot;$.page.totalElements&quot;).value(1));</span>
+<span class="fc" id="L128">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{id} - Actualizar Tetrazolio&quot;)
+    void actualizarTetrazolio_debeRetornarTetrazolioActualizado() throws Exception {
+<span class="fc" id="L134">        tetrazolioDTO.setComentarios(&quot;Actualizado&quot;);</span>
+<span class="fc" id="L135">        when(tetrazolioService.actualizarTetrazolio(eq(1L), any(TetrazolioRequestDTO.class))).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L137">        mockMvc.perform(put(&quot;/api/tetrazolios/1&quot;)</span>
+<span class="fc" id="L138">                .with(csrf())</span>
+<span class="fc" id="L139">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L140">                .content(objectMapper.writeValueAsString(tetrazolioRequestDTO)))</span>
+<span class="fc" id="L141">                .andExpect(status().isOk())</span>
+<span class="fc" id="L142">                .andExpect(jsonPath(&quot;$.comentarios&quot;).value(&quot;Actualizado&quot;));</span>
+<span class="fc" id="L143">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{id}/porcentajes - Actualizar porcentajes redondeados&quot;)
+    void actualizarPorcentajesRedondeados_debeRetornarTetrazolioActualizado() throws Exception {
+<span class="fc" id="L149">        PorcentajesRedondeadosRequestDTO porcentajesDTO = new PorcentajesRedondeadosRequestDTO();</span>
+<span class="fc" id="L150">        when(tetrazolioService.actualizarPorcentajesRedondeados(eq(1L), any(PorcentajesRedondeadosRequestDTO.class))).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L152">        mockMvc.perform(put(&quot;/api/tetrazolios/1/porcentajes&quot;)</span>
+<span class="fc" id="L153">                .with(csrf())</span>
+<span class="fc" id="L154">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L155">                .content(objectMapper.writeValueAsString(porcentajesDTO)))</span>
+<span class="fc" id="L156">                .andExpect(status().isOk())</span>
+<span class="fc" id="L157">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1));</span>
+<span class="fc" id="L158">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/tetrazolios/{id} - Eliminar Tetrazolio&quot;)
+    void eliminarTetrazolio_debeRetornarNoContent() throws Exception {
+<span class="fc" id="L164">        doNothing().when(tetrazolioService).desactivarTetrazolio(1L);</span>
+
+<span class="fc" id="L166">        mockMvc.perform(delete(&quot;/api/tetrazolios/1&quot;)</span>
+<span class="fc" id="L167">                .with(csrf()))</span>
+<span class="fc" id="L168">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L169">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{id}/desactivar - Desactivar Tetrazolio&quot;)
+    void desactivarTetrazolio_debeRetornarOk() throws Exception {
+<span class="fc" id="L175">        doNothing().when(tetrazolioService).desactivarTetrazolio(1L);</span>
+
+<span class="fc" id="L177">        mockMvc.perform(put(&quot;/api/tetrazolios/1/desactivar&quot;)</span>
+<span class="fc" id="L178">                .with(csrf()))</span>
+<span class="fc" id="L179">                .andExpect(status().isOk());</span>
+<span class="fc" id="L180">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{id}/reactivar - Reactivar Tetrazolio&quot;)
+    void reactivarTetrazolio_debeRetornarTetrazolioReactivado() throws Exception {
+<span class="fc" id="L186">        when(tetrazolioService.reactivarTetrazolio(1L)).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L188">        mockMvc.perform(put(&quot;/api/tetrazolios/1/reactivar&quot;)</span>
+<span class="fc" id="L189">                .with(csrf()))</span>
+<span class="fc" id="L190">                .andExpect(status().isOk())</span>
+<span class="fc" id="L191">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1));</span>
+<span class="fc" id="L192">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/lote/{idLote} - Obtener Tetrazolios por lote&quot;)
+    void obtenerTetrazoliosPorIdLote_debeRetornarLista() throws Exception {
+<span class="fc" id="L198">        List&lt;TetrazolioDTO&gt; lista = Arrays.asList(tetrazolioDTO);</span>
+<span class="fc" id="L199">        when(tetrazolioService.obtenerTetrazoliosPorIdLote(100L)).thenReturn(lista);</span>
+
+<span class="fc" id="L201">        mockMvc.perform(get(&quot;/api/tetrazolios/lote/100&quot;)</span>
+<span class="fc" id="L202">                .with(csrf()))</span>
+<span class="fc" id="L203">                .andExpect(status().isOk())</span>
+<span class="fc" id="L204">                .andExpect(jsonPath(&quot;$[0].analisisID&quot;).value(1))</span>
+<span class="fc" id="L205">                .andExpect(jsonPath(&quot;$[0].idLote&quot;).value(100));</span>
+<span class="fc" id="L206">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{id}/finalizar - Finalizar análisis&quot;)
+    void finalizarAnalisis_debeRetornarTetrazolioFinalizado() throws Exception {
+<span class="fc" id="L212">        tetrazolioDTO.setEstado(Estado.PENDIENTE_APROBACION);</span>
+<span class="fc" id="L213">        when(tetrazolioService.finalizarAnalisis(1L)).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L215">        mockMvc.perform(put(&quot;/api/tetrazolios/1/finalizar&quot;)</span>
+<span class="fc" id="L216">                .with(csrf()))</span>
+<span class="fc" id="L217">                .andExpect(status().isOk())</span>
+<span class="fc" id="L218">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;PENDIENTE_APROBACION&quot;));</span>
+<span class="fc" id="L219">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{id}/aprobar - Aprobar análisis&quot;)
+    void aprobarAnalisis_debeRetornarTetrazolioAprobado() throws Exception {
+<span class="fc" id="L225">        tetrazolioDTO.setEstado(Estado.APROBADO);</span>
+<span class="fc" id="L226">        when(tetrazolioService.aprobarAnalisis(1L)).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L228">        mockMvc.perform(put(&quot;/api/tetrazolios/1/aprobar&quot;)</span>
+<span class="fc" id="L229">                .with(csrf()))</span>
+<span class="fc" id="L230">                .andExpect(status().isOk())</span>
+<span class="fc" id="L231">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;APROBADO&quot;));</span>
+<span class="fc" id="L232">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{id}/repetir - Marcar para repetir&quot;)
+    void marcarParaRepetir_debeRetornarTetrazolioParaRepetir() throws Exception {
+<span class="fc" id="L238">        tetrazolioDTO.setEstado(Estado.A_REPETIR);</span>
+<span class="fc" id="L239">        when(tetrazolioService.marcarParaRepetir(1L)).thenReturn(tetrazolioDTO);</span>
+
+<span class="fc" id="L241">        mockMvc.perform(put(&quot;/api/tetrazolios/1/repetir&quot;)</span>
+<span class="fc" id="L242">                .with(csrf()))</span>
+<span class="fc" id="L243">                .andExpect(status().isOk())</span>
+<span class="fc" id="L244">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;A_REPETIR&quot;));</span>
+<span class="fc" id="L245">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

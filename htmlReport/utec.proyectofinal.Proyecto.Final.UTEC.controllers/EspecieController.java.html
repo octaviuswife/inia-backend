@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EspecieController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">EspecieController.java</span></div><h1>EspecieController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.EspecieRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.EspecieService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/especie&quot;)
+@Tag(name = &quot;Especies&quot;, description = &quot;API para gestión de especies&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L33">public class EspecieController {</span>
+
+    @Autowired
+    private EspecieService especieService;
+
+    // Obtener todas activas
+    @Operation(summary = &quot;Listar todas las especies&quot;,
+              description = &quot;Obtiene todas las especies con filtro opcional de estado (activo/inactivo)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;List&lt;EspecieDTO&gt;&gt; obtenerTodas(
+            @RequestParam(required = false) Boolean activo) {
+<span class="fc" id="L45">        List&lt;EspecieDTO&gt; especies = especieService.obtenerTodas(activo);</span>
+<span class="fc" id="L46">        return ResponseEntity.ok(especies);</span>
+    }
+
+    // Obtener inactivas
+    @Operation(summary = &quot;Listar especies inactivas&quot;, 
+              description = &quot;Obtiene todas las especies inactivas&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @GetMapping(&quot;/inactivas&quot;)
+    public ResponseEntity&lt;List&lt;EspecieDTO&gt;&gt; obtenerInactivas() {
+<span class="fc" id="L55">        List&lt;EspecieDTO&gt; especies = especieService.obtenerInactivas();</span>
+<span class="fc" id="L56">        return ResponseEntity.ok(especies);</span>
+    }
+
+    // Buscar por nombre común
+    @Operation(summary = &quot;Buscar especies por nombre común&quot;, 
+              description = &quot;Busca especies cuyo nombre común contenga el texto proporcionado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/buscar/comun&quot;)
+    public ResponseEntity&lt;List&lt;EspecieDTO&gt;&gt; buscarPorNombreComun(@RequestParam String nombre) {
+<span class="fc" id="L65">        List&lt;EspecieDTO&gt; especies = especieService.buscarPorNombreComun(nombre);</span>
+<span class="fc" id="L66">        return ResponseEntity.ok(especies);</span>
+    }
+
+    // Buscar por nombre científico
+    @Operation(summary = &quot;Buscar especies por nombre científico&quot;, 
+              description = &quot;Busca especies cuyo nombre científico contenga el texto proporcionado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/buscar/cientifico&quot;)
+    public ResponseEntity&lt;List&lt;EspecieDTO&gt;&gt; buscarPorNombreCientifico(@RequestParam String nombre) {
+<span class="fc" id="L75">        List&lt;EspecieDTO&gt; especies = especieService.buscarPorNombreCientifico(nombre);</span>
+<span class="fc" id="L76">        return ResponseEntity.ok(especies);</span>
+    }
+
+    // Obtener por ID
+    @Operation(summary = &quot;Obtener especie por ID&quot;, 
+              description = &quot;Obtiene una especie específica por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;EspecieDTO&gt; obtenerPorId(@PathVariable Long id) {
+<span class="fc" id="L85">        EspecieDTO especie = especieService.obtenerPorId(id);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (especie != null) {</span>
+<span class="fc" id="L87">            return ResponseEntity.ok(especie);</span>
+        }
+<span class="fc" id="L89">        return ResponseEntity.notFound().build();</span>
+    }
+
+    // Crear
+    @Operation(summary = &quot;Crear nueva especie&quot;, 
+              description = &quot;Crea una nueva especie (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;EspecieDTO&gt; crear(@RequestBody EspecieRequestDTO solicitud) {
+<span class="fc" id="L98">        EspecieDTO creada = especieService.crear(solicitud);</span>
+<span class="fc" id="L99">        return ResponseEntity.ok(creada);</span>
+    }
+
+    // Actualizar
+    @Operation(summary = &quot;Actualizar especie&quot;, 
+              description = &quot;Actualiza una especie existente (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;EspecieDTO&gt; actualizar(@PathVariable Long id, @RequestBody EspecieRequestDTO solicitud) {
+<span class="fc" id="L108">        EspecieDTO actualizada = especieService.actualizar(id, solicitud);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (actualizada != null) {</span>
+<span class="fc" id="L110">            return ResponseEntity.ok(actualizada);</span>
+        }
+<span class="fc" id="L112">        return ResponseEntity.notFound().build();</span>
+    }
+
+    // Eliminar (soft delete)
+    @Operation(summary = &quot;Eliminar especie&quot;, 
+              description = &quot;Elimina una especie (soft delete) (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+<span class="fc" id="L121">        especieService.eliminar(id);</span>
+<span class="fc" id="L122">        return ResponseEntity.ok().build();</span>
+    }
+
+    // Reactivar
+    @Operation(summary = &quot;Reactivar especie&quot;, 
+              description = &quot;Reactiva una especie (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/reactivar&quot;)
+    public ResponseEntity&lt;EspecieDTO&gt; reactivar(@PathVariable Long id) {
+<span class="fc" id="L131">        EspecieDTO reactivada = especieService.reactivar(id);</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (reactivada != null) {</span>
+<span class="fc" id="L133">            return ResponseEntity.ok(reactivada);</span>
+        }
+<span class="nc" id="L135">        return ResponseEntity.notFound().build();</span>
+    }
+
+    // Obtener Especies con paginado para listado
+    @Operation(summary = &quot;Obtener especies paginadas&quot;, 
+              description = &quot;Obtiene la lista paginada de especies para el listado&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/listado&quot;)
+    public ResponseEntity&lt;Page&lt;EspecieDTO&gt;&gt; obtenerEspeciesPaginadas(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo) {
+<span class="fc" id="L148">        Pageable pageable = PageRequest.of(page, size);</span>
+<span class="fc" id="L149">        Page&lt;EspecieDTO&gt; response = especieService.obtenerEspeciesPaginadasConFiltros(pageable, search, activo);</span>
+<span class="fc" id="L150">        return ResponseEntity.ok(response);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

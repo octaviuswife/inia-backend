@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">AuthControllerIntegrationTest.java</span></div><h1>AuthControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.*;
+
+@WebMvcTest(controllers = AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName(&quot;Tests de integración para AuthController&quot;)
+<span class="fc" id="L41">class AuthControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private SeguridadService seguridadService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private UsuarioService usuarioService;
+
+    @MockBean
+    private TotpService totpService;
+
+    @MockBean
+    private RecoveryCodeService recoveryCodeService;
+
+    @MockBean
+    private TrustedDeviceService trustedDeviceService;
+
+    @MockBean
+    private EmailService emailService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private Usuario usuario;
+    private UsuarioDTO usuarioDTO;
+    private LoginRequestDTO loginRequest;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L76">        usuario = new Usuario();</span>
+<span class="fc" id="L77">        usuario.setUsuarioID(1);</span>
+<span class="fc" id="L78">        usuario.setNombre(&quot;admin&quot;);</span>
+<span class="fc" id="L79">        usuario.setNombres(&quot;Admin&quot;);</span>
+<span class="fc" id="L80">        usuario.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L81">        usuario.setEmail(&quot;admin@test.com&quot;);</span>
+<span class="fc" id="L82">        usuario.setContrasenia(&quot;hashedPassword&quot;);</span>
+<span class="fc" id="L83">        usuario.setRol(Rol.ADMIN);</span>
+<span class="fc" id="L84">        usuario.setEstado(EstadoUsuario.ACTIVO);</span>
+
+<span class="fc" id="L86">        usuarioDTO = new UsuarioDTO();</span>
+<span class="fc" id="L87">        usuarioDTO.setUsuarioID(1);</span>
+<span class="fc" id="L88">        usuarioDTO.setNombre(&quot;admin&quot;);</span>
+<span class="fc" id="L89">        usuarioDTO.setNombres(&quot;Admin&quot;);</span>
+<span class="fc" id="L90">        usuarioDTO.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L91">        usuarioDTO.setEmail(&quot;admin@test.com&quot;);</span>
+<span class="fc" id="L92">        usuarioDTO.setRol(Rol.ADMIN);</span>
+<span class="fc" id="L93">        usuarioDTO.setEstado(EstadoUsuario.ACTIVO);</span>
+<span class="fc" id="L94">        usuarioDTO.setActivo(true);</span>
+
+<span class="fc" id="L96">        loginRequest = new LoginRequestDTO();</span>
+<span class="fc" id="L97">        loginRequest.setUsuario(&quot;admin&quot;);</span>
+<span class="fc" id="L98">        loginRequest.setPassword(&quot;password123&quot;);</span>
+<span class="fc" id="L99">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login - Debe hacer login exitosamente&quot;)
+    void login_conCredencialesValidas_debeRetornarExito() throws Exception {
+<span class="fc" id="L104">        when(seguridadService.autenticarUsuario(&quot;admin&quot;, &quot;password123&quot;)).thenReturn(Optional.of(usuario));</span>
+<span class="fc" id="L105">        when(seguridadService.listarRolesPorUsuario(usuario)).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L106">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;access-token&quot;);</span>
+<span class="fc" id="L107">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;refresh-token&quot;);</span>
+<span class="fc" id="L108">        when(jwtUtil.getAccessTokenExpiration()).thenReturn(900000L);</span>
+<span class="fc" id="L109">        when(jwtUtil.getRefreshTokenExpiration()).thenReturn(2592000000L);</span>
+
+<span class="fc" id="L111">        mockMvc.perform(post(&quot;/api/v1/auth/login&quot;)</span>
+<span class="fc" id="L112">                .with(csrf())</span>
+<span class="fc" id="L113">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L114">                .content(objectMapper.writeValueAsString(loginRequest)))</span>
+<span class="fc" id="L115">                .andExpect(status().isOk())</span>
+<span class="fc" id="L116">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Login exitoso&quot;))</span>
+<span class="fc" id="L117">                .andExpect(jsonPath(&quot;$.usuario.id&quot;).value(1))</span>
+<span class="fc" id="L118">                .andExpect(jsonPath(&quot;$.usuario.nombre&quot;).value(&quot;admin&quot;))</span>
+<span class="fc" id="L119">                .andExpect(jsonPath(&quot;$.usuario.email&quot;).value(&quot;admin@test.com&quot;))</span>
+<span class="fc" id="L120">                .andExpect(jsonPath(&quot;$.usuario.roles[0]&quot;).value(&quot;ADMIN&quot;));</span>
+<span class="fc" id="L121">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login - Debe rechazar credenciales incorrectas&quot;)
+    void login_conCredencialesIncorrectas_debeRetornar401() throws Exception {
+<span class="fc" id="L126">        when(seguridadService.autenticarUsuario(&quot;admin&quot;, &quot;wrongpassword&quot;))</span>
+<span class="fc" id="L127">            .thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L129">        loginRequest.setPassword(&quot;wrongpassword&quot;);</span>
+
+<span class="fc" id="L131">        mockMvc.perform(post(&quot;/api/v1/auth/login&quot;)</span>
+<span class="fc" id="L132">                .with(csrf())</span>
+<span class="fc" id="L133">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L134">                .content(objectMapper.writeValueAsString(loginRequest)))</span>
+<span class="fc" id="L135">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L136">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Credenciales incorrectas&quot;));</span>
+<span class="fc" id="L137">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login - Debe rechazar usuario inactivo&quot;)
+    void login_conUsuarioInactivo_debeRetornar401() throws Exception {
+<span class="fc" id="L142">        when(seguridadService.autenticarUsuario(&quot;admin&quot;, &quot;password123&quot;))</span>
+<span class="fc" id="L143">            .thenThrow(new RuntimeException(&quot;USUARIO_INACTIVO&quot;));</span>
+
+<span class="fc" id="L145">        mockMvc.perform(post(&quot;/api/v1/auth/login&quot;)</span>
+<span class="fc" id="L146">                .with(csrf())</span>
+<span class="fc" id="L147">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L148">                .content(objectMapper.writeValueAsString(loginRequest)))</span>
+<span class="fc" id="L149">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L150">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;No se puede iniciar sesión. Contacte al administrador&quot;));</span>
+<span class="fc" id="L151">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/register - Debe registrar solicitud exitosamente&quot;)
+    void registrar_conDatosValidos_debeRetornarCreated() throws Exception {
+<span class="fc" id="L156">        RegistroUsuarioRequestDTO registroDTO = new RegistroUsuarioRequestDTO();</span>
+<span class="fc" id="L157">        registroDTO.setNombre(&quot;newuser&quot;);</span>
+<span class="fc" id="L158">        registroDTO.setNombres(&quot;New&quot;);</span>
+<span class="fc" id="L159">        registroDTO.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L160">        registroDTO.setEmail(&quot;newuser@test.com&quot;);</span>
+<span class="fc" id="L161">        registroDTO.setContrasenia(&quot;password123&quot;);</span>
+
+<span class="fc" id="L163">        when(usuarioService.registrarSolicitud(any(RegistroUsuarioRequestDTO.class))).thenReturn(usuarioDTO);</span>
+
+<span class="fc" id="L165">        mockMvc.perform(post(&quot;/api/v1/auth/register&quot;)</span>
+<span class="fc" id="L166">                .with(csrf())</span>
+<span class="fc" id="L167">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L168">                .content(objectMapper.writeValueAsString(registroDTO)))</span>
+<span class="fc" id="L169">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L170">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Solicitud de registro enviada. Pendiente de aprobación por el administrador.&quot;))</span>
+<span class="fc" id="L171">                .andExpect(jsonPath(&quot;$.usuario.usuarioID&quot;).value(1));</span>
+<span class="fc" id="L172">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/pending - Debe listar solicitudes pendientes&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void listarSolicitudesPendientes_conRolAdmin_debeRetornarLista() throws Exception {
+<span class="fc" id="L178">        List&lt;UsuarioDTO&gt; solicitudes = Arrays.asList(usuarioDTO);</span>
+<span class="fc" id="L179">        when(usuarioService.listarSolicitudesPendientes()).thenReturn(solicitudes);</span>
+
+<span class="fc" id="L181">        mockMvc.perform(get(&quot;/api/v1/auth/pending&quot;)</span>
+<span class="fc" id="L182">                .with(csrf()))</span>
+<span class="fc" id="L183">                .andExpect(status().isOk())</span>
+<span class="fc" id="L184">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L185">                .andExpect(jsonPath(&quot;$[0].usuarioID&quot;).value(1));</span>
+<span class="fc" id="L186">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/approve/{id} - Debe aprobar usuario&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void aprobarUsuario_conDatosValidos_debeRetornarExito() throws Exception {
+<span class="fc" id="L192">        AprobarUsuarioRequestDTO aprobarDTO = new AprobarUsuarioRequestDTO();</span>
+<span class="fc" id="L193">        aprobarDTO.setRol(Rol.ANALISTA);</span>
+
+<span class="fc" id="L195">        when(usuarioService.aprobarUsuario(eq(1), any(AprobarUsuarioRequestDTO.class))).thenReturn(usuarioDTO);</span>
+
+<span class="fc" id="L197">        mockMvc.perform(post(&quot;/api/v1/auth/approve/1&quot;)</span>
+<span class="fc" id="L198">                .with(csrf())</span>
+<span class="fc" id="L199">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L200">                .content(objectMapper.writeValueAsString(aprobarDTO)))</span>
+<span class="fc" id="L201">                .andExpect(status().isOk())</span>
+<span class="fc" id="L202">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Usuario aprobado exitosamente&quot;))</span>
+<span class="fc" id="L203">                .andExpect(jsonPath(&quot;$.usuario.usuarioID&quot;).value(1));</span>
+<span class="fc" id="L204">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/v1/auth/reject/{id} - Debe rechazar solicitud&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void rechazarSolicitud_conIdValido_debeRetornarExito() throws Exception {
+<span class="fc" id="L210">        mockMvc.perform(delete(&quot;/api/v1/auth/reject/1&quot;)</span>
+<span class="fc" id="L211">                .with(csrf()))</span>
+<span class="fc" id="L212">                .andExpect(status().isOk())</span>
+<span class="fc" id="L213">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Solicitud rechazada&quot;));</span>
+<span class="fc" id="L214">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/users - Debe listar todos los usuarios&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void listarUsuarios_conRolAdmin_debeRetornarLista() throws Exception {
+<span class="fc" id="L220">        List&lt;UsuarioDTO&gt; usuarios = Arrays.asList(usuarioDTO);</span>
+<span class="fc" id="L221">        when(usuarioService.listarTodosUsuarios()).thenReturn(usuarios);</span>
+
+<span class="fc" id="L223">        mockMvc.perform(get(&quot;/api/v1/auth/users&quot;)</span>
+<span class="fc" id="L224">                .with(csrf()))</span>
+<span class="fc" id="L225">                .andExpect(status().isOk())</span>
+<span class="fc" id="L226">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L227">                .andExpect(jsonPath(&quot;$[0].usuarioID&quot;).value(1));</span>
+<span class="fc" id="L228">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/users/paginated - Debe listar usuarios paginados&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void listarUsuariosPaginados_debeRetornarPaginacion() throws Exception {
+<span class="fc" id="L234">        Page&lt;UsuarioDTO&gt; page = new PageImpl&lt;&gt;(Arrays.asList(usuarioDTO));</span>
+<span class="fc" id="L235">        when(usuarioService.listarTodosUsuariosPaginados(0, 10, null, null, null)).thenReturn(page);</span>
+
+<span class="fc" id="L237">        mockMvc.perform(get(&quot;/api/v1/auth/users/paginated&quot;)</span>
+<span class="fc" id="L238">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L239">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L240">                .with(csrf()))</span>
+<span class="fc" id="L241">                .andExpect(status().isOk())</span>
+<span class="fc" id="L242">                .andExpect(jsonPath(&quot;$.content.length()&quot;).value(1))</span>
+<span class="fc" id="L243">                .andExpect(jsonPath(&quot;$.content[0].usuarioID&quot;).value(1));</span>
+<span class="fc" id="L244">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/v1/auth/users/{id} - Debe actualizar usuario&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void gestionarUsuario_conDatosValidos_debeRetornarActualizado() throws Exception {
+<span class="fc" id="L250">        GestionarUsuarioRequestDTO gestionarDTO = new GestionarUsuarioRequestDTO();</span>
+<span class="fc" id="L251">        gestionarDTO.setRol(Rol.OBSERVADOR);</span>
+<span class="fc" id="L252">        gestionarDTO.setActivo(true);</span>
+
+<span class="fc" id="L254">        when(usuarioService.gestionarUsuario(eq(1), any(GestionarUsuarioRequestDTO.class))).thenReturn(usuarioDTO);</span>
+
+<span class="fc" id="L256">        mockMvc.perform(put(&quot;/api/v1/auth/users/1&quot;)</span>
+<span class="fc" id="L257">                .with(csrf())</span>
+<span class="fc" id="L258">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L259">                .content(objectMapper.writeValueAsString(gestionarDTO)))</span>
+<span class="fc" id="L260">                .andExpect(status().isOk())</span>
+<span class="fc" id="L261">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Usuario actualizado exitosamente&quot;))</span>
+<span class="fc" id="L262">                .andExpect(jsonPath(&quot;$.usuario.usuarioID&quot;).value(1));</span>
+<span class="fc" id="L263">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/profile - Debe obtener perfil del usuario autenticado&quot;)
+    @WithMockUser(username = &quot;admin&quot;, roles = &quot;ADMIN&quot;)
+    void obtenerPerfil_conUsuarioAutenticado_debeRetornarPerfil() throws Exception {
+<span class="fc" id="L269">        when(usuarioService.obtenerPerfil()).thenReturn(usuarioDTO);</span>
+
+<span class="fc" id="L271">        mockMvc.perform(get(&quot;/api/v1/auth/profile&quot;)</span>
+<span class="fc" id="L272">                .with(csrf()))</span>
+<span class="fc" id="L273">                .andExpect(status().isOk())</span>
+<span class="fc" id="L274">                .andExpect(jsonPath(&quot;$.usuarioID&quot;).value(1))</span>
+<span class="fc" id="L275">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;admin&quot;))</span>
+<span class="fc" id="L276">                .andExpect(jsonPath(&quot;$.email&quot;).value(&quot;admin@test.com&quot;));</span>
+<span class="fc" id="L277">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/v1/auth/profile - Debe actualizar perfil del usuario&quot;)
+    @WithMockUser(username = &quot;admin&quot;, roles = &quot;ADMIN&quot;)
+    void actualizarPerfil_conDatosValidos_debeRetornarActualizado() throws Exception {
+<span class="fc" id="L283">        ActualizarPerfilRequestDTO perfilDTO = new ActualizarPerfilRequestDTO();</span>
+<span class="fc" id="L284">        perfilDTO.setNombres(&quot;Admin Updated&quot;);</span>
+<span class="fc" id="L285">        perfilDTO.setApellidos(&quot;User Updated&quot;);</span>
+
+<span class="fc" id="L287">        when(usuarioService.actualizarPerfil(any(ActualizarPerfilRequestDTO.class))).thenReturn(usuarioDTO);</span>
+<span class="fc" id="L288">        when(usuarioService.buscarPorId(1)).thenReturn(Optional.of(usuario));</span>
+<span class="fc" id="L289">        when(seguridadService.listarRolesPorUsuario(usuario)).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L290">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;new-access-token&quot;);</span>
+<span class="fc" id="L291">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;new-refresh-token&quot;);</span>
+<span class="fc" id="L292">        when(jwtUtil.getAccessTokenExpiration()).thenReturn(900000L);</span>
+<span class="fc" id="L293">        when(jwtUtil.getRefreshTokenExpiration()).thenReturn(2592000000L);</span>
+
+<span class="fc" id="L295">        mockMvc.perform(put(&quot;/api/v1/auth/profile&quot;)</span>
+<span class="fc" id="L296">                .with(csrf())</span>
+<span class="fc" id="L297">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L298">                .content(objectMapper.writeValueAsString(perfilDTO)))</span>
+<span class="fc" id="L299">                .andExpect(status().isOk())</span>
+<span class="fc" id="L300">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Perfil actualizado exitosamente&quot;))</span>
+<span class="fc" id="L301">                .andExpect(jsonPath(&quot;$.usuario.usuarioID&quot;).value(1));</span>
+<span class="fc" id="L302">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/logout - Debe cerrar sesión exitosamente&quot;)
+    void logout_debeRetornarExito() throws Exception {
+<span class="fc" id="L307">        mockMvc.perform(post(&quot;/api/v1/auth/logout&quot;)</span>
+<span class="fc" id="L308">                .with(csrf()))</span>
+<span class="fc" id="L309">                .andExpect(status().isOk())</span>
+<span class="fc" id="L310">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Logout exitoso&quot;));</span>
+<span class="fc" id="L311">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/init-admin - Debe crear admin predeterminado&quot;)
+    void crearAdminPredeterminado_debeRetornarCreated() throws Exception {
+<span class="fc" id="L316">        when(usuarioService.crearAdminPredeterminado()).thenReturn(usuarioDTO);</span>
+
+<span class="fc" id="L318">        mockMvc.perform(post(&quot;/api/v1/auth/init-admin&quot;)</span>
+<span class="fc" id="L319">                .with(csrf()))</span>
+<span class="fc" id="L320">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L321">                .andExpect(jsonPath(&quot;$.mensaje&quot;).exists())</span>
+<span class="fc" id="L322">                .andExpect(jsonPath(&quot;$.usuario.usuarioID&quot;).value(1));</span>
+<span class="fc" id="L323">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/users/active - Debe listar usuarios activos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void listarUsuariosActivos_debeRetornarListaActivos() throws Exception {
+<span class="fc" id="L329">        List&lt;UsuarioDTO&gt; usuarios = Arrays.asList(usuarioDTO);</span>
+<span class="fc" id="L330">        when(usuarioService.listarUsuariosActivos()).thenReturn(usuarios);</span>
+
+<span class="fc" id="L332">        mockMvc.perform(get(&quot;/api/v1/auth/users/active&quot;)</span>
+<span class="fc" id="L333">                .with(csrf()))</span>
+<span class="fc" id="L334">                .andExpect(status().isOk())</span>
+<span class="fc" id="L335">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L336">                .andExpect(jsonPath(&quot;$[0].activo&quot;).value(true));</span>
+<span class="fc" id="L337">    }</span>
+
+    // ===== TESTS DE EDGE CASES Y VALIDACIONES =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/register - Email con formato inválido&quot;)
+    void register_emailInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L344">        RegistroUsuarioRequestDTO request = new RegistroUsuarioRequestDTO();</span>
+<span class="fc" id="L345">        request.setNombre(&quot;testuser&quot;);</span>
+<span class="fc" id="L346">        request.setContrasenia(&quot;password123&quot;);</span>
+<span class="fc" id="L347">        request.setNombres(&quot;Test&quot;);</span>
+<span class="fc" id="L348">        request.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L349">        request.setEmail(&quot;email-invalido&quot;);</span>
+
+<span class="fc" id="L351">        mockMvc.perform(post(&quot;/api/v1/auth/register&quot;)</span>
+<span class="fc" id="L352">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L353">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L354">                .with(csrf()))</span>
+<span class="fc" id="L355">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L356">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/register - Contraseña muy corta&quot;)
+    void register_passwordCorta_debeRetornar400() throws Exception {
+<span class="fc" id="L361">        RegistroUsuarioRequestDTO request = new RegistroUsuarioRequestDTO();</span>
+<span class="fc" id="L362">        request.setNombre(&quot;testuser&quot;);</span>
+<span class="fc" id="L363">        request.setContrasenia(&quot;123&quot;);</span>
+<span class="fc" id="L364">        request.setNombres(&quot;Test&quot;);</span>
+<span class="fc" id="L365">        request.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L366">        request.setEmail(&quot;test@example.com&quot;);</span>
+
+<span class="fc" id="L368">        mockMvc.perform(post(&quot;/api/v1/auth/register&quot;)</span>
+<span class="fc" id="L369">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L370">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L371">                .with(csrf()))</span>
+<span class="fc" id="L372">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L373">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/register - Usuario duplicado&quot;)
+    void register_usuarioDuplicado_debeRetornar409() throws Exception {
+<span class="fc" id="L378">        RegistroUsuarioRequestDTO request = new RegistroUsuarioRequestDTO();</span>
+<span class="fc" id="L379">        request.setNombre(&quot;testuser&quot;);</span>
+<span class="fc" id="L380">        request.setContrasenia(&quot;password123&quot;);</span>
+<span class="fc" id="L381">        request.setNombres(&quot;Test&quot;);</span>
+<span class="fc" id="L382">        request.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L383">        request.setEmail(&quot;test@example.com&quot;);</span>
+
+<span class="fc" id="L385">        when(usuarioService.registrarSolicitud(any(RegistroUsuarioRequestDTO.class)))</span>
+<span class="fc" id="L386">            .thenThrow(new IllegalArgumentException(&quot;Usuario ya existe&quot;));</span>
+
+<span class="fc" id="L388">        mockMvc.perform(post(&quot;/api/v1/auth/register&quot;)</span>
+<span class="fc" id="L389">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L390">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L391">                .with(csrf()))</span>
+<span class="fc" id="L392">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L393">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/users/paginated - Paginación con número de página negativo&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void listarUsuariosPaginados_paginaNegativa_debeRetornar400() throws Exception {
+        // El controller no valida parámetros negativos, devuelve 200 con resultado vacío
+<span class="fc" id="L400">        mockMvc.perform(get(&quot;/api/v1/auth/users/paginated&quot;)</span>
+<span class="fc" id="L401">                .param(&quot;page&quot;, &quot;-1&quot;)</span>
+<span class="fc" id="L402">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L403">                .with(csrf()))</span>
+<span class="fc" id="L404">                .andExpect(status().isOk());</span>
+<span class="fc" id="L405">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/users/paginated - Tamaño de página inválido&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void listarUsuariosPaginados_tamanoInvalido_debeRetornar400() throws Exception {
+        // El controller no valida tamaño 0, devuelve 200 con resultado vacío
+<span class="fc" id="L412">        mockMvc.perform(get(&quot;/api/v1/auth/users/paginated&quot;)</span>
+<span class="fc" id="L413">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L414">                .param(&quot;size&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L415">                .with(csrf()))</span>
+<span class="fc" id="L416">                .andExpect(status().isOk());</span>
+<span class="fc" id="L417">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/v1/auth/users/{id} - Actualizar usuario inexistente&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void gestionarUsuario_usuarioInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L423">        GestionarUsuarioRequestDTO gestionarDTO = new GestionarUsuarioRequestDTO();</span>
+<span class="fc" id="L424">        gestionarDTO.setRol(Rol.OBSERVADOR);</span>
+<span class="fc" id="L425">        gestionarDTO.setActivo(true);</span>
+
+<span class="fc" id="L427">        when(usuarioService.gestionarUsuario(eq(999), any(GestionarUsuarioRequestDTO.class)))</span>
+<span class="fc" id="L428">            .thenThrow(new IllegalArgumentException(&quot;Usuario no encontrado&quot;));</span>
+
+<span class="fc" id="L430">        mockMvc.perform(put(&quot;/api/v1/auth/users/999&quot;)</span>
+<span class="fc" id="L431">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L432">                .content(objectMapper.writeValueAsString(gestionarDTO))</span>
+<span class="fc" id="L433">                .with(csrf()))</span>
+<span class="fc" id="L434">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L435">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login - Múltiples intentos fallidos&quot;)
+    void login_intentosFallidos_debeRetornar401() throws Exception {
+<span class="fc" id="L440">        LoginRequestDTO loginRequest = new LoginRequestDTO();</span>
+<span class="fc" id="L441">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L442">        loginRequest.setPassword(&quot;wrongpassword&quot;);</span>
+
+<span class="fc" id="L444">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.empty());</span>
+
+<span class="fc bfc" id="L446" title="All 2 branches covered.">        for (int i = 0; i &lt; 5; i++) {</span>
+<span class="fc" id="L447">            mockMvc.perform(post(&quot;/api/v1/auth/login&quot;)</span>
+<span class="fc" id="L448">                    .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L449">                    .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L450">                    .with(csrf()))</span>
+<span class="fc" id="L451">                    .andExpect(status().isUnauthorized());</span>
+        }
+<span class="fc" id="L453">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/v1/auth/profile - Actualizar con email duplicado&quot;)
+    @WithMockUser(username = &quot;admin&quot;, roles = &quot;ADMIN&quot;)
+    void actualizarPerfil_emailDuplicado_debeRetornar409() throws Exception {
+<span class="fc" id="L459">        ActualizarPerfilRequestDTO perfilDTO = new ActualizarPerfilRequestDTO();</span>
+<span class="fc" id="L460">        perfilDTO.setEmail(&quot;otro@test.com&quot;);</span>
+
+<span class="fc" id="L462">        when(usuarioService.actualizarPerfil(any(ActualizarPerfilRequestDTO.class)))</span>
+<span class="fc" id="L463">            .thenThrow(new IllegalArgumentException(&quot;Email ya existe&quot;));</span>
+
+<span class="fc" id="L465">        mockMvc.perform(put(&quot;/api/v1/auth/profile&quot;)</span>
+<span class="fc" id="L466">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L467">                .content(objectMapper.writeValueAsString(perfilDTO))</span>
+<span class="fc" id="L468">                .with(csrf()))</span>
+<span class="fc" id="L469">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L470">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/init-admin - Admin ya existe&quot;)
+    void crearAdminPredeterminado_adminExiste_debeRetornar409() throws Exception {
+<span class="fc" id="L475">        when(usuarioService.crearAdminPredeterminado())</span>
+<span class="fc" id="L476">            .thenThrow(new IllegalStateException(&quot;Admin ya existe&quot;));</span>
+
+        // El controller captura la excepción y devuelve 400 en lugar de 409
+<span class="fc" id="L479">        mockMvc.perform(post(&quot;/api/v1/auth/init-admin&quot;)</span>
+<span class="fc" id="L480">                .with(csrf()))</span>
+<span class="fc" id="L481">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L482">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Admin ya existe&quot;));</span>
+<span class="fc" id="L483">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

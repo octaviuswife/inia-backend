@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PmsControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">PmsControllerIntegrationTest.java</span></div><h1>PmsControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.PmsService;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(PmsController.class)
+@DisplayName(&quot;Tests de integración para PmsController&quot;)
+<span class="fc" id="L37">class PmsControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private PmsService pmsService;
+
+    private PmsDTO pmsDTO;
+    private PmsRequestDTO pmsRequestDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L53">        pmsDTO = new PmsDTO();</span>
+<span class="fc" id="L54">        pmsDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L55">        pmsDTO.setIdLote(100L);</span>
+<span class="fc" id="L56">        pmsDTO.setNumRepeticionesEsperadas(4);</span>
+<span class="fc" id="L57">        pmsDTO.setEsSemillaBrozosa(false);</span>
+<span class="fc" id="L58">        pmsDTO.setComentarios(&quot;Test PMS&quot;);</span>
+<span class="fc" id="L59">        pmsDTO.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L60">        pmsDTO.setEstado(Estado.EN_PROCESO);</span>
+<span class="fc" id="L61">        pmsDTO.setActivo(true);</span>
+
+<span class="fc" id="L63">        pmsRequestDTO = new PmsRequestDTO();</span>
+<span class="fc" id="L64">        pmsRequestDTO.setIdLote(100L);</span>
+<span class="fc" id="L65">        pmsRequestDTO.setNumRepeticionesEsperadas(4);</span>
+<span class="fc" id="L66">        pmsRequestDTO.setEsSemillaBrozosa(false);</span>
+<span class="fc" id="L67">        pmsRequestDTO.setComentarios(&quot;Test PMS&quot;);</span>
+<span class="fc" id="L68">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/pms - Crear PMS exitosamente&quot;)
+    void crearPms_debeRetornarPmsCreado() throws Exception {
+<span class="fc" id="L74">        when(pmsService.crearPms(any(PmsRequestDTO.class))).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L76">        mockMvc.perform(post(&quot;/api/pms&quot;)</span>
+<span class="fc" id="L77">                .with(csrf())</span>
+<span class="fc" id="L78">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L79">                .content(objectMapper.writeValueAsString(pmsRequestDTO)))</span>
+<span class="fc" id="L80">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L81">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1))</span>
+<span class="fc" id="L82">                .andExpect(jsonPath(&quot;$.idLote&quot;).value(100))</span>
+<span class="fc" id="L83">                .andExpect(jsonPath(&quot;$.numRepeticionesEsperadas&quot;).value(4))</span>
+<span class="fc" id="L84">                .andExpect(jsonPath(&quot;$.esSemillaBrozosa&quot;).value(false))</span>
+<span class="fc" id="L85">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;EN_PROCESO&quot;));</span>
+<span class="fc" id="L86">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/pms - Obtener todos los PMS activos&quot;)
+    void obtenerTodos_debeRetornarListaDePms() throws Exception {
+<span class="fc" id="L92">        List&lt;PmsDTO&gt; listaPms = Arrays.asList(pmsDTO);</span>
+<span class="fc" id="L93">        when(pmsService.obtenerTodos()).thenReturn(listaPms);</span>
+
+<span class="fc" id="L95">        mockMvc.perform(get(&quot;/api/pms&quot;)</span>
+<span class="fc" id="L96">                .with(csrf()))</span>
+<span class="fc" id="L97">                .andExpect(status().isOk())</span>
+<span class="fc" id="L98">                .andExpect(jsonPath(&quot;$[0].analisisID&quot;).value(1))</span>
+<span class="fc" id="L99">                .andExpect(jsonPath(&quot;$[0].idLote&quot;).value(100));</span>
+<span class="fc" id="L100">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/pms/{id} - Obtener PMS por ID&quot;)
+    void obtenerPorId_debeRetornarPms() throws Exception {
+<span class="fc" id="L106">        when(pmsService.obtenerPorId(1L)).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L108">        mockMvc.perform(get(&quot;/api/pms/1&quot;)</span>
+<span class="fc" id="L109">                .with(csrf()))</span>
+<span class="fc" id="L110">                .andExpect(status().isOk())</span>
+<span class="fc" id="L111">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1))</span>
+<span class="fc" id="L112">                .andExpect(jsonPath(&quot;$.idLote&quot;).value(100))</span>
+<span class="fc" id="L113">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;EN_PROCESO&quot;));</span>
+<span class="fc" id="L114">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/pms/listado - Obtener PMS paginados&quot;)
+    void obtenerPmsPaginadas_debeRetornarPaginacion() throws Exception {
+<span class="fc" id="L120">        PmsListadoDTO listadoDTO = new PmsListadoDTO();</span>
+<span class="fc" id="L121">        listadoDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L122">        listadoDTO.setIdLote(100L);</span>
+<span class="fc" id="L123">        listadoDTO.setEstado(Estado.EN_PROCESO);</span>
+
+<span class="fc" id="L125">        Page&lt;PmsListadoDTO&gt; page = new PageImpl&lt;&gt;(Arrays.asList(listadoDTO), PageRequest.of(0, 10), 1);</span>
+<span class="fc" id="L126">        when(pmsService.obtenerPmsPaginadasConFiltros(any(), any(), any(), any(), any())).thenReturn(page);</span>
+
+<span class="fc" id="L128">        mockMvc.perform(get(&quot;/api/pms/listado&quot;)</span>
+<span class="fc" id="L129">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L130">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L131">                .with(csrf()))</span>
+<span class="fc" id="L132">                .andExpect(status().isOk())</span>
+<span class="fc" id="L133">                .andExpect(jsonPath(&quot;$.content[0].analisisID&quot;).value(1))</span>
+<span class="fc" id="L134">                .andExpect(jsonPath(&quot;$.page.totalElements&quot;).value(1));</span>
+<span class="fc" id="L135">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/pms/{id} - Actualizar PMS&quot;)
+    void actualizarPms_debeRetornarPmsActualizado() throws Exception {
+<span class="fc" id="L141">        pmsDTO.setComentarios(&quot;Actualizado&quot;);</span>
+<span class="fc" id="L142">        when(pmsService.actualizarPms(eq(1L), any(PmsRequestDTO.class))).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L144">        mockMvc.perform(put(&quot;/api/pms/1&quot;)</span>
+<span class="fc" id="L145">                .with(csrf())</span>
+<span class="fc" id="L146">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L147">                .content(objectMapper.writeValueAsString(pmsRequestDTO)))</span>
+<span class="fc" id="L148">                .andExpect(status().isOk())</span>
+<span class="fc" id="L149">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1))</span>
+<span class="fc" id="L150">                .andExpect(jsonPath(&quot;$.comentarios&quot;).value(&quot;Actualizado&quot;));</span>
+<span class="fc" id="L151">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/pms/{id} - Eliminar PMS&quot;)
+    void eliminarPms_debeRetornarNoContent() throws Exception {
+<span class="fc" id="L157">        doNothing().when(pmsService).eliminarPms(1L);</span>
+
+<span class="fc" id="L159">        mockMvc.perform(delete(&quot;/api/pms/1&quot;)</span>
+<span class="fc" id="L160">                .with(csrf()))</span>
+<span class="fc" id="L161">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L162">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/pms/{id}/desactivar - Desactivar PMS&quot;)
+    void desactivarPms_debeRetornarOk() throws Exception {
+<span class="fc" id="L168">        doNothing().when(pmsService).desactivarPms(1L);</span>
+
+<span class="fc" id="L170">        mockMvc.perform(put(&quot;/api/pms/1/desactivar&quot;)</span>
+<span class="fc" id="L171">                .with(csrf()))</span>
+<span class="fc" id="L172">                .andExpect(status().isOk());</span>
+<span class="fc" id="L173">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/pms/{id}/reactivar - Reactivar PMS&quot;)
+    void reactivarPms_debeRetornarPmsReactivado() throws Exception {
+<span class="fc" id="L179">        when(pmsService.reactivarPms(1L)).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L181">        mockMvc.perform(put(&quot;/api/pms/1/reactivar&quot;)</span>
+<span class="fc" id="L182">                .with(csrf()))</span>
+<span class="fc" id="L183">                .andExpect(status().isOk())</span>
+<span class="fc" id="L184">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1));</span>
+<span class="fc" id="L185">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/pms/lote/{idLote} - Obtener PMS por ID de lote&quot;)
+    void obtenerPmsPorIdLote_debeRetornarLista() throws Exception {
+<span class="fc" id="L191">        List&lt;PmsDTO&gt; lista = Arrays.asList(pmsDTO);</span>
+<span class="fc" id="L192">        when(pmsService.obtenerPmsPorIdLote(100L)).thenReturn(lista);</span>
+
+<span class="fc" id="L194">        mockMvc.perform(get(&quot;/api/pms/lote/100&quot;)</span>
+<span class="fc" id="L195">                .with(csrf()))</span>
+<span class="fc" id="L196">                .andExpect(status().isOk())</span>
+<span class="fc" id="L197">                .andExpect(jsonPath(&quot;$[0].analisisID&quot;).value(1))</span>
+<span class="fc" id="L198">                .andExpect(jsonPath(&quot;$[0].idLote&quot;).value(100));</span>
+<span class="fc" id="L199">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/pms/{id}/redondeo - Actualizar PMS con redondeo&quot;)
+    void actualizarPmsConRedondeo_debeRetornarPmsActualizado() throws Exception {
+<span class="fc" id="L205">        PmsRedondeoRequestDTO redondeoDTO = new PmsRedondeoRequestDTO();</span>
+<span class="fc" id="L206">        redondeoDTO.setPmsconRedon(new BigDecimal(&quot;25.5&quot;));</span>
+<span class="fc" id="L207">        when(pmsService.actualizarPmsConRedondeo(eq(1L), any(PmsRedondeoRequestDTO.class))).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L209">        mockMvc.perform(put(&quot;/api/pms/1/redondeo&quot;)</span>
+<span class="fc" id="L210">                .with(csrf())</span>
+<span class="fc" id="L211">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L212">                .content(objectMapper.writeValueAsString(redondeoDTO)))</span>
+<span class="fc" id="L213">                .andExpect(status().isOk())</span>
+<span class="fc" id="L214">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1));</span>
+<span class="fc" id="L215">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/pms/{id}/finalizar - Finalizar análisis PMS&quot;)
+    void finalizarAnalisis_debeRetornarPmsFinalizado() throws Exception {
+<span class="fc" id="L221">        pmsDTO.setEstado(Estado.PENDIENTE_APROBACION);</span>
+<span class="fc" id="L222">        when(pmsService.finalizarAnalisis(1L)).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L224">        mockMvc.perform(put(&quot;/api/pms/1/finalizar&quot;)</span>
+<span class="fc" id="L225">                .with(csrf()))</span>
+<span class="fc" id="L226">                .andExpect(status().isOk())</span>
+<span class="fc" id="L227">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;PENDIENTE_APROBACION&quot;));</span>
+<span class="fc" id="L228">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/pms/{id}/aprobar - Aprobar análisis PMS&quot;)
+    void aprobarAnalisis_debeRetornarPmsAprobado() throws Exception {
+<span class="fc" id="L234">        pmsDTO.setEstado(Estado.APROBADO);</span>
+<span class="fc" id="L235">        when(pmsService.aprobarAnalisis(1L)).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L237">        mockMvc.perform(put(&quot;/api/pms/1/aprobar&quot;)</span>
+<span class="fc" id="L238">                .with(csrf()))</span>
+<span class="fc" id="L239">                .andExpect(status().isOk())</span>
+<span class="fc" id="L240">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;APROBADO&quot;));</span>
+<span class="fc" id="L241">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/pms/{id}/repetir - Marcar análisis PMS para repetir&quot;)
+    void marcarParaRepetir_debeRetornarPmsParaRepetir() throws Exception {
+<span class="fc" id="L247">        pmsDTO.setEstado(Estado.A_REPETIR);</span>
+<span class="fc" id="L248">        when(pmsService.marcarParaRepetir(1L)).thenReturn(pmsDTO);</span>
+
+<span class="fc" id="L250">        mockMvc.perform(put(&quot;/api/pms/1/repetir&quot;)</span>
+<span class="fc" id="L251">                .with(csrf()))</span>
+<span class="fc" id="L252">                .andExpect(status().isOk())</span>
+<span class="fc" id="L253">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;A_REPETIR&quot;));</span>
+<span class="fc" id="L254">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

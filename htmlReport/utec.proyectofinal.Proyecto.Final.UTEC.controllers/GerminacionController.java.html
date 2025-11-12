@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GerminacionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">GerminacionController.java</span></div><h1>GerminacionController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/germinaciones&quot;)
+@Tag(name = &quot;Germinación&quot;, description = &quot;API para gestión del análisis de germinación&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L39">public class GerminacionController {</span>
+
+    @Autowired
+    private GerminacionService germinacionService;
+
+    // Crear nueva Germinación
+    @Operation(summary = &quot;Crear análisis de germinación&quot;, 
+              description = &quot;Crea un nuevo análisis de germinación con numeroRepeticiones y numeroConteos definidos&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Germinación creada exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Datos inválidos en la solicitud&quot;),
+        @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Error interno del servidor&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;GerminacionDTO&gt; crearGerminacion(@RequestBody GerminacionRequestDTO solicitud) {
+<span class="fc" id="L55">        GerminacionDTO germinacionCreada = germinacionService.crearGerminacion(solicitud);</span>
+<span class="fc" id="L56">        return ResponseEntity.status(HttpStatus.CREATED).body(germinacionCreada);</span>
+    }
+
+    // Obtener todas las Germinaciones activas
+    @Operation(summary = &quot;Obtener todas las germinaciones&quot;, 
+              description = &quot;Obtiene la lista de todos los análisis de germinación activos&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Lista obtenida exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Error interno del servidor&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;ResponseListadoGerminacion&gt; obtenerTodasGerminaciones() {
+<span class="fc" id="L69">        ResponseListadoGerminacion response = germinacionService.obtenerTodasGerminaciones();</span>
+<span class="fc" id="L70">        return ResponseEntity.ok(response);</span>
+    }
+
+    // Obtener germinaciones con paginado para listado
+    @Operation(summary = &quot;Obtener germinaciones paginadas&quot;, 
+              description = &quot;Obtiene la lista paginada de análisis de germinación para el listado&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Lista paginada obtenida exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Error interno del servidor&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/listado&quot;)
+    public ResponseEntity&lt;Page&lt;GerminacionListadoDTO&gt;&gt; obtenerGerminacionesPaginadas(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) Long loteId) {
+<span class="fc" id="L89">        Pageable pageable = PageRequest.of(page, size);</span>
+<span class="fc" id="L90">        Page&lt;GerminacionListadoDTO&gt; response = germinacionService.obtenerGerminacionesPaginadasConFiltros(pageable, search, activo, estado, loteId);</span>
+<span class="fc" id="L91">        return ResponseEntity.ok(response);</span>
+    }
+
+    // Obtener Germinación por ID
+    @Operation(summary = &quot;Obtener germinación por ID&quot;, 
+              description = &quot;Obtiene los detalles de un análisis de germinación específico&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Germinación encontrada&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Germinación no encontrada&quot;),
+        @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Error interno del servidor&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;GerminacionDTO&gt; obtenerGerminacionPorId(@PathVariable Long id) {
+<span class="fc" id="L105">        GerminacionDTO germinacion = germinacionService.obtenerGerminacionPorId(id);</span>
+<span class="fc" id="L106">        return ResponseEntity.ok(germinacion);</span>
+    }
+
+    // Actualizar Germinación
+    @Operation(summary = &quot;Actualizar germinación&quot;, 
+              description = &quot;Actualiza solo los campos editables de una germinación existente. &quot; +
+                          &quot;Las fechas no se pueden modificar por seguridad.&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Germinación actualizada exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Germinación no encontrada&quot;),
+        @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Error interno del servidor&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;GerminacionDTO&gt; actualizarGerminacion(@PathVariable Long id, @RequestBody GerminacionEditRequestDTO dto) {
+<span class="fc" id="L121">        GerminacionDTO germinacionActualizada = germinacionService.actualizarGerminacionSeguro(id, dto);</span>
+<span class="fc" id="L122">        return ResponseEntity.ok(germinacionActualizada);</span>
+    }
+
+    // Eliminar Germinación (cambiar estado a INACTIVO)
+    @Operation(summary = &quot;Eliminar germinación&quot;, description = &quot;Cambia el estado de la germinación a INACTIVO&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminarGerminacion(@PathVariable Long id) {
+<span class="fc" id="L130">        germinacionService.eliminarGerminacion(id);</span>
+<span class="fc" id="L131">        return ResponseEntity.noContent().build();</span>
+    }
+
+    // Desactivar Germinacion (soft delete)
+    @Operation(summary = &quot;Desactivar análisis Germinación&quot;, 
+              description = &quot;Desactiva un análisis de Germinación (cambiar activo a false)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/desactivar&quot;)
+    public ResponseEntity&lt;Void&gt; desactivarGerminacion(@PathVariable Long id) {
+<span class="fc" id="L140">        germinacionService.desactivarGerminacion(id);</span>
+<span class="fc" id="L141">        return ResponseEntity.ok().build();</span>
+    }
+
+    // Reactivar Germinacion
+    @Operation(summary = &quot;Reactivar análisis Germinación&quot;, 
+              description = &quot;Reactiva un análisis de Germinación desactivado (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/reactivar&quot;)
+    public ResponseEntity&lt;GerminacionDTO&gt; reactivarGerminacion(@PathVariable Long id) {
+<span class="fc" id="L150">        GerminacionDTO germinacionReactivada = germinacionService.reactivarGerminacion(id);</span>
+<span class="fc" id="L151">        return ResponseEntity.ok(germinacionReactivada);</span>
+    }
+
+    // Obtener Germinaciones por Lote
+    @Operation(summary = &quot;Obtener germinaciones por lote&quot;, description = &quot;Devuelve una lista de germinaciones asociadas a un lote específico&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/lote/{idLote}&quot;)
+    public ResponseEntity&lt;List&lt;GerminacionDTO&gt;&gt; obtenerGerminacionesPorIdLote(@PathVariable Long idLote) {
+<span class="fc" id="L159">        List&lt;GerminacionDTO&gt; germinaciones = germinacionService.obtenerGerminacionesPorIdLote(idLote);</span>
+<span class="fc" id="L160">        return ResponseEntity.ok(germinaciones);</span>
+    }
+
+    // Finalizar análisis de germinación
+    @Operation(summary = &quot;Finalizar análisis de germinación&quot;, description = &quot;Marca el análisis como FINALIZADO, impidiendo más modificaciones&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/finalizar&quot;)
+    public ResponseEntity&lt;GerminacionDTO&gt; finalizarAnalisis(@PathVariable Long id) {
+<span class="fc" id="L168">        GerminacionDTO analisisFinalizado = germinacionService.finalizarAnalisis(id);</span>
+<span class="fc" id="L169">        return ResponseEntity.ok(analisisFinalizado);</span>
+    }
+
+    // Aprobar análisis (solo admin)
+    @Operation(summary = &quot;Aprobar análisis de germinación&quot;, description = &quot;Solo administradores pueden aprobar análisis&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Análisis aprobado exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Error en la aprobación&quot;),
+        @ApiResponse(responseCode = &quot;403&quot;, description = &quot;No autorizado&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/aprobar&quot;)
+    public ResponseEntity&lt;GerminacionDTO&gt; aprobarAnalisis(@PathVariable Long id) {
+<span class="fc" id="L182">        GerminacionDTO analisisAprobado = germinacionService.aprobarAnalisis(id);</span>
+<span class="fc" id="L183">        return ResponseEntity.ok(analisisAprobado);</span>
+    }
+
+    // Marcar análisis para repetir (solo admin)
+    @Operation(summary = &quot;Marcar análisis de germinación para repetir&quot;, 
+              description = &quot;Marca un análisis de germinación para repetir - solo administradores&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/repetir&quot;)
+    public ResponseEntity&lt;GerminacionDTO&gt; marcarParaRepetir(@PathVariable Long id) {
+<span class="fc" id="L192">        GerminacionDTO analisisRepetir = germinacionService.marcarParaRepetir(id);</span>
+<span class="fc" id="L193">        return ResponseEntity.ok(analisisRepetir);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TablaGermServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">TablaGermServiceTest.java</span></div><h1>TablaGermServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepGerm;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.TablaGerm;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TablaGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.ValoresGermRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TablaGermRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TablaGermDTO;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Tests unitarios para TablaGermService
+ * 
+ * Funcionalidades testeadas:
+ * - Creación de tablas de germinación
+ * - Validación de fechas
+ * - Finalización de tablas
+ * - Actualización de porcentajes de redondeo
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de TablaGermService&quot;)
+<span class="fc" id="L44">class TablaGermServiceTest {</span>
+
+    @Mock
+    private TablaGermRepository tablaGermRepository;
+
+    @Mock
+    private GerminacionRepository germinacionRepository;
+
+    @Mock
+    private RepGermRepository repGermRepository;
+
+    @Mock
+    private ValoresGermRepository valoresGermRepository;
+
+    @Mock
+    private AnalisisService analisisService;
+
+    @InjectMocks
+    private TablaGermService tablaGermService;
+
+    private Germinacion germinacion;
+    private TablaGerm tablaGerm;
+    private TablaGermRequestDTO requestDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L70">        germinacion = new Germinacion();</span>
+<span class="fc" id="L71">        germinacion.setAnalisisID(1L);</span>
+
+<span class="fc" id="L73">        tablaGerm = new TablaGerm();</span>
+<span class="fc" id="L74">        tablaGerm.setTablaGermID(15L);</span>
+<span class="fc" id="L75">        tablaGerm.setFinalizada(false);</span>
+<span class="fc" id="L76">        tablaGerm.setTratamiento(&quot;Agar&quot;);</span>
+<span class="fc" id="L77">        tablaGerm.setProductoYDosis(&quot;Sin producto&quot;);</span>
+<span class="fc" id="L78">        tablaGerm.setNumSemillasPRep(100);</span>
+<span class="fc" id="L79">        tablaGerm.setMetodo(&quot;Entre papel&quot;);</span>
+<span class="fc" id="L80">        tablaGerm.setTemperatura(&quot;25&quot;);</span>
+<span class="fc" id="L81">        tablaGerm.setTienePrefrio(false);</span>
+<span class="fc" id="L82">        tablaGerm.setTienePretratamiento(false);</span>
+<span class="fc" id="L83">        tablaGerm.setDiasPrefrio(0);</span>
+<span class="fc" id="L84">        tablaGerm.setFechaIngreso(LocalDate.of(2024, 1, 10));</span>
+<span class="fc" id="L85">        tablaGerm.setFechaGerminacion(LocalDate.of(2024, 1, 15));</span>
+<span class="fc" id="L86">        tablaGerm.setFechaConteos(Arrays.asList(LocalDate.of(2024, 1, 18), LocalDate.of(2024, 1, 22), LocalDate.of(2024, 1, 25)));</span>
+<span class="fc" id="L87">        tablaGerm.setFechaUltConteo(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L88">        tablaGerm.setNumDias(&quot;10&quot;);</span>
+<span class="fc" id="L89">        tablaGerm.setNumeroRepeticiones(8);</span>
+<span class="fc" id="L90">        tablaGerm.setNumeroConteos(3);</span>
+<span class="fc" id="L91">        tablaGerm.setGerminacion(germinacion);</span>
+
+<span class="fc" id="L93">        requestDTO = new TablaGermRequestDTO();</span>
+<span class="fc" id="L94">        requestDTO.setFechaFinal(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L95">        requestDTO.setTratamiento(&quot;Agar&quot;);</span>
+<span class="fc" id="L96">        requestDTO.setProductoYDosis(&quot;Sin producto&quot;);</span>
+<span class="fc" id="L97">        requestDTO.setNumSemillasPRep(100);</span>
+<span class="fc" id="L98">        requestDTO.setMetodo(&quot;Entre papel&quot;);</span>
+<span class="fc" id="L99">        requestDTO.setTemperatura(&quot;25&quot;);</span>
+<span class="fc" id="L100">        requestDTO.setTienePrefrio(false);</span>
+<span class="fc" id="L101">        requestDTO.setTienePretratamiento(false);</span>
+<span class="fc" id="L102">        requestDTO.setDiasPrefrio(0);</span>
+<span class="fc" id="L103">        requestDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));</span>
+<span class="fc" id="L104">        requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15));</span>
+<span class="fc" id="L105">        requestDTO.setFechaConteos(Arrays.asList(LocalDate.of(2024, 1, 18), LocalDate.of(2024, 1, 22), LocalDate.of(2024, 1, 25)));</span>
+<span class="fc" id="L106">        requestDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L107">        requestDTO.setNumDias(&quot;10&quot;);</span>
+<span class="fc" id="L108">        requestDTO.setNumeroRepeticiones(8);</span>
+<span class="fc" id="L109">        requestDTO.setNumeroConteos(3);</span>
+<span class="fc" id="L110">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear tabla - debe crear exitosamente&quot;)
+    void crearTablaGerm_debeCrearExitosamente() {
+        // ARRANGE
+<span class="fc" id="L116">        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));</span>
+<span class="fc" id="L117">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+
+        // ACT
+<span class="fc" id="L120">        TablaGermDTO resultado = tablaGermService.crearTablaGerm(1L, requestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L123">        assertNotNull(resultado);</span>
+<span class="fc" id="L124">        assertEquals(15L, resultado.getTablaGermID());</span>
+<span class="fc" id="L125">        assertEquals(&quot;Agar&quot;, resultado.getTratamiento());</span>
+<span class="fc" id="L126">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L127">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear tabla - debe lanzar excepción si germinación no existe&quot;)
+    void crearTablaGerm_debeLanzarExcepcionSiGerminacionNoExiste() {
+        // ARRANGE
+<span class="fc" id="L133">        when(germinacionRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L136">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L137">            tablaGermService.crearTablaGerm(999L, requestDTO);</span>
+<span class="nc" id="L138">        });</span>
+        
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;) || </span>
+<span class="pc bnc" id="L141" title="All 2 branches missed.">                   exception.getMessage().contains(&quot;no existe&quot;));</span>
+<span class="fc" id="L142">        verify(tablaGermRepository, never()).save(any(TablaGerm.class));</span>
+<span class="fc" id="L143">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener tabla por ID - debe retornar si existe&quot;)
+    void obtenerTablaGermPorId_debeRetornarSiExiste() {
+        // ARRANGE
+<span class="fc" id="L149">        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));</span>
+
+        // ACT
+<span class="fc" id="L152">        TablaGermDTO resultado = tablaGermService.obtenerTablaGermPorId(15L);</span>
+
+        // ASSERT
+<span class="fc" id="L155">        assertNotNull(resultado);</span>
+<span class="fc" id="L156">        assertEquals(15L, resultado.getTablaGermID());</span>
+<span class="fc" id="L157">        verify(tablaGermRepository, times(1)).findById(15L);</span>
+<span class="fc" id="L158">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener tabla por ID - debe lanzar excepción si no existe&quot;)
+    void obtenerTablaGermPorId_debeLanzarExcepcionSiNoExiste() {
+        // ARRANGE
+<span class="fc" id="L164">        when(tablaGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L167">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L168">            tablaGermService.obtenerTablaGermPorId(999L);</span>
+<span class="nc" id="L169">        });</span>
+        
+<span class="fc" id="L171">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
+<span class="fc" id="L172">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar tabla - debe actualizar correctamente&quot;)
+    void actualizarTablaGerm_debeActualizarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L178">        requestDTO.setTemperatura(&quot;28&quot;);</span>
+<span class="fc" id="L179">        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L180">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+<span class="fc" id="L181">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());</span>
+
+        // ACT
+<span class="fc" id="L184">        TablaGermDTO resultado = tablaGermService.actualizarTablaGerm(15L, requestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L187">        assertNotNull(resultado);</span>
+<span class="fc" id="L188">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L189">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar tabla - debe eliminar correctamente&quot;)
+    void eliminarTablaGerm_debeEliminarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L195">        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L196">        when(valoresGermRepository.findByTablaGermId(15L)).thenReturn(Arrays.asList());</span>
+<span class="fc" id="L197">        doNothing().when(tablaGermRepository).deleteById(15L);</span>
+
+        // ACT
+<span class="fc" id="L200">        tablaGermService.eliminarTablaGerm(15L);</span>
+
+        // ASSERT
+<span class="fc" id="L203">        verify(tablaGermRepository, times(1)).deleteById(15L);</span>
+<span class="fc" id="L204">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar tabla - debe lanzar excepción si no existe&quot;)
+    void eliminarTablaGerm_debeLanzarExcepcionSiNoExiste() {
+        // ARRANGE
+<span class="fc" id="L210">        when(tablaGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L213">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L214">            tablaGermService.eliminarTablaGerm(999L);</span>
+<span class="nc" id="L215">        });</span>
+        
+<span class="fc" id="L217">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
+<span class="fc" id="L218">        verify(tablaGermRepository, never()).deleteById(anyLong());</span>
+<span class="fc" id="L219">    }</span>
+
+    @Test
+    @DisplayName(&quot;Finalizar tabla - debe marcar como finalizada&quot;)
+    void finalizarTabla_debMarcarComoFinalizada() {
+        // ARRANGE
+        // Crear repeticiones mockeadas con conteos completos
+<span class="fc" id="L226">        List&lt;RepGerm&gt; repeticiones = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        for (int i = 0; i &lt; 8; i++) {</span>
+<span class="fc" id="L228">            RepGerm rep = new RepGerm();</span>
+<span class="fc" id="L229">            rep.setNormales(Arrays.asList(10, 15, 20)); // 3 conteos</span>
+<span class="fc" id="L230">            rep.setAnormales(10); // Total de anormales</span>
+<span class="fc" id="L231">            rep.setDuras(0);</span>
+<span class="fc" id="L232">            rep.setFrescas(0);</span>
+<span class="fc" id="L233">            rep.setMuertas(5);</span>
+<span class="fc" id="L234">            rep.setTablaGerm(tablaGerm); // Establecer la relación con la tabla</span>
+<span class="fc" id="L235">            repeticiones.add(rep);</span>
+        }
+<span class="fc" id="L237">        tablaGerm.setRepGerm(repeticiones);</span>
+        
+        // Configurar porcentajes para que estén completos
+<span class="fc" id="L240">        tablaGerm.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;85.0&quot;));</span>
+<span class="fc" id="L241">        tablaGerm.setPorcentajeAnormalesConRedondeo(new BigDecimal(&quot;10.0&quot;));</span>
+<span class="fc" id="L242">        tablaGerm.setPorcentajeDurasConRedondeo(new BigDecimal(&quot;0.0&quot;));</span>
+<span class="fc" id="L243">        tablaGerm.setPorcentajeFrescasConRedondeo(new BigDecimal(&quot;0.0&quot;));</span>
+<span class="fc" id="L244">        tablaGerm.setPorcentajeMuertasConRedondeo(new BigDecimal(&quot;5.0&quot;));</span>
+        
+<span class="fc" id="L246">        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L247">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+
+        // ACT
+<span class="fc" id="L250">        TablaGermDTO resultado = tablaGermService.finalizarTabla(15L);</span>
+
+        // ASSERT
+<span class="fc" id="L253">        assertNotNull(resultado);</span>
+<span class="fc" id="L254">        verify(tablaGermRepository).save(argThat(tabla -&gt; tabla.getFinalizada()));</span>
+<span class="fc" id="L255">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener tablas por germinación - debe retornar lista&quot;)
+    void obtenerTablasPorGerminacion_debeRetornarLista() {
+        // ARRANGE
+<span class="fc" id="L261">        TablaGerm tabla2 = new TablaGerm();</span>
+<span class="fc" id="L262">        tabla2.setTablaGermID(16L);</span>
+        
+<span class="fc" id="L264">        when(tablaGermRepository.findByGerminacionId(1L))</span>
+<span class="fc" id="L265">            .thenReturn(Arrays.asList(tablaGerm, tabla2));</span>
+
+        // ACT
+<span class="fc" id="L268">        List&lt;TablaGermDTO&gt; resultado = tablaGermService.obtenerTablasPorGerminacion(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L271">        assertNotNull(resultado);</span>
+<span class="fc" id="L272">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L273">        assertEquals(15L, resultado.get(0).getTablaGermID());</span>
+<span class="fc" id="L274">        assertEquals(16L, resultado.get(1).getTablaGermID());</span>
+<span class="fc" id="L275">    }</span>
+
+    @Test
+    @DisplayName(&quot;Contar tablas por germinación - debe retornar cantidad&quot;)
+    void contarTablasPorGerminacion_debeRetornarCantidad() {
+        // ARRANGE
+<span class="fc" id="L281">        when(tablaGermRepository.countByGerminacionId(1L)).thenReturn(2L);</span>
+
+        // ACT
+<span class="fc" id="L284">        Long resultado = tablaGermService.contarTablasPorGerminacion(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L287">        assertEquals(2L, resultado);</span>
+<span class="fc" id="L288">        verify(tablaGermRepository, times(1)).countByGerminacionId(1L);</span>
+<span class="fc" id="L289">    }</span>
+
+    @Test
+    @DisplayName(&quot;Puede ingresar porcentajes - debe retornar false si tabla no finalizada&quot;)
+    void puedeIngresarPorcentajes_debeRetornarTrueSiTablaFinalizada() {
+        // ARRANGE
+<span class="fc" id="L295">        tablaGerm.setFinalizada(false); // La tabla en setUp no está finalizada</span>
+<span class="fc" id="L296">        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));</span>
+
+        // ACT
+<span class="fc" id="L299">        Boolean resultado = tablaGermService.puedeIngresarPorcentajes(15L);</span>
+
+        // ASSERT
+<span class="fc" id="L302">        assertFalse(resultado); // Debe retornar false porque no está finalizada</span>
+<span class="fc" id="L303">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar porcentajes - debe actualizar correctamente&quot;)
+    void actualizarPorcentajes_debeActualizarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L309">        PorcentajesRedondeoRequestDTO porcentajesDTO = new PorcentajesRedondeoRequestDTO();</span>
+<span class="fc" id="L310">        porcentajesDTO.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;85.5&quot;));</span>
+<span class="fc" id="L311">        porcentajesDTO.setPorcentajeAnormalesConRedondeo(new BigDecimal(&quot;8.2&quot;));</span>
+<span class="fc" id="L312">        porcentajesDTO.setPorcentajeDurasConRedondeo(new BigDecimal(&quot;3.1&quot;));</span>
+<span class="fc" id="L313">        porcentajesDTO.setPorcentajeFrescasConRedondeo(new BigDecimal(&quot;2.0&quot;));</span>
+<span class="fc" id="L314">        porcentajesDTO.setPorcentajeMuertasConRedondeo(new BigDecimal(&quot;1.2&quot;));</span>
+
+        // Crear repeticiones mockeadas con conteos completos
+<span class="fc" id="L317">        List&lt;RepGerm&gt; repeticiones = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">        for (int i = 0; i &lt; 8; i++) {</span>
+<span class="fc" id="L319">            RepGerm rep = new RepGerm();</span>
+<span class="fc" id="L320">            rep.setNormales(Arrays.asList(10, 15, 20)); // 3 conteos</span>
+<span class="fc" id="L321">            rep.setAnormales(10); // Total de anormales</span>
+<span class="fc" id="L322">            rep.setDuras(0);</span>
+<span class="fc" id="L323">            rep.setFrescas(0);</span>
+<span class="fc" id="L324">            rep.setMuertas(5);</span>
+<span class="fc" id="L325">            rep.setTablaGerm(tablaGerm); // Establecer la relación con la tabla</span>
+<span class="fc" id="L326">            repeticiones.add(rep);</span>
+        }
+<span class="fc" id="L328">        tablaGerm.setRepGerm(repeticiones);</span>
+<span class="fc" id="L329">        tablaGerm.setFinalizada(true);</span>
+        
+<span class="fc" id="L331">        when(tablaGermRepository.findById(15L)).thenReturn(Optional.of(tablaGerm));</span>
+<span class="fc" id="L332">        when(tablaGermRepository.save(any(TablaGerm.class))).thenReturn(tablaGerm);</span>
+<span class="fc" id="L333">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any());</span>
+
+        // ACT
+<span class="fc" id="L336">        TablaGermDTO resultado = tablaGermService.actualizarPorcentajes(15L, porcentajesDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L339">        assertNotNull(resultado);</span>
+<span class="fc" id="L340">        verify(tablaGermRepository, times(1)).save(any(TablaGerm.class));</span>
+<span class="fc" id="L341">    }</span>
+
+    @Test
+    @DisplayName(&quot;Validar fechas - debe lanzar excepción si fecha germinación es anterior a fecha ingreso&quot;)
+    void crearTablaGerm_debeValidarFechas() {
+        // ARRANGE
+<span class="fc" id="L347">        requestDTO.setFechaIngreso(LocalDate.of(2024, 1, 20));</span>
+<span class="fc" id="L348">        requestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15));</span>
+        
+<span class="fc" id="L350">        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));</span>
+
+        // ACT &amp; ASSERT
+        // El servicio debe validar que fecha germinación sea posterior a fecha ingreso
+<span class="fc" id="L354">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L355">            tablaGermService.crearTablaGerm(1L, requestDTO);</span>
+<span class="nc" id="L356">        });</span>
+        
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">        assertTrue(exception.getMessage().contains(&quot;fecha de germinación&quot;) || </span>
+<span class="pc bnc" id="L359" title="All 2 branches missed.">                   exception.getMessage().contains(&quot;fecha de ingreso&quot;));</span>
+<span class="fc" id="L360">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

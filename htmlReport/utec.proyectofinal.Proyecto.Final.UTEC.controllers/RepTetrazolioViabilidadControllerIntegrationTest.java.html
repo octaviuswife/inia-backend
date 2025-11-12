@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepTetrazolioViabilidadControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">RepTetrazolioViabilidadControllerIntegrationTest.java</span></div><h1>RepTetrazolioViabilidadControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepTetrazolioViabilidadRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepTetrazolioViabilidadDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.RepTetrazolioViabilidadService;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(RepTetrazolioViabilidadController.class)
+@DisplayName(&quot;Tests de integración para RepTetrazolioViabilidadController&quot;)
+<span class="fc" id="L30">class RepTetrazolioViabilidadControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private RepTetrazolioViabilidadService repeticionService;
+
+    private RepTetrazolioViabilidadDTO repTetrazolioDTO;
+    private RepTetrazolioViabilidadRequestDTO repTetrazolioRequestDTO;
+<span class="fc" id="L43">    private static final Long TETRAZOLIO_ID = 1L;</span>
+<span class="fc" id="L44">    private static final Long REP_ID = 20L;</span>
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L48">        repTetrazolioDTO = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L49">        repTetrazolioDTO.setRepTetrazolioViabID(REP_ID);</span>
+<span class="fc" id="L50">        repTetrazolioDTO.setFecha(LocalDate.of(2024, 1, 15));</span>
+<span class="fc" id="L51">        repTetrazolioDTO.setViablesNum(85);</span>
+<span class="fc" id="L52">        repTetrazolioDTO.setNoViablesNum(10);</span>
+<span class="fc" id="L53">        repTetrazolioDTO.setDuras(5);</span>
+
+<span class="fc" id="L55">        repTetrazolioRequestDTO = new RepTetrazolioViabilidadRequestDTO();</span>
+<span class="fc" id="L56">        repTetrazolioRequestDTO.setFecha(LocalDate.of(2024, 1, 15));</span>
+<span class="fc" id="L57">        repTetrazolioRequestDTO.setViablesNum(85);</span>
+<span class="fc" id="L58">        repTetrazolioRequestDTO.setNoViablesNum(10);</span>
+<span class="fc" id="L59">        repTetrazolioRequestDTO.setDuras(5);</span>
+<span class="fc" id="L60">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Crear repetición tetrazolio exitosamente&quot;)
+    void crearRepeticion_debeRetornarRepeticionCreada() throws Exception {
+<span class="fc" id="L66">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L67">            .thenReturn(repTetrazolioDTO);</span>
+
+<span class="fc" id="L69">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L70">                .with(csrf())</span>
+<span class="fc" id="L71">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L72">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L73">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L74">                .andExpect(jsonPath(&quot;$.repTetrazolioViabID&quot;).value(REP_ID))</span>
+<span class="fc" id="L75">                .andExpect(jsonPath(&quot;$.viablesNum&quot;).value(85))</span>
+<span class="fc" id="L76">                .andExpect(jsonPath(&quot;$.noViablesNum&quot;).value(10))</span>
+<span class="fc" id="L77">                .andExpect(jsonPath(&quot;$.duras&quot;).value(5));</span>
+<span class="fc" id="L78">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Error con suma incorrecta&quot;)
+    void crearRepeticion_debeRetornar400ConSumaIncorrecta() throws Exception {
+<span class="fc" id="L84">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L85">            .thenThrow(new RuntimeException(&quot;La suma de semillas no coincide con el total esperado&quot;));</span>
+
+<span class="fc" id="L87">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L88">                .with(csrf())</span>
+<span class="fc" id="L89">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L90">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L91">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L92">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones - Obtener todas las repeticiones&quot;)
+    void obtenerRepeticionesPorTetrazolio_debeRetornarLista() throws Exception {
+<span class="fc" id="L98">        RepTetrazolioViabilidadDTO rep2 = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L99">        rep2.setRepTetrazolioViabID(21L);</span>
+<span class="fc" id="L100">        rep2.setViablesNum(88);</span>
+<span class="fc" id="L101">        rep2.setNoViablesNum(8);</span>
+<span class="fc" id="L102">        rep2.setDuras(4);</span>
+
+<span class="fc" id="L104">        List&lt;RepTetrazolioViabilidadDTO&gt; repeticiones = Arrays.asList(repTetrazolioDTO, rep2);</span>
+<span class="fc" id="L105">        when(repeticionService.obtenerRepeticionesPorTetrazolio(TETRAZOLIO_ID)).thenReturn(repeticiones);</span>
+
+<span class="fc" id="L107">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L108">                .with(csrf()))</span>
+<span class="fc" id="L109">                .andExpect(status().isOk())</span>
+<span class="fc" id="L110">                .andExpect(jsonPath(&quot;$[0].repTetrazolioViabID&quot;).value(REP_ID))</span>
+<span class="fc" id="L111">                .andExpect(jsonPath(&quot;$[1].repTetrazolioViabID&quot;).value(21))</span>
+<span class="fc" id="L112">                .andExpect(jsonPath(&quot;$[0].viablesNum&quot;).value(85))</span>
+<span class="fc" id="L113">                .andExpect(jsonPath(&quot;$[1].viablesNum&quot;).value(88));</span>
+<span class="fc" id="L114">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones/count - Contar repeticiones&quot;)
+    void contarRepeticiones_debeRetornarCantidad() throws Exception {
+<span class="fc" id="L120">        when(repeticionService.contarRepeticionesPorTetrazolio(TETRAZOLIO_ID)).thenReturn(4L);</span>
+
+<span class="fc" id="L122">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/count&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L123">                .with(csrf()))</span>
+<span class="fc" id="L124">                .andExpect(status().isOk())</span>
+<span class="fc" id="L125">                .andExpect(content().string(&quot;4&quot;));</span>
+<span class="fc" id="L126">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Obtener por ID&quot;)
+    void obtenerRepeticionPorId_debeRetornarRepeticion() throws Exception {
+<span class="fc" id="L132">        when(repeticionService.obtenerRepeticionPorId(REP_ID)).thenReturn(repTetrazolioDTO);</span>
+
+<span class="fc" id="L134">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L136">                .with(csrf()))</span>
+<span class="fc" id="L137">                .andExpect(status().isOk())</span>
+<span class="fc" id="L138">                .andExpect(jsonPath(&quot;$.repTetrazolioViabID&quot;).value(REP_ID))</span>
+<span class="fc" id="L139">                .andExpect(jsonPath(&quot;$.viablesNum&quot;).value(85));</span>
+<span class="fc" id="L140">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Error 404&quot;)
+    void obtenerRepeticionPorId_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L146">        when(repeticionService.obtenerRepeticionPorId(999L))</span>
+<span class="fc" id="L147">            .thenThrow(new RuntimeException(&quot;Repetición no encontrada&quot;));</span>
+
+<span class="fc" id="L149">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+<span class="fc" id="L150">                TETRAZOLIO_ID, 999L)</span>
+<span class="fc" id="L151">                .with(csrf()))</span>
+<span class="fc" id="L152">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L153">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Actualizar&quot;)
+    void actualizarRepeticion_debeRetornarRepeticionActualizada() throws Exception {
+<span class="fc" id="L159">        repTetrazolioDTO.setViablesNum(90);</span>
+<span class="fc" id="L160">        repTetrazolioDTO.setNoViablesNum(7);</span>
+<span class="fc" id="L161">        repTetrazolioDTO.setDuras(3);</span>
+        
+<span class="fc" id="L163">        when(repeticionService.actualizarRepeticion(eq(REP_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L164">            .thenReturn(repTetrazolioDTO);</span>
+
+<span class="fc" id="L166">        mockMvc.perform(put(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L168">                .with(csrf())</span>
+<span class="fc" id="L169">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L170">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L171">                .andExpect(status().isOk())</span>
+<span class="fc" id="L172">                .andExpect(jsonPath(&quot;$.viablesNum&quot;).value(90))</span>
+<span class="fc" id="L173">                .andExpect(jsonPath(&quot;$.noViablesNum&quot;).value(7))</span>
+<span class="fc" id="L174">                .andExpect(jsonPath(&quot;$.duras&quot;).value(3));</span>
+<span class="fc" id="L175">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Sin validación de valores negativos&quot;)
+    void actualizarRepeticion_debeRetornar400ConValoresNegativos() throws Exception {
+<span class="fc" id="L181">        RepTetrazolioViabilidadRequestDTO requestDTO = new RepTetrazolioViabilidadRequestDTO();</span>
+<span class="fc" id="L182">        requestDTO.setFecha(LocalDate.parse(&quot;2024-01-15&quot;));</span>
+<span class="fc" id="L183">        requestDTO.setViablesNum(-5);</span>
+<span class="fc" id="L184">        requestDTO.setNoViablesNum(10);</span>
+<span class="fc" id="L185">        requestDTO.setDuras(5);</span>
+        
+        // El controller no valida valores negativos, delega en el servicio que puede o no validar
+<span class="fc" id="L188">        RepTetrazolioViabilidadDTO mockResponse = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L189">        mockResponse.setRepTetrazolioViabID(REP_ID);</span>
+<span class="fc" id="L190">        when(repeticionService.actualizarRepeticion(eq(REP_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L191">            .thenReturn(mockResponse);</span>
+        
+<span class="fc" id="L193">        mockMvc.perform(put(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L195">                .with(csrf())</span>
+<span class="fc" id="L196">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L197">                .content(objectMapper.writeValueAsString(requestDTO)))</span>
+<span class="fc" id="L198">                .andExpect(status().isOk());</span>
+<span class="fc" id="L199">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Eliminar&quot;)
+    void eliminarRepeticion_debeRetornarNoContent() throws Exception {
+<span class="fc" id="L205">        doNothing().when(repeticionService).eliminarRepeticion(REP_ID);</span>
+
+<span class="fc" id="L207">        mockMvc.perform(delete(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L209">                .with(csrf()))</span>
+<span class="fc" id="L210">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L211">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Sin validación de existencia&quot;)
+    void eliminarRepeticion_debeRetornar404CuandoNoExiste() throws Exception {
+        // El controller no valida existencia antes de eliminar
+<span class="fc" id="L218">        doNothing().when(repeticionService).eliminarRepeticion(999L);</span>
+
+<span class="fc" id="L220">        mockMvc.perform(delete(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+<span class="fc" id="L221">                TETRAZOLIO_ID, 999L)</span>
+<span class="fc" id="L222">                .with(csrf()))</span>
+<span class="fc" id="L223">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L224">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Sin validación de campos requeridos&quot;)
+    void crearRepeticion_debeFallarSinCamposRequeridos() throws Exception {
+<span class="fc" id="L230">        RepTetrazolioViabilidadRequestDTO requestInvalido = new RepTetrazolioViabilidadRequestDTO();</span>
+        
+        // Mock del DTO de respuesta ya que el controller no valida campos requeridos
+<span class="fc" id="L233">        RepTetrazolioViabilidadDTO mockResponse = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L234">        mockResponse.setRepTetrazolioViabID(1L);</span>
+<span class="fc" id="L235">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L236">            .thenReturn(mockResponse);</span>
+
+<span class="fc" id="L238">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L239">                .with(csrf())</span>
+<span class="fc" id="L240">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L241">                .content(objectMapper.writeValueAsString(requestInvalido)))</span>
+<span class="fc" id="L242">                .andExpect(status().isCreated());</span>
+<span class="fc" id="L243">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Validar total de semillas&quot;)
+    void crearRepeticion_debeValidarTotalSemillas() throws Exception {
+        // La suma debería ser 100 (por ejemplo)
+<span class="fc" id="L250">        repTetrazolioRequestDTO.setViablesNum(85);</span>
+<span class="fc" id="L251">        repTetrazolioRequestDTO.setNoViablesNum(10);</span>
+<span class="fc" id="L252">        repTetrazolioRequestDTO.setDuras(10); // suma = 105, incorrecto</span>
+        
+<span class="fc" id="L254">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L255">            .thenThrow(new RuntimeException(&quot;La suma no coincide con el número de semillas esperado&quot;));</span>
+
+<span class="fc" id="L257">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L258">                .with(csrf())</span>
+<span class="fc" id="L259">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L260">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L261">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L262">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

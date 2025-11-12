@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValoresGermControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">ValoresGermControllerIntegrationTest.java</span></div><h1>ValoresGermControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ValoresGermRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ValoresGermDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
+
+@WebMvcTest(ValoresGermController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName(&quot;Tests de integración para ValoresGermController&quot;)
+<span class="fc" id="L36">class ValoresGermControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private ValoresGermService valoresGermService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private ValoresGermRequestDTO requestDTO;
+    private ValoresGermDTO responseDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L52">        requestDTO = new ValoresGermRequestDTO();</span>
+<span class="fc" id="L53">        requestDTO.setNormales(new BigDecimal(&quot;80.00&quot;));</span>
+<span class="fc" id="L54">        requestDTO.setAnormales(new BigDecimal(&quot;10.00&quot;));</span>
+<span class="fc" id="L55">        requestDTO.setDuras(new BigDecimal(&quot;5.00&quot;));</span>
+<span class="fc" id="L56">        requestDTO.setFrescas(new BigDecimal(&quot;3.00&quot;));</span>
+<span class="fc" id="L57">        requestDTO.setMuertas(new BigDecimal(&quot;2.00&quot;));</span>
+<span class="fc" id="L58">        requestDTO.setGerminacion(new BigDecimal(&quot;90.00&quot;));</span>
+
+<span class="fc" id="L60">        responseDTO = new ValoresGermDTO();</span>
+<span class="fc" id="L61">        responseDTO.setValoresGermID(1L);</span>
+<span class="fc" id="L62">        responseDTO.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L63">        responseDTO.setNormales(new BigDecimal(&quot;80.00&quot;));</span>
+<span class="fc" id="L64">        responseDTO.setAnormales(new BigDecimal(&quot;10.00&quot;));</span>
+<span class="fc" id="L65">        responseDTO.setDuras(new BigDecimal(&quot;5.00&quot;));</span>
+<span class="fc" id="L66">        responseDTO.setFrescas(new BigDecimal(&quot;3.00&quot;));</span>
+<span class="fc" id="L67">        responseDTO.setMuertas(new BigDecimal(&quot;2.00&quot;));</span>
+<span class="fc" id="L68">        responseDTO.setGerminacion(new BigDecimal(&quot;90.00&quot;));</span>
+<span class="fc" id="L69">        responseDTO.setTablaGermId(1L);</span>
+<span class="fc" id="L70">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/{valoresId} - Debe obtener valores por ID&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerValoresPorId_conIdExistente_debeRetornarValores() throws Exception {
+<span class="fc" id="L76">        when(valoresGermService.obtenerValoresPorId(1L)).thenReturn(responseDTO);</span>
+
+<span class="fc" id="L78">        mockMvc.perform(get(&quot;/api/germinacion/1/tabla/1/valores/1&quot;)</span>
+<span class="fc" id="L79">                .with(csrf()))</span>
+<span class="fc" id="L80">                .andExpect(status().isOk())</span>
+<span class="fc" id="L81">                .andExpect(jsonPath(&quot;$.valoresGermID&quot;).value(1L))</span>
+<span class="fc" id="L82">                .andExpect(jsonPath(&quot;$.instituto&quot;).value(&quot;INIA&quot;))</span>
+<span class="fc" id="L83">                .andExpect(jsonPath(&quot;$.normales&quot;).value(80.00))</span>
+<span class="fc" id="L84">                .andExpect(jsonPath(&quot;$.tablaGermId&quot;).value(1L));</span>
+<span class="fc" id="L85">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/{valoresId} - Debe retornar 404 cuando no existe&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerValoresPorId_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L91">        when(valoresGermService.obtenerValoresPorId(999L))</span>
+<span class="fc" id="L92">            .thenThrow(new RuntimeException(&quot;Valores de germinación no encontrados con ID: 999&quot;));</span>
+
+<span class="fc" id="L94">        mockMvc.perform(get(&quot;/api/germinacion/1/tabla/1/valores/999&quot;)</span>
+<span class="fc" id="L95">                .with(csrf()))</span>
+<span class="fc" id="L96">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L97">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/{valoresId} - Debe actualizar valores exitosamente&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarValores_conDatosValidos_debeRetornarActualizado() throws Exception {
+<span class="fc" id="L103">        responseDTO.setNormales(new BigDecimal(&quot;75.00&quot;));</span>
+<span class="fc" id="L104">        when(valoresGermService.actualizarValores(eq(1L), any(ValoresGermRequestDTO.class))).thenReturn(responseDTO);</span>
+
+<span class="fc" id="L106">        mockMvc.perform(put(&quot;/api/germinacion/1/tabla/1/valores/1&quot;)</span>
+<span class="fc" id="L107">                .with(csrf())</span>
+<span class="fc" id="L108">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L109">                .content(objectMapper.writeValueAsString(requestDTO)))</span>
+<span class="fc" id="L110">                .andExpect(status().isOk())</span>
+<span class="fc" id="L111">                .andExpect(jsonPath(&quot;$.valoresGermID&quot;).value(1L))</span>
+<span class="fc" id="L112">                .andExpect(jsonPath(&quot;$.instituto&quot;).value(&quot;INIA&quot;));</span>
+<span class="fc" id="L113">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/{valoresId} - Debe rechazar suma mayor a 100&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarValores_conSumaSuperior100_debeRetornarError() throws Exception {
+<span class="fc" id="L119">        when(valoresGermService.actualizarValores(eq(1L), any(ValoresGermRequestDTO.class)))</span>
+<span class="fc" id="L120">            .thenThrow(new RuntimeException(&quot;La suma de los valores no puede superar 100&quot;));</span>
+
+<span class="fc" id="L122">        mockMvc.perform(put(&quot;/api/germinacion/1/tabla/1/valores/1&quot;)</span>
+<span class="fc" id="L123">                .with(csrf())</span>
+<span class="fc" id="L124">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L125">                .content(objectMapper.writeValueAsString(requestDTO)))</span>
+<span class="fc" id="L126">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L127">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores - Debe obtener todos los valores de una tabla&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerValoresPorTabla_debeRetornarListaDeValores() throws Exception {
+<span class="fc" id="L133">        ValoresGermDTO valoresInase = new ValoresGermDTO();</span>
+<span class="fc" id="L134">        valoresInase.setValoresGermID(2L);</span>
+<span class="fc" id="L135">        valoresInase.setInstituto(Instituto.INASE);</span>
+<span class="fc" id="L136">        valoresInase.setTablaGermId(1L);</span>
+
+<span class="fc" id="L138">        List&lt;ValoresGermDTO&gt; valores = Arrays.asList(responseDTO, valoresInase);</span>
+<span class="fc" id="L139">        when(valoresGermService.obtenerValoresPorTabla(1L)).thenReturn(valores);</span>
+
+<span class="fc" id="L141">        mockMvc.perform(get(&quot;/api/germinacion/1/tabla/1/valores&quot;)</span>
+<span class="fc" id="L142">                .with(csrf()))</span>
+<span class="fc" id="L143">                .andExpect(status().isOk())</span>
+<span class="fc" id="L144">                .andExpect(jsonPath(&quot;$.length()&quot;).value(2))</span>
+<span class="fc" id="L145">                .andExpect(jsonPath(&quot;$[0].instituto&quot;).value(&quot;INIA&quot;))</span>
+<span class="fc" id="L146">                .andExpect(jsonPath(&quot;$[1].instituto&quot;).value(&quot;INASE&quot;));</span>
+<span class="fc" id="L147">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/inia - Debe obtener valores de INIA&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerValoresIniaPorTabla_debeRetornarValoresDeInia() throws Exception {
+<span class="fc" id="L153">        when(valoresGermService.obtenerValoresIniaPorTabla(1L)).thenReturn(responseDTO);</span>
+
+<span class="fc" id="L155">        mockMvc.perform(get(&quot;/api/germinacion/1/tabla/1/valores/inia&quot;)</span>
+<span class="fc" id="L156">                .with(csrf()))</span>
+<span class="fc" id="L157">                .andExpect(status().isOk())</span>
+<span class="fc" id="L158">                .andExpect(jsonPath(&quot;$.instituto&quot;).value(&quot;INIA&quot;))</span>
+<span class="fc" id="L159">                .andExpect(jsonPath(&quot;$.tablaGermId&quot;).value(1L));</span>
+<span class="fc" id="L160">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/inase - Debe obtener valores de INASE&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerValoresInasePorTabla_debeRetornarValoresDeInase() throws Exception {
+<span class="fc" id="L166">        responseDTO.setInstituto(Instituto.INASE);</span>
+<span class="fc" id="L167">        when(valoresGermService.obtenerValoresInasePorTabla(1L)).thenReturn(responseDTO);</span>
+
+<span class="fc" id="L169">        mockMvc.perform(get(&quot;/api/germinacion/1/tabla/1/valores/inase&quot;)</span>
+<span class="fc" id="L170">                .with(csrf()))</span>
+<span class="fc" id="L171">                .andExpect(status().isOk())</span>
+<span class="fc" id="L172">                .andExpect(jsonPath(&quot;$.instituto&quot;).value(&quot;INASE&quot;))</span>
+<span class="fc" id="L173">                .andExpect(jsonPath(&quot;$.tablaGermId&quot;).value(1L));</span>
+<span class="fc" id="L174">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/germinacion/{germinacionId}/tabla/{tablaId}/valores/{valoresId} - Debe eliminar valores&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void eliminarValores_conIdValido_debeEliminar() throws Exception {
+<span class="fc" id="L180">        doNothing().when(valoresGermService).eliminarValores(1L);</span>
+
+<span class="fc" id="L182">        mockMvc.perform(delete(&quot;/api/germinacion/1/tabla/1/valores/1&quot;)</span>
+<span class="fc" id="L183">                .with(csrf()))</span>
+<span class="fc" id="L184">                .andExpect(status().isOk());</span>
+<span class="fc" id="L185">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

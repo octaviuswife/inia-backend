@@ -1,0 +1,739 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PmsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">PmsService.java</span></div><h1>PmsService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepPmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.specifications.PmsSpecification;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRedondeoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PmsRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EstadisticasTandaDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsListadoDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+
+@Service
+<span class="fc" id="L32">public class PmsService {</span>
+
+    @Autowired
+    private PmsRepository pmsRepository;
+
+    @Autowired
+    private RepPmsRepository repPmsRepository;
+
+    @Autowired
+    private LoteRepository loteRepository;
+
+    @Autowired
+    private AnalisisHistorialService analisisHistorialService;
+    
+    @Autowired
+    private AnalisisService analisisService;
+
+        @Transactional
+    // Crear Pms con estado REGISTRADO
+    public PmsDTO crearPms(PmsRequestDTO solicitud) {
+        // Validar que se especifique el número de repeticiones esperadas
+<span class="fc bfc" id="L53" title="All 4 branches covered.">        if (solicitud.getNumRepeticionesEsperadas() == null || solicitud.getNumRepeticionesEsperadas() &lt;= 0) {</span>
+<span class="fc" id="L54">            throw new RuntimeException(&quot;Debe especificar un número válido de repeticiones esperadas (mayor a 0).&quot;);</span>
+        }
+        
+        // Validar que en el peor caso (múltiples tandas inválidas) no se supere el límite de 16 repeticiones totales
+        // Como mínimo necesitamos 1 tanda válida, así que validamos que las repeticiones por tanda no excedan 16
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (solicitud.getNumRepeticionesEsperadas() &gt; 16) {</span>
+<span class="fc" id="L60">            throw new RuntimeException(&quot;El número de repeticiones por tanda no puede superar 16.&quot;);</span>
+        }
+        
+<span class="fc" id="L63">        Pms pms = mapearSolicitudAEntidad(solicitud);</span>
+<span class="fc" id="L64">        pms.setEstado(Estado.REGISTRADO);</span>
+
+<span class="fc" id="L66">        Pms guardado = pmsRepository.save(pms);</span>
+        
+        // Registrar automáticamente en el historial
+<span class="fc" id="L69">        analisisHistorialService.registrarCreacion(guardado);</span>
+        
+<span class="fc" id="L71">        return mapearEntidadADTO(guardado);</span>
+    }
+
+    // Editar Pms
+    @Transactional
+    public PmsDTO actualizarPms(Long id, PmsRequestDTO solicitud) {
+<span class="fc" id="L77">        Optional&lt;Pms&gt; existente = pmsRepository.findById(id);</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (existente.isPresent()) {</span>
+<span class="fc" id="L80">            Pms pms = existente.get();</span>
+            
+            // Manejar cambios de estado según rol del usuario usando el servicio común
+<span class="fc" id="L83">            analisisService.manejarEdicionAnalisisFinalizado(pms);</span>
+            
+<span class="fc" id="L85">            actualizarEntidadDesdeSolicitud(pms, solicitud);</span>
+<span class="fc" id="L86">            Pms actualizado = pmsRepository.save(pms);</span>
+            
+            // Registrar automáticamente en el historial
+<span class="fc" id="L89">            analisisHistorialService.registrarModificacion(actualizado);</span>
+            
+<span class="fc" id="L91">            return mapearEntidadADTO(actualizado);</span>
+        } else {
+<span class="fc" id="L93">            throw new RuntimeException(&quot;Pms no encontrado con ID: &quot; + id);</span>
+        }
+    }
+
+    // Eliminar Pms (desactivar - cambia activo a false)
+    public void eliminarPms(Long id) {
+<span class="fc" id="L99">        Optional&lt;Pms&gt; existente = pmsRepository.findById(id);</span>
+
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if (existente.isPresent()) {</span>
+<span class="fc" id="L102">            Pms pms = existente.get();</span>
+<span class="fc" id="L103">            pms.setActivo(false);</span>
+<span class="fc" id="L104">            pmsRepository.save(pms);</span>
+<span class="fc" id="L105">        } else {</span>
+<span class="nc" id="L106">            throw new RuntimeException(&quot;Pms no encontrado con ID: &quot; + id);</span>
+        }
+<span class="fc" id="L108">    }</span>
+
+    // Desactivar PMS (cambiar activo a false)
+    public void desactivarPms(Long id) {
+<span class="fc" id="L112">        analisisService.desactivarAnalisis(id, pmsRepository);</span>
+<span class="fc" id="L113">    }</span>
+
+    // Reactivar PMS (cambiar activo a true)
+    public PmsDTO reactivarPms(Long id) {
+<span class="fc" id="L117">        return analisisService.reactivarAnalisis(id, pmsRepository, this::mapearEntidadADTO);</span>
+    }
+
+    // Listar todos los Pms activos
+    public List&lt;PmsDTO&gt; obtenerTodos() {
+<span class="fc" id="L122">        List&lt;Pms&gt; activos = pmsRepository.findByActivoTrue();</span>
+
+<span class="fc" id="L124">        return activos.stream()</span>
+<span class="fc" id="L125">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L126">                .collect(Collectors.toList());</span>
+    }
+
+    // Obtener Pms por ID
+    public PmsDTO obtenerPorId(Long id) {
+<span class="fc" id="L131">        Optional&lt;Pms&gt; pms = pmsRepository.findById(id);</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (pms.isPresent()) {</span>
+<span class="fc" id="L133">            return mapearEntidadADTO(pms.get());</span>
+        } else {
+<span class="fc" id="L135">            throw new RuntimeException(&quot;Pms no encontrado con ID: &quot; + id);</span>
+        }
+    }
+
+    public List&lt;PmsDTO&gt; obtenerPmsPorIdLote(Long idLote) {
+<span class="fc" id="L140">        List&lt;Pms&gt; lista = pmsRepository.findByIdLote(idLote.intValue());</span>
+
+<span class="fc" id="L142">        return lista.stream()</span>
+<span class="fc" id="L143">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L144">                .collect(Collectors.toList());</span>
+    }
+
+    // Listar PMS con paginado (para listado)
+    public Page&lt;PmsListadoDTO&gt; obtenerPmsPaginadas(Pageable pageable) {
+<span class="fc" id="L149">        Page&lt;Pms&gt; pmsPage = pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);</span>
+<span class="fc" id="L150">        return pmsPage.map(this::mapearEntidadAListadoDTO);</span>
+    }
+
+    // Listar PMS con paginado y filtro de activo
+    public Page&lt;PmsListadoDTO&gt; obtenerPmsPaginadasConFiltro(Pageable pageable, String filtroActivo) {
+        Page&lt;Pms&gt; pmsPage;
+        
+<span class="nc bnc" id="L157" title="All 3 branches missed.">        switch (filtroActivo.toLowerCase()) {</span>
+            case &quot;activos&quot;:
+<span class="nc" id="L159">                pmsPage = pmsRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);</span>
+<span class="nc" id="L160">                break;</span>
+            case &quot;inactivos&quot;:
+<span class="nc" id="L162">                pmsPage = pmsRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);</span>
+<span class="nc" id="L163">                break;</span>
+            default: // &quot;todos&quot;
+<span class="nc" id="L165">                pmsPage = pmsRepository.findAllByOrderByFechaInicioDesc(pageable);</span>
+                break;
+        }
+        
+<span class="nc" id="L169">        return pmsPage.map(this::mapearEntidadAListadoDTO);</span>
+    }
+
+    /**
+     * Listar PMS con paginado y filtros dinámicos
+     */
+    public Page&lt;PmsListadoDTO&gt; obtenerPmsPaginadasConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String estado,
+            Long loteId) {
+        
+<span class="nc" id="L182">        Specification&lt;Pms&gt; spec = PmsSpecification.conFiltros(searchTerm, activo, estado, loteId);</span>
+<span class="nc" id="L183">        Page&lt;Pms&gt; pmsPage = pmsRepository.findAll(spec, pageable);</span>
+<span class="nc" id="L184">        return pmsPage.map(this::mapearEntidadAListadoDTO);</span>
+    }
+
+    private PmsListadoDTO mapearEntidadAListadoDTO(Pms pms) {
+<span class="fc" id="L188">        PmsListadoDTO dto = new PmsListadoDTO();</span>
+<span class="fc" id="L189">        dto.setAnalisisID(pms.getAnalisisID());</span>
+<span class="fc" id="L190">        dto.setEstado(pms.getEstado());</span>
+<span class="fc" id="L191">        dto.setFechaInicio(pms.getFechaInicio());</span>
+<span class="fc" id="L192">        dto.setFechaFin(pms.getFechaFin());</span>
+<span class="fc" id="L193">        dto.setActivo(pms.getActivo());</span>
+        
+        // Campos específicos de PMS
+<span class="fc" id="L196">        dto.setPms_g(pms.getPmsconRedon());</span>
+<span class="fc" id="L197">        dto.setCoeficienteVariacion(pms.getCoefVariacion());</span>
+        
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">        if (pms.getLote() != null) {</span>
+<span class="fc" id="L200">            dto.setIdLote(pms.getLote().getLoteID());</span>
+<span class="fc" id="L201">            dto.setLote(pms.getLote().getNomLote()); // Usar nomLote en lugar de ficha</span>
+            
+            // Obtener especie del lote - Usar nombreComun primero, luego nombreCientifico
+<span class="pc bpc" id="L204" title="3 of 4 branches missed.">            if (pms.getLote().getCultivar() != null &amp;&amp; pms.getLote().getCultivar().getEspecie() != null) {</span>
+<span class="nc" id="L205">                String nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreComun();</span>
+                // Si nombreComun está vacío, intentar con nombreCientifico
+<span class="nc bnc" id="L207" title="All 4 branches missed.">                if (nombreEspecie == null || nombreEspecie.trim().isEmpty()) {</span>
+<span class="nc" id="L208">                    nombreEspecie = pms.getLote().getCultivar().getEspecie().getNombreCientifico();</span>
+                }
+<span class="nc" id="L210">                dto.setEspecie(nombreEspecie);</span>
+            }
+        }
+        
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">        if (pms.getAnalisisID() != null) {</span>
+<span class="fc" id="L215">            var historial = analisisHistorialService.obtenerHistorialAnalisis(pms.getAnalisisID());</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">            if (!historial.isEmpty()) {</span>
+<span class="nc" id="L217">                var primerRegistro = historial.get(historial.size() - 1);</span>
+<span class="nc" id="L218">                dto.setUsuarioCreador(primerRegistro.getUsuario());</span>
+<span class="nc" id="L219">                var ultimoRegistro = historial.get(0);</span>
+<span class="nc" id="L220">                dto.setUsuarioModificador(ultimoRegistro.getUsuario());</span>
+            }
+        }
+<span class="fc" id="L223">        return dto;</span>
+    }
+
+    // Actualizar PMS con redondeo (solo cuando todas las repeticiones estén completas)
+    @Transactional
+    public PmsDTO actualizarPmsConRedondeo(Long id, PmsRedondeoRequestDTO solicitud) {
+<span class="nc" id="L229">        Optional&lt;Pms&gt; pmsExistente = pmsRepository.findById(id);</span>
+        
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (pmsExistente.isPresent()) {</span>
+<span class="nc" id="L232">            Pms pms = pmsExistente.get();</span>
+            
+<span class="nc" id="L234">            System.out.println(&quot;=== DEBUG actualizarPmsConRedondeo ===&quot;);</span>
+<span class="nc" id="L235">            System.out.println(&quot;PMS ID: &quot; + id);</span>
+<span class="nc" id="L236">            System.out.println(&quot;Estado actual: &quot; + pms.getEstado());</span>
+<span class="nc" id="L237">            System.out.println(&quot;Número de tandas: &quot; + pms.getNumTandas());</span>
+<span class="nc" id="L238">            System.out.println(&quot;Repeticiones esperadas: &quot; + pms.getNumRepeticionesEsperadas());</span>
+            
+            // Validar estado del análisis - permitir EN_PROCESO, PENDIENTE_APROBACION y APROBADO
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (pms.getEstado() != Estado.EN_PROCESO &amp;&amp; </span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">                pms.getEstado() != Estado.PENDIENTE_APROBACION &amp;&amp; </span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">                pms.getEstado() != Estado.APROBADO) {</span>
+<span class="nc" id="L244">                System.out.println(&quot;ERROR: Estado no válido: &quot; + pms.getEstado());</span>
+<span class="nc" id="L245">                throw new RuntimeException(&quot;Solo se pueden actualizar valores finales de PMS en estado EN_PROCESO, PENDIENTE_APROBACION o APROBADO. Estado actual: &quot; + pms.getEstado());</span>
+            }
+            
+            // Validar que se hayan completado todas las repeticiones válidas
+<span class="nc" id="L249">            boolean repeticionesCompletas = todasLasRepeticionesCompletas(pms);</span>
+<span class="nc" id="L250">            System.out.println(&quot;Repeticiones completas: &quot; + repeticionesCompletas);</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">            if (!repeticionesCompletas) {</span>
+<span class="nc" id="L252">                System.out.println(&quot;ERROR: No todas las repeticiones están completas&quot;);</span>
+<span class="nc" id="L253">                throw new RuntimeException(&quot;No se pueden actualizar los valores finales hasta completar todas las repeticiones válidas&quot;);</span>
+            }
+            
+            // Actualizar solo el valor con redondeo
+<span class="nc" id="L257">            pms.setPmsconRedon(solicitud.getPmsconRedon());</span>
+            
+<span class="nc" id="L259">            Pms pmsActualizado = pmsRepository.save(pms);</span>
+<span class="nc" id="L260">            System.out.println(&quot;PMS con redondeo actualizado exitosamente para PMS ID: &quot; + id);</span>
+<span class="nc" id="L261">            return mapearEntidadADTO(pmsActualizado);</span>
+        } else {
+<span class="nc" id="L263">            throw new RuntimeException(&quot;Análisis de PMS no encontrado con ID: &quot; + id);</span>
+        }
+    }
+
+    // Procesar cálculos cuando se complete una tanda
+    public void procesarCalculosTanda(Long pmsId, Integer numTanda) {
+<span class="nc" id="L269">        Pms pms = pmsRepository.findById(pmsId)</span>
+<span class="nc" id="L270">            .orElseThrow(() -&gt; new RuntimeException(&quot;PMS no encontrado con ID: &quot; + pmsId));</span>
+        
+<span class="nc" id="L272">        List&lt;RepPms&gt; repeticionesTanda = repPmsRepository.findByPmsId(pmsId).stream()</span>
+<span class="nc" id="L273">            .filter(rep -&gt; rep.getNumTanda().equals(numTanda))</span>
+<span class="nc" id="L274">            .collect(Collectors.toList());</span>
+        
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        if (repeticionesTanda.size() &lt; pms.getNumRepeticionesEsperadas()) {</span>
+            // Si la tanda no está completa, solo actualizar estadísticas generales
+<span class="nc" id="L278">            actualizarEstadisticasGenerales(pms);</span>
+<span class="nc" id="L279">            pmsRepository.save(pms);</span>
+<span class="nc" id="L280">            return;</span>
+        }
+        
+        // PASO 1: Obtener TODAS las repeticiones del PMS para calcular estadísticas globales
+<span class="nc" id="L284">        List&lt;RepPms&gt; todasLasRepeticiones = repPmsRepository.findByPmsId(pmsId);</span>
+        
+        // PASO 2: Calcular estadísticas con TODAS las repeticiones del PMS (no solo de esta tanda)
+<span class="nc" id="L287">        EstadisticasTandaDTO estadisticasGlobales = calcularEstadisticasTanda(todasLasRepeticiones);</span>
+        
+        // PASO 3: Identificar y marcar outliers (±2σ de la media GLOBAL)
+<span class="nc" id="L290">        BigDecimal media = estadisticasGlobales.getPromedio();</span>
+<span class="nc" id="L291">        BigDecimal desviacion = estadisticasGlobales.getDesviacion();</span>
+<span class="nc" id="L292">        BigDecimal umbralInferior = media.subtract(desviacion.multiply(new BigDecimal(&quot;2&quot;)));</span>
+<span class="nc" id="L293">        BigDecimal umbralSuperior = media.add(desviacion.multiply(new BigDecimal(&quot;2&quot;)));</span>
+        
+<span class="nc" id="L295">        System.out.println(&quot; ESTADÍSTICAS GLOBALES DEL PMS (todas las repeticiones):&quot;);</span>
+<span class="nc" id="L296">        System.out.println(&quot;  Total repeticiones: &quot; + todasLasRepeticiones.size());</span>
+<span class="nc" id="L297">        System.out.println(&quot;  Media (μ): &quot; + media);</span>
+<span class="nc" id="L298">        System.out.println(&quot;  Desviación (σ): &quot; + desviacion);</span>
+<span class="nc" id="L299">        System.out.println(&quot;  Umbral inferior (μ - 2σ): &quot; + umbralInferior);</span>
+<span class="nc" id="L300">        System.out.println(&quot;  Umbral superior (μ + 2σ): &quot; + umbralSuperior);</span>
+<span class="nc" id="L301">        System.out.println(&quot; VALIDACIÓN DE TANDA &quot; + numTanda + &quot;:&quot;);</span>
+        
+        // PASO 4: Marcar repeticiones de esta tanda como válidas o inválidas según ±2σ GLOBAL
+<span class="nc bnc" id="L304" title="All 2 branches missed.">        for (RepPms rep : repeticionesTanda) {</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">            boolean esValida = rep.getPeso().compareTo(umbralInferior) &gt;= 0 &amp;&amp; </span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">                              rep.getPeso().compareTo(umbralSuperior) &lt;= 0;</span>
+<span class="nc" id="L307">            rep.setValido(esValida);</span>
+<span class="nc" id="L308">            System.out.println(&quot;    Rep #&quot; + rep.getNumRep() + &quot; (Tanda &quot; + numTanda + &quot;): &quot; + rep.getPeso() + &quot;g -&gt; &quot; + </span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">                (esValida ? &quot; VÁLIDA&quot; : &quot; INVÁLIDA&quot;) +</span>
+<span class="nc" id="L310">                &quot; (comparación: &quot; + rep.getPeso() + &quot; vs [&quot; + umbralInferior + &quot;, &quot; + umbralSuperior + &quot;])&quot;);</span>
+<span class="nc" id="L311">        }</span>
+<span class="nc" id="L312">        repPmsRepository.saveAll(repeticionesTanda);</span>
+<span class="nc" id="L313">        System.out.println(&quot;   Validaciones guardadas en BD&quot;);</span>
+        
+        // PASO 5: Filtrar solo repeticiones válidas de esta tanda y recalcular estadísticas
+<span class="nc" id="L316">        List&lt;RepPms&gt; repeticionesValidas = repeticionesTanda.stream()</span>
+<span class="nc" id="L317">            .filter(rep -&gt; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="nc" id="L318">            .collect(Collectors.toList());</span>
+        
+<span class="nc bnc" id="L320" title="All 2 branches missed.">        if (repeticionesValidas.isEmpty()) {</span>
+            // Si no hay repeticiones válidas en esta tanda, incrementar tandas si es posible
+<span class="nc bnc" id="L322" title="All 2 branches missed.">            if (puedeIncrementarTandas(pms)) {</span>
+<span class="nc" id="L323">                pms.setNumTandas(pms.getNumTandas() + 1);</span>
+<span class="nc" id="L324">                System.out.println(&quot;No hay repeticiones válidas en tanda &quot; + numTanda + &quot;. Se incrementa el número de tandas a: &quot; + pms.getNumTandas());</span>
+            }
+<span class="nc" id="L326">            actualizarEstadisticasGenerales(pms);</span>
+<span class="nc" id="L327">            pmsRepository.save(pms);</span>
+<span class="nc" id="L328">            return;</span>
+        }
+        
+        // PASO 6: Calcular estadísticas DE LA TANDA con solo repeticiones válidas
+<span class="nc" id="L332">        EstadisticasTandaDTO estadisticasTanda = calcularEstadisticasTanda(repeticionesValidas);</span>
+        
+        // PASO 7: Evaluar CV de la tanda según tipo de semilla
+<span class="nc bnc" id="L335" title="All 2 branches missed.">        BigDecimal umbralCV = pms.getEsSemillaBrozosa() ? </span>
+<span class="nc" id="L336">            new BigDecimal(&quot;6.0&quot;) : new BigDecimal(&quot;4.0&quot;);</span>
+        
+<span class="nc" id="L338">        System.out.println(&quot;  CV de la tanda &quot; + numTanda + &quot;: &quot; + estadisticasTanda.getCoeficienteVariacion() + &quot; (umbral: &quot; + umbralCV + &quot;)&quot;);</span>
+        
+<span class="nc bnc" id="L340" title="All 2 branches missed.">        if (estadisticasTanda.getCoeficienteVariacion().compareTo(umbralCV) &gt; 0) {</span>
+            // CV no aceptable - incrementar tandas si es posible
+<span class="nc bnc" id="L342" title="All 2 branches missed.">            if (puedeIncrementarTandas(pms)) {</span>
+<span class="nc" id="L343">                pms.setNumTandas(pms.getNumTandas() + 1);</span>
+<span class="nc" id="L344">                System.out.println(&quot;  ️ CV no aceptable. Se incrementa el número de tandas a: &quot; + pms.getNumTandas());</span>
+            } else {
+<span class="nc" id="L346">                System.out.println(&quot;  ️ CV no aceptable pero se alcanzó el límite máximo de 16 repeticiones.&quot;);</span>
+            }
+        } else {
+<span class="nc" id="L349">            System.out.println(&quot;   CV aceptable para la tanda &quot; + numTanda);</span>
+        }
+        
+        // PASO 8: Actualizar estadísticas generales del PMS
+<span class="nc" id="L353">        actualizarEstadisticasGenerales(pms);</span>
+        
+<span class="nc" id="L355">        pmsRepository.save(pms);</span>
+<span class="nc" id="L356">    }</span>
+    
+    /**
+     * Valida TODAS las repeticiones del PMS usando estadísticas globales (±2σ).
+     * Se ejecuta cada vez que se crea, edita o elimina una repetición.
+     * No considera tandas - simplemente valida todas las repeticiones contra la media global.
+     */
+    @Transactional
+    public void validarTodasLasRepeticiones(Long pmsId) {
+<span class="nc" id="L365">        System.out.println(&quot; VALIDANDO TODAS LAS REPETICIONES del PMS ID: &quot; + pmsId);</span>
+        
+<span class="nc" id="L367">        Pms pms = pmsRepository.findById(pmsId)</span>
+<span class="nc" id="L368">            .orElseThrow(() -&gt; new RuntimeException(&quot;PMS no encontrado con ID: &quot; + pmsId));</span>
+        
+        // Obtener todas las repeticiones del PMS
+<span class="nc" id="L371">        List&lt;RepPms&gt; todasLasRepeticiones = repPmsRepository.findByPmsId(pmsId);</span>
+        
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        if (todasLasRepeticiones.isEmpty()) {</span>
+<span class="nc" id="L374">            System.out.println(&quot;  No hay repeticiones para validar&quot;);</span>
+<span class="nc" id="L375">            return;</span>
+        }
+        
+        // Si hay menos del mínimo esperado, no validar aún
+<span class="nc bnc" id="L379" title="All 2 branches missed.">        if (todasLasRepeticiones.size() &lt; pms.getNumRepeticionesEsperadas()) {</span>
+<span class="nc" id="L380">            System.out.println(&quot;  Repeticiones insuficientes (&quot; + todasLasRepeticiones.size() + &quot; &lt; &quot; + pms.getNumRepeticionesEsperadas() + &quot;), marcando todas como indeterminadas&quot;);</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">            for (RepPms rep : todasLasRepeticiones) {</span>
+<span class="nc" id="L382">                rep.setValido(null);</span>
+<span class="nc" id="L383">            }</span>
+<span class="nc" id="L384">            repPmsRepository.saveAll(todasLasRepeticiones);</span>
+<span class="nc" id="L385">            actualizarEstadisticasGenerales(pms);</span>
+<span class="nc" id="L386">            pmsRepository.save(pms);</span>
+<span class="nc" id="L387">            return;</span>
+        }
+        
+        // Calcular estadísticas globales con TODAS las repeticiones
+<span class="nc" id="L391">        EstadisticasTandaDTO estadisticasGlobales = calcularEstadisticasTanda(todasLasRepeticiones);</span>
+<span class="nc" id="L392">        BigDecimal media = estadisticasGlobales.getPromedio();</span>
+<span class="nc" id="L393">        BigDecimal desviacion = estadisticasGlobales.getDesviacion();</span>
+<span class="nc" id="L394">        BigDecimal umbralInferior = media.subtract(desviacion.multiply(new BigDecimal(&quot;2&quot;)));</span>
+<span class="nc" id="L395">        BigDecimal umbralSuperior = media.add(desviacion.multiply(new BigDecimal(&quot;2&quot;)));</span>
+        
+<span class="nc" id="L397">        System.out.println(&quot; ESTADÍSTICAS GLOBALES:&quot;);</span>
+<span class="nc" id="L398">        System.out.println(&quot;  Total repeticiones: &quot; + todasLasRepeticiones.size());</span>
+<span class="nc" id="L399">        System.out.println(&quot;  Media (μ): &quot; + media);</span>
+<span class="nc" id="L400">        System.out.println(&quot;  Desviación (σ): &quot; + desviacion);</span>
+<span class="nc" id="L401">        System.out.println(&quot;  Umbral inferior (μ - 2σ): &quot; + umbralInferior);</span>
+<span class="nc" id="L402">        System.out.println(&quot;  Umbral superior (μ + 2σ): &quot; + umbralSuperior);</span>
+<span class="nc" id="L403">        System.out.println(&quot;  Validación:&quot;);</span>
+        
+        // Validar TODAS las repeticiones
+<span class="nc bnc" id="L406" title="All 2 branches missed.">        for (RepPms rep : todasLasRepeticiones) {</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">            boolean esValida = rep.getPeso().compareTo(umbralInferior) &gt;= 0 &amp;&amp; </span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">                              rep.getPeso().compareTo(umbralSuperior) &lt;= 0;</span>
+<span class="nc" id="L409">            rep.setValido(esValida);</span>
+<span class="nc" id="L410">            System.out.println(&quot;    Rep #&quot; + rep.getNumRep() + &quot; (Tanda &quot; + rep.getNumTanda() + &quot;): &quot; + </span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">                rep.getPeso() + &quot;g -&gt; &quot; + (esValida ? &quot; VÁLIDA&quot; : &quot; INVÁLIDA&quot;));</span>
+<span class="nc" id="L412">        }</span>
+        
+        // Guardar todas las validaciones
+<span class="nc" id="L415">        repPmsRepository.saveAll(todasLasRepeticiones);</span>
+<span class="nc" id="L416">        System.out.println(&quot;   Validaciones guardadas&quot;);</span>
+        
+        // Verificar CV con repeticiones válidas
+<span class="nc" id="L419">        List&lt;RepPms&gt; repeticionesValidas = todasLasRepeticiones.stream()</span>
+<span class="nc" id="L420">            .filter(rep -&gt; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="nc" id="L421">            .collect(Collectors.toList());</span>
+        
+<span class="nc bnc" id="L423" title="All 2 branches missed.">        if (repeticionesValidas.size() &gt;= pms.getNumRepeticionesEsperadas()) {</span>
+<span class="nc" id="L424">            EstadisticasTandaDTO estadisticasValidas = calcularEstadisticasTanda(repeticionesValidas);</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">            BigDecimal umbralCV = pms.getEsSemillaBrozosa() ? new BigDecimal(&quot;6.0&quot;) : new BigDecimal(&quot;4.0&quot;);</span>
+            
+<span class="nc" id="L427">            System.out.println(&quot;  CV con repeticiones válidas: &quot; + estadisticasValidas.getCoeficienteVariacion() + &quot; (umbral: &quot; + umbralCV + &quot;)&quot;);</span>
+            
+<span class="nc bnc" id="L429" title="All 4 branches missed.">            if (estadisticasValidas.getCoeficienteVariacion().compareTo(umbralCV) &gt; 0 &amp;&amp; puedeIncrementarTandas(pms)) {</span>
+<span class="nc" id="L430">                pms.setNumTandas(pms.getNumTandas() + 1);</span>
+<span class="nc" id="L431">                System.out.println(&quot;  ️ CV no aceptable. Se incrementa número de tandas a: &quot; + pms.getNumTandas());</span>
+            }
+        }
+        
+        // Actualizar estadísticas generales del PMS
+<span class="nc" id="L436">        actualizarEstadisticasGenerales(pms);</span>
+<span class="nc" id="L437">        pmsRepository.save(pms);</span>
+        
+<span class="nc" id="L439">        System.out.println(&quot; Validación completada&quot;);</span>
+<span class="nc" id="L440">    }</span>
+    
+    // Método público para actualizar estadísticas generales desde servicios externos
+    public void actualizarEstadisticasPms(Long pmsId) {
+<span class="nc" id="L444">        Pms pms = pmsRepository.findById(pmsId)</span>
+<span class="nc" id="L445">            .orElseThrow(() -&gt; new RuntimeException(&quot;PMS no encontrado con ID: &quot; + pmsId));</span>
+        
+<span class="nc" id="L447">        actualizarEstadisticasGenerales(pms);</span>
+<span class="nc" id="L448">        pmsRepository.save(pms);</span>
+<span class="nc" id="L449">    }</span>
+
+
+
+    // ==============================
+    // Métodos auxiliares de mapeo
+    // ==============================
+
+    private Pms mapearSolicitudAEntidad(PmsRequestDTO solicitud) {
+<span class="fc" id="L458">        Pms pms = new Pms();</span>
+
+<span class="fc" id="L460">        pms.setComentarios(solicitud.getComentarios());</span>
+
+<span class="pc bpc" id="L462" title="1 of 2 branches missed.">        if (solicitud.getIdLote() != null) {</span>
+<span class="fc" id="L463">            Optional&lt;Lote&gt; loteOpt = loteRepository.findById(solicitud.getIdLote());</span>
+<span class="fc bfc" id="L464" title="All 2 branches covered.">            if (loteOpt.isPresent()) {</span>
+<span class="fc" id="L465">                Lote lote = loteOpt.get();</span>
+                
+                // Validar que el lote esté activo
+<span class="pc bpc" id="L468" title="1 of 2 branches missed.">                if (!lote.getActivo()) {</span>
+<span class="nc" id="L469">                    throw new RuntimeException(&quot;No se puede crear un análisis para un lote inactivo&quot;);</span>
+                }
+                
+<span class="fc" id="L472">                pms.setLote(lote);</span>
+<span class="fc" id="L473">            } else {</span>
+<span class="fc" id="L474">                throw new RuntimeException(&quot;Lote no encontrado con ID: &quot; + solicitud.getIdLote());</span>
+            }
+        }
+
+        // Campos específicos de PMS
+<span class="fc" id="L479">        pms.setNumRepeticionesEsperadas(solicitud.getNumRepeticionesEsperadas());</span>
+<span class="fc" id="L480">        pms.setNumTandas(1); // Siempre inicia con 1 tanda</span>
+<span class="fc" id="L481">        pms.setEsSemillaBrozosa(solicitud.getEsSemillaBrozosa());</span>
+
+<span class="fc" id="L483">        return pms;</span>
+    }
+
+    private void actualizarEntidadDesdeSolicitud(Pms pms, PmsRequestDTO solicitud) {
+
+<span class="fc" id="L488">        pms.setComentarios(solicitud.getComentarios());</span>
+
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">        if (solicitud.getIdLote() != null) {</span>
+<span class="fc" id="L491">            Optional&lt;Lote&gt; loteOpt = loteRepository.findById(solicitud.getIdLote());</span>
+<span class="pc bpc" id="L492" title="1 of 2 branches missed.">            if (loteOpt.isPresent()) {</span>
+<span class="fc" id="L493">                pms.setLote(loteOpt.get());</span>
+            } else {
+<span class="nc" id="L495">                throw new RuntimeException(&quot;Lote no encontrado con ID: &quot; + solicitud.getIdLote());</span>
+            }
+        }
+
+        // Campos específicos de PMS (solo campos de configuración, no los calculados)
+        // El número de repeticiones esperadas Y el número de tandas NO se pueden editar una vez creado
+        // numTandas se maneja automáticamente por la lógica del sistema
+<span class="fc" id="L502">        pms.setEsSemillaBrozosa(solicitud.getEsSemillaBrozosa());</span>
+<span class="fc" id="L503">    }</span>
+
+    private PmsDTO mapearEntidadADTO(Pms pms) {
+<span class="fc" id="L506">        PmsDTO dto = new PmsDTO();</span>
+
+<span class="fc" id="L508">        dto.setAnalisisID(pms.getAnalisisID());</span>
+<span class="fc" id="L509">        dto.setEstado(pms.getEstado());</span>
+<span class="fc" id="L510">        dto.setFechaInicio(pms.getFechaInicio());</span>
+<span class="fc" id="L511">        dto.setFechaFin(pms.getFechaFin());</span>
+<span class="fc" id="L512">        dto.setComentarios(pms.getComentarios());</span>
+
+        // Datos completos del lote si existe
+<span class="fc bfc" id="L515" title="All 2 branches covered.">        if (pms.getLote() != null) {</span>
+<span class="fc" id="L516">            dto.setIdLote(pms.getLote().getLoteID());</span>
+<span class="fc" id="L517">            dto.setLote(pms.getLote().getNomLote());</span>
+<span class="fc" id="L518">            dto.setFicha(pms.getLote().getFicha());</span>
+            
+            // Información del cultivar y especie
+<span class="pc bpc" id="L521" title="1 of 2 branches missed.">            if (pms.getLote().getCultivar() != null) {</span>
+<span class="nc" id="L522">                dto.setCultivarNombre(pms.getLote().getCultivar().getNombre());</span>
+                
+<span class="nc bnc" id="L524" title="All 2 branches missed.">                if (pms.getLote().getCultivar().getEspecie() != null) {</span>
+<span class="nc" id="L525">                    dto.setEspecieNombre(pms.getLote().getCultivar().getEspecie().getNombreComun());</span>
+                }
+            }
+        }
+
+        // Campos específicos de PMS de configuración
+<span class="fc" id="L531">        dto.setNumRepeticionesEsperadas(pms.getNumRepeticionesEsperadas());</span>
+<span class="fc" id="L532">        dto.setNumTandas(pms.getNumTandas());</span>
+<span class="fc" id="L533">        dto.setEsSemillaBrozosa(pms.getEsSemillaBrozosa());</span>
+        
+        // Campos calculados
+<span class="fc" id="L536">        dto.setPromedio100g(pms.getPromedio100g());</span>
+<span class="fc" id="L537">        dto.setDesvioStd(pms.getDesvioStd());</span>
+<span class="fc" id="L538">        dto.setCoefVariacion(pms.getCoefVariacion());</span>
+<span class="fc" id="L539">        dto.setPmssinRedon(pms.getPmssinRedon());</span>
+<span class="fc" id="L540">        dto.setPmsconRedon(pms.getPmsconRedon());</span>
+
+        // Mapear historial de análisis
+<span class="fc" id="L543">        dto.setHistorial(analisisHistorialService.obtenerHistorialAnalisis(pms.getAnalisisID()));</span>
+
+<span class="fc" id="L545">        return dto;</span>
+    }
+
+    // ==============================
+    // Métodos auxiliares de cálculo estadístico y validación
+    // ==============================
+
+    private EstadisticasTandaDTO calcularEstadisticasTanda(List&lt;RepPms&gt; repeticiones) {
+<span class="nc bnc" id="L553" title="All 2 branches missed.">        if (repeticiones.isEmpty()) {</span>
+<span class="nc" id="L554">            throw new RuntimeException(&quot;No se pueden calcular estadísticas de una tanda vacía&quot;);</span>
+        }
+
+        // Calcular promedio con 4 decimales
+<span class="nc" id="L558">        BigDecimal suma = repeticiones.stream()</span>
+<span class="nc" id="L559">            .map(RepPms::getPeso)</span>
+<span class="nc" id="L560">            .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+        
+<span class="nc" id="L562">        BigDecimal promedio = suma.divide(</span>
+<span class="nc" id="L563">            new BigDecimal(repeticiones.size()), </span>
+            4, RoundingMode.HALF_UP  // 4 decimales para promedio
+        );
+
+        // Calcular desviación estándar (muestral: dividir por n-1)
+<span class="nc" id="L568">        BigDecimal sumaCuadrados = repeticiones.stream()</span>
+<span class="nc" id="L569">            .map(rep -&gt; rep.getPeso().subtract(promedio).pow(2))</span>
+<span class="nc" id="L570">            .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+
+        // Usar desviación estándar muestral (n-1) para muestras pequeñas
+<span class="nc" id="L573">        int n = repeticiones.size();</span>
+<span class="nc bnc" id="L574" title="All 2 branches missed.">        BigDecimal divisor = n &gt; 1 ? new BigDecimal(n - 1) : new BigDecimal(1);</span>
+        
+<span class="nc" id="L576">        BigDecimal varianza = sumaCuadrados.divide(</span>
+            divisor, 
+            MathContext.DECIMAL128
+        );
+        
+<span class="nc" id="L581">        BigDecimal desviacion = new BigDecimal(Math.sqrt(varianza.doubleValue()))</span>
+<span class="nc" id="L582">            .setScale(4, RoundingMode.HALF_UP);</span>
+
+        // Calcular coeficiente de variación (CV = desviacion / promedio * 100) con 4 decimales
+<span class="nc" id="L585">        BigDecimal coeficienteVariacion = desviacion</span>
+<span class="nc" id="L586">            .divide(promedio, MathContext.DECIMAL128)</span>
+<span class="nc" id="L587">            .multiply(new BigDecimal(&quot;100&quot;))</span>
+<span class="nc" id="L588">            .setScale(4, RoundingMode.HALF_UP);  // Cambiar de 2 a 4 decimales</span>
+
+        // Calcular PMS sin redondeo (promedio * 10) con 4 decimales
+<span class="nc" id="L591">        BigDecimal pmsSinRedondeo = promedio.multiply(new BigDecimal(&quot;10&quot;))</span>
+<span class="nc" id="L592">            .setScale(4, RoundingMode.HALF_UP);  // Cambiar de 2 a 4 decimales</span>
+
+<span class="nc" id="L594">        return new EstadisticasTandaDTO(promedio, desviacion, coeficienteVariacion, pmsSinRedondeo);</span>
+    }
+
+    private void actualizarEstadisticasGenerales(Pms pms) {
+        // Obtener SOLO las repeticiones VÁLIDAS del PMS
+<span class="nc" id="L599">        List&lt;RepPms&gt; repeticionesValidas = repPmsRepository.findByPmsId(pms.getAnalisisID()).stream()</span>
+<span class="nc" id="L600">            .filter(rep -&gt; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="nc" id="L601">            .collect(Collectors.toList());</span>
+        
+<span class="nc bnc" id="L603" title="All 2 branches missed.">        if (!repeticionesValidas.isEmpty()) {</span>
+<span class="nc" id="L604">            EstadisticasTandaDTO estadisticasGenerales = calcularEstadisticasTanda(repeticionesValidas);</span>
+            
+            // Actualizar estadísticas del PMS solo con repeticiones válidas
+<span class="nc" id="L607">            pms.setPromedio100g(estadisticasGenerales.getPromedio());</span>
+<span class="nc" id="L608">            pms.setDesvioStd(estadisticasGenerales.getDesviacion());</span>
+<span class="nc" id="L609">            pms.setCoefVariacion(estadisticasGenerales.getCoeficienteVariacion());</span>
+<span class="nc" id="L610">            pms.setPmssinRedon(estadisticasGenerales.getPmsSinRedondeo());</span>
+<span class="nc" id="L611">        } else {</span>
+            // Si no hay repeticiones válidas, limpiar estadísticas
+<span class="nc" id="L613">            pms.setPromedio100g(null);</span>
+<span class="nc" id="L614">            pms.setDesvioStd(null);</span>
+<span class="nc" id="L615">            pms.setCoefVariacion(null);</span>
+<span class="nc" id="L616">            pms.setPmssinRedon(null);</span>
+        }
+<span class="nc" id="L618">    }</span>
+
+    private boolean todasLasTandasCompletas(Pms pms) {
+<span class="nc bnc" id="L621" title="All 2 branches missed.">        for (int tandaNum = 1; tandaNum &lt;= pms.getNumTandas(); tandaNum++) {</span>
+<span class="nc" id="L622">            final int tanda = tandaNum;</span>
+<span class="nc" id="L623">            List&lt;RepPms&gt; repeticionesTanda = repPmsRepository.findByPmsId(pms.getAnalisisID()).stream()</span>
+<span class="nc bnc" id="L624" title="All 4 branches missed.">                .filter(rep -&gt; rep.getNumTanda().equals(tanda) &amp;&amp; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="nc" id="L625">                .collect(Collectors.toList());</span>
+            
+<span class="nc bnc" id="L627" title="All 2 branches missed.">            if (repeticionesTanda.size() &lt; pms.getNumRepeticionesEsperadas()) {</span>
+<span class="nc" id="L628">                return false;</span>
+            }
+        }
+<span class="nc" id="L631">        return true;</span>
+    }
+
+    private boolean puedeIncrementarTandas(Pms pms) {
+<span class="nc" id="L635">        long totalRepeticiones = repPmsRepository.countByPmsId(pms.getAnalisisID());</span>
+        // Permitir agregar tandas mientras no se superen las 16 repeticiones totales
+<span class="nc bnc" id="L637" title="All 2 branches missed.">        return totalRepeticiones &lt; 16;</span>
+    }
+
+    private boolean todasLasRepeticionesCompletas(Pms pms) {
+<span class="nc" id="L641">        System.out.println(&quot;=== DEBUG todasLasRepeticionesCompletas ===&quot;);</span>
+        
+        // Obtener todas las repeticiones
+<span class="nc" id="L644">        List&lt;RepPms&gt; todasLasRepeticiones = repPmsRepository.findByPmsId(pms.getAnalisisID());</span>
+<span class="nc" id="L645">        long totalRepeticiones = todasLasRepeticiones.size();</span>
+        
+<span class="nc" id="L647">        System.out.println(&quot;Total de repeticiones: &quot; + totalRepeticiones);</span>
+<span class="nc" id="L648">        System.out.println(&quot;Número de tandas: &quot; + pms.getNumTandas());</span>
+<span class="nc" id="L649">        System.out.println(&quot;Repeticiones esperadas por tanda: &quot; + pms.getNumRepeticionesEsperadas());</span>
+        
+        // Verificar que exista al menos una tanda con repeticiones válidas completas
+<span class="nc bnc" id="L652" title="All 2 branches missed.">        for (int tandaNum = 1; tandaNum &lt;= pms.getNumTandas(); tandaNum++) {</span>
+<span class="nc" id="L653">            final int tanda = tandaNum;</span>
+<span class="nc" id="L654">            List&lt;RepPms&gt; repeticionesTanda = todasLasRepeticiones.stream()</span>
+<span class="nc" id="L655">                .filter(rep -&gt; rep.getNumTanda().equals(tanda))</span>
+<span class="nc" id="L656">                .collect(Collectors.toList());</span>
+            
+<span class="nc" id="L658">            List&lt;RepPms&gt; repeticionesValidas = repeticionesTanda.stream()</span>
+<span class="nc" id="L659">                .filter(rep -&gt; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="nc" id="L660">                .collect(Collectors.toList());</span>
+            
+<span class="nc" id="L662">            System.out.println(&quot;Tanda &quot; + tanda + &quot;: &quot; + repeticionesTanda.size() + &quot; repeticiones totales, &quot; + </span>
+<span class="nc" id="L663">                             repeticionesValidas.size() + &quot; válidas (necesita &quot; + pms.getNumRepeticionesEsperadas() + &quot;)&quot;);</span>
+            
+            // Si la tanda está completa con repeticiones válidas
+<span class="nc bnc" id="L666" title="All 2 branches missed.">            if (repeticionesValidas.size() &gt;= pms.getNumRepeticionesEsperadas()) {</span>
+                // Calcular CV de esta tanda para verificar si es válida
+<span class="nc" id="L668">                EstadisticasTandaDTO estadisticas = calcularEstadisticasTanda(repeticionesValidas);</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">                BigDecimal umbralCV = pms.getEsSemillaBrozosa() ? </span>
+<span class="nc" id="L670">                    new BigDecimal(&quot;6.0&quot;) : new BigDecimal(&quot;4.0&quot;);</span>
+                
+<span class="nc" id="L672">                System.out.println(&quot;CV de tanda &quot; + tanda + &quot;: &quot; + estadisticas.getCoeficienteVariacion() + </span>
+                                 &quot; (umbral: &quot; + umbralCV + &quot;)&quot;);
+                
+                // Si el CV es aceptable, las repeticiones están completas
+<span class="nc bnc" id="L676" title="All 2 branches missed.">                if (estadisticas.getCoeficienteVariacion().compareTo(umbralCV) &lt;= 0) {</span>
+<span class="nc" id="L677">                    System.out.println(&quot;Tanda &quot; + tanda + &quot; tiene CV válido. Repeticiones completas.&quot;);</span>
+<span class="nc" id="L678">                    return true;</span>
+                }
+            }
+        }
+        
+        // Si no hay tandas válidas, verificar si se alcanzó el límite de 16 repeticiones
+<span class="nc bnc" id="L684" title="All 2 branches missed.">        if (totalRepeticiones &gt;= 16) {</span>
+<span class="nc" id="L685">            System.out.println(&quot;Se alcanzó el límite de 16 repeticiones sin CV válido. Permitir finalización.&quot;);</span>
+<span class="nc" id="L686">            return true; // Permitir finalizar aunque no sea válido si se alcanzó el límite</span>
+        }
+        
+<span class="nc" id="L689">        System.out.println(&quot;No hay tandas con CV válido y no se alcanzó el límite. Retornando false.&quot;);</span>
+<span class="nc" id="L690">        return false;</span>
+    }
+
+    /**
+     * Validación completa para operaciones críticas de PMS (finalizar y marcar para repetir)
+     * Verifica completitud de repeticiones y presencia de promedio con redondeo
+     */
+    private void validarPmsParaOperacionCritica(Pms pms) {
+        // Validación específica de PMS: completitud de repeticiones
+<span class="nc bnc" id="L699" title="All 2 branches missed.">        if (!todasLasRepeticionesCompletas(pms)) {</span>
+<span class="nc" id="L700">            throw new RuntimeException(&quot;No se puede completar la operación hasta completar todas las repeticiones válidas&quot;);</span>
+        }
+        // Validación específica de PMS: debe tener promedio con redondeo ingresado
+<span class="nc bnc" id="L703" title="All 2 branches missed.">        if (pms.getPmsconRedon() == null) {</span>
+<span class="nc" id="L704">            throw new RuntimeException(&quot;Debe ingresar el promedio con redondeo (PMS con redondeo) antes de completar la operación&quot;);</span>
+        }
+<span class="nc" id="L706">    }</span>
+
+    // Finalizar análisis PMS - cambia estado según rol del usuario
+    public PmsDTO finalizarAnalisis(Long id) {
+<span class="fc" id="L710">        return analisisService.finalizarAnalisisGenerico(</span>
+            id, 
+            pmsRepository, 
+            this::mapearEntidadADTO,
+            this::validarPmsParaOperacionCritica
+        );
+    }
+
+    // Aprobar análisis PMS (solo para administradores)
+    public PmsDTO aprobarAnalisis(Long id) {
+<span class="fc" id="L720">        return analisisService.aprobarAnalisisGenerico(</span>
+            id,
+            pmsRepository,
+            this::mapearEntidadADTO,
+            this::validarPmsParaOperacionCritica, // Mismas validaciones que finalizar
+<span class="nc" id="L725">            (idLote) -&gt; pmsRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote</span>
+        );
+    }
+
+    // Marcar análisis para repetir (solo administradores)
+    public PmsDTO marcarParaRepetir(Long id) {
+<span class="fc" id="L731">        return analisisService.marcarParaRepetirGenerico(</span>
+            id,
+            pmsRepository,
+            this::mapearEntidadADTO,
+            this::validarPmsParaOperacionCritica // Mismas validaciones que finalizar
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

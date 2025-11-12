@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoteControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">LoteControllerIntegrationTest.java</span></div><h1>LoteControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.LoteService;
+
+import java.time.LocalDate;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/**
+ * Tests de Controlador para LoteController
+ * 
+ * Usa @WebMvcTest en lugar de @SpringBootTest para evitar problemas
+ * con la configuración completa de Spring Security.
+ * 
+ * Estos tests verifican:
+ * - Endpoints REST funcionan correctamente
+ * - Serialización/Deserialización JSON
+ * - Códigos de respuesta HTTP
+ * - Validación de permisos con @WithMockUser
+ */
+@WebMvcTest(LoteController.class)
+@DisplayName(&quot;Tests de Controlador - LoteController&quot;)
+<span class="fc" id="L43">class LoteControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private LoteService loteService;
+
+    private LoteRequestDTO loteRequestDTO;
+    private LoteDTO loteDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L59">        loteRequestDTO = new LoteRequestDTO();</span>
+<span class="fc" id="L60">        loteRequestDTO.setNomLote(&quot;LOTE-TEST-001&quot;);</span>
+<span class="fc" id="L61">        loteRequestDTO.setFechaRecibo(LocalDate.now());</span>
+<span class="fc" id="L62">        loteRequestDTO.setFicha(&quot;F-001&quot;);</span>
+<span class="fc" id="L63">        loteRequestDTO.setCultivarID(1L);</span>
+<span class="fc" id="L64">        loteRequestDTO.setClienteID(1L);</span>
+
+<span class="fc" id="L66">        loteDTO = new LoteDTO();</span>
+<span class="fc" id="L67">        loteDTO.setLoteID(1L);</span>
+<span class="fc" id="L68">        loteDTO.setNomLote(&quot;LOTE-TEST-001&quot;);</span>
+<span class="fc" id="L69">        loteDTO.setActivo(true);</span>
+<span class="fc" id="L70">        loteDTO.setFechaRecibo(LocalDate.now());</span>
+<span class="fc" id="L71">        loteDTO.setFicha(&quot;F-001&quot;);</span>
+<span class="fc" id="L72">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/lotes - debe crear lote con autenticación&quot;)
+    void crearLote_conAutenticacion_debeRetornar201() throws Exception {
+        // ARRANGE
+<span class="fc" id="L79">        when(loteService.crearLote(any(LoteRequestDTO.class))).thenReturn(loteDTO);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L82">        mockMvc.perform(post(&quot;/api/lotes&quot;)</span>
+<span class="fc" id="L83">                .with(csrf())</span>
+<span class="fc" id="L84">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L85">                .content(objectMapper.writeValueAsString(loteRequestDTO)))</span>
+<span class="fc" id="L86">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L87">                .andExpect(jsonPath(&quot;$.loteID&quot;).value(1))</span>
+<span class="fc" id="L88">                .andExpect(jsonPath(&quot;$.nomLote&quot;).value(&quot;LOTE-TEST-001&quot;))</span>
+<span class="fc" id="L89">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
+<span class="fc" id="L90">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/lotes/{id} - debe retornar lote existente&quot;)
+    void obtenerLotePorId_existente_debeRetornar200() throws Exception {
+        // ARRANGE
+<span class="fc" id="L97">        when(loteService.obtenerLotePorId(1L)).thenReturn(loteDTO);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L100">        mockMvc.perform(get(&quot;/api/lotes/1&quot;))</span>
+<span class="fc" id="L101">                .andExpect(status().isOk())</span>
+<span class="fc" id="L102">                .andExpect(jsonPath(&quot;$.loteID&quot;).value(1))</span>
+<span class="fc" id="L103">                .andExpect(jsonPath(&quot;$.nomLote&quot;).value(&quot;LOTE-TEST-001&quot;));</span>
+<span class="fc" id="L104">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/lotes/activos - debe retornar lista de lotes activos&quot;)
+    void listarLotesActivos_debeRetornarLista() throws Exception {
+        // ARRANGE
+<span class="fc" id="L111">        ResponseListadoLoteSimple response = new ResponseListadoLoteSimple();</span>
+<span class="fc" id="L112">        when(loteService.obtenerTodosLotesActivos()).thenReturn(response);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L115">        mockMvc.perform(get(&quot;/api/lotes/activos&quot;))</span>
+<span class="fc" id="L116">                .andExpect(status().isOk());</span>
+<span class="fc" id="L117">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/lotes/{id} - debe actualizar lote&quot;)
+    void actualizarLote_conDatosValidos_debeRetornar200() throws Exception {
+        // ARRANGE
+<span class="fc" id="L124">        loteRequestDTO.setNomLote(&quot;LOTE-ACTUALIZADO&quot;);</span>
+<span class="fc" id="L125">        loteDTO.setNomLote(&quot;LOTE-ACTUALIZADO&quot;);</span>
+        
+<span class="fc" id="L127">        when(loteService.actualizarLote(eq(1L), any(LoteRequestDTO.class))).thenReturn(loteDTO);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L130">        mockMvc.perform(put(&quot;/api/lotes/1&quot;)</span>
+<span class="fc" id="L131">                .with(csrf())</span>
+<span class="fc" id="L132">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L133">                .content(objectMapper.writeValueAsString(loteRequestDTO)))</span>
+<span class="fc" id="L134">                .andExpect(status().isOk())</span>
+<span class="fc" id="L135">                .andExpect(jsonPath(&quot;$.nomLote&quot;).value(&quot;LOTE-ACTUALIZADO&quot;));</span>
+<span class="fc" id="L136">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/lotes/{id} - debe desactivar lote&quot;)
+    void eliminarLote_conPermisos_debeRetornar200() throws Exception {
+        // ARRANGE
+<span class="fc" id="L143">        doNothing().when(loteService).eliminarLote(1L);</span>
+        
+        // ACT &amp; ASSERT
+<span class="fc" id="L146">        mockMvc.perform(delete(&quot;/api/lotes/1&quot;)</span>
+<span class="fc" id="L147">                .with(csrf()))</span>
+<span class="fc" id="L148">                .andExpect(status().isOk());</span>
+<span class="fc" id="L149">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/lotes/{id}/reactivar - debe reactivar lote&quot;)
+    void reactivarLote_conPermisos_debeRetornar200() throws Exception {
+        // ARRANGE
+<span class="fc" id="L156">        loteDTO.setActivo(true);</span>
+<span class="fc" id="L157">        when(loteService.reactivarLote(1L)).thenReturn(loteDTO);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L160">        mockMvc.perform(put(&quot;/api/lotes/1/reactivar&quot;)</span>
+<span class="fc" id="L161">                .with(csrf()))</span>
+<span class="fc" id="L162">                .andExpect(status().isOk())</span>
+<span class="fc" id="L163">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
+<span class="fc" id="L164">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

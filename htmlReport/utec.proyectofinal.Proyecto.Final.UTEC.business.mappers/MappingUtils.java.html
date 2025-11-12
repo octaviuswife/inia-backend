@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MappingUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.business.mappers</a> &gt; <span class="el_source">MappingUtils.java</span></div><h1>MappingUtils.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.business.mappers;
+
+import java.util.Optional;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Listado;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.MalezasCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.MalezasCatalogoRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.EspecieRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ListadoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
+
+<span class="nc" id="L15">public class MappingUtils {</span>
+
+    public static MalezasCatalogoDTO toCatalogoDTO(MalezasCatalogo MalezasCatalogo) {
+<span class="nc" id="L18">        MalezasCatalogoDTO dto = new MalezasCatalogoDTO();</span>
+<span class="nc" id="L19">        dto.setCatalogoID(MalezasCatalogo.getCatalogoID());</span>
+<span class="nc" id="L20">        dto.setNombreComun(MalezasCatalogo.getNombreComun());</span>
+<span class="nc" id="L21">        dto.setNombreCientifico(MalezasCatalogo.getNombreCientifico());</span>
+        // Omitir campo activo intencionalmente
+<span class="nc" id="L23">        return dto;</span>
+    }
+
+    public static EspecieDTO toEspecieDTO(Especie especie) {
+<span class="nc" id="L27">        EspecieDTO dto = new EspecieDTO();</span>
+<span class="nc" id="L28">        dto.setEspecieID(especie.getEspecieID());</span>
+<span class="nc" id="L29">        dto.setNombreComun(especie.getNombreComun());</span>
+<span class="nc" id="L30">        dto.setNombreCientifico(especie.getNombreCientifico());</span>
+<span class="nc" id="L31">        dto.setActivo(especie.getActivo());</span>
+        // Cultivares se puede agregar si es necesario
+<span class="nc" id="L33">        return dto;</span>
+    }
+
+    public static ListadoDTO toListadoDTO(Listado listado) {
+<span class="nc" id="L37">        ListadoDTO dto = new ListadoDTO();</span>
+<span class="nc" id="L38">        dto.setListadoID(listado.getListadoID());</span>
+<span class="nc" id="L39">        dto.setListadoTipo(listado.getListadoTipo());</span>
+<span class="nc" id="L40">        dto.setListadoInsti(listado.getListadoInsti());</span>
+<span class="nc" id="L41">        dto.setListadoNum(listado.getListadoNum());</span>
+
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (listado.getCatalogo() != null) {</span>
+<span class="nc" id="L44">            dto.setCatalogo(toCatalogoDTO(listado.getCatalogo()));</span>
+        }
+        
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (listado.getEspecie() != null) {</span>
+<span class="nc" id="L48">            dto.setEspecie(toEspecieDTO(listado.getEspecie()));</span>
+        }
+        
+<span class="nc" id="L51">        return dto;</span>
+    }
+
+    public static Listado fromListadoRequest(ListadoRequestDTO solicitud, MalezasCatalogoRepository catalogoRepository, EspecieRepository especieRepository) {
+<span class="nc" id="L55">        Listado listado = new Listado();</span>
+<span class="nc" id="L56">        listado.setListadoTipo(solicitud.getListadoTipo());</span>
+<span class="nc" id="L57">        listado.setListadoInsti(solicitud.getListadoInsti());</span>
+<span class="nc" id="L58">        listado.setListadoNum(solicitud.getListadoNum());</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (solicitud.getIdCatalogo() != null) {</span>
+<span class="nc" id="L61">            Optional&lt;MalezasCatalogo&gt; catalogoOpt = catalogoRepository.findById(solicitud.getIdCatalogo());</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (catalogoOpt.isPresent()) {</span>
+<span class="nc" id="L63">                listado.setCatalogo(catalogoOpt.get());</span>
+            } else {
+<span class="nc" id="L65">                throw new RuntimeException(&quot;Catálogo no encontrado con ID: &quot; + solicitud.getIdCatalogo());</span>
+            }
+        }
+        
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (solicitud.getIdEspecie() != null) {</span>
+<span class="nc" id="L70">            Optional&lt;Especie&gt; especieOpt = especieRepository.findById(solicitud.getIdEspecie());</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (especieOpt.isPresent()) {</span>
+<span class="nc" id="L72">                listado.setEspecie(especieOpt.get());</span>
+            } else {
+<span class="nc" id="L74">                throw new RuntimeException(&quot;Especie no encontrada con ID: &quot; + solicitud.getIdEspecie());</span>
+            }
+        }
+        
+<span class="nc" id="L78">        return listado;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

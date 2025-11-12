@@ -1,5 +1,6 @@
 package utec.proyectofinal.Proyecto.Final.UTEC.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -74,6 +75,7 @@ public class KeysetCursor {
      * 
      * @return true si es válido
      */
+    @JsonIgnore
     public boolean isValid() {
         return lastId != null;
     }

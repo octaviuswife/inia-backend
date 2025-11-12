@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CultivarController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">CultivarController.java</span></div><h1>CultivarController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CultivarRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CultivarDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.CultivarService;
+
+import java.util.List;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/cultivar&quot;)
+@Tag(name = &quot;Cultivares&quot;, description = &quot;API para gestión de cultivares&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L26">public class CultivarController {</span>
+
+    @Autowired
+    private CultivarService cultivarService;
+
+    // Obtener todos activos
+    @Operation(summary = &quot;Listar todos los cultivares&quot;, 
+              description = &quot;Obtiene todos los cultivares con filtro opcional de estado (activo/inactivo)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;List&lt;CultivarDTO&gt;&gt; obtenerTodos(
+            @RequestParam(required = false) Boolean activo) {
+<span class="fc" id="L38">        List&lt;CultivarDTO&gt; cultivares = cultivarService.obtenerTodos(activo);</span>
+<span class="fc" id="L39">        return ResponseEntity.ok(cultivares);</span>
+    }
+
+    // Obtener inactivos
+    @Operation(summary = &quot;Listar todos los cultivares inactivos&quot;, 
+              description = &quot;Obtiene todos los cultivares que están inactivos en el sistema&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @GetMapping(&quot;/inactivos&quot;)
+    public ResponseEntity&lt;List&lt;CultivarDTO&gt;&gt; obtenerInactivos() {
+<span class="nc" id="L48">        List&lt;CultivarDTO&gt; cultivares = cultivarService.obtenerInactivos();</span>
+<span class="nc" id="L49">        return ResponseEntity.ok(cultivares);</span>
+    }
+
+    // Obtener por especie
+    @Operation(summary = &quot;Listar todos los cultivares por especie&quot;, 
+              description = &quot;Obtiene todos los cultivares asociados a una especie específica&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/especie/{especieID}&quot;)
+    public ResponseEntity&lt;List&lt;CultivarDTO&gt;&gt; obtenerPorEspecie(@PathVariable Long especieID) {
+<span class="fc" id="L58">        List&lt;CultivarDTO&gt; cultivares = cultivarService.obtenerPorEspecie(especieID);</span>
+<span class="fc" id="L59">        return ResponseEntity.ok(cultivares);</span>
+    }
+
+    // Buscar por nombre
+    @Operation(summary = &quot;Buscar cultivares por nombre&quot;, 
+              description = &quot;Busca cultivares cuyo nombre contenga el texto especificado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/buscar&quot;)
+    public ResponseEntity&lt;List&lt;CultivarDTO&gt;&gt; buscarPorNombre(@RequestParam String nombre) {
+<span class="fc" id="L68">        List&lt;CultivarDTO&gt; cultivares = cultivarService.buscarPorNombre(nombre);</span>
+<span class="fc" id="L69">        return ResponseEntity.ok(cultivares);</span>
+    }
+
+    // Obtener por ID
+    @Operation(summary = &quot;Obtener cultivar por ID&quot;, 
+              description = &quot;Obtiene un cultivar específico por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;CultivarDTO&gt; obtenerPorId(@PathVariable Long id) {
+<span class="fc" id="L78">        CultivarDTO cultivar = cultivarService.obtenerPorId(id);</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        if (cultivar != null) {</span>
+<span class="fc" id="L80">            return ResponseEntity.ok(cultivar);</span>
+        }
+<span class="nc" id="L82">        return ResponseEntity.notFound().build();</span>
+    }
+
+    // Crear
+    @Operation(summary = &quot;Crear nuevo cultivar&quot;, 
+              description = &quot;Crea un nuevo cultivar en el sistema&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;CultivarDTO&gt; crear(@RequestBody CultivarRequestDTO solicitud) {
+        try {
+<span class="fc" id="L92">            CultivarDTO creado = cultivarService.crear(solicitud);</span>
+<span class="fc" id="L93">            return ResponseEntity.ok(creado);</span>
+<span class="nc" id="L94">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L95">            return ResponseEntity.badRequest().build();</span>
+        }
+    }
+
+    // Actualizar
+    @Operation(summary = &quot;Actualizar cultivar&quot;, 
+              description = &quot;Actualiza los detalles de un cultivar existente&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;CultivarDTO&gt; actualizar(@PathVariable Long id, @RequestBody CultivarRequestDTO solicitud) {
+        try {
+<span class="fc" id="L106">            CultivarDTO actualizado = cultivarService.actualizar(id, solicitud);</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            if (actualizado != null) {</span>
+<span class="fc" id="L108">                return ResponseEntity.ok(actualizado);</span>
+            }
+<span class="nc" id="L110">            return ResponseEntity.notFound().build();</span>
+<span class="nc" id="L111">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L112">            return ResponseEntity.badRequest().build();</span>
+        }
+    }
+
+    // Eliminar (soft delete)
+    @Operation(summary = &quot;Eliminar cultivar&quot;, 
+              description = &quot;Elimina (cambia a inactivo) un cultivar existente&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+<span class="fc" id="L122">        cultivarService.eliminar(id);</span>
+<span class="fc" id="L123">        return ResponseEntity.ok().build();</span>
+    }
+
+    // Reactivar
+    @Operation(summary = &quot;Reactivar cultivar&quot;, 
+              description = &quot;Reactiva un cultivar que estaba inactivo&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/reactivar&quot;)
+    public ResponseEntity&lt;CultivarDTO&gt; reactivar(@PathVariable Long id) {
+<span class="fc" id="L132">        CultivarDTO reactivado = cultivarService.reactivar(id);</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (reactivado != null) {</span>
+<span class="fc" id="L134">            return ResponseEntity.ok(reactivado);</span>
+        }
+<span class="nc" id="L136">        return ResponseEntity.notFound().build();</span>
+    }
+
+    // Obtener Cultivares con paginado para listado
+    @Operation(summary = &quot;Obtener cultivares paginados&quot;, 
+              description = &quot;Obtiene la lista paginada de cultivares para el listado&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/listado&quot;)
+    public ResponseEntity&lt;Page&lt;CultivarDTO&gt;&gt; obtenerCultivaresPaginados(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo) {
+<span class="nc" id="L149">        Pageable pageable = PageRequest.of(page, size);</span>
+<span class="nc" id="L150">        Page&lt;CultivarDTO&gt; response = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, search, activo);</span>
+<span class="nc" id="L151">        return ResponseEntity.ok(response);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

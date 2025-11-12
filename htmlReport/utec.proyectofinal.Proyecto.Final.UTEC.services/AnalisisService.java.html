@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnalisisService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">AnalisisService.java</span></div><h1>AnalisisService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import java.time.LocalDateTime;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Analisis;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+
+/**
+ * Servicio común para operaciones relacionadas con análisis
+ * Maneja la lógica compartida entre diferentes tipos de análisis
+ */
+@Service
+<span class="fc" id="L22">public class AnalisisService {</span>
+
+    @Autowired
+    private AnalisisHistorialService analisisHistorialService;
+
+    @Autowired
+    private NotificacionService notificacionService;
+
+    /**
+     * Establece la fecha de inicio automáticamente al crear un análisis
+     * 
+     * @param analisis El análisis recién creado
+     */
+    public void establecerFechaInicio(Analisis analisis) {
+<span class="fc" id="L36">        analisis.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L37">    }</span>
+
+    /**
+     * Finaliza un análisis según el rol del usuario actual y establece fecha fin
+     * - Si es analista, cambia estado a PENDIENTE_APROBACION
+     * - Si es admin, cambia estado a APROBADO directamente
+     * 
+     * @param analisis El análisis a finalizar
+     * @return El análisis actualizado
+     */
+    public Analisis finalizarAnalisis(Analisis analisis) {
+        // Validar que el análisis esté activo
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (!analisis.getActivo()) {</span>
+<span class="fc" id="L50">            throw new RuntimeException(&quot;No se puede finalizar un análisis inactivo&quot;);</span>
+        }
+        
+        // Chequear si el estado del análisis no es APROBADO o A_REPETIR
+<span class="fc bfc" id="L54" title="All 4 branches covered.">        if (analisis.getEstado() == Estado.APROBADO || analisis.getEstado() == Estado.A_REPETIR) {</span>
+<span class="fc" id="L55">            throw new RuntimeException(&quot;El análisis ya está finalizado o marcado para repetir&quot;);</span>
+        }
+
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (esAnalista()) {</span>
+            // Analista: enviar a pendiente de aprobación
+<span class="fc" id="L60">            analisis.setEstado(Estado.PENDIENTE_APROBACION);</span>
+        } else {
+            // Admin: aprobar directamente
+<span class="fc" id="L63">            analisis.setEstado(Estado.APROBADO);</span>
+        }
+        
+        // Establecer fecha de finalización
+<span class="fc" id="L67">        analisis.setFechaFin(LocalDateTime.now());</span>
+        
+        // Registrar en el historial
+<span class="fc" id="L70">        analisisHistorialService.registrarModificacion(analisis);</span>
+        
+        // Crear notificación automática para finalización de análisis
+        try {
+<span class="fc" id="L74">            notificacionService.notificarAnalisisFinalizado(analisis.getAnalisisID());</span>
+<span class="fc" id="L75">        } catch (Exception e) {</span>
+            // Log error but don't fail the analysis finalization
+<span class="fc" id="L77">            System.err.println(&quot;Error creating notification for analysis finalization: &quot; + e.getMessage());</span>
+<span class="fc" id="L78">        }</span>
+        
+<span class="fc" id="L80">        return analisis;</span>
+    }
+
+    /**
+     * Aprueba un análisis (verifica que esté en PENDIENTE_APROBACION o A_REPETIR)
+     * 
+     * @param analisis El análisis a aprobar
+     * @return El análisis actualizado
+     * @throws RuntimeException si el análisis no está en estado PENDIENTE_APROBACION o A_REPETIR, o está inactivo
+     */
+    public Analisis aprobarAnalisis(Analisis analisis) {
+        // Validar que el análisis esté activo
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (!analisis.getActivo()) {</span>
+<span class="fc" id="L93">            throw new RuntimeException(&quot;No se puede aprobar un análisis inactivo&quot;);</span>
+        }
+        
+        // Validar que esté en estado PENDIENTE_APROBACION o A_REPETIR
+<span class="pc bpc" id="L97" title="1 of 4 branches missed.">        if (analisis.getEstado() != Estado.PENDIENTE_APROBACION &amp;&amp; analisis.getEstado() != Estado.A_REPETIR) {</span>
+<span class="fc" id="L98">            throw new RuntimeException(&quot;El análisis debe estar en estado PENDIENTE_APROBACION o A_REPETIR para ser aprobado&quot;);</span>
+        }
+        
+<span class="fc" id="L101">        analisis.setEstado(Estado.APROBADO);</span>
+        
+        // Establecer fecha de finalización si no está establecida
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (analisis.getFechaFin() == null) {</span>
+<span class="fc" id="L105">            analisis.setFechaFin(LocalDateTime.now());</span>
+        }
+        
+        // Registrar en el historial
+<span class="fc" id="L109">        analisisHistorialService.registrarModificacion(analisis);</span>
+        
+        // Crear notificación automática para aprobación de análisis
+        try {
+<span class="fc" id="L113">            notificacionService.notificarAnalisisAprobado(analisis.getAnalisisID());</span>
+<span class="nc" id="L114">        } catch (Exception e) {</span>
+            // Log error but don't fail the analysis approval
+<span class="nc" id="L116">            System.err.println(&quot;Error creating notification for analysis approval: &quot; + e.getMessage());</span>
+<span class="fc" id="L117">        }</span>
+        
+<span class="fc" id="L119">        return analisis;</span>
+    }
+    
+    /**
+     * Marca un análisis para repetir (solo administradores)
+     * - Se permite marcar para repetir análisis APROBADOS o que cumplan validaciones
+     * - Cambia estado a A_REPETIR
+     * 
+     * @param analisis El análisis a marcar para repetir
+     * @return El análisis actualizado
+     * @throws RuntimeException si el análisis está inactivo o no cumple las validaciones
+     */
+    public Analisis marcarParaRepetir(Analisis analisis) {
+        // Validar que el análisis esté activo
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (!analisis.getActivo()) {</span>
+<span class="fc" id="L134">            throw new RuntimeException(&quot;No se puede marcar para repetir un análisis inactivo&quot;);</span>
+        }
+        
+        // Se permite marcar para repetir análisis APROBADOS o que cumplan validaciones
+        // (El validador específico se encargará de verificar requisitos por tipo de análisis)
+        
+<span class="fc" id="L140">        analisis.setEstado(Estado.A_REPETIR);</span>
+        
+        // Registrar en el historial
+<span class="fc" id="L143">        analisisHistorialService.registrarModificacion(analisis);</span>
+        
+        // Crear notificación automática para rechazo de análisis (marcado para repetir)
+        try {
+<span class="fc" id="L147">            notificacionService.notificarAnalisisRepetir(analisis.getAnalisisID());</span>
+<span class="nc" id="L148">        } catch (Exception e) {</span>
+            // Log error but don't fail the analysis rejection
+<span class="nc" id="L150">            System.err.println(&quot;Error creating notification for analysis rejection: &quot; + e.getMessage());</span>
+<span class="fc" id="L151">        }</span>
+        
+<span class="fc" id="L153">        return analisis;</span>
+    }
+
+    /**
+     * Verifica si el usuario actual es un analista
+     * 
+     * @return true si el usuario tiene rol ANALISTA
+     */
+    public boolean esAnalista() {
+<span class="fc" id="L162">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L163" title="2 of 4 branches missed.">        if (authentication != null &amp;&amp; authentication.getAuthorities() != null) {</span>
+<span class="fc" id="L164">            return authentication.getAuthorities().contains(new SimpleGrantedAuthority(&quot;ROLE_ANALISTA&quot;));</span>
+        }
+<span class="nc" id="L166">        return false;</span>
+    }
+
+    /**
+     * Maneja el cambio de estado cuando se edita un análisis finalizado
+     * - Si es admin: mantiene el estado actual (FINALIZADO/APROBADO)
+     * - Si es analista: cambia a PENDIENTE_APROBACION para nueva revisión
+     * 
+     * @param analisis El análisis que se está editando
+     */
+    public void manejarEdicionAnalisisFinalizado(Analisis analisis) {
+        // Solo procesar si el análisis está finalizado o aprobado
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (analisis.getEstado() == Estado.APROBADO) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">            if (esAnalista()) {</span>
+                // Analista: cambiar a pendiente de aprobación para nueva revisión
+<span class="fc" id="L181">                analisis.setEstado(Estado.PENDIENTE_APROBACION);</span>
+                
+                // Registrar en el historial
+<span class="fc" id="L184">                analisisHistorialService.registrarModificacion(analisis);</span>
+                
+                // Crear notificación para informar que necesita nueva aprobación
+                try {
+<span class="fc" id="L188">                    notificacionService.notificarAnalisisPendienteAprobacion(analisis.getAnalisisID());</span>
+<span class="nc" id="L189">                } catch (Exception e) {</span>
+<span class="nc" id="L190">                    System.err.println(&quot;Error creating notification for analysis pending approval: &quot; + e.getMessage());</span>
+<span class="fc" id="L191">                }</span>
+            }
+            // Si es admin: no hacer nada, mantener estado actual
+        }
+<span class="fc" id="L195">    }</span>
+
+    /**
+     * Método genérico para finalizar análisis con validación específica opcional
+     * 
+     * @param &lt;T&gt; Tipo del análisis que extiende Analisis
+     * @param &lt;D&gt; Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo específico
+     * @param mapper Función para mapear entidad a DTO
+     * @param validator Validación específica opcional (puede ser null)
+     * @return DTO del análisis finalizado
+     */
+    public &lt;T extends Analisis, D&gt; D finalizarAnalisisGenerico(
+            Long id, 
+            JpaRepository&lt;T, Long&gt; repository,
+            Function&lt;T, D&gt; mapper,
+            Consumer&lt;T&gt; validator) {
+        
+<span class="fc" id="L214">        T analisis = repository.findById(id)</span>
+<span class="pc" id="L215">                .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado con ID: &quot; + id));</span>
+        
+        // Ejecutar validación específica si existe
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">        if (validator != null) {</span>
+<span class="fc" id="L219">            validator.accept(analisis);</span>
+        }
+        
+        // Finalizar usando la lógica común
+<span class="fc" id="L223">        finalizarAnalisis(analisis);</span>
+        
+        // Guardar cambios
+<span class="fc" id="L226">        T analisisActualizado = repository.save(analisis);</span>
+        
+<span class="fc" id="L228">        return mapper.apply(analisisActualizado);</span>
+    }
+
+    /**
+     * Método genérico para aprobar análisis con validación específica opcional
+     * 
+     * @param &lt;T&gt; Tipo del análisis que extiende Analisis
+     * @param &lt;D&gt; Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo específico
+     * @param mapper Función para mapear entidad a DTO
+     * @param validator Validación específica opcional (puede ser null)
+     * @param buscarPorLote Función para buscar análisis por lote (puede ser null)
+     * @return DTO del análisis aprobado
+     */
+    public &lt;T extends Analisis, D&gt; D aprobarAnalisisGenerico(
+            Long id,
+            JpaRepository&lt;T, Long&gt; repository,
+            Function&lt;T, D&gt; mapper,
+            Consumer&lt;T&gt; validator,
+            Function&lt;Long, java.util.List&lt;T&gt;&gt; buscarPorLote) {
+        
+<span class="fc" id="L250">        T analisis = repository.findById(id)</span>
+<span class="pc" id="L251">                .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado con ID: &quot; + id));</span>
+        
+
+        // Si el análisis está marcado como A_REPETIR y tiene lote asociado
+<span class="pc bpc" id="L255" title="2 of 6 branches missed.">        if (analisis.getEstado() == Estado.A_REPETIR &amp;&amp; analisis.getLote() != null &amp;&amp; buscarPorLote != null) {</span>
+<span class="fc" id="L256">            System.out.println(&quot;   Análisis está en A_REPETIR, validando si existen otros análisis válidos...&quot;);</span>
+            
+            // Buscar otros análisis del mismo tipo para el mismo lote
+<span class="fc" id="L259">            java.util.List&lt;T&gt; analisisDelMismoLote = buscarPorLote.apply(analisis.getLote().getLoteID());</span>
+            
+<span class="fc" id="L261">            System.out.println(&quot;  - Total análisis del mismo tipo para este lote: &quot; + analisisDelMismoLote.size());</span>
+            
+            // Mostrar todos los análisis encontrados
+<span class="fc" id="L264">            analisisDelMismoLote.forEach(a -&gt; {</span>
+<span class="fc" id="L265">                System.out.println(&quot;    • ID: &quot; + a.getAnalisisID() + </span>
+<span class="fc" id="L266">                                 &quot;, Estado: &quot; + a.getEstado() + </span>
+<span class="fc" id="L267">                                 &quot;, Activo: &quot; + a.getActivo() +</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">                                 (a.getAnalisisID().equals(analisis.getAnalisisID()) ? &quot; (ACTUAL)&quot; : &quot;&quot;));</span>
+<span class="fc" id="L269">            });</span>
+            
+            // Verificar si existe algún análisis válido (estado diferente de A_REPETIR, no null, y activo)
+<span class="fc" id="L272">            boolean existeAnalisisValido = analisisDelMismoLote.stream()</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">                .filter(a -&gt; !a.getAnalisisID().equals(analisis.getAnalisisID())) // Excluir el análisis actual</span>
+<span class="fc" id="L274">                .filter(a -&gt; a.getActivo()) // Solo análisis activos</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">                .filter(a -&gt; a.getEstado() != null) // Excluir análisis sin estado asignado</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">                .anyMatch(a -&gt; a.getEstado() != Estado.A_REPETIR); // Estado diferente de A_REPETIR</span>
+            
+<span class="fc" id="L278">            System.out.println(&quot;  - ¿Existe otro análisis válido (activo, con estado y no A_REPETIR)? &quot; + existeAnalisisValido);</span>
+            
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">            if (existeAnalisisValido) {</span>
+<span class="fc" id="L281">                System.out.println(&quot;   ERROR: Ya existe un análisis válido, cancelando aprobación&quot;);</span>
+<span class="fc" id="L282">                throw new RuntimeException(&quot;Ya existe un análisis válido de este tipo para el lote &quot; + </span>
+<span class="fc" id="L283">                    analisis.getLote().getFicha() + &quot;. No se puede aprobar este análisis marcado para repetir.&quot;);</span>
+            }
+            
+<span class="nc" id="L286">            System.out.println(&quot;   No existe otro análisis válido, procediendo con la aprobación...&quot;);</span>
+        }
+        
+        // Ejecutar validación específica si existe
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">        if (validator != null) {</span>
+<span class="fc" id="L291">            validator.accept(analisis);</span>
+        }
+        
+        // Aprobar usando la lógica común
+<span class="fc" id="L295">        aprobarAnalisis(analisis);</span>
+        
+        // Guardar cambios
+<span class="fc" id="L298">        T analisisActualizado = repository.save(analisis);</span>
+        
+<span class="fc" id="L300">        System.out.println(&quot;   Análisis aprobado exitosamente, nuevo estado: &quot; + analisisActualizado.getEstado());</span>
+        
+<span class="fc" id="L302">        return mapper.apply(analisisActualizado);</span>
+    }
+
+    /**
+     * Método genérico para marcar análisis a repetir con validación específica opcional
+     * 
+     * @param &lt;T&gt; Tipo del análisis que extiende Analisis
+     * @param &lt;D&gt; Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo específico
+     * @param mapper Función para mapear entidad a DTO
+     * @param validator Validación específica opcional (puede ser null)
+     * @return DTO del análisis marcado para repetir
+     */
+    public &lt;T extends Analisis, D&gt; D marcarParaRepetirGenerico(
+            Long id,
+            JpaRepository&lt;T, Long&gt; repository,
+            Function&lt;T, D&gt; mapper,
+            Consumer&lt;T&gt; validator) {
+        
+<span class="fc" id="L322">        T analisis = repository.findById(id)</span>
+<span class="pc" id="L323">            .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado con ID: &quot; + id));</span>
+        
+        // Aplicar validación específica si se proporciona
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">        if (validator != null) {</span>
+<span class="fc" id="L327">            validator.accept(analisis);</span>
+        }
+        
+        // Marcar para repetir usando el método común
+<span class="fc" id="L331">        marcarParaRepetir(analisis);</span>
+        
+        // Guardar y devolver
+<span class="fc" id="L334">        T analisisActualizado = repository.save(analisis);</span>
+<span class="fc" id="L335">        return mapper.apply(analisisActualizado);</span>
+    }
+
+    /**
+     * Desactiva un análisis (cambia activo a false)
+     * Método genérico que puede ser usado por cualquier tipo de análisis
+     * 
+     * @param &lt;T&gt; Tipo del análisis que extiende Analisis
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo de análisis
+     */
+    public &lt;T extends Analisis&gt; void desactivarAnalisis(
+            Long id,
+            JpaRepository&lt;T, Long&gt; repository) {
+        
+<span class="fc" id="L350">        T analisis = repository.findById(id)</span>
+<span class="pc" id="L351">            .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado con ID: &quot; + id));</span>
+        
+<span class="fc" id="L353">        analisis.setActivo(false);</span>
+<span class="fc" id="L354">        repository.save(analisis);</span>
+<span class="fc" id="L355">    }</span>
+
+    /**
+     * Reactiva un análisis (cambia activo a true)
+     * Método genérico que puede ser usado por cualquier tipo de análisis
+     * 
+     * @param &lt;T&gt; Tipo del análisis que extiende Analisis
+     * @param &lt;D&gt; Tipo del DTO de respuesta
+     * @param id ID del análisis
+     * @param repository Repositorio del tipo de análisis
+     * @param mapper Función para mapear entidad a DTO
+     * @return DTO del análisis reactivado
+     */
+    public &lt;T extends Analisis, D&gt; D reactivarAnalisis(
+            Long id,
+            JpaRepository&lt;T, Long&gt; repository,
+            Function&lt;T, D&gt; mapper) {
+        
+<span class="fc" id="L373">        T analisis = repository.findById(id)</span>
+<span class="pc" id="L374">            .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado con ID: &quot; + id));</span>
+        
+<span class="fc bfc" id="L376" title="All 2 branches covered.">        if (analisis.getActivo()) {</span>
+<span class="fc" id="L377">            throw new RuntimeException(&quot;El análisis ya está activo&quot;);</span>
+        }
+        
+<span class="fc" id="L380">        analisis.setActivo(true);</span>
+<span class="fc" id="L381">        T analisisReactivado = repository.save(analisis);</span>
+<span class="fc" id="L382">        return mapper.apply(analisisReactivado);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

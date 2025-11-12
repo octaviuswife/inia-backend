@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GerminacionServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">GerminacionServiceTest.java</span></div><h1>GerminacionServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Germinacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.GerminacionRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Tests unitarios para GerminacionService
+ * 
+ * Funcionalidades testeadas:
+ * - Creación de análisis de germinación con estado REGISTRADO
+ * - Validación de repeticiones esperadas (&gt; 0)
+ * - Actualización de análisis existentes
+ * - Gestión de estados (REGISTRADO, EN_PROCESO, PENDIENTE_APROBACION, APROBADO)
+ * - Desactivación y reactivación de análisis
+ * - Cálculos de germinación
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de GerminacionService&quot;)
+<span class="fc" id="L47">class GerminacionServiceTest {</span>
+
+    @Mock
+    private GerminacionRepository germinacionRepository;
+
+    @Mock
+    private LoteRepository loteRepository;
+
+    @Mock
+    private AnalisisHistorialService analisisHistorialService;
+
+    @Mock
+    private AnalisisService analisisService;
+
+    @InjectMocks
+    private GerminacionService germinacionService;
+
+    private GerminacionRequestDTO germinacionRequestDTO;
+    private Lote lote;
+    private Germinacion germinacion;
+
+    @BeforeEach
+    void setUp() {
+        // ARRANGE: Preparar datos de prueba
+<span class="fc" id="L71">        lote = new Lote();</span>
+<span class="fc" id="L72">        lote.setLoteID(1L);</span>
+<span class="fc" id="L73">        lote.setNomLote(&quot;LOTE-GERM-001&quot;);</span>
+<span class="fc" id="L74">        lote.setActivo(true);</span>
+
+<span class="fc" id="L76">        germinacionRequestDTO = new GerminacionRequestDTO();</span>
+<span class="fc" id="L77">        germinacionRequestDTO.setIdLote(1L);</span>
+<span class="fc" id="L78">        germinacionRequestDTO.setComentarios(&quot;Test de germinación&quot;);</span>
+
+<span class="fc" id="L80">        germinacion = new Germinacion();</span>
+<span class="fc" id="L81">        germinacion.setAnalisisID(1L);</span>
+<span class="fc" id="L82">        germinacion.setLote(lote);</span>
+<span class="fc" id="L83">        germinacion.setEstado(Estado.REGISTRADO);</span>
+<span class="fc" id="L84">        germinacion.setActivo(true);</span>
+<span class="fc" id="L85">        germinacion.setComentarios(&quot;Test de germinación&quot;);</span>
+<span class="fc" id="L86">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear germinación - debe asignar estado REGISTRADO&quot;)
+    void crearGerminacion_debeAsignarEstadoRegistrado() {
+        // ARRANGE
+<span class="fc" id="L92">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L93">        when(germinacionRepository.save(any(Germinacion.class))).thenReturn(germinacion);</span>
+<span class="fc" id="L94">        doNothing().when(analisisService).establecerFechaInicio(any(Germinacion.class));</span>
+<span class="fc" id="L95">        doNothing().when(analisisHistorialService).registrarCreacion(any(Germinacion.class));</span>
+
+        // ACT
+<span class="fc" id="L98">        GerminacionDTO resultado = germinacionService.crearGerminacion(germinacionRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L101">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
+<span class="fc" id="L102">        verify(germinacionRepository, times(1)).save(any(Germinacion.class));</span>
+<span class="fc" id="L103">        verify(analisisHistorialService, times(1)).registrarCreacion(any(Germinacion.class));</span>
+<span class="fc" id="L104">        verify(analisisService, times(1)).establecerFechaInicio(any(Germinacion.class));</span>
+<span class="fc" id="L105">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear germinación con lote inexistente - debe lanzar excepción&quot;)
+    void crearGerminacion_conLoteInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L111">        when(loteRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L112">        germinacionRequestDTO.setIdLote(999L);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L115">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L116">            germinacionService.crearGerminacion(germinacionRequestDTO);</span>
+<span class="nc" id="L117">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
+<span class="fc" id="L118">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear germinación sin repeticiones esperadas - debe lanzar excepción&quot;)
+    void crearGerminacion_sinLote_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L124">        germinacionRequestDTO.setIdLote(null);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L127">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L128">            germinacionService.crearGerminacion(germinacionRequestDTO);</span>
+<span class="nc" id="L129">        }, &quot;Debe lanzar excepción cuando no hay lote&quot;);</span>
+<span class="fc" id="L130">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear germinación con repeticiones = 0 - debe lanzar excepción&quot;)
+    void crearGerminacion_debeFuncionar() {
+        // ARRANGE
+<span class="fc" id="L136">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L137">        when(germinacionRepository.save(any(Germinacion.class))).thenReturn(germinacion);</span>
+<span class="fc" id="L138">        doNothing().when(analisisService).establecerFechaInicio(any(Germinacion.class));</span>
+<span class="fc" id="L139">        doNothing().when(analisisHistorialService).registrarCreacion(any(Germinacion.class));</span>
+
+        // ACT
+<span class="fc" id="L142">        GerminacionDTO resultado = germinacionService.crearGerminacion(germinacionRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L145">        assertNotNull(resultado);</span>
+<span class="fc" id="L146">        verify(germinacionRepository, times(1)).save(any(Germinacion.class));</span>
+<span class="fc" id="L147">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear germinación con días &lt;= 0 - debe funcionar correctamente&quot;)
+    void crearGerminacion_conLoteValido_debeFuncionar() {
+        // ARRANGE
+<span class="fc" id="L153">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L154">        when(germinacionRepository.save(any(Germinacion.class))).thenReturn(germinacion);</span>
+<span class="fc" id="L155">        doNothing().when(analisisService).establecerFechaInicio(any(Germinacion.class));</span>
+<span class="fc" id="L156">        doNothing().when(analisisHistorialService).registrarCreacion(any(Germinacion.class));</span>
+
+        // ACT
+<span class="fc" id="L159">        GerminacionDTO resultado = germinacionService.crearGerminacion(germinacionRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L162">        assertNotNull(resultado);</span>
+<span class="fc" id="L163">        verify(analisisService, times(1)).establecerFechaInicio(any(Germinacion.class));</span>
+<span class="fc" id="L164">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener germinación por ID - debe retornar el análisis si existe&quot;)
+    void obtenerGerminacionPorId_cuandoExiste_debeRetornarGerminacion() {
+        // ARRANGE
+<span class="fc" id="L170">        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));</span>
+
+        // ACT
+<span class="fc" id="L173">        GerminacionDTO resultado = germinacionService.obtenerGerminacionPorId(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L176">        assertNotNull(resultado);</span>
+<span class="fc" id="L177">        assertEquals(1L, resultado.getAnalisisID());</span>
+<span class="fc" id="L178">        verify(germinacionRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L179">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener germinación por ID inexistente - debe lanzar excepción&quot;)
+    void obtenerGerminacionPorId_cuandoNoExiste_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L185">        when(germinacionRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L188">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L189">            germinacionService.obtenerGerminacionPorId(999L);</span>
+<span class="nc" id="L190">        }, &quot;Debe lanzar excepción cuando el análisis no existe&quot;);</span>
+<span class="fc" id="L191">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar germinación - debe actualizar correctamente&quot;)
+    void actualizarGerminacion_debeActualizarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L197">        germinacionRequestDTO.setComentarios(&quot;Comentarios actualizados&quot;);</span>
+        
+<span class="fc" id="L199">        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));</span>
+<span class="fc" id="L200">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L201">        when(germinacionRepository.save(any(Germinacion.class))).thenReturn(germinacion);</span>
+<span class="fc" id="L202">        doNothing().when(analisisHistorialService).registrarModificacion(any(Germinacion.class));</span>
+
+        // ACT
+<span class="fc" id="L205">        GerminacionDTO resultado = germinacionService.actualizarGerminacion(1L, germinacionRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L208">        assertNotNull(resultado);</span>
+<span class="fc" id="L209">        verify(germinacionRepository, times(1)).save(any(Germinacion.class));</span>
+<span class="fc" id="L210">        verify(analisisHistorialService, times(1)).registrarModificacion(any(Germinacion.class));</span>
+<span class="fc" id="L211">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar germinación APROBADA por ANALISTA - debe cambiar a PENDIENTE_APROBACION&quot;)
+    void actualizarGerminacion_aprobadaPorAnalista_debeCambiarAPendiente() {
+        // ARRANGE
+<span class="fc" id="L217">        germinacion.setEstado(Estado.APROBADO);</span>
+        
+<span class="fc" id="L219">        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));</span>
+<span class="fc" id="L220">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L221">        when(analisisService.esAnalista()).thenReturn(true);</span>
+<span class="fc" id="L222">        when(germinacionRepository.save(any(Germinacion.class))).thenReturn(germinacion);</span>
+<span class="fc" id="L223">        doNothing().when(analisisHistorialService).registrarModificacion(any(Germinacion.class));</span>
+
+        // ACT
+<span class="fc" id="L226">        germinacionService.actualizarGerminacion(1L, germinacionRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L229">        verify(germinacionRepository, times(1)).save(any(Germinacion.class));</span>
+<span class="fc" id="L230">        verify(analisisService, times(1)).esAnalista();</span>
+<span class="fc" id="L231">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar germinación seguro - solo actualiza campos permitidos&quot;)
+    void actualizarGerminacionSeguro_debeActualizarSoloCamposPermitidos() {
+        // ARRANGE
+<span class="fc" id="L237">        GerminacionEditRequestDTO editDTO = new GerminacionEditRequestDTO();</span>
+<span class="fc" id="L238">        editDTO.setIdLote(1L);</span>
+<span class="fc" id="L239">        editDTO.setComentarios(&quot;Nuevo comentario&quot;);</span>
+        
+<span class="fc" id="L241">        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));</span>
+<span class="fc" id="L242">        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L243">        when(germinacionRepository.save(any(Germinacion.class))).thenReturn(germinacion);</span>
+<span class="fc" id="L244">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any(Germinacion.class));</span>
+<span class="fc" id="L245">        doNothing().when(analisisHistorialService).registrarModificacion(any(Germinacion.class));</span>
+
+        // ACT
+<span class="fc" id="L248">        GerminacionDTO resultado = germinacionService.actualizarGerminacionSeguro(1L, editDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L251">        assertNotNull(resultado);</span>
+<span class="fc" id="L252">        verify(analisisService, times(1)).manejarEdicionAnalisisFinalizado(any(Germinacion.class));</span>
+<span class="fc" id="L253">        verify(germinacionRepository, times(1)).save(any(Germinacion.class));</span>
+<span class="fc" id="L254">    }</span>
+
+    @Test
+    @DisplayName(&quot;Desactivar germinación - debe cambiar activo a false&quot;)
+    void desactivarGerminacion_debeCambiarActivoAFalse() {
+        // ARRANGE
+<span class="fc" id="L260">        doNothing().when(analisisService).desactivarAnalisis(eq(1L), any());</span>
+
+        // ACT
+<span class="fc" id="L263">        germinacionService.desactivarGerminacion(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L266">        verify(analisisService, times(1)).desactivarAnalisis(eq(1L), any());</span>
+<span class="fc" id="L267">    }</span>
+
+    @Test
+    @DisplayName(&quot;Reactivar germinación - debe cambiar activo a true&quot;)
+    void reactivarGerminacion_debeCambiarActivoATrue() {
+        // ARRANGE
+<span class="fc" id="L273">        germinacion.setActivo(false);</span>
+<span class="fc" id="L274">        GerminacionDTO germinacionDTO = new GerminacionDTO();</span>
+<span class="fc" id="L275">        germinacionDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L276">        germinacionDTO.setActivo(true);</span>
+        
+<span class="fc" id="L278">        when(analisisService.reactivarAnalisis(any(Long.class), any(), any())).thenReturn(germinacionDTO);</span>
+
+        // ACT
+<span class="fc" id="L281">        germinacionService.reactivarGerminacion(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L284">        verify(analisisService, times(1)).reactivarAnalisis(any(Long.class), any(), any());</span>
+<span class="fc" id="L285">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar germinación - debe desactivar el análisis&quot;)
+    void eliminarGerminacion_debeDesactivarAnalisis() {
+        // ARRANGE
+<span class="fc" id="L291">        when(germinacionRepository.findById(1L)).thenReturn(Optional.of(germinacion));</span>
+<span class="fc" id="L292">        when(germinacionRepository.save(any(Germinacion.class))).thenReturn(germinacion);</span>
+
+        // ACT
+<span class="fc" id="L295">        germinacionService.eliminarGerminacion(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L298">        verify(germinacionRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L299">        verify(germinacionRepository, times(1)).save(any(Germinacion.class));</span>
+<span class="fc" id="L300">    }</span>
+
+    @Test
+    @DisplayName(&quot;Listar germinaciones por lote - debe retornar germinaciones del lote&quot;)
+    void obtenerGerminacionesPorLote_debeRetornarGerminacionesDelLote() {
+        // ARRANGE
+<span class="fc" id="L306">        Germinacion germinacion2 = new Germinacion();</span>
+<span class="fc" id="L307">        germinacion2.setAnalisisID(2L);</span>
+<span class="fc" id="L308">        germinacion2.setLote(lote);</span>
+<span class="fc" id="L309">        germinacion2.setActivo(true);</span>
+        
+<span class="fc" id="L311">        when(germinacionRepository.findByIdLote(1L)).thenReturn(Arrays.asList(germinacion, germinacion2));</span>
+
+        // ACT
+<span class="fc" id="L314">        List&lt;GerminacionDTO&gt; resultado = germinacionService.obtenerGerminacionesPorIdLote(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L317">        assertNotNull(resultado);</span>
+<span class="fc" id="L318">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L319">        verify(germinacionRepository, times(1)).findByIdLote(1L);</span>
+<span class="fc" id="L320">    }</span>
+
+    @Test
+    @DisplayName(&quot;Listar germinaciones paginadas - debe retornar página correcta&quot;)
+    void obtenerGerminacionesPaginadas_debeRetornarPaginaCorrecta() {
+        // ARRANGE
+<span class="fc" id="L326">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L327">        GerminacionListadoDTO listadoDTO = new GerminacionListadoDTO();</span>
+<span class="fc" id="L328">        listadoDTO.setAnalisisID(1L);</span>
+        
+<span class="fc" id="L330">        Page&lt;GerminacionListadoDTO&gt; germinacionesPage = new PageImpl&lt;&gt;(Arrays.asList(listadoDTO));</span>
+        
+<span class="fc" id="L332">        when(germinacionRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))</span>
+<span class="fc" id="L333">            .thenReturn(new PageImpl&lt;&gt;(Arrays.asList(germinacion)));</span>
+
+        // ACT
+<span class="fc" id="L336">        Page&lt;GerminacionListadoDTO&gt; resultado = germinacionService.obtenerGerminacionesPaginadas(pageable);</span>
+
+        // ASSERT
+<span class="fc" id="L339">        assertNotNull(resultado);</span>
+<span class="fc" id="L340">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L341">        assertEquals(1, resultado.getContent().size());</span>
+<span class="fc" id="L342">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

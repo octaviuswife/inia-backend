@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeguridadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.security</a> &gt; <span class="el_source">SeguridadService.java</span></div><h1>SeguridadService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.PasswordService;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+<span class="fc" id="L17">public class SeguridadService {</span>
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PasswordService passwordService;
+
+    public Optional&lt;Usuario&gt; autenticarUsuario(String usuarioOrEmail, String password) {
+        // Intentar buscar por nombre de usuario primero
+<span class="nc" id="L27">        Optional&lt;Usuario&gt; objUsuario = usuarioRepository.findByNombreIgnoreCase(usuarioOrEmail);</span>
+        
+        // Si no se encuentra por nombre, intentar por email
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (objUsuario.isEmpty()) {</span>
+<span class="nc" id="L31">            objUsuario = usuarioRepository.findByEmailIgnoreCase(usuarioOrEmail);</span>
+        }
+
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (objUsuario.isEmpty()) {</span>
+<span class="nc" id="L35">            throw new RuntimeException(&quot;USUARIO_INCORRECTO&quot;);</span>
+        }
+
+<span class="nc" id="L38">        Usuario usuarioEncontrado = objUsuario.get();</span>
+
+        // Verificar que el usuario esté activo (campo legacy)
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (!usuarioEncontrado.getActivo()) {</span>
+<span class="nc" id="L42">            throw new RuntimeException(&quot;USUARIO_INACTIVO&quot;);</span>
+        }
+
+        // Verificar el estado del usuario
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (usuarioEncontrado.getEstado() == EstadoUsuario.PENDIENTE) {</span>
+<span class="nc" id="L47">            throw new RuntimeException(&quot;USUARIO_PENDIENTE_APROBACION&quot;);</span>
+        }
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (usuarioEncontrado.getEstado() == EstadoUsuario.INACTIVO) {</span>
+<span class="nc" id="L51">            throw new RuntimeException(&quot;USUARIO_INACTIVO&quot;);</span>
+        }
+
+        // Verificar que tenga un rol asignado
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (usuarioEncontrado.getRol() == null) {</span>
+<span class="nc" id="L56">            throw new RuntimeException(&quot;USUARIO_SIN_ROL&quot;);</span>
+        }
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (!passwordService.matchPassword(password, usuarioEncontrado.getContrasenia())) {</span>
+<span class="nc" id="L60">            throw new RuntimeException(&quot;CONTRASENIA_INCORRECTA&quot;);</span>
+        }
+
+        // Actualizar fecha de última conexión
+<span class="nc" id="L64">        usuarioEncontrado.setFechaUltimaConexion(LocalDateTime.now());</span>
+<span class="nc" id="L65">        usuarioRepository.save(usuarioEncontrado);</span>
+
+<span class="nc" id="L67">        return objUsuario;</span>
+    }
+
+    public String[] listarRolesPorUsuario(Usuario usuario) {
+<span class="nc" id="L71">        List&lt;String&gt; roles = usuario.getRoles();</span>
+<span class="nc" id="L72">        return roles.toArray(new String[0]);</span>
+    }
+
+    public boolean existeUsuario(String nombreUsuario) {
+<span class="nc" id="L76">        return usuarioRepository.findByNombreIgnoreCase(nombreUsuario).isPresent();</span>
+    }
+
+    public boolean existeEmailActivo(String email) {
+<span class="nc" id="L80">        return usuarioRepository.findByEmailIgnoreCase(email).isPresent();</span>
+    }
+
+    /**
+     * Obtener el ID del usuario autenticado actualmente
+     * Usado en endpoints protegidos con @PreAuthorize
+     */
+    public Integer obtenerUsuarioAutenticado() {
+<span class="nc" id="L88">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+        
+<span class="nc bnc" id="L90" title="All 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
+<span class="nc" id="L91">            throw new RuntimeException(&quot;No hay usuario autenticado&quot;);</span>
+        }
+        
+        // El nombre en el Authentication puede ser el username o email
+<span class="nc" id="L95">        String identifier = auth.getName();</span>
+        
+        // Intentar buscar por nombre primero
+<span class="nc" id="L98">        Optional&lt;Usuario&gt; usuario = usuarioRepository.findByNombre(identifier);</span>
+        
+        // Si no se encuentra, intentar por email
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (usuario.isEmpty()) {</span>
+<span class="nc" id="L102">            usuario = usuarioRepository.findByEmail(identifier);</span>
+        }
+        
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (usuario.isEmpty()) {</span>
+<span class="nc" id="L106">            throw new RuntimeException(&quot;Usuario autenticado no encontrado en base de datos&quot;);</span>
+        }
+        
+<span class="nc" id="L109">        return usuario.get().getUsuarioID();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

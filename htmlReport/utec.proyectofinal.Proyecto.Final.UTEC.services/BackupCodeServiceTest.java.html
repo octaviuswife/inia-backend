@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BackupCodeServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">BackupCodeServiceTest.java</span></div><h1>BackupCodeServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.BackupCode;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.BackupCodeRepository;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de BackupCodeService&quot;)
+<span class="fc" id="L24">class BackupCodeServiceTest {</span>
+
+    @Mock
+    private BackupCodeRepository backupCodeRepository;
+
+    @InjectMocks
+    private BackupCodeService backupCodeService;
+
+<span class="fc" id="L32">    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);</span>
+<span class="fc" id="L33">    private Integer usuarioId = 1;</span>
+
+    @Test
+    @DisplayName(&quot;Generar códigos de respaldo - debe generar 10 códigos&quot;)
+    void generateBackupCodes_debeGenerar10Codigos() {
+<span class="fc" id="L38">        doNothing().when(backupCodeRepository).deleteAllByUsuarioId(anyInt());</span>
+<span class="fc" id="L39">        when(backupCodeRepository.save(any(BackupCode.class))).thenAnswer(invocation -&gt; invocation.getArgument(0));</span>
+
+<span class="fc" id="L41">        List&lt;String&gt; codigos = backupCodeService.generateBackupCodes(usuarioId);</span>
+
+<span class="fc" id="L43">        assertNotNull(codigos);</span>
+<span class="fc" id="L44">        assertEquals(10, codigos.size());</span>
+<span class="fc" id="L45">        verify(backupCodeRepository, times(1)).deleteAllByUsuarioId(usuarioId);</span>
+<span class="fc" id="L46">        verify(backupCodeRepository, times(10)).save(any(BackupCode.class));</span>
+<span class="fc" id="L47">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar códigos de respaldo - códigos deben tener formato correcto&quot;)
+    void generateBackupCodes_debenTenerFormatoCorrecto() {
+<span class="fc" id="L52">        doNothing().when(backupCodeRepository).deleteAllByUsuarioId(anyInt());</span>
+<span class="fc" id="L53">        when(backupCodeRepository.save(any(BackupCode.class))).thenAnswer(invocation -&gt; invocation.getArgument(0));</span>
+
+<span class="fc" id="L55">        List&lt;String&gt; codigos = backupCodeService.generateBackupCodes(usuarioId);</span>
+
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (String codigo : codigos) {</span>
+<span class="fc" id="L58">            assertTrue(codigo.matches(&quot;^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$&quot;),</span>
+                &quot;Código debe tener formato XXXX-XXXX-XXXX: &quot; + codigo);
+<span class="fc" id="L60">        }</span>
+<span class="fc" id="L61">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código válido - debe retornar true y marcarlo como usado&quot;)
+    void verifyAndUseBackupCode_codigoValido_debeRetornarTrue() {
+<span class="fc" id="L66">        String codigoPlano = &quot;ABCD-EFGH-JKLM&quot;;</span>
+<span class="fc" id="L67">        String codigoNormalizado = &quot;ABCDEFGHJKLM&quot;;</span>
+        
+<span class="fc" id="L69">        BackupCode backupCode = new BackupCode();</span>
+<span class="fc" id="L70">        backupCode.setId(1L);</span>
+<span class="fc" id="L71">        backupCode.setUsuarioId(usuarioId);</span>
+<span class="fc" id="L72">        backupCode.setCodeHash(passwordEncoder.encode(codigoNormalizado));</span>
+<span class="fc" id="L73">        backupCode.setUsed(false);</span>
+
+<span class="fc" id="L75">        List&lt;BackupCode&gt; codigosDisponibles = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L76">        codigosDisponibles.add(backupCode);</span>
+
+<span class="fc" id="L78">        when(backupCodeRepository.findByUsuarioIdAndUsedFalse(usuarioId)).thenReturn(codigosDisponibles);</span>
+<span class="fc" id="L79">        when(backupCodeRepository.save(any(BackupCode.class))).thenAnswer(invocation -&gt; invocation.getArgument(0));</span>
+<span class="fc" id="L80">        when(backupCodeRepository.countByUsuarioIdAndUsedFalse(usuarioId)).thenReturn(9L);</span>
+
+<span class="fc" id="L82">        boolean resultado = backupCodeService.verifyAndUseBackupCode(usuarioId, codigoPlano);</span>
+
+<span class="fc" id="L84">        assertTrue(resultado);</span>
+<span class="fc" id="L85">        verify(backupCodeRepository, times(1)).save(backupCode);</span>
+<span class="fc" id="L86">        assertTrue(backupCode.getUsed());</span>
+<span class="fc" id="L87">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código inválido - debe retornar false&quot;)
+    void verifyAndUseBackupCode_codigoInvalido_debeRetornarFalse() {
+<span class="fc" id="L92">        String codigoIncorrecto = &quot;XXXX-XXXX-XXXX&quot;;</span>
+        
+<span class="fc" id="L94">        BackupCode backupCode = new BackupCode();</span>
+<span class="fc" id="L95">        backupCode.setId(1L);</span>
+<span class="fc" id="L96">        backupCode.setUsuarioId(usuarioId);</span>
+<span class="fc" id="L97">        backupCode.setCodeHash(passwordEncoder.encode(&quot;ABCDEFGHJKLM&quot;));</span>
+<span class="fc" id="L98">        backupCode.setUsed(false);</span>
+
+<span class="fc" id="L100">        List&lt;BackupCode&gt; codigosDisponibles = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L101">        codigosDisponibles.add(backupCode);</span>
+
+<span class="fc" id="L103">        when(backupCodeRepository.findByUsuarioIdAndUsedFalse(usuarioId)).thenReturn(codigosDisponibles);</span>
+
+<span class="fc" id="L105">        boolean resultado = backupCodeService.verifyAndUseBackupCode(usuarioId, codigoIncorrecto);</span>
+
+<span class="fc" id="L107">        assertFalse(resultado);</span>
+<span class="fc" id="L108">        verify(backupCodeRepository, never()).save(any(BackupCode.class));</span>
+<span class="fc" id="L109">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código vacío - debe retornar false&quot;)
+    void verifyAndUseBackupCode_codigoVacio_debeRetornarFalse() {
+<span class="fc" id="L114">        boolean resultado = backupCodeService.verifyAndUseBackupCode(usuarioId, &quot;&quot;);</span>
+
+<span class="fc" id="L116">        assertFalse(resultado);</span>
+<span class="fc" id="L117">        verify(backupCodeRepository, never()).findByUsuarioIdAndUsedFalse(anyInt());</span>
+<span class="fc" id="L118">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código con longitud incorrecta - debe retornar false&quot;)
+    void verifyAndUseBackupCode_longitudIncorrecta_debeRetornarFalse() {
+<span class="fc" id="L123">        boolean resultado = backupCodeService.verifyAndUseBackupCode(usuarioId, &quot;ABC&quot;);</span>
+
+<span class="fc" id="L125">        assertFalse(resultado);</span>
+<span class="fc" id="L126">        verify(backupCodeRepository, never()).save(any(BackupCode.class));</span>
+<span class="fc" id="L127">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener cantidad de códigos disponibles - debe retornar conteo correcto&quot;)
+    void getAvailableCodesCount_debeRetornarConteoCorrecto() {
+<span class="fc" id="L132">        when(backupCodeRepository.countByUsuarioIdAndUsedFalse(usuarioId)).thenReturn(5L);</span>
+
+<span class="fc" id="L134">        long resultado = backupCodeService.getAvailableCodesCount(usuarioId);</span>
+
+<span class="fc" id="L136">        assertEquals(5L, resultado);</span>
+<span class="fc" id="L137">        verify(backupCodeRepository, times(1)).countByUsuarioIdAndUsedFalse(usuarioId);</span>
+<span class="fc" id="L138">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar si tiene códigos disponibles - debe retornar true&quot;)
+    void hasAvailableCodes_conCodigosDisponibles_debeRetornarTrue() {
+<span class="fc" id="L143">        when(backupCodeRepository.countByUsuarioIdAndUsedFalse(usuarioId)).thenReturn(3L);</span>
+
+<span class="fc" id="L145">        boolean resultado = backupCodeService.hasAvailableCodes(usuarioId);</span>
+
+<span class="fc" id="L147">        assertTrue(resultado);</span>
+<span class="fc" id="L148">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar si tiene códigos disponibles - debe retornar false&quot;)
+    void hasAvailableCodes_sinCodigosDisponibles_debeRetornarFalse() {
+<span class="fc" id="L153">        when(backupCodeRepository.countByUsuarioIdAndUsedFalse(usuarioId)).thenReturn(0L);</span>
+
+<span class="fc" id="L155">        boolean resultado = backupCodeService.hasAvailableCodes(usuarioId);</span>
+
+<span class="fc" id="L157">        assertFalse(resultado);</span>
+<span class="fc" id="L158">    }</span>
+
+    @Test
+    @DisplayName(&quot;Regenerar códigos - debe eliminar anteriores y generar nuevos&quot;)
+    void regenerateBackupCodes_debeEliminarAnterioresYGenerarNuevos() {
+<span class="fc" id="L163">        doNothing().when(backupCodeRepository).deleteAllByUsuarioId(anyInt());</span>
+<span class="fc" id="L164">        when(backupCodeRepository.save(any(BackupCode.class))).thenAnswer(invocation -&gt; invocation.getArgument(0));</span>
+
+<span class="fc" id="L166">        List&lt;String&gt; codigos = backupCodeService.regenerateBackupCodes(usuarioId);</span>
+
+<span class="fc" id="L168">        assertNotNull(codigos);</span>
+<span class="fc" id="L169">        assertEquals(10, codigos.size());</span>
+<span class="fc" id="L170">        verify(backupCodeRepository, times(1)).deleteAllByUsuarioId(usuarioId);</span>
+<span class="fc" id="L171">        verify(backupCodeRepository, times(10)).save(any(BackupCode.class));</span>
+<span class="fc" id="L172">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar todos los códigos de usuario - debe llamar al repositorio&quot;)
+    void deleteAllUserCodes_debeEliminarTodos() {
+<span class="fc" id="L177">        doNothing().when(backupCodeRepository).deleteAllByUsuarioId(usuarioId);</span>
+
+<span class="fc" id="L179">        backupCodeService.deleteAllUserCodes(usuarioId);</span>
+
+<span class="fc" id="L181">        verify(backupCodeRepository, times(1)).deleteAllByUsuarioId(usuarioId);</span>
+<span class="fc" id="L182">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

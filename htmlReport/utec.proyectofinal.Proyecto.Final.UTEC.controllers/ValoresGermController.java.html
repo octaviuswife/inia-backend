@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValoresGermController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">ValoresGermController.java</span></div><h1>ValoresGermController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ValoresGermRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ValoresGermDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/valores&quot;)
+@Tag(name = &quot;Valores Germinación&quot;, description = &quot;API para gestión de valores de germinación&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L31">public class ValoresGermController {</span>
+
+    @Autowired
+    private ValoresGermService valoresGermService;
+
+    // Obtener valores por ID
+    @Operation(summary = &quot;Obtener valores de germinación por ID&quot;,
+              description = &quot;Obtiene los valores específicos de germinación por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{valoresId}&quot;)
+    public ResponseEntity&lt;?&gt; obtenerValoresPorId(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId,
+            @PathVariable Long valoresId) {
+        try {
+<span class="fc" id="L46">            ValoresGermDTO valores = valoresGermService.obtenerValoresPorId(valoresId);</span>
+<span class="fc" id="L47">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
+<span class="fc" id="L48">        } catch (Exception e) {</span>
+<span class="fc" id="L49">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Actualizar valores existentes
+    @Operation(summary = &quot;Actualizar valores de germinación&quot;, 
+              description = &quot;Actualiza los valores específicos de germinación por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PutMapping(&quot;/{valoresId}&quot;)
+    public ResponseEntity&lt;?&gt; actualizarValores(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId,
+            @PathVariable Long valoresId,
+            @RequestBody ValoresGermRequestDTO solicitud) {
+        try {
+<span class="fc" id="L64">            ValoresGermDTO valoresActualizados = valoresGermService.actualizarValores(valoresId, solicitud);</span>
+<span class="fc" id="L65">            return new ResponseEntity&lt;&gt;(valoresActualizados, HttpStatus.OK);</span>
+<span class="fc" id="L66">        } catch (Exception e) {</span>
+<span class="fc" id="L67">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Obtener todos los valores de una tabla
+    @Operation(summary = &quot;Obtener todos los valores de germinación para una tabla&quot;, 
+              description = &quot;Obtiene todos los valores de germinación asociados a una tabla específica&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;?&gt; obtenerValoresPorTabla(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId) {
+        try {
+<span class="fc" id="L80">            List&lt;ValoresGermDTO&gt; valores = valoresGermService.obtenerValoresPorTabla(tablaId);</span>
+<span class="fc" id="L81">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
+<span class="nc" id="L82">        } catch (Exception e) {</span>
+<span class="nc" id="L83">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.BAD_REQUEST);</span>
+        }
+    }
+
+    // Obtener valores de INIA para una tabla
+    @Operation(summary = &quot;Obtener valores de germinación de INIA para una tabla&quot;, 
+              description = &quot;Obtiene los valores de germinación específicos del instituto INIA para una tabla dada&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/inia&quot;)
+    public ResponseEntity&lt;?&gt; obtenerValoresIniaPorTabla(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId) {
+        try {
+<span class="fc" id="L96">            ValoresGermDTO valores = valoresGermService.obtenerValoresIniaPorTabla(tablaId);</span>
+<span class="fc" id="L97">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
+<span class="nc" id="L98">        } catch (Exception e) {</span>
+<span class="nc" id="L99">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Obtener valores de INASE para una tabla
+    @Operation(summary = &quot;Obtener valores de germinación de INASE para una tabla&quot;, 
+              description = &quot;Obtiene los valores de germinación específicos del instituto INASE para una tabla dada&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/inase&quot;)
+    public ResponseEntity&lt;?&gt; obtenerValoresInasePorTabla(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId) {
+        try {
+<span class="fc" id="L112">            ValoresGermDTO valores = valoresGermService.obtenerValoresInasePorTabla(tablaId);</span>
+<span class="fc" id="L113">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
+<span class="nc" id="L114">        } catch (Exception e) {</span>
+<span class="nc" id="L115">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Obtener valores por tabla e instituto (parámetro de consulta)
+    @Operation(summary = &quot;Obtener valores de germinación por tabla e instituto&quot;, 
+              description = &quot;Obtiene los valores de germinación asociados a una tabla específica y un instituto dado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/instituto&quot;)
+    public ResponseEntity&lt;?&gt; obtenerValoresPorTablaEInstituto(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId,
+            @RequestParam Instituto instituto) {
+        try {
+<span class="nc" id="L129">            ValoresGermDTO valores = valoresGermService.obtenerValoresPorTablaEInstituto(tablaId, instituto);</span>
+<span class="nc" id="L130">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
+<span class="nc" id="L131">        } catch (Exception e) {</span>
+<span class="nc" id="L132">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Eliminar valores
+    @Operation(summary = &quot;Eliminar valores de germinación&quot;, 
+              description = &quot;Elimina los valores específicos de germinación por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{valoresId}&quot;)
+    public ResponseEntity&lt;?&gt; eliminarValores(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId,
+            @PathVariable Long valoresId) {
+        try {
+<span class="fc" id="L146">            valoresGermService.eliminarValores(valoresId);</span>
+<span class="fc" id="L147">            return new ResponseEntity&lt;&gt;(&quot;Valores de germinación eliminados exitosamente&quot;, HttpStatus.OK);</span>
+<span class="nc" id="L148">        } catch (Exception e) {</span>
+<span class="nc" id="L149">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

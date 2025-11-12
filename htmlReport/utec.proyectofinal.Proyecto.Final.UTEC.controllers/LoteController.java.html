@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">LoteController.java</span></div><h1>LoteController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ValidacionLoteDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ValidacionLoteResponseDTO;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoteRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.LoteSimpleDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoAnalisis;
+import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimple;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.LoteService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/lotes&quot;)
+@Tag(name = &quot;Lotes&quot;, description = &quot;API para gestión de lotes de semillas&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L38">public class LoteController {</span>
+
+    @Autowired
+    private LoteService loteService;
+
+    // Validar campos únicos
+    @PostMapping(&quot;/validar-campos&quot;)
+    @Operation(summary = &quot;Validar campos únicos&quot;, description = &quot;Valida si la ficha y nombre de lote ya existen&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    public ResponseEntity&lt;ValidacionLoteResponseDTO&gt; validarCamposUnicos(@RequestBody ValidacionLoteDTO solicitud) {
+<span class="nc" id="L48">        ValidacionLoteResponseDTO resultado = loteService.validarCamposUnicos(solicitud);</span>
+<span class="nc" id="L49">        return ResponseEntity.ok(resultado);</span>
+    }
+
+    // Crear nuevo Lote
+    @PostMapping
+    @Operation(summary = &quot;Crear lote&quot;, description = &quot;Crea un nuevo lote de semillas&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    public ResponseEntity&lt;LoteDTO&gt; crearLote(@RequestBody LoteRequestDTO solicitud) {
+<span class="fc" id="L57">        LoteDTO loteCreado = loteService.crearLote(solicitud);</span>
+<span class="fc" id="L58">        return ResponseEntity.status(HttpStatus.CREATED).body(loteCreado);</span>
+    }
+
+    // Obtener todos los Lotes activos (listado simple)
+    @GetMapping(&quot;/activos&quot;)
+    @Operation(summary = &quot;Listar lotes activos&quot;, description = &quot;Obtiene todos los lotes activos&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;ResponseListadoLoteSimple&gt; obtenerTodosLotesActivos() {
+<span class="fc" id="L66">        ResponseListadoLoteSimple respuesta = loteService.obtenerTodosLotesActivos();</span>
+<span class="fc" id="L67">        return ResponseEntity.ok(respuesta);</span>
+    }
+
+    // Obtener todos los Lotes inactivos (listado simple)
+    @GetMapping(&quot;/inactivos&quot;)
+    @Operation(summary = &quot;Listar lotes inactivos&quot;, description = &quot;Obtiene todos los lotes inactivos&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;ResponseListadoLoteSimple&gt; obtenerTodosLotesInactivos() {
+<span class="nc" id="L75">        ResponseListadoLoteSimple respuesta = loteService.obtenerTodosLotesInactivos();</span>
+<span class="nc" id="L76">        return ResponseEntity.ok(respuesta);</span>
+    }
+
+    // Obtener Lote por ID (completo)
+    @GetMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Obtener lote por ID&quot;, description = &quot;Obtiene un lote específico por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;LoteDTO&gt; obtenerLotePorId(@PathVariable Long id) {
+<span class="fc" id="L84">        LoteDTO lote = loteService.obtenerLotePorId(id);</span>
+<span class="fc" id="L85">        return ResponseEntity.ok(lote);</span>
+    }
+
+    // Obtener Lotes con paginado para listado
+    @GetMapping(&quot;/listado&quot;)
+    @Operation(summary = &quot;Obtener lotes paginadas con filtros&quot;, description = &quot;Obtiene la lista paginada de lotes con soporte para búsqueda y filtros&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;org.springframework.data.domain.Page&lt;LoteSimpleDTO&gt;&gt; obtenerLotesPaginadas(
+            org.springframework.data.domain.Pageable pageable,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String search,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Boolean activo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String cultivar) {
+<span class="nc" id="L97">        org.springframework.data.domain.Page&lt;LoteSimpleDTO&gt; response = loteService.obtenerLotesSimplePaginadasConFiltros(pageable, search, activo, cultivar);</span>
+<span class="nc" id="L98">        return ResponseEntity.ok(response);</span>
+    }
+    
+    // Obtener estadísticas de lotes
+    @GetMapping(&quot;/estadisticas&quot;)
+    @Operation(summary = &quot;Obtener estadísticas de lotes&quot;, description = &quot;Obtiene el conteo total de lotes, activos e inactivos&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;java.util.Map&lt;String, Long&gt;&gt; obtenerEstadisticasLotes() {
+<span class="nc" id="L106">        java.util.Map&lt;String, Long&gt; stats = loteService.obtenerEstadisticasLotes();</span>
+<span class="nc" id="L107">        return ResponseEntity.ok(stats);</span>
+    }
+
+    // Actualizar Lote
+    @PutMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Actualizar lote&quot;, description = &quot;Actualiza un lote existente&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    public ResponseEntity&lt;LoteDTO&gt; actualizarLote(@PathVariable Long id, @RequestBody LoteRequestDTO solicitud) {
+<span class="fc" id="L115">        LoteDTO loteActualizado = loteService.actualizarLote(id, solicitud);</span>
+<span class="fc" id="L116">        return ResponseEntity.ok(loteActualizado);</span>
+    }
+
+    // Eliminar Lote (cambiar activo a false)
+    @DeleteMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Eliminar lote&quot;, description = &quot;Desactiva un lote (cambiar activo a false)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;Void&gt; eliminarLote(@PathVariable Long id) {
+<span class="fc" id="L124">        loteService.eliminarLote(id);</span>
+<span class="fc" id="L125">        return ResponseEntity.ok().build();</span>
+    }
+
+    // Reactivar Lote (cambiar activo a true)
+    @PutMapping(&quot;/{id}/reactivar&quot;)
+    @Operation(summary = &quot;Reactivar lote&quot;, description = &quot;Reactiva un lote desactivado (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;LoteDTO&gt; reactivarLote(@PathVariable Long id) {
+<span class="fc" id="L133">        LoteDTO loteReactivado = loteService.reactivarLote(id);</span>
+<span class="fc" id="L134">        return ResponseEntity.ok(loteReactivado);</span>
+    }
+    
+    // Obtener lotes elegibles para un tipo de análisis específico
+    @GetMapping(&quot;/elegibles/{tipoAnalisis}&quot;)
+    @Operation(summary = &quot;Obtener lotes elegibles para análisis&quot;, description = &quot;Obtiene lotes que pueden tener análisis del tipo especificado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;ResponseListadoLoteSimple&gt; obtenerLotesElegiblesParaTipoAnalisis(@PathVariable String tipoAnalisis) {
+<span class="nc" id="L142">        TipoAnalisis tipo = TipoAnalisis.valueOf(tipoAnalisis.toUpperCase());</span>
+<span class="nc" id="L143">        ResponseListadoLoteSimple lotes = loteService.obtenerLotesElegiblesParaTipoAnalisis(tipo);</span>
+<span class="nc" id="L144">        return ResponseEntity.ok(lotes);</span>
+    }
+    
+    // Verificar si se puede remover un tipo de análisis de un lote
+    @GetMapping(&quot;/{loteID}/puede-remover-tipo/{tipoAnalisis}&quot;)
+    @Operation(summary = &quot;Verificar si se puede remover tipo de análisis&quot;, description = &quot;Verifica si un tipo de análisis puede ser removido de un lote específico&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; puedeRemoverTipoAnalisis(@PathVariable Long loteID, @PathVariable String tipoAnalisis) {
+<span class="nc" id="L152">        TipoAnalisis tipo = TipoAnalisis.valueOf(tipoAnalisis.toUpperCase());</span>
+<span class="nc" id="L153">        boolean puedeRemover = loteService.puedeRemoverTipoAnalisis(loteID, tipo);</span>
+        
+<span class="nc" id="L155">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L156">        response.put(&quot;puedeRemover&quot;, puedeRemover);</span>
+        
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (!puedeRemover) {</span>
+<span class="nc" id="L159">            response.put(&quot;razon&quot;, &quot;Este lote tiene análisis completados de tipo &quot; + tipo + &quot; que no están marcados para repetir&quot;);</span>
+        }
+        
+<span class="nc" id="L162">        return ResponseEntity.ok(response);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

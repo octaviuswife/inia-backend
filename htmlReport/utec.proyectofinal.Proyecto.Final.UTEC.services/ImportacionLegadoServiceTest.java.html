@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportacionLegadoServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">ImportacionLegadoServiceTest.java</span></div><h1>ImportacionLegadoServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.*;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de ImportacionLegadoService&quot;)
+<span class="fc" id="L21">class ImportacionLegadoServiceTest {</span>
+
+    @Mock
+    private LegadoRepository legadoRepository;
+
+    @Mock
+    private LoteRepository loteRepository;
+
+    @Mock
+    private CultivarRepository cultivarRepository;
+
+    @Mock
+    private EspecieRepository especieRepository;
+
+    @Mock
+    private ContactoRepository contactoRepository;
+
+    @Mock
+    private CatalogoCrudRepository catalogoRepository;
+
+    @Mock
+    private MultipartFile archivo;
+
+    @InjectMocks
+    private ImportacionLegadoService importacionLegadoService;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L49">    }</span>
+
+    @Test
+    @DisplayName(&quot;Importar archivo con error IO - debe manejar correctamente&quot;)
+    void importarDesdeExcel_errorIO_debeManejarCorrectamente() throws IOException {
+<span class="fc" id="L54">        when(archivo.getInputStream()).thenThrow(new IOException(&quot;Error al leer archivo&quot;));</span>
+
+<span class="fc" id="L56">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L58">        assertNotNull(resultado);</span>
+<span class="fc" id="L59">        assertFalse(resultado.getExitoso());</span>
+<span class="fc" id="L60">        assertTrue(resultado.getMensaje().contains(&quot;Error al leer&quot;));</span>
+<span class="fc" id="L61">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

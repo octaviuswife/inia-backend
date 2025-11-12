@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">UsuarioService.java</span></div><h1>UsuarioService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ActualizarPerfilRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.AprobarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GestionarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RegistroUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
+
+@Service
+<span class="fc" id="L28">public class UsuarioService {</span>
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private NotificacionService notificacionService;
+    
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private TotpService totpService;
+
+    @Autowired
+    private BackupCodeService backupCodeService;
+
+    /**
+     * Buscar usuario por ID
+     */
+    public Optional&lt;Usuario&gt; buscarPorId(Integer id) {
+<span class="fc" id="L52">        return usuarioRepository.findById(id);</span>
+    }
+
+    /**
+     * Registrar nueva solicitud de usuario
+     */
+    public UsuarioDTO registrarSolicitud(RegistroUsuarioRequestDTO solicitud) {
+        // Validar que el username no exista
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (usuarioRepository.findByNombre(solicitud.getNombre()).isPresent()) {</span>
+<span class="fc" id="L61">            throw new RuntimeException(&quot;El nombre de usuario ya existe&quot;);</span>
+        }
+
+        // Validar que el email no exista
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (usuarioRepository.findByEmail(solicitud.getEmail()).isPresent()) {</span>
+<span class="fc" id="L66">            throw new RuntimeException(&quot;El email ya está registrado&quot;);</span>
+        }
+
+        // Crear nuevo usuario en estado PENDIENTE
+<span class="fc" id="L70">        Usuario usuario = new Usuario();</span>
+<span class="fc" id="L71">        usuario.setNombre(solicitud.getNombre());</span>
+<span class="fc" id="L72">        usuario.setNombres(solicitud.getNombres());</span>
+<span class="fc" id="L73">        usuario.setApellidos(solicitud.getApellidos());</span>
+<span class="fc" id="L74">        usuario.setEmail(solicitud.getEmail());</span>
+<span class="fc" id="L75">        usuario.setContrasenia(passwordEncoder.encode(solicitud.getContrasenia()));</span>
+<span class="fc" id="L76">        usuario.setEstado(EstadoUsuario.PENDIENTE);</span>
+<span class="fc" id="L77">        usuario.setRol(null); // Sin rol hasta ser aprobado</span>
+<span class="fc" id="L78">        usuario.setActivo(false); // Inactivo hasta ser aprobado</span>
+
+<span class="fc" id="L80">        Usuario usuarioGuardado = usuarioRepository.save(usuario);</span>
+        
+        // Crear notificación automática para el nuevo usuario registrado
+        try {
+<span class="fc" id="L84">            notificacionService.notificarNuevoUsuario(usuarioGuardado.getUsuarioID().longValue());</span>
+<span class="nc" id="L85">        } catch (Exception e) {</span>
+            // Log error but don't fail the registration
+<span class="nc" id="L87">            System.err.println(&quot;Error creating notification for new user: &quot; + e.getMessage());</span>
+<span class="fc" id="L88">        }</span>
+        
+        // Enviar emails
+        try {
+            // 1. Email de confirmación al usuario registrado
+<span class="fc" id="L93">            emailService.enviarEmailConfirmacionRegistro(</span>
+<span class="fc" id="L94">                usuarioGuardado.getEmail(),</span>
+<span class="fc" id="L95">                usuarioGuardado.getNombres() + &quot; &quot; + usuarioGuardado.getApellidos()</span>
+            );
+            
+            // 2. Email a todos los analistas notificando el nuevo registro
+<span class="fc" id="L99">            List&lt;Usuario&gt; analistas = usuarioRepository.findAllByRol(Rol.ANALISTA);</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            for (Usuario analista : analistas) {</span>
+<span class="pc bpc" id="L101" title="2 of 4 branches missed.">                if (analista.getActivo() &amp;&amp; analista.getEmail() != null) {</span>
+<span class="fc" id="L102">                    emailService.enviarEmailNuevoRegistro(</span>
+<span class="fc" id="L103">                        analista.getEmail(),</span>
+<span class="fc" id="L104">                        analista.getNombres() + &quot; &quot; + analista.getApellidos(),</span>
+<span class="fc" id="L105">                        usuarioGuardado.getNombres() + &quot; &quot; + usuarioGuardado.getApellidos(),</span>
+<span class="fc" id="L106">                        usuarioGuardado.getEmail()</span>
+                    );
+                }
+<span class="fc" id="L109">            }</span>
+            
+<span class="fc" id="L111">            System.out.println(&quot;✉️ Emails enviados: confirmación a usuario y notificación a &quot; + analistas.size() + &quot; analista(s)&quot;);</span>
+<span class="nc" id="L112">        } catch (Exception e) {</span>
+<span class="nc" id="L113">            System.err.println(&quot;⚠️ Error enviando emails (registro continúa): &quot; + e.getMessage());</span>
+<span class="fc" id="L114">        }</span>
+        
+<span class="fc" id="L116">        return mapearEntidadADTO(usuarioGuardado);</span>
+    }
+
+    /**
+     * Listar solicitudes pendientes de aprobación
+     */
+    public List&lt;UsuarioDTO&gt; listarSolicitudesPendientes() {
+<span class="fc" id="L123">        return usuarioRepository.findByEstado(EstadoUsuario.PENDIENTE)</span>
+<span class="fc" id="L124">                .stream()</span>
+<span class="fc" id="L125">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L126">                .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Listar solicitudes pendientes con paginación y búsqueda
+     */
+    public Page&lt;UsuarioDTO&gt; listarSolicitudesPendientesPaginadas(int page, int size, String search) {
+        // Crear Pageable ordenado por fecha de creación descendente (más recientes primero)
+<span class="fc" id="L134">        Pageable pageable = PageRequest.of(page, size,</span>
+<span class="fc" id="L135">            Sort.by(Sort.Direction.DESC, &quot;fechaCreacion&quot;));</span>
+        Page&lt;Usuario&gt; usuariosPage;
+        
+<span class="pc bpc" id="L138" title="1 of 4 branches missed.">        if (search != null &amp;&amp; !search.trim().isEmpty()) {</span>
+            // Búsqueda por nombre de usuario, nombres, apellidos o email
+<span class="fc" id="L140">            usuariosPage = usuarioRepository.findByEstadoAndSearchTerm(EstadoUsuario.PENDIENTE, search, pageable);</span>
+        } else {
+<span class="fc" id="L142">            usuariosPage = usuarioRepository.findByEstado(EstadoUsuario.PENDIENTE, pageable);</span>
+        }
+        
+<span class="fc" id="L145">        return usuariosPage.map(this::mapearEntidadADTO);</span>
+    }
+
+    /**
+     * Aprobar usuario y asignar rol
+     */
+    public UsuarioDTO aprobarUsuario(Integer usuarioId, AprobarUsuarioRequestDTO solicitud) {
+<span class="fc" id="L152">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
+<span class="fc" id="L153">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">        if (usuario.getEstado() != EstadoUsuario.PENDIENTE) {</span>
+<span class="nc" id="L156">            throw new RuntimeException(&quot;Solo se pueden aprobar usuarios en estado PENDIENTE&quot;);</span>
+        }
+
+<span class="fc" id="L159">        usuario.setRol(solicitud.getRol());</span>
+<span class="fc" id="L160">        usuario.setEstado(EstadoUsuario.ACTIVO);</span>
+<span class="fc" id="L161">        usuario.setActivo(true);</span>
+
+<span class="fc" id="L163">        Usuario usuarioActualizado = usuarioRepository.save(usuario);</span>
+        
+        // Crear notificación automática para aprobación de usuario
+        try {
+<span class="fc" id="L167">            notificacionService.notificarUsuarioAprobado(usuarioActualizado.getUsuarioID().longValue());</span>
+<span class="nc" id="L168">        } catch (Exception e) {</span>
+            // Log error but don't fail the approval
+<span class="nc" id="L170">            System.err.println(&quot;Error creating notification for user approval: &quot; + e.getMessage());</span>
+<span class="fc" id="L171">        }</span>
+        
+        // Enviar email de bienvenida al usuario aprobado
+        try {
+<span class="fc" id="L175">            emailService.enviarEmailBienvenida(</span>
+<span class="fc" id="L176">                usuarioActualizado.getEmail(),</span>
+<span class="fc" id="L177">                usuarioActualizado.getNombres() + &quot; &quot; + usuarioActualizado.getApellidos()</span>
+            );
+<span class="fc" id="L179">            System.out.println(&quot;✉️ Email de bienvenida enviado a: &quot; + usuarioActualizado.getEmail());</span>
+<span class="nc" id="L180">        } catch (Exception e) {</span>
+<span class="nc" id="L181">            System.err.println(&quot;⚠️ Error enviando email de bienvenida (aprobación continúa): &quot; + e.getMessage());</span>
+<span class="fc" id="L182">        }</span>
+        
+<span class="fc" id="L184">        return mapearEntidadADTO(usuarioActualizado);</span>
+    }
+
+    /**
+     * Rechazar solicitud de usuario
+     */
+    public void rechazarSolicitud(Integer usuarioId) {
+<span class="nc" id="L191">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
+<span class="nc" id="L192">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (usuario.getEstado() != EstadoUsuario.PENDIENTE) {</span>
+<span class="nc" id="L195">            throw new RuntimeException(&quot;Solo se pueden rechazar usuarios en estado PENDIENTE&quot;);</span>
+        }
+
+        // Crear notificación automática para rechazo de usuario
+        try {
+<span class="nc" id="L200">            notificacionService.notificarUsuarioRechazado(usuario.getUsuarioID().longValue());</span>
+<span class="nc" id="L201">        } catch (Exception e) {</span>
+            // Log error but continue with rejection
+<span class="nc" id="L203">            System.err.println(&quot;Error creating notification for user rejection: &quot; + e.getMessage());</span>
+<span class="nc" id="L204">        }</span>
+
+<span class="nc" id="L206">        usuarioRepository.delete(usuario);</span>
+<span class="nc" id="L207">    }</span>
+
+    /**
+     * Listar todos los usuarios (para administración)
+     */
+    public List&lt;UsuarioDTO&gt; listarTodosUsuarios() {
+<span class="nc" id="L213">        return usuarioRepository.findAll()</span>
+<span class="nc" id="L214">                .stream()</span>
+<span class="nc" id="L215">                .map(this::mapearEntidadADTO)</span>
+<span class="nc" id="L216">                .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Listar todos los usuarios con paginación, búsqueda y filtros
+     */
+    public Page&lt;UsuarioDTO&gt; listarTodosUsuariosPaginados(int page, int size, String search, Rol rol, Boolean activo) {
+        // Crear Pageable con ordenamiento alfabético por nombres y apellidos
+<span class="nc" id="L224">        Pageable pageable = PageRequest.of(page, size, </span>
+<span class="nc" id="L225">            Sort.by(Sort.Direction.ASC, &quot;apellidos&quot;, &quot;nombres&quot;));</span>
+        Page&lt;Usuario&gt; usuariosPage;
+        
+<span class="nc bnc" id="L228" title="All 4 branches missed.">        boolean hasSearch = search != null &amp;&amp; !search.trim().isEmpty();</span>
+        
+        // Combinaciones de filtros
+<span class="nc bnc" id="L231" title="All 6 branches missed.">        if (rol != null &amp;&amp; activo != null &amp;&amp; hasSearch) {</span>
+            // Rol + Activo + Búsqueda
+<span class="nc" id="L233">            usuariosPage = usuarioRepository.findByRolAndActivoAndSearchTerm(rol, activo, search, pageable);</span>
+<span class="nc bnc" id="L234" title="All 4 branches missed.">        } else if (rol != null &amp;&amp; activo != null) {</span>
+            // Rol + Activo (sin búsqueda)
+<span class="nc" id="L236">            usuariosPage = usuarioRepository.findByRolAndActivo(rol, activo, pageable);</span>
+<span class="nc bnc" id="L237" title="All 4 branches missed.">        } else if (rol != null &amp;&amp; hasSearch) {</span>
+            // Rol + Búsqueda
+<span class="nc" id="L239">            usuariosPage = usuarioRepository.findBySearchTermAndRol(search, rol, pageable);</span>
+<span class="nc bnc" id="L240" title="All 4 branches missed.">        } else if (activo != null &amp;&amp; hasSearch) {</span>
+            // Activo + Búsqueda
+<span class="nc" id="L242">            usuariosPage = usuarioRepository.findByActivoAndSearchTerm(activo, search, pageable);</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        } else if (rol != null) {</span>
+            // Solo Rol
+<span class="nc" id="L245">            usuariosPage = usuarioRepository.findByRol(rol, pageable);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">        } else if (activo != null) {</span>
+            // Solo Activo
+<span class="nc" id="L248">            usuariosPage = usuarioRepository.findByActivo(activo, pageable);</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        } else if (hasSearch) {</span>
+            // Solo Búsqueda
+<span class="nc" id="L251">            usuariosPage = usuarioRepository.findBySearchTerm(search, pageable);</span>
+        } else {
+            // Sin filtros
+<span class="nc" id="L254">            usuariosPage = usuarioRepository.findAll(pageable);</span>
+        }
+        
+<span class="nc" id="L257">        return usuariosPage.map(this::mapearEntidadADTO);</span>
+    }
+
+    /**
+     * Listar usuarios activos
+     */
+    public List&lt;UsuarioDTO&gt; listarUsuariosActivos() {
+<span class="nc" id="L264">        return usuarioRepository.findByEstado(EstadoUsuario.ACTIVO)</span>
+<span class="nc" id="L265">                .stream()</span>
+<span class="nc" id="L266">                .map(this::mapearEntidadADTO)</span>
+<span class="nc" id="L267">                .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Gestionar usuario (cambiar rol o estado)
+     */
+    public UsuarioDTO gestionarUsuario(Integer usuarioId, GestionarUsuarioRequestDTO solicitud) {
+<span class="fc" id="L274">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
+<span class="pc" id="L275">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+
+        // Actualizar rol si se proporciona
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">        if (solicitud.getRol() != null) {</span>
+<span class="fc" id="L279">            usuario.setRol(solicitud.getRol());</span>
+        }
+
+        // Actualizar estado si se proporciona
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">        if (solicitud.getEstado() != null) {</span>
+<span class="nc" id="L284">            usuario.setEstado(solicitud.getEstado());</span>
+            // Sincronizar campo activo con estado
+<span class="nc bnc" id="L286" title="All 2 branches missed.">            usuario.setActivo(solicitud.getEstado() == EstadoUsuario.ACTIVO);</span>
+        }
+        
+        // Actualizar campo activo si se proporciona (y sincronizar con estado)
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">        if (solicitud.getActivo() != null) {</span>
+<span class="fc" id="L291">            usuario.setActivo(solicitud.getActivo());</span>
+            // Sincronizar estado con activo
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">            usuario.setEstado(solicitud.getActivo() ? EstadoUsuario.ACTIVO : EstadoUsuario.INACTIVO);</span>
+        }
+
+<span class="fc" id="L296">        Usuario usuarioActualizado = usuarioRepository.save(usuario);</span>
+<span class="fc" id="L297">        return mapearEntidadADTO(usuarioActualizado);</span>
+    }
+
+    /**
+     * Obtener perfil del usuario actual
+     */
+    public UsuarioDTO obtenerPerfil() {
+<span class="nc" id="L304">        Usuario usuario = obtenerUsuarioActual();</span>
+<span class="nc" id="L305">        return mapearEntidadADTO(usuario);</span>
+    }
+
+    /**
+     * Actualizar perfil del usuario actual
+     */
+    public UsuarioDTO actualizarPerfil(ActualizarPerfilRequestDTO solicitud) {
+<span class="nc" id="L312">        Usuario usuario = obtenerUsuarioActual();</span>
+
+        // Verificar contraseña actual si se va a cambiar
+<span class="nc bnc" id="L315" title="All 4 branches missed.">        if (solicitud.getContraseniaNueva() != null &amp;&amp; !solicitud.getContraseniaNueva().isEmpty()) {</span>
+<span class="nc bnc" id="L316" title="All 4 branches missed.">            if (solicitud.getContraseniaActual() == null || solicitud.getContraseniaActual().isEmpty()) {</span>
+<span class="nc" id="L317">                throw new RuntimeException(&quot;Debe proporcionar la contraseña actual para cambiarla&quot;);</span>
+            }
+            
+<span class="nc bnc" id="L320" title="All 2 branches missed.">            if (!passwordEncoder.matches(solicitud.getContraseniaActual(), usuario.getContrasenia())) {</span>
+<span class="nc" id="L321">                throw new RuntimeException(&quot;Contraseña actual incorrecta&quot;);</span>
+            }
+            
+<span class="nc" id="L324">            usuario.setContrasenia(passwordEncoder.encode(solicitud.getContraseniaNueva()));</span>
+        }
+
+        // Actualizar nombre de usuario (username) si se proporciona
+<span class="nc bnc" id="L328" title="All 4 branches missed.">        if (solicitud.getNombre() != null &amp;&amp; !solicitud.getNombre().trim().isEmpty() </span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">            &amp;&amp; !solicitud.getNombre().equalsIgnoreCase(usuario.getNombre())) {</span>
+            // Verificar que el nuevo nombre de usuario no exista
+<span class="nc" id="L331">            Optional&lt;Usuario&gt; usuarioExistente = usuarioRepository.findByNombreIgnoreCase(solicitud.getNombre());</span>
+<span class="nc bnc" id="L332" title="All 4 branches missed.">            if (usuarioExistente.isPresent() &amp;&amp; !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {</span>
+<span class="nc" id="L333">                throw new RuntimeException(&quot;El nombre de usuario ya está en uso por otro usuario&quot;);</span>
+            }
+<span class="nc" id="L335">            usuario.setNombre(solicitud.getNombre());</span>
+        }
+
+        // Actualizar datos del perfil
+<span class="nc bnc" id="L339" title="All 4 branches missed.">        if (solicitud.getNombres() != null &amp;&amp; !solicitud.getNombres().trim().isEmpty()) {</span>
+<span class="nc" id="L340">            usuario.setNombres(solicitud.getNombres());</span>
+        }
+        
+<span class="nc bnc" id="L343" title="All 4 branches missed.">        if (solicitud.getApellidos() != null &amp;&amp; !solicitud.getApellidos().trim().isEmpty()) {</span>
+<span class="nc" id="L344">            usuario.setApellidos(solicitud.getApellidos());</span>
+        }
+        
+<span class="nc bnc" id="L347" title="All 4 branches missed.">        if (solicitud.getEmail() != null &amp;&amp; !solicitud.getEmail().trim().isEmpty() </span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">            &amp;&amp; !solicitud.getEmail().equalsIgnoreCase(usuario.getEmail())) {</span>
+            // Verificar que el nuevo email no exista (case-insensitive)
+<span class="nc" id="L350">            Optional&lt;Usuario&gt; usuarioExistente = usuarioRepository.findByEmailIgnoreCase(solicitud.getEmail());</span>
+<span class="nc bnc" id="L351" title="All 4 branches missed.">            if (usuarioExistente.isPresent() &amp;&amp; !usuarioExistente.get().getUsuarioID().equals(usuario.getUsuarioID())) {</span>
+<span class="nc" id="L352">                throw new RuntimeException(&quot;El email ya está en uso por otro usuario&quot;);</span>
+            }
+<span class="nc" id="L354">            usuario.setEmail(solicitud.getEmail());</span>
+        }
+
+<span class="nc" id="L357">        Usuario usuarioActualizado = usuarioRepository.save(usuario);</span>
+<span class="nc" id="L358">        return mapearEntidadADTO(usuarioActualizado);</span>
+    }
+
+    /**
+     * Crear admin predeterminado si no existe
+     * El admin se crea con 2FA YA ACTIVADO para cumplir con la política de seguridad
+     */
+    public UsuarioDTO crearAdminPredeterminado() {
+        // Verificar si ya existe al menos un admin
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">        if (usuarioRepository.existsByRol(Rol.ADMIN)) {</span>
+<span class="nc" id="L368">            throw new RuntimeException(&quot;Ya existe un administrador en el sistema&quot;);</span>
+        }
+
+<span class="fc" id="L371">        System.out.println(&quot;=&quot; .repeat(80));</span>
+<span class="fc" id="L372">        System.out.println(&quot;🔐 CREANDO USUARIO ADMINISTRADOR CON 2FA OBLIGATORIO&quot;);</span>
+<span class="fc" id="L373">        System.out.println(&quot;=&quot; .repeat(80));</span>
+
+        // Crear admin predeterminado
+<span class="fc" id="L376">        Usuario admin = new Usuario();</span>
+<span class="fc" id="L377">        admin.setNombre(&quot;admin&quot;);</span>
+<span class="fc" id="L378">        admin.setNombres(&quot;Administrador&quot;);</span>
+<span class="fc" id="L379">        admin.setApellidos(&quot;del Sistema&quot;);</span>
+<span class="fc" id="L380">        admin.setEmail(&quot;admin@temporal.local&quot;); // Email temporal que DEBE cambiar</span>
+<span class="fc" id="L381">        admin.setContrasenia(passwordEncoder.encode(&quot;admin123&quot;)); // Contraseña temporal</span>
+<span class="fc" id="L382">        admin.setRol(Rol.ADMIN);</span>
+<span class="fc" id="L383">        admin.setEstado(EstadoUsuario.ACTIVO);</span>
+<span class="fc" id="L384">        admin.setActivo(true);</span>
+<span class="fc" id="L385">        admin.setRequiereCambioCredenciales(true); // ⚠️ DEBE cambiar credenciales en primer login</span>
+
+        // GENERAR 2FA AUTOMÁTICAMENTE (pero NO habilitado hasta que configure sus credenciales)
+<span class="fc" id="L388">        String secret = totpService.generateSecret();</span>
+<span class="fc" id="L389">        admin.setTotpSecret(secret);</span>
+<span class="fc" id="L390">        admin.setTotpEnabled(false); // Se habilitará después de cambiar credenciales</span>
+
+<span class="fc" id="L392">        Usuario adminGuardado = usuarioRepository.save(admin);</span>
+
+        // NO generamos códigos de respaldo hasta que el admin configure sus credenciales
+        
+        // MOSTRAR INFORMACIÓN EN CONSOLA
+<span class="fc" id="L397">        System.out.println(&quot;\n✅ ADMINISTRADOR CREADO EXITOSAMENTE&quot;);</span>
+<span class="fc" id="L398">        System.out.println(&quot;-&quot;.repeat(80));</span>
+<span class="fc" id="L399">        System.out.println(&quot;📧 Usuario: admin&quot;);</span>
+<span class="fc" id="L400">        System.out.println(&quot;🔑 Contraseña temporal: admin123&quot;);</span>
+<span class="fc" id="L401">        System.out.println(&quot;-&quot;.repeat(80));</span>
+<span class="fc" id="L402">        System.out.println(&quot;\n⚠️  CONFIGURACIÓN INICIAL REQUERIDA&quot;);</span>
+<span class="fc" id="L403">        System.out.println(&quot;-&quot;.repeat(80));</span>
+<span class="fc" id="L404">        System.out.println(&quot;1. Ve a http://localhost:3000/login&quot;);</span>
+<span class="fc" id="L405">        System.out.println(&quot;2. Ingresa las credenciales temporales (admin / admin123)&quot;);</span>
+<span class="fc" id="L406">        System.out.println(&quot;3. Serás redirigido a configurar:&quot;);</span>
+<span class="fc" id="L407">        System.out.println(&quot;   - Tu email real&quot;);</span>
+<span class="fc" id="L408">        System.out.println(&quot;   - Tu contraseña segura&quot;);</span>
+<span class="fc" id="L409">        System.out.println(&quot;   - Google Authenticator (2FA obligatorio)&quot;);</span>
+<span class="fc" id="L410">        System.out.println(&quot;4. Recibirás códigos de respaldo (guárdalos en lugar seguro)&quot;);</span>
+<span class="fc" id="L411">        System.out.println(&quot;-&quot;.repeat(80));</span>
+<span class="fc" id="L412">        System.out.println(&quot;\n💡 TIP: El sistema te guiará paso a paso en el navegador&quot;);</span>
+<span class="fc" id="L413">        System.out.println(&quot;=&quot; .repeat(80));</span>
+<span class="fc" id="L414">        System.out.println(&quot;\n&quot;);</span>
+
+<span class="fc" id="L416">        return mapearEntidadADTO(adminGuardado);</span>
+    }
+
+    // === MÉTODOS PARA 2FA Y RECUPERACIÓN DE CONTRASEÑA ===
+
+    /**
+     * Guardar usuario (método público para uso desde controladores 2FA)
+     */
+    public Usuario guardar(Usuario usuario) {
+<span class="nc" id="L425">        return usuarioRepository.save(usuario);</span>
+    }
+
+    /**
+     * Buscar usuario por email
+     */
+    public Optional&lt;Usuario&gt; buscarPorEmail(String email) {
+<span class="nc" id="L432">        return usuarioRepository.findByEmail(email);</span>
+    }
+
+    /**
+     * Cambiar contraseña de un usuario (para recuperación de contraseña)
+     */
+    public void cambiarContrasenia(Integer usuarioId, String nuevaContrasenia) {
+<span class="nc" id="L439">        Usuario usuario = usuarioRepository.findById(usuarioId)</span>
+<span class="nc" id="L440">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+        
+        // Validar que la nueva contraseña no esté vacía
+<span class="nc bnc" id="L443" title="All 4 branches missed.">        if (nuevaContrasenia == null || nuevaContrasenia.trim().isEmpty()) {</span>
+<span class="nc" id="L444">            throw new RuntimeException(&quot;La nueva contraseña no puede estar vacía&quot;);</span>
+        }
+        
+        // Validar longitud mínima de contraseña
+<span class="nc bnc" id="L448" title="All 2 branches missed.">        if (nuevaContrasenia.length() &lt; 8) {</span>
+<span class="nc" id="L449">            throw new RuntimeException(&quot;La contraseña debe tener al menos 8 caracteres&quot;);</span>
+        }
+        
+        // Hashear y guardar la nueva contraseña
+<span class="nc" id="L453">        usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));</span>
+<span class="nc" id="L454">        usuarioRepository.save(usuario);</span>
+        
+<span class="nc" id="L456">        System.out.println(&quot;✅ Contraseña cambiada para usuario: &quot; + usuario.getNombre());</span>
+<span class="nc" id="L457">    }</span>
+
+    // === Métodos auxiliares ===
+
+    private Usuario obtenerUsuarioActual() {
+<span class="nc" id="L462">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L463" title="All 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
+<span class="nc" id="L464">            throw new RuntimeException(&quot;No hay usuario autenticado&quot;);</span>
+        }
+
+<span class="nc" id="L467">        return usuarioRepository.findByNombre(auth.getName())</span>
+<span class="nc" id="L468">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario autenticado no encontrado en base de datos&quot;));</span>
+    }
+
+    private UsuarioDTO mapearEntidadADTO(Usuario usuario) {
+<span class="fc" id="L472">        UsuarioDTO dto = new UsuarioDTO();</span>
+<span class="fc" id="L473">        dto.setUsuarioID(usuario.getUsuarioID());</span>
+<span class="fc" id="L474">        dto.setNombre(usuario.getNombre());</span>
+<span class="fc" id="L475">        dto.setNombres(usuario.getNombres());</span>
+<span class="fc" id="L476">        dto.setApellidos(usuario.getApellidos());</span>
+<span class="fc" id="L477">        dto.setEmail(usuario.getEmail());</span>
+        
+        // Campo original
+<span class="fc" id="L480">        dto.setRol(usuario.getRol());</span>
+        
+        // Mapear rol a array de strings para el frontend
+<span class="fc bfc" id="L483" title="All 2 branches covered.">        if (usuario.getRol() != null) {</span>
+<span class="fc" id="L484">            dto.setRoles(List.of(usuario.getRol().name()));</span>
+        } else {
+<span class="fc" id="L486">            dto.setRoles(List.of());</span>
+        }
+        
+<span class="fc" id="L489">        dto.setEstado(usuario.getEstado());</span>
+        
+        // Mapear estado a string para el frontend
+<span class="pc bpc" id="L492" title="1 of 2 branches missed.">        if (usuario.getEstado() != null) {</span>
+<span class="fc" id="L493">            dto.setEstadoSolicitud(usuario.getEstado().name());</span>
+        }
+        
+<span class="fc" id="L496">        dto.setActivo(usuario.getActivo());</span>
+        
+        // Campo original
+<span class="fc" id="L499">        dto.setFechaCreacion(usuario.getFechaCreacion());</span>
+        
+        // Mapear fechaCreacion a ISO string para el frontend
+<span class="fc bfc" id="L502" title="All 2 branches covered.">        if (usuario.getFechaCreacion() != null) {</span>
+<span class="fc" id="L503">            dto.setFechaRegistro(usuario.getFechaCreacion().toString());</span>
+        }
+        
+<span class="fc" id="L506">        dto.setFechaUltimaConexion(usuario.getFechaUltimaConexion());</span>
+<span class="fc" id="L507">        dto.setNombreCompleto(usuario.getNombreCompleto());</span>
+<span class="fc" id="L508">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GerminacionControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">GerminacionControllerIntegrationTest.java</span></div><h1>GerminacionControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionEditRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GerminacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.GerminacionListadoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoGerminacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.GerminacionService;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(GerminacionController.class)
+@DisplayName(&quot;Tests de integración para GerminacionController&quot;)
+<span class="fc" id="L37">class GerminacionControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private GerminacionService germinacionService;
+
+    private GerminacionDTO germinacionDTO;
+    private GerminacionRequestDTO germinacionRequestDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L53">        germinacionDTO = new GerminacionDTO();</span>
+<span class="fc" id="L54">        germinacionDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L55">        germinacionDTO.setIdLote(100L);</span>
+<span class="fc" id="L56">        germinacionDTO.setComentarios(&quot;Test Germinacion&quot;);</span>
+<span class="fc" id="L57">        germinacionDTO.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L58">        germinacionDTO.setEstado(Estado.EN_PROCESO);</span>
+<span class="fc" id="L59">        germinacionDTO.setActivo(true);</span>
+
+<span class="fc" id="L61">        germinacionRequestDTO = new GerminacionRequestDTO();</span>
+<span class="fc" id="L62">        germinacionRequestDTO.setIdLote(100L);</span>
+<span class="fc" id="L63">        germinacionRequestDTO.setComentarios(&quot;Test Germinacion&quot;);</span>
+<span class="fc" id="L64">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/germinaciones - Crear Germinación exitosamente&quot;)
+    void crearGerminacion_debeRetornarGerminacionCreada() throws Exception {
+<span class="fc" id="L70">        when(germinacionService.crearGerminacion(any(GerminacionRequestDTO.class))).thenReturn(germinacionDTO);</span>
+
+<span class="fc" id="L72">        mockMvc.perform(post(&quot;/api/germinaciones&quot;)</span>
+<span class="fc" id="L73">                .with(csrf())</span>
+<span class="fc" id="L74">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L75">                .content(objectMapper.writeValueAsString(germinacionRequestDTO)))</span>
+<span class="fc" id="L76">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L77">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1))</span>
+<span class="fc" id="L78">                .andExpect(jsonPath(&quot;$.idLote&quot;).value(100))</span>
+<span class="fc" id="L79">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;EN_PROCESO&quot;));</span>
+<span class="fc" id="L80">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/germinaciones - Obtener todas las Germinaciones&quot;)
+    void obtenerTodasGerminaciones_debeRetornarRespuesta() throws Exception {
+<span class="fc" id="L86">        ResponseListadoGerminacion response = new ResponseListadoGerminacion();</span>
+<span class="fc" id="L87">        response.setGerminaciones(Arrays.asList(germinacionDTO));</span>
+<span class="fc" id="L88">        when(germinacionService.obtenerTodasGerminaciones()).thenReturn(response);</span>
+
+<span class="fc" id="L90">        mockMvc.perform(get(&quot;/api/germinaciones&quot;)</span>
+<span class="fc" id="L91">                .with(csrf()))</span>
+<span class="fc" id="L92">                .andExpect(status().isOk())</span>
+<span class="fc" id="L93">                .andExpect(jsonPath(&quot;$.germinaciones[0].analisisID&quot;).value(1));</span>
+<span class="fc" id="L94">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/germinaciones/{id} - Obtener Germinación por ID&quot;)
+    void obtenerGerminacionPorId_debeRetornarGerminacion() throws Exception {
+<span class="fc" id="L100">        when(germinacionService.obtenerGerminacionPorId(1L)).thenReturn(germinacionDTO);</span>
+
+<span class="fc" id="L102">        mockMvc.perform(get(&quot;/api/germinaciones/1&quot;)</span>
+<span class="fc" id="L103">                .with(csrf()))</span>
+<span class="fc" id="L104">                .andExpect(status().isOk())</span>
+<span class="fc" id="L105">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1))</span>
+<span class="fc" id="L106">                .andExpect(jsonPath(&quot;$.idLote&quot;).value(100));</span>
+<span class="fc" id="L107">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/germinaciones/listado - Obtener Germinaciones paginadas&quot;)
+    void obtenerGerminacionesPaginadas_debeRetornarPaginacion() throws Exception {
+<span class="fc" id="L113">        GerminacionListadoDTO listadoDTO = new GerminacionListadoDTO();</span>
+<span class="fc" id="L114">        listadoDTO.setAnalisisID(1L);</span>
+<span class="fc" id="L115">        listadoDTO.setIdLote(100L);</span>
+<span class="fc" id="L116">        listadoDTO.setEstado(Estado.EN_PROCESO);</span>
+
+<span class="fc" id="L118">        Page&lt;GerminacionListadoDTO&gt; page = new PageImpl&lt;&gt;(Arrays.asList(listadoDTO), PageRequest.of(0, 10), 1);</span>
+<span class="fc" id="L119">        when(germinacionService.obtenerGerminacionesPaginadasConFiltros(any(), any(), any(), any(), any())).thenReturn(page);</span>
+
+<span class="fc" id="L121">        mockMvc.perform(get(&quot;/api/germinaciones/listado&quot;)</span>
+<span class="fc" id="L122">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L123">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L124">                .with(csrf()))</span>
+<span class="fc" id="L125">                .andExpect(status().isOk())</span>
+<span class="fc" id="L126">                .andExpect(jsonPath(&quot;$.content[0].analisisID&quot;).value(1))</span>
+<span class="fc" id="L127">                .andExpect(jsonPath(&quot;$.page.totalElements&quot;).value(1));</span>
+<span class="fc" id="L128">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/germinaciones/{id} - Actualizar Germinación&quot;)
+    void actualizarGerminacion_debeRetornarGerminacionActualizada() throws Exception {
+<span class="fc" id="L134">        GerminacionEditRequestDTO editDTO = new GerminacionEditRequestDTO();</span>
+<span class="fc" id="L135">        editDTO.setComentarios(&quot;Actualizado&quot;);</span>
+        
+<span class="fc" id="L137">        germinacionDTO.setComentarios(&quot;Actualizado&quot;);</span>
+<span class="fc" id="L138">        when(germinacionService.actualizarGerminacionSeguro(eq(1L), any(GerminacionEditRequestDTO.class))).thenReturn(germinacionDTO);</span>
+
+<span class="fc" id="L140">        mockMvc.perform(put(&quot;/api/germinaciones/1&quot;)</span>
+<span class="fc" id="L141">                .with(csrf())</span>
+<span class="fc" id="L142">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L143">                .content(objectMapper.writeValueAsString(editDTO)))</span>
+<span class="fc" id="L144">                .andExpect(status().isOk())</span>
+<span class="fc" id="L145">                .andExpect(jsonPath(&quot;$.comentarios&quot;).value(&quot;Actualizado&quot;));</span>
+<span class="fc" id="L146">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/germinaciones/{id} - Eliminar Germinación&quot;)
+    void eliminarGerminacion_debeRetornarNoContent() throws Exception {
+<span class="fc" id="L152">        doNothing().when(germinacionService).eliminarGerminacion(1L);</span>
+
+<span class="fc" id="L154">        mockMvc.perform(delete(&quot;/api/germinaciones/1&quot;)</span>
+<span class="fc" id="L155">                .with(csrf()))</span>
+<span class="fc" id="L156">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L157">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/germinaciones/{id}/desactivar - Desactivar Germinación&quot;)
+    void desactivarGerminacion_debeRetornarOk() throws Exception {
+<span class="fc" id="L163">        doNothing().when(germinacionService).desactivarGerminacion(1L);</span>
+
+<span class="fc" id="L165">        mockMvc.perform(put(&quot;/api/germinaciones/1/desactivar&quot;)</span>
+<span class="fc" id="L166">                .with(csrf()))</span>
+<span class="fc" id="L167">                .andExpect(status().isOk());</span>
+<span class="fc" id="L168">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/germinaciones/{id}/reactivar - Reactivar Germinación&quot;)
+    void reactivarGerminacion_debeRetornarGerminacionReactivada() throws Exception {
+<span class="fc" id="L174">        when(germinacionService.reactivarGerminacion(1L)).thenReturn(germinacionDTO);</span>
+
+<span class="fc" id="L176">        mockMvc.perform(put(&quot;/api/germinaciones/1/reactivar&quot;)</span>
+<span class="fc" id="L177">                .with(csrf()))</span>
+<span class="fc" id="L178">                .andExpect(status().isOk())</span>
+<span class="fc" id="L179">                .andExpect(jsonPath(&quot;$.analisisID&quot;).value(1));</span>
+<span class="fc" id="L180">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/germinaciones/lote/{idLote} - Obtener Germinaciones por lote&quot;)
+    void obtenerGerminacionesPorIdLote_debeRetornarLista() throws Exception {
+<span class="fc" id="L186">        List&lt;GerminacionDTO&gt; lista = Arrays.asList(germinacionDTO);</span>
+<span class="fc" id="L187">        when(germinacionService.obtenerGerminacionesPorIdLote(100L)).thenReturn(lista);</span>
+
+<span class="fc" id="L189">        mockMvc.perform(get(&quot;/api/germinaciones/lote/100&quot;)</span>
+<span class="fc" id="L190">                .with(csrf()))</span>
+<span class="fc" id="L191">                .andExpect(status().isOk())</span>
+<span class="fc" id="L192">                .andExpect(jsonPath(&quot;$[0].analisisID&quot;).value(1))</span>
+<span class="fc" id="L193">                .andExpect(jsonPath(&quot;$[0].idLote&quot;).value(100));</span>
+<span class="fc" id="L194">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/germinaciones/{id}/finalizar - Finalizar análisis&quot;)
+    void finalizarAnalisis_debeRetornarGerminacionFinalizada() throws Exception {
+<span class="fc" id="L200">        germinacionDTO.setEstado(Estado.PENDIENTE_APROBACION);</span>
+<span class="fc" id="L201">        when(germinacionService.finalizarAnalisis(1L)).thenReturn(germinacionDTO);</span>
+
+<span class="fc" id="L203">        mockMvc.perform(put(&quot;/api/germinaciones/1/finalizar&quot;)</span>
+<span class="fc" id="L204">                .with(csrf()))</span>
+<span class="fc" id="L205">                .andExpect(status().isOk())</span>
+<span class="fc" id="L206">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;PENDIENTE_APROBACION&quot;));</span>
+<span class="fc" id="L207">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/germinaciones/{id}/aprobar - Aprobar análisis&quot;)
+    void aprobarAnalisis_debeRetornarGerminacionAprobada() throws Exception {
+<span class="fc" id="L213">        germinacionDTO.setEstado(Estado.APROBADO);</span>
+<span class="fc" id="L214">        when(germinacionService.aprobarAnalisis(1L)).thenReturn(germinacionDTO);</span>
+
+<span class="fc" id="L216">        mockMvc.perform(put(&quot;/api/germinaciones/1/aprobar&quot;)</span>
+<span class="fc" id="L217">                .with(csrf()))</span>
+<span class="fc" id="L218">                .andExpect(status().isOk())</span>
+<span class="fc" id="L219">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;APROBADO&quot;));</span>
+<span class="fc" id="L220">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/germinaciones/{id}/repetir - Marcar para repetir&quot;)
+    void marcarParaRepetir_debeRetornarGerminacionParaRepetir() throws Exception {
+<span class="fc" id="L226">        germinacionDTO.setEstado(Estado.A_REPETIR);</span>
+<span class="fc" id="L227">        when(germinacionService.marcarParaRepetir(1L)).thenReturn(germinacionDTO);</span>
+
+<span class="fc" id="L229">        mockMvc.perform(put(&quot;/api/germinaciones/1/repetir&quot;)</span>
+<span class="fc" id="L230">                .with(csrf()))</span>
+<span class="fc" id="L231">                .andExpect(status().isOk())</span>
+<span class="fc" id="L232">                .andExpect(jsonPath(&quot;$.estado&quot;).value(&quot;A_REPETIR&quot;));</span>
+<span class="fc" id="L233">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

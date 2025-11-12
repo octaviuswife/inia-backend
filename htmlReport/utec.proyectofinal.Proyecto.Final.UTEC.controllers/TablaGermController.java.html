@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TablaGermController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">TablaGermController.java</span></div><h1>TablaGermController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PorcentajesRedondeoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TablaGermRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TablaGermDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TablaGermService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/germinacion/{germinacionId}/tabla&quot;)
+@Tag(name = &quot;Tabla de Germinación&quot;, description = &quot;API para gestión de tablas dentro del análisis de germinación&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L33">public class TablaGermController {</span>
+
+    @Autowired
+    private TablaGermService tablaGermService;
+
+    // Crear nueva tabla para una germinación
+    @Operation(summary = &quot;Crear tabla de germinación&quot;, 
+              description = &quot;Crea una nueva tabla de germinación. Solo se puede crear si todas las tablas anteriores están finalizadas&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Tabla creada exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;No se puede crear - tabla anterior no finalizada o datos inválidos&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Germinación no encontrada&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;?&gt; crearTablaGerm(
+            @PathVariable Long germinacionId,
+            @RequestBody TablaGermRequestDTO solicitud) {
+        try {
+<span class="fc" id="L52">            TablaGermDTO nuevaTablaGerm = tablaGermService.crearTablaGerm(germinacionId, solicitud);</span>
+<span class="fc" id="L53">            return new ResponseEntity&lt;&gt;(nuevaTablaGerm, HttpStatus.CREATED);</span>
+<span class="fc" id="L54">        } catch (Exception e) {</span>
+<span class="fc" id="L55">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Contar tablas de una germinación
+    @Operation(summary = &quot;Contar tablas por germinación&quot;, description = &quot;Devuelve el número total de tablas asociadas a una germinación específica&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/contar&quot;)
+    public ResponseEntity&lt;?&gt; contarTablasPorGerminacion(@PathVariable Long germinacionId) {
+        try {
+<span class="fc" id="L65">            Long count = tablaGermService.contarTablasPorGerminacion(germinacionId);</span>
+<span class="fc" id="L66">            return new ResponseEntity&lt;&gt;(count, HttpStatus.OK);</span>
+<span class="nc" id="L67">        } catch (Exception e) {</span>
+<span class="nc" id="L68">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Finalizar tabla (marcar como finalizada)
+    @Operation(summary = &quot;Finalizar tabla de germinación&quot;,
+              description = &quot;Marca una tabla como finalizada. Requiere que todas las repeticiones estén completas y porcentajes ingresados&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tabla finalizada exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;No se puede finalizar - faltan repeticiones o porcentajes&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tabla no encontrada&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PutMapping(&quot;/{tablaId}/finalizar&quot;)
+    public ResponseEntity&lt;?&gt; finalizarTabla(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId) {
+        try {
+<span class="fc" id="L86">            TablaGermDTO tablaFinalizada = tablaGermService.finalizarTabla(tablaId);</span>
+<span class="fc" id="L87">            return new ResponseEntity&lt;&gt;(tablaFinalizada, HttpStatus.OK);</span>
+<span class="fc" id="L88">        } catch (Exception e) {</span>
+<span class="fc" id="L89">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.BAD_REQUEST);</span>
+        }
+    }
+
+    // Verificar si se pueden ingresar porcentajes
+    @Operation(summary = &quot;Verificar si se pueden ingresar porcentajes&quot;, 
+              description = &quot;Verifica si es posible ingresar los 5 porcentajes con redondeo para una tabla. Solo si todas las repeticiones están completas&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @GetMapping(&quot;/{tablaId}/puede-ingresar-porcentajes&quot;)
+    public ResponseEntity&lt;?&gt; puedeIngresarPorcentajes(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId) {
+        try {
+<span class="fc" id="L102">            boolean puede = tablaGermService.puedeIngresarPorcentajes(tablaId);</span>
+<span class="fc" id="L103">            return new ResponseEntity&lt;&gt;(puede, HttpStatus.OK);</span>
+<span class="nc" id="L104">        } catch (Exception e) {</span>
+<span class="nc" id="L105">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Actualizar porcentajes con redondeo
+    @Operation(summary = &quot;Actualizar porcentajes con redondeo&quot;, 
+              description = &quot;Actualiza los 5 porcentajes con redondeo de una tabla. Solo disponible cuando todas las repeticiones están completas&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Porcentajes actualizados exitosamente&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;No se pueden ingresar porcentajes - repeticiones incompletas&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tabla no encontrada&quot;)
+    })
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PutMapping(&quot;/{tablaId}/porcentajes&quot;)
+    public ResponseEntity&lt;?&gt; actualizarPorcentajes(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId,
+            @RequestBody PorcentajesRedondeoRequestDTO solicitud) {
+        try {
+<span class="fc" id="L124">            TablaGermDTO tablaActualizada = tablaGermService.actualizarPorcentajes(tablaId, solicitud);</span>
+<span class="fc" id="L125">            return new ResponseEntity&lt;&gt;(tablaActualizada, HttpStatus.OK);</span>
+<span class="fc" id="L126">        } catch (Exception e) {</span>
+<span class="fc" id="L127">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.BAD_REQUEST);</span>
+        }
+    } 
+
+    // Obtener tabla por ID (dentro de una germinación)
+    @Operation(summary = &quot;Obtener tabla por ID&quot;, 
+              description = &quot;Obtiene los detalles de una tabla de germinación específica dentro de una germinación&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{tablaId}&quot;)
+    public ResponseEntity&lt;?&gt; obtenerTablaGermPorId(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId) {
+        try {
+<span class="fc" id="L140">            TablaGermDTO tablaGerm = tablaGermService.obtenerTablaGermPorId(tablaId);</span>
+<span class="fc" id="L141">            return new ResponseEntity&lt;&gt;(tablaGerm, HttpStatus.OK);</span>
+<span class="fc" id="L142">        } catch (Exception e) {</span>
+<span class="fc" id="L143">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Actualizar tabla existente
+    @Operation(summary = &quot;Actualizar tabla de germinación&quot;, 
+              description = &quot;Actualiza los detalles de una tabla de germinación existente&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PutMapping(&quot;/{tablaId}&quot;)
+    public ResponseEntity&lt;?&gt; actualizarTablaGerm(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId,
+            @RequestBody TablaGermRequestDTO solicitud) {
+        try {
+<span class="fc" id="L157">            TablaGermDTO tablaGermActualizada = tablaGermService.actualizarTablaGerm(tablaId, solicitud);</span>
+<span class="fc" id="L158">            return new ResponseEntity&lt;&gt;(tablaGermActualizada, HttpStatus.OK);</span>
+<span class="nc" id="L159">        } catch (Exception e) {</span>
+<span class="nc" id="L160">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Eliminar tabla
+    @Operation(summary = &quot;Eliminar tabla de germinación&quot;, 
+              description = &quot;Elimina una tabla de germinación específica (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{tablaId}&quot;)
+    public ResponseEntity&lt;?&gt; eliminarTablaGerm(
+            @PathVariable Long germinacionId,
+            @PathVariable Long tablaId) {
+        try {
+<span class="fc" id="L173">            tablaGermService.eliminarTablaGerm(tablaId);</span>
+<span class="fc" id="L174">            return new ResponseEntity&lt;&gt;(HttpStatus.NO_CONTENT);</span>
+<span class="nc" id="L175">        } catch (Exception e) {</span>
+<span class="nc" id="L176">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+        }
+    }
+
+    // Obtener todas las tablas de una germinación
+    @Operation(summary = &quot;Obtener tablas por germinación&quot;, 
+              description = &quot;Obtiene todas las tablas asociadas a una germinación específica&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;?&gt; obtenerTablasPorGerminacion(@PathVariable Long germinacionId) {
+        try {
+<span class="fc" id="L187">            List&lt;TablaGermDTO&gt; tablas = tablaGermService.obtenerTablasPorGerminacion(germinacionId);</span>
+<span class="fc" id="L188">            return new ResponseEntity&lt;&gt;(tablas, HttpStatus.OK);</span>
+<span class="nc" id="L189">        } catch (Exception e) {</span>
+<span class="nc" id="L190">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

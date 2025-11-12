@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepPmsServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">RepPmsServiceTest.java</span></div><h1>RepPmsServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepPmsRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepPmsRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepPmsDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Tests unitarios para RepPmsService (Repeticiones de Peso de Mil Semillas)
+ * 
+ * Funcionalidades testeadas:
+ * - Creación de repeticiones de PMS
+ * - Validación de límite de 16 repeticiones
+ * - Asignación automática de tandas
+ * - Cálculos de validación y estadísticas
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de RepPmsService&quot;)
+<span class="fc" id="L39">class RepPmsServiceTest {</span>
+
+    @Mock
+    private RepPmsRepository repPmsRepository;
+
+    @Mock
+    private PmsRepository pmsRepository;
+
+    @Mock
+    private PmsService pmsService;
+
+    @Mock
+    private AnalisisService analisisService;
+
+    @Mock
+    private AnalisisHistorialService analisisHistorialService;
+
+    @InjectMocks
+    private RepPmsService repPmsService;
+
+    private Pms pms;
+    private RepPms repPms;
+    private RepPmsRequestDTO repPmsRequestDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L65">        pms = new Pms();</span>
+<span class="fc" id="L66">        pms.setAnalisisID(1L);</span>
+<span class="fc" id="L67">        pms.setEstado(Estado.REGISTRADO);</span>
+<span class="fc" id="L68">        pms.setNumRepeticionesEsperadas(8);</span>
+<span class="fc" id="L69">        pms.setNumTandas(1);</span>
+<span class="fc" id="L70">        pms.setEsSemillaBrozosa(false);</span>
+<span class="fc" id="L71">        pms.setActivo(true);</span>
+
+<span class="fc" id="L73">        repPms = new RepPms();</span>
+<span class="fc" id="L74">        repPms.setRepPMSID(10L);</span>
+<span class="fc" id="L75">        repPms.setNumRep(1);</span>
+<span class="fc" id="L76">        repPms.setNumTanda(1);</span>
+<span class="fc" id="L77">        repPms.setPeso(new BigDecimal(&quot;45.5&quot;));</span>
+<span class="fc" id="L78">        repPms.setValido(null);</span>
+<span class="fc" id="L79">        repPms.setPms(pms);</span>
+
+<span class="fc" id="L81">        repPmsRequestDTO = new RepPmsRequestDTO();</span>
+<span class="fc" id="L82">        repPmsRequestDTO.setNumRep(1);</span>
+<span class="fc" id="L83">        repPmsRequestDTO.setPeso(new BigDecimal(&quot;45.5&quot;));</span>
+<span class="fc" id="L84">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición PMS - debe crear exitosamente&quot;)
+    void crearRepeticion_debeCrearExitosamente() {
+        // ARRANGE
+<span class="fc" id="L90">        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));</span>
+<span class="fc" id="L91">        when(repPmsRepository.countByPmsId(1L)).thenReturn(0L);</span>
+<span class="fc" id="L92">        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList());</span>
+<span class="fc" id="L93">        when(repPmsRepository.save(any(RepPms.class))).thenReturn(repPms);</span>
+<span class="fc" id="L94">        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);</span>
+<span class="fc" id="L95">        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));</span>
+
+        // ACT
+<span class="fc" id="L98">        RepPmsDTO resultado = repPmsService.crearRepeticion(1L, repPmsRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L101">        assertNotNull(resultado);</span>
+<span class="fc" id="L102">        assertEquals(10L, resultado.getRepPMSID());</span>
+<span class="fc" id="L103">        assertEquals(1, resultado.getNumRep());</span>
+<span class="fc" id="L104">        assertEquals(new BigDecimal(&quot;45.5&quot;), resultado.getPeso());</span>
+<span class="fc" id="L105">        verify(repPmsRepository, times(1)).save(any(RepPms.class));</span>
+<span class="fc" id="L106">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe cambiar estado a EN_PROCESO en primera repetición&quot;)
+    void crearRepeticion_debeCambiarEstadoEnProceso() {
+        // ARRANGE
+<span class="fc" id="L112">        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));</span>
+<span class="fc" id="L113">        when(repPmsRepository.countByPmsId(1L)).thenReturn(0L);</span>
+<span class="fc" id="L114">        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList());</span>
+<span class="fc" id="L115">        when(repPmsRepository.save(any(RepPms.class))).thenReturn(repPms);</span>
+<span class="fc" id="L116">        when(pmsRepository.save(any(Pms.class))).thenReturn(pms);</span>
+<span class="fc" id="L117">        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));</span>
+
+        // ACT
+<span class="fc" id="L120">        repPmsService.crearRepeticion(1L, repPmsRequestDTO);</span>
+
+        // ASSERT
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        verify(pmsRepository).save(argThat(p -&gt; p.getEstado() == Estado.EN_PROCESO));</span>
+<span class="fc" id="L124">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe lanzar excepción si PMS no existe&quot;)
+    void crearRepeticion_debeLanzarExcepcionSiPmsNoExiste() {
+        // ARRANGE
+<span class="fc" id="L130">        when(pmsRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L133">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L134">            repPmsService.crearRepeticion(999L, repPmsRequestDTO);</span>
+<span class="nc" id="L135">        });</span>
+        
+<span class="fc" id="L137">        assertTrue(exception.getMessage().contains(&quot;no encontrado&quot;));</span>
+<span class="fc" id="L138">        verify(repPmsRepository, never()).save(any(RepPms.class));</span>
+<span class="fc" id="L139">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe lanzar excepción si PMS está finalizado&quot;)
+    void crearRepeticion_debeLanzarExcepcionSiPmsEstFinalizado() {
+        // ARRANGE
+<span class="fc" id="L145">        pms.setEstado(Estado.APROBADO);</span>
+<span class="fc" id="L146">        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L149">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L150">            repPmsService.crearRepeticion(1L, repPmsRequestDTO);</span>
+<span class="nc" id="L151">        });</span>
+        
+<span class="fc" id="L153">        assertTrue(exception.getMessage().contains(&quot;REGISTRADO o EN_PROCESO&quot;));</span>
+<span class="fc" id="L154">        verify(repPmsRepository, never()).save(any(RepPms.class));</span>
+<span class="fc" id="L155">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear repetición - debe lanzar excepción si se exceden 16 repeticiones&quot;)
+    void crearRepeticion_debeLanzarExcepcionSiExcede16() {
+        // ARRANGE
+<span class="fc" id="L161">        when(pmsRepository.findById(1L)).thenReturn(Optional.of(pms));</span>
+<span class="fc" id="L162">        when(repPmsRepository.countByPmsId(1L)).thenReturn(16L);</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L165">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L166">            repPmsService.crearRepeticion(1L, repPmsRequestDTO);</span>
+<span class="nc" id="L167">        });</span>
+        
+<span class="fc" id="L169">        assertTrue(exception.getMessage().contains(&quot;más de 16 repeticiones&quot;));</span>
+<span class="fc" id="L170">        verify(repPmsRepository, never()).save(any(RepPms.class));</span>
+<span class="fc" id="L171">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener repetición por ID - debe retornar repetición si existe&quot;)
+    void obtenerPorId_debeRetornarRepeticionSiExiste() {
+        // ARRANGE
+<span class="fc" id="L177">        when(repPmsRepository.findById(10L)).thenReturn(Optional.of(repPms));</span>
+
+        // ACT
+<span class="fc" id="L180">        RepPmsDTO resultado = repPmsService.obtenerPorId(10L);</span>
+
+        // ASSERT
+<span class="fc" id="L183">        assertNotNull(resultado);</span>
+<span class="fc" id="L184">        assertEquals(10L, resultado.getRepPMSID());</span>
+<span class="fc" id="L185">        assertEquals(new BigDecimal(&quot;45.5&quot;), resultado.getPeso());</span>
+<span class="fc" id="L186">        verify(repPmsRepository, times(1)).findById(10L);</span>
+<span class="fc" id="L187">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener repetición por ID - debe lanzar excepción si no existe&quot;)
+    void obtenerPorId_debeLanzarExcepcionSiNoExiste() {
+        // ARRANGE
+<span class="fc" id="L193">        when(repPmsRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L196">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L197">            repPmsService.obtenerPorId(999L);</span>
+<span class="nc" id="L198">        });</span>
+        
+<span class="fc" id="L200">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
+<span class="fc" id="L201">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar repetición - debe actualizar correctamente&quot;)
+    void actualizarRepeticion_debeActualizarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L207">        RepPmsRequestDTO updateDTO = new RepPmsRequestDTO();</span>
+<span class="fc" id="L208">        updateDTO.setNumRep(1);</span>
+<span class="fc" id="L209">        updateDTO.setPeso(new BigDecimal(&quot;47.3&quot;));</span>
+        
+<span class="fc" id="L211">        when(repPmsRepository.findById(10L)).thenReturn(Optional.of(repPms));</span>
+<span class="fc" id="L212">        when(repPmsRepository.save(any(RepPms.class))).thenReturn(repPms);</span>
+<span class="fc" id="L213">        when(repPmsRepository.countByPmsId(1L)).thenReturn(8L);</span>
+<span class="fc" id="L214">        doNothing().when(analisisService).manejarEdicionAnalisisFinalizado(any(Pms.class));</span>
+<span class="fc" id="L215">        doNothing().when(pmsService).validarTodasLasRepeticiones(1L);</span>
+<span class="fc" id="L216">        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));</span>
+
+        // ACT
+<span class="fc" id="L219">        RepPmsDTO resultado = repPmsService.actualizarRepeticion(10L, updateDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L222">        assertNotNull(resultado);</span>
+<span class="fc" id="L223">        verify(repPmsRepository, times(1)).save(any(RepPms.class));</span>
+<span class="fc" id="L224">        verify(analisisHistorialService, times(1)).registrarModificacion(any(Pms.class));</span>
+<span class="fc" id="L225">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar repetición - debe eliminar correctamente&quot;)
+    void eliminarRepeticion_debeEliminarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L231">        when(repPmsRepository.findById(10L)).thenReturn(Optional.of(repPms));</span>
+<span class="fc" id="L232">        doNothing().when(repPmsRepository).deleteById(10L);</span>
+<span class="fc" id="L233">        when(repPmsRepository.countByPmsId(1L)).thenReturn(7L);</span>
+<span class="fc" id="L234">        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList());</span>
+<span class="fc" id="L235">        doNothing().when(pmsService).actualizarEstadisticasPms(1L);</span>
+<span class="fc" id="L236">        doNothing().when(analisisHistorialService).registrarModificacion(any(Pms.class));</span>
+
+        // ACT
+<span class="fc" id="L239">        repPmsService.eliminarRepeticion(10L);</span>
+
+        // ASSERT
+<span class="fc" id="L242">        verify(repPmsRepository, times(1)).deleteById(10L);</span>
+<span class="fc" id="L243">        verify(analisisHistorialService, times(1)).registrarModificacion(any(Pms.class));</span>
+<span class="fc" id="L244">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar repetición - debe lanzar excepción si no existe&quot;)
+    void eliminarRepeticion_debeLanzarExcepcionSiNoExiste() {
+        // ARRANGE
+<span class="fc" id="L250">        when(repPmsRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L253">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L254">            repPmsService.eliminarRepeticion(999L);</span>
+<span class="nc" id="L255">        });</span>
+        
+<span class="fc" id="L257">        assertTrue(exception.getMessage().contains(&quot;no encontrada&quot;));</span>
+<span class="fc" id="L258">        verify(repPmsRepository, never()).deleteById(anyLong());</span>
+<span class="fc" id="L259">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener repeticiones por PMS - debe retornar lista&quot;)
+    void obtenerPorPms_debeRetornarLista() {
+        // ARRANGE
+<span class="fc" id="L265">        RepPms rep2 = new RepPms();</span>
+<span class="fc" id="L266">        rep2.setRepPMSID(11L);</span>
+<span class="fc" id="L267">        rep2.setNumRep(2);</span>
+<span class="fc" id="L268">        rep2.setNumTanda(1);</span>
+<span class="fc" id="L269">        rep2.setPeso(new BigDecimal(&quot;46.2&quot;));</span>
+<span class="fc" id="L270">        rep2.setPms(pms);</span>
+        
+<span class="fc" id="L272">        when(repPmsRepository.findByPmsId(1L)).thenReturn(Arrays.asList(repPms, rep2));</span>
+
+        // ACT
+<span class="fc" id="L275">        List&lt;RepPmsDTO&gt; resultado = repPmsService.obtenerPorPms(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L278">        assertNotNull(resultado);</span>
+<span class="fc" id="L279">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L280">        assertEquals(10L, resultado.get(0).getRepPMSID());</span>
+<span class="fc" id="L281">        assertEquals(11L, resultado.get(1).getRepPMSID());</span>
+<span class="fc" id="L282">    }</span>
+
+    @Test
+    @DisplayName(&quot;Contar repeticiones por PMS - debe retornar cantidad correcta&quot;)
+    void contarPorPms_debeRetornarCantidad() {
+        // ARRANGE
+<span class="fc" id="L288">        when(repPmsRepository.countByPmsId(1L)).thenReturn(8L);</span>
+
+        // ACT
+<span class="fc" id="L291">        Long resultado = repPmsService.contarPorPms(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L294">        assertEquals(8L, resultado);</span>
+<span class="fc" id="L295">        verify(repPmsRepository, times(1)).countByPmsId(1L);</span>
+<span class="fc" id="L296">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

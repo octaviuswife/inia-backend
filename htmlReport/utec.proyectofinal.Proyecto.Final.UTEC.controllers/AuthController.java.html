@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ActualizarPerfilRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.AprobarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ForgotPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GestionarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.LoginRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RegistroUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ResetPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Verify2FARequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.Setup2FAResponseDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TrustedDeviceDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.EmailService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.RecoveryCodeService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TotpService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.TrustedDeviceService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
+
+@RestController
+@RequestMapping(&quot;/api/v1/auth&quot;)
+@CrossOrigin(origins = &quot;http://localhost:3000&quot;) // Ajusta el origen según tu configuración de frontend
+@Tag(name = &quot;Autenticación y Gestión de Usuarios&quot;, description = &quot;Endpoints para autenticación, registro y gestión de usuarios&quot;)
+<span class="fc" id="L56">public class AuthController {</span>
+
+    @Autowired
+    private SeguridadService seguridadService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UsuarioService usuarioService;
+
+    @Autowired
+    private TotpService totpService;
+
+    @Autowired
+    private RecoveryCodeService recoveryCodeService;
+
+    @Autowired
+    private TrustedDeviceService trustedDeviceService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @PostMapping(&quot;/login&quot;)
+    @Operation(summary = &quot;Iniciar sesión&quot;, description = &quot;Autentica un usuario y devuelve un token JWT en cookies HttpOnly&quot;)
+    public ResponseEntity&lt;?&gt; login(@RequestBody LoginRequestDTO loginData, HttpServletResponse response) {
+<span class="fc" id="L82">        System.out.println(&quot; [LOGIN] Iniciando proceso de login...&quot;);</span>
+<span class="fc" id="L83">        System.out.println(&quot; [LOGIN] Usuario recibido: &quot; + loginData.getUsuario());</span>
+        
+        try {
+<span class="fc" id="L86">            String usuario = loginData.getUsuario();</span>
+<span class="fc" id="L87">            String password = loginData.getPassword();</span>
+            
+<span class="fc" id="L89">            Optional&lt;Usuario&gt; usuarioOpt = seguridadService.autenticarUsuario(usuario, password);</span>
+            
+<span class="fc" id="L91">            System.out.println(&quot; [LOGIN] Autenticación completada. Usuario encontrado: &quot; + usuarioOpt.isPresent());</span>
+
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (usuarioOpt.isPresent()) {</span>
+<span class="fc" id="L94">                Usuario user = usuarioOpt.get();</span>
+<span class="fc" id="L95">                String[] roles = seguridadService.listarRolesPorUsuario(user);</span>
+                
+                // Debug: Ver qué roles se están asignando
+<span class="fc" id="L98">                System.out.println(&quot; [LOGIN] Usuario: &quot; + user.getNombre());</span>
+<span class="fc" id="L99">                System.out.println(&quot; [LOGIN] Roles asignados: &quot; + java.util.Arrays.toString(roles));</span>
+<span class="fc" id="L100">                System.out.println(&quot; [LOGIN] Estado usuario: &quot; + user.getEstado());</span>
+<span class="fc" id="L101">                System.out.println(&quot; [LOGIN] Rol en entidad: &quot; + user.getRol());</span>
+                
+                // Generar access token y refresh token
+<span class="fc" id="L104">                String accessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));</span>
+<span class="fc" id="L105">                String refreshToken = jwtUtil.generarRefreshToken(user);</span>
+                
+                // Configurar cookies HttpOnly Secure
+<span class="fc" id="L108">                configurarCookieToken(response, &quot;accessToken&quot;, accessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));</span>
+<span class="fc" id="L109">                configurarCookieToken(response, &quot;refreshToken&quot;, refreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));</span>
+                
+<span class="fc" id="L111">                System.out.println(&quot; [LOGIN] Cookies establecidas correctamente&quot;);</span>
+<span class="fc" id="L112">                System.out.println(&quot; [LOGIN] Preparando respuesta con datos de usuario...&quot;);</span>
+                
+                // Responder SOLO con información del usuario (NO incluir token en body)
+<span class="fc" id="L115">                Map&lt;String, Object&gt; responseBody = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L116">                responseBody.put(&quot;mensaje&quot;, &quot;Login exitoso&quot;);</span>
+<span class="fc" id="L117">                responseBody.put(&quot;usuario&quot;, Map.of(</span>
+<span class="fc" id="L118">                    &quot;id&quot;, user.getUsuarioID(),</span>
+<span class="fc" id="L119">                    &quot;nombre&quot;, user.getNombre(),</span>
+<span class="fc" id="L120">                    &quot;nombres&quot;, user.getNombres(),</span>
+<span class="fc" id="L121">                    &quot;apellidos&quot;, user.getApellidos(),</span>
+<span class="fc" id="L122">                    &quot;email&quot;, user.getEmail(),</span>
+                    &quot;roles&quot;, roles
+                ));
+                
+<span class="fc" id="L126">                return ResponseEntity.ok(responseBody);</span>
+            }
+            
+<span class="fc" id="L129">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L130">                    .body(Map.of(&quot;error&quot;, &quot;Credenciales incorrectas&quot;));</span>
+                    
+<span class="fc" id="L132">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L133">            System.err.println(&quot; [LOGIN] Error en autenticación: &quot; + e.getMessage());</span>
+<span class="fc" id="L134">            e.printStackTrace();</span>
+            
+<span class="pc bpc" id="L136" title="5 of 6 branches missed.">            String mensaje = switch (e.getMessage()) {</span>
+<span class="nc" id="L137">                case &quot;USUARIO_INCORRECTO&quot; -&gt; &quot;Credenciales incorrectas&quot;;</span>
+<span class="fc" id="L138">                case &quot;USUARIO_INACTIVO&quot; -&gt; &quot;No se puede iniciar sesión. Contacte al administrador&quot;;</span>
+<span class="nc" id="L139">                case &quot;USUARIO_PENDIENTE_APROBACION&quot; -&gt; &quot;Cuenta pendiente de aprobación. Contacte al administrador&quot;;</span>
+<span class="nc" id="L140">                case &quot;USUARIO_SIN_ROL&quot; -&gt; &quot;No se puede iniciar sesión. Contacte al administrador&quot;;</span>
+<span class="nc" id="L141">                case &quot;CONTRASENIA_INCORRECTA&quot; -&gt; &quot;Credenciales incorrectas&quot;;</span>
+<span class="pc" id="L142">                default -&gt; &quot;Error de autenticación&quot;;</span>
+            };
+            
+<span class="fc" id="L145">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L146">                    .body(Map.of(&quot;error&quot;, mensaje));</span>
+        }
+    }
+
+    /**
+     * Configura una cookie HttpOnly Secure para almacenar tokens JWT de forma segura.
+     */
+    private void configurarCookieToken(HttpServletResponse response, String nombre, String valor, int maxAgeSegundos) {
+        // Usar ResponseCookie (Spring Framework 5+) para mejor control de SameSite
+<span class="fc" id="L155">        String cookieValue = String.format(</span>
+            &quot;%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax&quot;,
+<span class="fc" id="L157">            nombre, valor, maxAgeSegundos</span>
+        );
+        
+<span class="fc" id="L160">        System.out.println(&quot; [AuthController] Estableciendo cookie: &quot; + nombre + &quot; (maxAge: &quot; + maxAgeSegundos + &quot;s)&quot;);</span>
+        
+<span class="fc" id="L162">        response.addHeader(&quot;Set-Cookie&quot;, cookieValue);</span>
+<span class="fc" id="L163">    }</span>
+
+    @PostMapping(&quot;/refresh&quot;)
+    @Operation(summary = &quot;Renovar access token&quot;, description = &quot;Usa el refresh token para generar un nuevo access token&quot;)
+    public ResponseEntity&lt;?&gt; refresh(@CookieValue(name = &quot;refreshToken&quot;, required = false) String refreshToken, HttpServletResponse response) {
+        try {
+<span class="nc bnc" id="L169" title="All 4 branches missed.">            if (refreshToken == null || refreshToken.isEmpty()) {</span>
+<span class="nc" id="L170">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L171">                        .body(Map.of(&quot;error&quot;, &quot;Refresh token no encontrado&quot;));</span>
+            }
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (!jwtUtil.esTokenValido(refreshToken)) {</span>
+<span class="nc" id="L175">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L176">                        .body(Map.of(&quot;error&quot;, &quot;Refresh token inválido o expirado&quot;));</span>
+            }
+
+<span class="nc" id="L179">            String tipo = jwtUtil.obtenerTipoToken(refreshToken);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (!&quot;refresh&quot;.equals(tipo)) {</span>
+<span class="nc" id="L181">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L182">                        .body(Map.of(&quot;error&quot;, &quot;Token no es de tipo refresh&quot;));</span>
+            }
+
+<span class="nc" id="L185">            Integer userId = jwtUtil.obtenerUserIdDelToken(refreshToken);</span>
+<span class="nc" id="L186">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(userId);</span>
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (usuarioOpt.isEmpty()) {</span>
+<span class="nc" id="L189">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L190">                        .body(Map.of(&quot;error&quot;, &quot;Usuario no encontrado&quot;));</span>
+            }
+
+<span class="nc" id="L193">            Usuario user = usuarioOpt.get();</span>
+<span class="nc" id="L194">            String[] roles = seguridadService.listarRolesPorUsuario(user);</span>
+
+            // Generar nuevo access token
+<span class="nc" id="L197">            String nuevoAccessToken = jwtUtil.generarToken(user, java.util.Arrays.asList(roles));</span>
+<span class="nc" id="L198">            configurarCookieToken(response, &quot;accessToken&quot;, nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));</span>
+
+<span class="nc" id="L200">            return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Access token renovado exitosamente&quot;));</span>
+<span class="nc" id="L201">        } catch (Exception e) {</span>
+<span class="nc" id="L202">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L203">                    .body(Map.of(&quot;error&quot;, &quot;Error al renovar token: &quot; + e.getMessage()));</span>
+        }
+    }
+
+    @PostMapping(&quot;/logout&quot;)
+    @Operation(summary = &quot;Cerrar sesión&quot;, description = &quot;Invalida las cookies de autenticación&quot;)
+    public ResponseEntity&lt;?&gt; logout(HttpServletResponse response) {
+        // Borrar cookies estableciendo Max-Age=0
+<span class="fc" id="L211">        Cookie accessCookie = new Cookie(&quot;accessToken&quot;, &quot;&quot;);</span>
+<span class="fc" id="L212">        accessCookie.setHttpOnly(true);</span>
+<span class="fc" id="L213">        accessCookie.setPath(&quot;/&quot;);</span>
+<span class="fc" id="L214">        accessCookie.setMaxAge(0);</span>
+<span class="fc" id="L215">        response.addCookie(accessCookie);</span>
+
+<span class="fc" id="L217">        Cookie refreshCookie = new Cookie(&quot;refreshToken&quot;, &quot;&quot;);</span>
+<span class="fc" id="L218">        refreshCookie.setHttpOnly(true);</span>
+<span class="fc" id="L219">        refreshCookie.setPath(&quot;/&quot;);</span>
+<span class="fc" id="L220">        refreshCookie.setMaxAge(0);</span>
+<span class="fc" id="L221">        response.addCookie(refreshCookie);</span>
+
+<span class="fc" id="L223">        return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Logout exitoso&quot;));</span>
+    }
+
+    @PostMapping(&quot;/validate&quot;)
+    @Operation(summary = &quot;Validar token&quot;, description = &quot;Valida si un token JWT es válido&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; validateToken(@RequestHeader(&quot;Authorization&quot;) String authHeader) {
+        try {
+<span class="nc" id="L231">            String token = authHeader.replace(&quot;Bearer &quot;, &quot;&quot;);</span>
+            
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            if (jwtUtil.esTokenValido(token)) {</span>
+<span class="nc" id="L234">                String username = jwtUtil.obtenerUsuarioDelToken(token);</span>
+<span class="nc" id="L235">                return ResponseEntity.ok(Map.of(</span>
+<span class="nc" id="L236">                    &quot;valido&quot;, true,</span>
+                    &quot;usuario&quot;, username
+                ));
+            }
+            
+<span class="nc" id="L241">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L242">                    .body(Map.of(&quot;valido&quot;, false, &quot;error&quot;, &quot;Token inválido&quot;));</span>
+                    
+<span class="nc" id="L244">        } catch (Exception e) {</span>
+<span class="nc" id="L245">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L246">                    .body(Map.of(&quot;valido&quot;, false, &quot;error&quot;, &quot;Token malformado&quot;));</span>
+        }
+    }
+
+    // === ENDPOINTS DE REGISTRO Y GESTIÓN DE USUARIOS ===
+
+    @PostMapping(&quot;/register&quot;)
+    @Operation(summary = &quot;Registrar usuario&quot;, description = &quot;Solicita el registro de un nuevo usuario (pendiente de aprobación)&quot;)
+    public ResponseEntity&lt;?&gt; registrar(@RequestBody RegistroUsuarioRequestDTO solicitud) {
+        try {
+<span class="fc" id="L256">            UsuarioDTO usuarioRegistrado = usuarioService.registrarSolicitud(solicitud);</span>
+<span class="fc" id="L257">            return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L258">                    .body(Map.of(</span>
+                        &quot;mensaje&quot;, &quot;Solicitud de registro enviada. Pendiente de aprobación por el administrador.&quot;,
+                        &quot;usuario&quot;, usuarioRegistrado
+                    ));
+<span class="fc" id="L262">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L263">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L264">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @GetMapping(&quot;/pending&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Listar solicitudes pendientes&quot;, description = &quot;Lista todas las solicitudes de registro pendientes de aprobación&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;List&lt;UsuarioDTO&gt;&gt; listarSolicitudesPendientes() {
+<span class="fc" id="L273">        List&lt;UsuarioDTO&gt; solicitudes = usuarioService.listarSolicitudesPendientes();</span>
+<span class="fc" id="L274">        return ResponseEntity.ok(solicitudes);</span>
+    }
+
+    @GetMapping(&quot;/pending/paginated&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Listar solicitudes pendientes paginadas&quot;, description = &quot;Lista solicitudes pendientes con paginación y búsqueda&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;Page&lt;UsuarioDTO&gt;&gt; listarSolicitudesPendientesPaginadas(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(required = false) String search) {
+<span class="nc" id="L285">        Page&lt;UsuarioDTO&gt; solicitudes = usuarioService.listarSolicitudesPendientesPaginadas(page, size, search);</span>
+<span class="nc" id="L286">        return ResponseEntity.ok(solicitudes);</span>
+    }
+
+    @PostMapping(&quot;/approve/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Aprobar usuario&quot;, description = &quot;Aprueba un usuario registrado y le asigna un rol&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; aprobarUsuario(@PathVariable Integer id, @RequestBody AprobarUsuarioRequestDTO solicitud) {
+        try {
+<span class="fc" id="L295">            UsuarioDTO usuarioAprobado = usuarioService.aprobarUsuario(id, solicitud);</span>
+<span class="fc" id="L296">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;Usuario aprobado exitosamente&quot;,
+                &quot;usuario&quot;, usuarioAprobado
+            ));
+<span class="nc" id="L300">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L301">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L302">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @DeleteMapping(&quot;/reject/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Rechazar solicitud&quot;, description = &quot;Rechaza y elimina una solicitud de registro&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; rechazarSolicitud(@PathVariable Integer id) {
+        try {
+<span class="fc" id="L312">            usuarioService.rechazarSolicitud(id);</span>
+<span class="fc" id="L313">            return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Solicitud rechazada&quot;));</span>
+<span class="nc" id="L314">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L315">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L316">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @GetMapping(&quot;/users&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Listar usuarios&quot;, description = &quot;Lista todos los usuarios del sistema&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;List&lt;UsuarioDTO&gt;&gt; listarUsuarios() {
+<span class="fc" id="L325">        List&lt;UsuarioDTO&gt; usuarios = usuarioService.listarTodosUsuarios();</span>
+<span class="fc" id="L326">        return ResponseEntity.ok(usuarios);</span>
+    }
+
+    @GetMapping(&quot;/users/paginated&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Listar usuarios paginados&quot;, description = &quot;Lista todos los usuarios con paginación, búsqueda y filtros por rol y estado activo&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;Page&lt;UsuarioDTO&gt;&gt; listarUsuariosPaginados(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) String activo) {
+        
+        // Convertir String a Rol enum si se proporciona
+<span class="fc" id="L341">        utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol rolEnum = null;</span>
+<span class="pc bpc" id="L342" title="5 of 6 branches missed.">        if (rol != null &amp;&amp; !rol.trim().isEmpty() &amp;&amp; !rol.equalsIgnoreCase(&quot;all&quot;)) {</span>
+            try {
+<span class="nc" id="L344">                rolEnum = utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.valueOf(rol.toUpperCase());</span>
+<span class="nc" id="L345">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L346">                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();</span>
+<span class="nc" id="L347">            }</span>
+        }
+        
+        // Convertir String a Boolean si se proporciona
+<span class="fc" id="L351">        Boolean activoBoolean = null;</span>
+<span class="pc bpc" id="L352" title="5 of 6 branches missed.">        if (activo != null &amp;&amp; !activo.trim().isEmpty() &amp;&amp; !activo.equalsIgnoreCase(&quot;all&quot;)) {</span>
+<span class="nc" id="L353">            activoBoolean = Boolean.parseBoolean(activo);</span>
+        }
+        
+<span class="fc" id="L356">        Page&lt;UsuarioDTO&gt; usuarios = usuarioService.listarTodosUsuariosPaginados(page, size, search, rolEnum, activoBoolean);</span>
+<span class="fc" id="L357">        return ResponseEntity.ok(usuarios);</span>
+    }
+
+    @GetMapping(&quot;/users/active&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Listar usuarios activos&quot;, description = &quot;Lista todos los usuarios activos del sistema&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;List&lt;UsuarioDTO&gt;&gt; listarUsuariosActivos() {
+<span class="fc" id="L365">        List&lt;UsuarioDTO&gt; usuarios = usuarioService.listarUsuariosActivos();</span>
+<span class="fc" id="L366">        return ResponseEntity.ok(usuarios);</span>
+    }
+
+    @PutMapping(&quot;/users/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Gestionar usuario&quot;, description = &quot;Actualiza el rol o estado de un usuario&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; gestionarUsuario(@PathVariable Integer id, @RequestBody GestionarUsuarioRequestDTO solicitud) {
+        try {
+<span class="fc" id="L375">            UsuarioDTO usuarioActualizado = usuarioService.gestionarUsuario(id, solicitud);</span>
+<span class="fc" id="L376">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;Usuario actualizado exitosamente&quot;,
+                &quot;usuario&quot;, usuarioActualizado
+            ));
+<span class="fc" id="L380">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L381">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L382">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+        }
+    }
+
+    // === ENDPOINTS DE GESTIÓN DE PERFIL ===
+
+    @GetMapping(&quot;/profile&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Obtener perfil&quot;, description = &quot;Obtiene el perfil del usuario autenticado&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; obtenerPerfil() {
+        try {
+<span class="fc" id="L394">            UsuarioDTO perfil = usuarioService.obtenerPerfil();</span>
+<span class="fc" id="L395">            return ResponseEntity.ok(perfil);</span>
+<span class="nc" id="L396">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L397">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L398">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @PutMapping(&quot;/profile&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Actualizar perfil&quot;, description = &quot;Actualiza el perfil del usuario autenticado&quot;)
+    @SecurityRequirement(name = &quot;bearerAuth&quot;)
+    public ResponseEntity&lt;?&gt; actualizarPerfil(@RequestBody ActualizarPerfilRequestDTO solicitud, HttpServletResponse response) {
+        try {
+<span class="fc" id="L408">            UsuarioDTO perfilActualizado = usuarioService.actualizarPerfil(solicitud);</span>
+            
+            // Buscar el usuario completo para regenerar el token
+<span class="fc" id="L411">            Optional&lt;Usuario&gt; usuarioOpt = usuarioService.buscarPorId(perfilActualizado.getUsuarioID());</span>
+            
+<span class="pc bpc" id="L413" title="1 of 2 branches missed.">            if (usuarioOpt.isPresent()) {</span>
+<span class="fc" id="L414">                Usuario usuario = usuarioOpt.get();</span>
+<span class="fc" id="L415">                String[] roles = seguridadService.listarRolesPorUsuario(usuario);</span>
+                
+                // Generar nuevos tokens con la información actualizada
+<span class="fc" id="L418">                String nuevoAccessToken = jwtUtil.generarToken(usuario, java.util.Arrays.asList(roles));</span>
+<span class="fc" id="L419">                String nuevoRefreshToken = jwtUtil.generarRefreshToken(usuario);</span>
+                
+                // Actualizar cookies con los nuevos tokens
+<span class="fc" id="L422">                configurarCookieToken(response, &quot;accessToken&quot;, nuevoAccessToken, (int) (jwtUtil.getAccessTokenExpiration() / 1000));</span>
+<span class="fc" id="L423">                configurarCookieToken(response, &quot;refreshToken&quot;, nuevoRefreshToken, (int) (jwtUtil.getRefreshTokenExpiration() / 1000));</span>
+                
+<span class="fc" id="L425">                System.out.println(&quot; [PERFIL] Tokens actualizados después de modificar perfil para usuario: &quot; + usuario.getNombre());</span>
+            }
+            
+<span class="fc" id="L428">            return ResponseEntity.ok(Map.of(</span>
+                &quot;mensaje&quot;, &quot;Perfil actualizado exitosamente&quot;,
+                &quot;usuario&quot;, perfilActualizado
+            ));
+<span class="fc" id="L432">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L433">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L434">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+        }
+    }
+
+    // === ADMIN PREDETERMINADO ===
+
+    @PostMapping(&quot;/init-admin&quot;)
+    @Operation(summary = &quot;Crear admin inicial&quot;, description = &quot;Crea el administrador predeterminado si no existe&quot;)
+    public ResponseEntity&lt;?&gt; crearAdminPredeterminado() {
+        try {
+<span class="fc" id="L444">            UsuarioDTO admin = usuarioService.crearAdminPredeterminado();</span>
+<span class="fc" id="L445">            return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L446">                    .body(Map.of(</span>
+                        &quot;mensaje&quot;, &quot;Administrador predeterminado creado. Usuario: 'admin', Contraseña: 'admin123'&quot;,
+                        &quot;usuario&quot;, admin
+                    ));
+<span class="fc" id="L450">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L451">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L452">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

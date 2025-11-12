@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CultivarService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">CultivarService.java</span></div><h1>CultivarService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Cultivar;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CultivarRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CultivarRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CultivarDTO;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+<span class="fc" id="L17">public class CultivarService {</span>
+
+    @Autowired
+    private CultivarRepository cultivarRepository;
+
+    @Autowired
+    private EspecieService especieService;
+
+    // Obtener todos activos
+    public List&lt;CultivarDTO&gt; obtenerTodos() {
+<span class="fc" id="L27">        return cultivarRepository.findByActivoTrue().stream()</span>
+<span class="fc" id="L28">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L29">                .collect(Collectors.toList());</span>
+    }
+
+    // Obtener inactivos
+    public List&lt;CultivarDTO&gt; obtenerInactivos() {
+<span class="fc" id="L34">        return cultivarRepository.findByActivoFalse().stream()</span>
+<span class="fc" id="L35">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L36">                .collect(Collectors.toList());</span>
+    }
+
+    // Obtener con filtro de estado opcional
+    public List&lt;CultivarDTO&gt; obtenerTodos(Boolean activo) {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (activo == null) {</span>
+            // Devolver todos (activos e inactivos)
+<span class="fc" id="L43">            return cultivarRepository.findAll().stream()</span>
+<span class="fc" id="L44">                    .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L45">                    .collect(Collectors.toList());</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        } else if (activo) {</span>
+<span class="nc" id="L47">            return obtenerTodos();</span>
+        } else {
+<span class="nc" id="L49">            return obtenerInactivos();</span>
+        }
+    }
+
+    // Obtener por especie
+    public List&lt;CultivarDTO&gt; obtenerPorEspecie(Long especieID) {
+<span class="fc" id="L55">        return cultivarRepository.findByEspecieEspecieIDAndActivoTrue(especieID).stream()</span>
+<span class="fc" id="L56">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L57">                .collect(Collectors.toList());</span>
+    }
+
+    // Buscar por nombre
+    public List&lt;CultivarDTO&gt; buscarPorNombre(String nombre) {
+<span class="fc" id="L62">        return cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre).stream()</span>
+<span class="fc" id="L63">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L64">                .collect(Collectors.toList());</span>
+    }
+
+    // Obtener por ID
+    public CultivarDTO obtenerPorId(Long id) {
+<span class="fc" id="L69">        return cultivarRepository.findById(id)</span>
+<span class="fc" id="L70">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L71">                .orElse(null);</span>
+    }
+
+    // Crear
+    public CultivarDTO crear(CultivarRequestDTO solicitud) {
+<span class="fc" id="L76">        Especie especie = especieService.obtenerEntidadPorId(solicitud.getEspecieID());</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (especie == null) {</span>
+<span class="fc" id="L78">            throw new RuntimeException(&quot;Especie no encontrada con ID: &quot; + solicitud.getEspecieID());</span>
+        }
+
+<span class="fc" id="L81">        Cultivar cultivar = new Cultivar();</span>
+<span class="fc" id="L82">        cultivar.setEspecie(especie);</span>
+<span class="fc" id="L83">        cultivar.setNombre(solicitud.getNombre());</span>
+<span class="fc" id="L84">        cultivar.setActivo(true);</span>
+
+<span class="fc" id="L86">        Cultivar guardado = cultivarRepository.save(cultivar);</span>
+<span class="fc" id="L87">        return mapearEntidadADTO(guardado);</span>
+    }
+
+    // Actualizar
+    public CultivarDTO actualizar(Long id, CultivarRequestDTO solicitud) {
+<span class="fc" id="L92">        return cultivarRepository.findById(id)</span>
+<span class="fc" id="L93">                .map(cultivar -&gt; {</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                    if (solicitud.getEspecieID() != null) {</span>
+<span class="fc" id="L95">                        Especie especie = especieService.obtenerEntidadPorId(solicitud.getEspecieID());</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">                        if (especie == null) {</span>
+<span class="nc" id="L97">                            throw new RuntimeException(&quot;Especie no encontrada con ID: &quot; + solicitud.getEspecieID());</span>
+                        }
+<span class="fc" id="L99">                        cultivar.setEspecie(especie);</span>
+                    }
+                    
+<span class="fc" id="L102">                    cultivar.setNombre(solicitud.getNombre());</span>
+
+<span class="fc" id="L104">                    Cultivar actualizado = cultivarRepository.save(cultivar);</span>
+<span class="fc" id="L105">                    return mapearEntidadADTO(actualizado);</span>
+                })
+<span class="fc" id="L107">                .orElse(null);</span>
+    }
+
+    // Soft delete
+    public void eliminar(Long id) {
+<span class="fc" id="L112">        cultivarRepository.findById(id)</span>
+<span class="fc" id="L113">                .ifPresent(cultivar -&gt; {</span>
+<span class="fc" id="L114">                    cultivar.setActivo(false);</span>
+<span class="fc" id="L115">                    cultivarRepository.save(cultivar);</span>
+<span class="fc" id="L116">                });</span>
+<span class="fc" id="L117">    }</span>
+
+    // Reactivar
+    public CultivarDTO reactivar(Long id) {
+<span class="fc" id="L121">        return cultivarRepository.findById(id)</span>
+<span class="fc" id="L122">                .map(cultivar -&gt; {</span>
+<span class="pc bpc" id="L123" title="1 of 4 branches missed.">                    if (cultivar.getActivo() != null &amp;&amp; cultivar.getActivo()) {</span>
+<span class="fc" id="L124">                        throw new RuntimeException(&quot;El cultivar ya está activo&quot;);</span>
+                    }
+<span class="fc" id="L126">                    cultivar.setActivo(true);</span>
+<span class="fc" id="L127">                    Cultivar reactivado = cultivarRepository.save(cultivar);</span>
+<span class="fc" id="L128">                    return mapearEntidadADTO(reactivado);</span>
+                })
+<span class="fc" id="L130">                .orElse(null);</span>
+    }
+
+    // Mapeo
+    private CultivarDTO mapearEntidadADTO(Cultivar cultivar) {
+<span class="fc" id="L135">        CultivarDTO dto = new CultivarDTO();</span>
+<span class="fc" id="L136">        dto.setCultivarID(cultivar.getCultivarID());</span>
+<span class="fc" id="L137">        dto.setNombre(cultivar.getNombre());</span>
+<span class="fc" id="L138">        dto.setActivo(cultivar.getActivo());</span>
+        
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (cultivar.getEspecie() != null) {</span>
+<span class="fc" id="L141">            dto.setEspecieID(cultivar.getEspecie().getEspecieID());</span>
+<span class="fc" id="L142">            dto.setEspecieNombre(cultivar.getEspecie().getNombreComun());</span>
+        }
+        
+<span class="fc" id="L145">        return dto;</span>
+    }
+
+    // Obtener entidad para uso interno
+    public Cultivar obtenerEntidadPorId(Long id) {
+<span class="fc" id="L150">        return cultivarRepository.findById(id).orElse(null);</span>
+    }
+
+    /**
+     * Listar Cultivares con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @return Página de CultivarDTO filtrados
+     */
+    public Page&lt;CultivarDTO&gt; obtenerCultivaresPaginadosConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo) {
+        
+        Page&lt;Cultivar&gt; cultivarPage;
+        
+        // Si hay término de búsqueda, buscar en nombre
+<span class="nc bnc" id="L168" title="All 4 branches missed.">        if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
+            List&lt;Cultivar&gt; cultivares;
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (activo == null) {</span>
+                // Buscar en todas (activos e inactivos)
+<span class="nc" id="L172">                cultivares = cultivarRepository.findAll().stream()</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">                    .filter(c -&gt; c.getNombre() != null &amp;&amp; </span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))</span>
+<span class="nc" id="L175">                    .collect(Collectors.toList());</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            } else if (activo) {</span>
+                // Buscar solo en activos
+<span class="nc" id="L178">                cultivares = cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
+            } else {
+                // Buscar solo en inactivos
+<span class="nc" id="L181">                cultivares = cultivarRepository.findByActivoFalse().stream()</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                    .filter(c -&gt; c.getNombre() != null &amp;&amp; </span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))</span>
+<span class="nc" id="L184">                    .collect(Collectors.toList());</span>
+            }
+            
+            // Convertir lista a página
+<span class="nc" id="L188">            int start = (int) pageable.getOffset();</span>
+<span class="nc" id="L189">            int end = Math.min(start + pageable.getPageSize(), cultivares.size());</span>
+<span class="nc" id="L190">            List&lt;Cultivar&gt; pageContent = cultivares.subList(start, end);</span>
+<span class="nc" id="L191">            cultivarPage = new org.springframework.data.domain.PageImpl&lt;&gt;(pageContent, pageable, cultivares.size());</span>
+<span class="nc" id="L192">        } else {</span>
+            // Sin término de búsqueda, aplicar solo filtro de activo
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            if (activo == null) {</span>
+<span class="nc" id="L195">                cultivarPage = cultivarRepository.findAllByOrderByNombreAsc(pageable);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            } else if (activo) {</span>
+<span class="nc" id="L197">                cultivarPage = cultivarRepository.findByActivoTrueOrderByNombreAsc(pageable);</span>
+            } else {
+<span class="nc" id="L199">                cultivarPage = cultivarRepository.findByActivoFalseOrderByNombreAsc(pageable);</span>
+            }
+        }
+        
+<span class="nc" id="L203">        return cultivarPage.map(this::mapearEntidadADTO);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

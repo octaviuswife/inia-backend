@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MalezasCatalogoControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">MalezasCatalogoControllerIntegrationTest.java</span></div><h1>MalezasCatalogoControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.MalezasCatalogoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.MalezasCatalogoService;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(MalezasCatalogoController.class)
+@DisplayName(&quot;Tests de integración para MalezasCatalogoController&quot;)
+<span class="fc" id="L32">class MalezasCatalogoControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private MalezasCatalogoService malezasCatalogoService;
+
+    private MalezasCatalogoDTO malezasCatalogoDTO;
+    private MalezasCatalogoRequestDTO malezasCatalogoRequestDTO;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L48">        malezasCatalogoDTO = new MalezasCatalogoDTO();</span>
+<span class="fc" id="L49">        malezasCatalogoDTO.setCatalogoID(1L);</span>
+<span class="fc" id="L50">        malezasCatalogoDTO.setNombreComun(&quot;Yuyo Colorado&quot;);</span>
+<span class="fc" id="L51">        malezasCatalogoDTO.setNombreCientifico(&quot;Amaranthus quitensis&quot;);</span>
+<span class="fc" id="L52">        malezasCatalogoDTO.setActivo(true);</span>
+
+<span class="fc" id="L54">        malezasCatalogoRequestDTO = new MalezasCatalogoRequestDTO();</span>
+<span class="fc" id="L55">        malezasCatalogoRequestDTO.setNombreComun(&quot;Yuyo Colorado&quot;);</span>
+<span class="fc" id="L56">        malezasCatalogoRequestDTO.setNombreCientifico(&quot;Amaranthus quitensis&quot;);</span>
+<span class="fc" id="L57">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/malezas - Obtener todas las malezas activas&quot;)
+    void obtenerTodos_debeRetornarListaMalezas() throws Exception {
+<span class="fc" id="L63">        List&lt;MalezasCatalogoDTO&gt; malezas = Arrays.asList(malezasCatalogoDTO);</span>
+<span class="fc" id="L64">        when(malezasCatalogoService.obtenerTodos()).thenReturn(malezas);</span>
+
+<span class="fc" id="L66">        mockMvc.perform(get(&quot;/api/malezas&quot;)</span>
+<span class="fc" id="L67">                .with(csrf()))</span>
+<span class="fc" id="L68">                .andExpect(status().isOk())</span>
+<span class="fc" id="L69">                .andExpect(jsonPath(&quot;$[0].catalogoID&quot;).value(1))</span>
+<span class="fc" id="L70">                .andExpect(jsonPath(&quot;$[0].nombreComun&quot;).value(&quot;Yuyo Colorado&quot;))</span>
+<span class="fc" id="L71">                .andExpect(jsonPath(&quot;$[0].nombreCientifico&quot;).value(&quot;Amaranthus quitensis&quot;))</span>
+<span class="fc" id="L72">                .andExpect(jsonPath(&quot;$[0].activo&quot;).value(true));</span>
+<span class="fc" id="L73">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;GET /api/malezas/inactivos - Obtener malezas inactivas&quot;)
+    void obtenerInactivos_debeRetornarListaMalezasInactivas() throws Exception {
+<span class="fc" id="L79">        MalezasCatalogoDTO malezaInactiva = new MalezasCatalogoDTO();</span>
+<span class="fc" id="L80">        malezaInactiva.setCatalogoID(2L);</span>
+<span class="fc" id="L81">        malezaInactiva.setNombreComun(&quot;Maleza Inactiva&quot;);</span>
+<span class="fc" id="L82">        malezaInactiva.setNombreCientifico(&quot;Maleza inactiva&quot;);</span>
+<span class="fc" id="L83">        malezaInactiva.setActivo(false);</span>
+
+<span class="fc" id="L85">        List&lt;MalezasCatalogoDTO&gt; malezasInactivas = Arrays.asList(malezaInactiva);</span>
+<span class="fc" id="L86">        when(malezasCatalogoService.obtenerInactivos()).thenReturn(malezasInactivas);</span>
+
+<span class="fc" id="L88">        mockMvc.perform(get(&quot;/api/malezas/inactivos&quot;)</span>
+<span class="fc" id="L89">                .with(csrf()))</span>
+<span class="fc" id="L90">                .andExpect(status().isOk())</span>
+<span class="fc" id="L91">                .andExpect(jsonPath(&quot;$[0].catalogoID&quot;).value(2))</span>
+<span class="fc" id="L92">                .andExpect(jsonPath(&quot;$[0].activo&quot;).value(false));</span>
+<span class="fc" id="L93">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/malezas/buscar/comun - Buscar por nombre común&quot;)
+    void buscarPorNombreComun_debeRetornarMalezasCoincidentes() throws Exception {
+<span class="fc" id="L99">        List&lt;MalezasCatalogoDTO&gt; malezas = Arrays.asList(malezasCatalogoDTO);</span>
+<span class="fc" id="L100">        when(malezasCatalogoService.buscarPorNombreComun(&quot;Yuyo&quot;)).thenReturn(malezas);</span>
+
+<span class="fc" id="L102">        mockMvc.perform(get(&quot;/api/malezas/buscar/comun&quot;)</span>
+<span class="fc" id="L103">                .param(&quot;nombre&quot;, &quot;Yuyo&quot;)</span>
+<span class="fc" id="L104">                .with(csrf()))</span>
+<span class="fc" id="L105">                .andExpect(status().isOk())</span>
+<span class="fc" id="L106">                .andExpect(jsonPath(&quot;$[0].nombreComun&quot;).value(&quot;Yuyo Colorado&quot;));</span>
+<span class="fc" id="L107">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/malezas/buscar/cientifico - Buscar por nombre científico&quot;)
+    void buscarPorNombreCientifico_debeRetornarMalezasCoincidentes() throws Exception {
+<span class="fc" id="L113">        List&lt;MalezasCatalogoDTO&gt; malezas = Arrays.asList(malezasCatalogoDTO);</span>
+<span class="fc" id="L114">        when(malezasCatalogoService.buscarPorNombreCientifico(&quot;Amaranthus&quot;)).thenReturn(malezas);</span>
+
+<span class="fc" id="L116">        mockMvc.perform(get(&quot;/api/malezas/buscar/cientifico&quot;)</span>
+<span class="fc" id="L117">                .param(&quot;nombre&quot;, &quot;Amaranthus&quot;)</span>
+<span class="fc" id="L118">                .with(csrf()))</span>
+<span class="fc" id="L119">                .andExpect(status().isOk())</span>
+<span class="fc" id="L120">                .andExpect(jsonPath(&quot;$[0].nombreCientifico&quot;).value(&quot;Amaranthus quitensis&quot;));</span>
+<span class="fc" id="L121">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/malezas/{id} - Obtener maleza por ID&quot;)
+    void obtenerPorId_debeRetornarMaleza() throws Exception {
+<span class="fc" id="L127">        when(malezasCatalogoService.obtenerPorId(1L)).thenReturn(malezasCatalogoDTO);</span>
+
+<span class="fc" id="L129">        mockMvc.perform(get(&quot;/api/malezas/1&quot;)</span>
+<span class="fc" id="L130">                .with(csrf()))</span>
+<span class="fc" id="L131">                .andExpect(status().isOk())</span>
+<span class="fc" id="L132">                .andExpect(jsonPath(&quot;$.catalogoID&quot;).value(1))</span>
+<span class="fc" id="L133">                .andExpect(jsonPath(&quot;$.nombreComun&quot;).value(&quot;Yuyo Colorado&quot;));</span>
+<span class="fc" id="L134">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/malezas/{id} - Retornar 404 cuando no existe&quot;)
+    void obtenerPorId_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L140">        when(malezasCatalogoService.obtenerPorId(999L)).thenReturn(null);</span>
+
+<span class="fc" id="L142">        mockMvc.perform(get(&quot;/api/malezas/999&quot;)</span>
+<span class="fc" id="L143">                .with(csrf()))</span>
+<span class="fc" id="L144">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L145">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;POST /api/malezas - Crear maleza exitosamente&quot;)
+    void crear_debeRetornarMalezaCreada() throws Exception {
+<span class="fc" id="L151">        when(malezasCatalogoService.crear(any(MalezasCatalogoRequestDTO.class))).thenReturn(malezasCatalogoDTO);</span>
+
+<span class="fc" id="L153">        mockMvc.perform(post(&quot;/api/malezas&quot;)</span>
+<span class="fc" id="L154">                .with(csrf())</span>
+<span class="fc" id="L155">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L156">                .content(objectMapper.writeValueAsString(malezasCatalogoRequestDTO)))</span>
+<span class="fc" id="L157">                .andExpect(status().isOk())</span>
+<span class="fc" id="L158">                .andExpect(jsonPath(&quot;$.catalogoID&quot;).value(1))</span>
+<span class="fc" id="L159">                .andExpect(jsonPath(&quot;$.nombreComun&quot;).value(&quot;Yuyo Colorado&quot;))</span>
+<span class="fc" id="L160">                .andExpect(jsonPath(&quot;$.nombreCientifico&quot;).value(&quot;Amaranthus quitensis&quot;));</span>
+<span class="fc" id="L161">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/malezas/{id} - Actualizar maleza exitosamente&quot;)
+    void actualizar_debeRetornarMalezaActualizada() throws Exception {
+<span class="fc" id="L167">        MalezasCatalogoDTO actualizado = new MalezasCatalogoDTO();</span>
+<span class="fc" id="L168">        actualizado.setCatalogoID(1L);</span>
+<span class="fc" id="L169">        actualizado.setNombreComun(&quot;Yuyo Colorado Actualizado&quot;);</span>
+<span class="fc" id="L170">        actualizado.setNombreCientifico(&quot;Amaranthus quitensis&quot;);</span>
+<span class="fc" id="L171">        actualizado.setActivo(true);</span>
+
+<span class="fc" id="L173">        when(malezasCatalogoService.actualizar(eq(1L), any(MalezasCatalogoRequestDTO.class))).thenReturn(actualizado);</span>
+
+<span class="fc" id="L175">        MalezasCatalogoRequestDTO requestDTO = new MalezasCatalogoRequestDTO();</span>
+<span class="fc" id="L176">        requestDTO.setNombreComun(&quot;Yuyo Colorado Actualizado&quot;);</span>
+<span class="fc" id="L177">        requestDTO.setNombreCientifico(&quot;Amaranthus quitensis&quot;);</span>
+
+<span class="fc" id="L179">        mockMvc.perform(put(&quot;/api/malezas/1&quot;)</span>
+<span class="fc" id="L180">                .with(csrf())</span>
+<span class="fc" id="L181">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L182">                .content(objectMapper.writeValueAsString(requestDTO)))</span>
+<span class="fc" id="L183">                .andExpect(status().isOk())</span>
+<span class="fc" id="L184">                .andExpect(jsonPath(&quot;$.nombreComun&quot;).value(&quot;Yuyo Colorado Actualizado&quot;));</span>
+<span class="fc" id="L185">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/malezas/{id} - Retornar 404 cuando no existe al actualizar&quot;)
+    void actualizar_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L191">        when(malezasCatalogoService.actualizar(eq(999L), any(MalezasCatalogoRequestDTO.class))).thenReturn(null);</span>
+
+<span class="fc" id="L193">        mockMvc.perform(put(&quot;/api/malezas/999&quot;)</span>
+<span class="fc" id="L194">                .with(csrf())</span>
+<span class="fc" id="L195">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L196">                .content(objectMapper.writeValueAsString(malezasCatalogoRequestDTO)))</span>
+<span class="fc" id="L197">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L198">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/malezas/{id} - Eliminar maleza (soft delete)&quot;)
+    void eliminar_debeRetornarOk() throws Exception {
+<span class="fc" id="L204">        doNothing().when(malezasCatalogoService).eliminar(1L);</span>
+
+<span class="fc" id="L206">        mockMvc.perform(delete(&quot;/api/malezas/1&quot;)</span>
+<span class="fc" id="L207">                .with(csrf()))</span>
+<span class="fc" id="L208">                .andExpect(status().isOk());</span>
+<span class="fc" id="L209">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/malezas/{id}/reactivar - Reactivar maleza&quot;)
+    void reactivar_debeRetornarMalezaReactivada() throws Exception {
+<span class="fc" id="L215">        when(malezasCatalogoService.reactivar(1L)).thenReturn(malezasCatalogoDTO);</span>
+
+<span class="fc" id="L217">        mockMvc.perform(put(&quot;/api/malezas/1/reactivar&quot;)</span>
+<span class="fc" id="L218">                .with(csrf()))</span>
+<span class="fc" id="L219">                .andExpect(status().isOk())</span>
+<span class="fc" id="L220">                .andExpect(jsonPath(&quot;$.catalogoID&quot;).value(1))</span>
+<span class="fc" id="L221">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
+<span class="fc" id="L222">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;PUT /api/malezas/{id}/reactivar - Retornar 404 cuando no existe al reactivar&quot;)
+    void reactivar_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L228">        when(malezasCatalogoService.reactivar(999L)).thenReturn(null);</span>
+
+<span class="fc" id="L230">        mockMvc.perform(put(&quot;/api/malezas/999/reactivar&quot;)</span>
+<span class="fc" id="L231">                .with(csrf()))</span>
+<span class="fc" id="L232">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L233">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/malezas/listado - Obtener malezas paginadas&quot;)
+    void obtenerMalezasPaginadas_debeRetornarPaginacion() throws Exception {
+<span class="fc" id="L239">        Page&lt;MalezasCatalogoDTO&gt; page = new PageImpl&lt;&gt;(</span>
+<span class="fc" id="L240">            Arrays.asList(malezasCatalogoDTO),</span>
+<span class="fc" id="L241">            PageRequest.of(0, 10),</span>
+            1
+        );
+        
+<span class="fc" id="L245">        when(malezasCatalogoService.obtenerMalezasPaginadasConFiltros(any(), any(), any())).thenReturn(page);</span>
+
+<span class="fc" id="L247">        mockMvc.perform(get(&quot;/api/malezas/listado&quot;)</span>
+<span class="fc" id="L248">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L249">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L250">                .with(csrf()))</span>
+<span class="fc" id="L251">                .andExpect(status().isOk())</span>
+<span class="fc" id="L252">                .andExpect(jsonPath(&quot;$.content&quot;).isArray())</span>
+<span class="fc" id="L253">                .andExpect(jsonPath(&quot;$.content[0].catalogoID&quot;).value(1));</span>
+<span class="fc" id="L254">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/malezas/listado - Obtener malezas paginadas con filtro de búsqueda&quot;)
+    void obtenerMalezasPaginadas_conFiltroSearch_debeRetornarResultadosFiltrados() throws Exception {
+<span class="fc" id="L260">        Page&lt;MalezasCatalogoDTO&gt; page = new PageImpl&lt;&gt;(</span>
+<span class="fc" id="L261">            Arrays.asList(malezasCatalogoDTO),</span>
+<span class="fc" id="L262">            PageRequest.of(0, 10),</span>
+            1
+        );
+        
+<span class="fc" id="L266">        when(malezasCatalogoService.obtenerMalezasPaginadasConFiltros(any(), eq(&quot;Yuyo&quot;), any())).thenReturn(page);</span>
+
+<span class="fc" id="L268">        mockMvc.perform(get(&quot;/api/malezas/listado&quot;)</span>
+<span class="fc" id="L269">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L270">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L271">                .param(&quot;search&quot;, &quot;Yuyo&quot;)</span>
+<span class="fc" id="L272">                .with(csrf()))</span>
+<span class="fc" id="L273">                .andExpect(status().isOk())</span>
+<span class="fc" id="L274">                .andExpect(jsonPath(&quot;$.content[0].nombreComun&quot;).value(&quot;Yuyo Colorado&quot;));</span>
+<span class="fc" id="L275">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/malezas/listado - Obtener malezas paginadas filtradas por estado activo&quot;)
+    void obtenerMalezasPaginadas_conFiltroActivo_debeRetornarSoloActivas() throws Exception {
+<span class="fc" id="L281">        Page&lt;MalezasCatalogoDTO&gt; page = new PageImpl&lt;&gt;(</span>
+<span class="fc" id="L282">            Arrays.asList(malezasCatalogoDTO),</span>
+<span class="fc" id="L283">            PageRequest.of(0, 10),</span>
+            1
+        );
+        
+<span class="fc" id="L287">        when(malezasCatalogoService.obtenerMalezasPaginadasConFiltros(any(), any(), eq(true))).thenReturn(page);</span>
+
+<span class="fc" id="L289">        mockMvc.perform(get(&quot;/api/malezas/listado&quot;)</span>
+<span class="fc" id="L290">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L291">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L292">                .param(&quot;activo&quot;, &quot;true&quot;)</span>
+<span class="fc" id="L293">                .with(csrf()))</span>
+<span class="fc" id="L294">                .andExpect(status().isOk())</span>
+<span class="fc" id="L295">                .andExpect(jsonPath(&quot;$.content[0].activo&quot;).value(true));</span>
+<span class="fc" id="L296">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportacionControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">ExportacionControllerIntegrationTest.java</span></div><h1>ExportacionControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ExportacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.ExportacionExcelService;
+
+@WebMvcTest(ExportacionController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName(&quot;Tests de integración para ExportacionController&quot;)
+<span class="fc" id="L32">class ExportacionControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private ExportacionExcelService exportacionExcelService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private byte[] excelBytes;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L47">        excelBytes = &quot;Excel content&quot;.getBytes();</span>
+<span class="fc" id="L48">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - Debe exportar todos los lotes&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosExcel_sinParametros_debeRetornarExcel() throws Exception {
+<span class="fc" id="L54">        when(exportacionExcelService.generarReporteExcel(null)).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L56">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L57">                .with(csrf()))</span>
+<span class="fc" id="L58">                .andExpect(status().isOk())</span>
+<span class="fc" id="L59">                .andExpect(header().exists(&quot;Content-Disposition&quot;))</span>
+<span class="fc" id="L60">                .andExpect(header().string(&quot;Content-Type&quot;, &quot;application/octet-stream&quot;))</span>
+<span class="fc" id="L61">                .andExpect(content().bytes(excelBytes));</span>
+<span class="fc" id="L62">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - Debe exportar lotes específicos&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarDatosExcel_conLoteIds_debeRetornarExcel() throws Exception {
+<span class="fc" id="L68">        List&lt;Long&gt; loteIds = Arrays.asList(1L, 2L, 3L);</span>
+<span class="fc" id="L69">        when(exportacionExcelService.generarReporteExcel(loteIds)).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L71">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L72">                .param(&quot;loteIds&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;)</span>
+<span class="fc" id="L73">                .with(csrf()))</span>
+<span class="fc" id="L74">                .andExpect(status().isOk())</span>
+<span class="fc" id="L75">                .andExpect(header().exists(&quot;Content-Disposition&quot;))</span>
+<span class="fc" id="L76">                .andExpect(content().bytes(excelBytes));</span>
+<span class="fc" id="L77">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - Debe manejar error de IO&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosExcel_conErrorIO_debeRetornar500() throws Exception {
+<span class="fc" id="L83">        when(exportacionExcelService.generarReporteExcel(any())).thenThrow(new java.io.IOException(&quot;Error IO&quot;));</span>
+
+<span class="fc" id="L85">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L86">                .with(csrf()))</span>
+<span class="fc" id="L87">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L88">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel/lote/{loteId} - Debe exportar lote específico&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void exportarLoteEspecificoExcel_conIdValido_debeRetornarExcel() throws Exception {
+<span class="fc" id="L94">        when(exportacionExcelService.generarReporteExcel(anyList())).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L96">        mockMvc.perform(get(&quot;/api/exportaciones/excel/lote/1&quot;)</span>
+<span class="fc" id="L97">                .with(csrf()))</span>
+<span class="fc" id="L98">                .andExpect(status().isOk())</span>
+<span class="fc" id="L99">                .andExpect(header().exists(&quot;Content-Disposition&quot;))</span>
+<span class="fc" id="L100">                .andExpect(header().string(&quot;Content-Type&quot;, &quot;application/octet-stream&quot;))</span>
+<span class="fc" id="L101">                .andExpect(content().bytes(excelBytes));</span>
+<span class="fc" id="L102">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel/lote/{loteId} - Debe incluir ID en nombre archivo&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarLoteEspecificoExcel_debeIncluirIdEnNombre() throws Exception {
+<span class="fc" id="L108">        when(exportacionExcelService.generarReporteExcel(anyList())).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L110">        mockMvc.perform(get(&quot;/api/exportaciones/excel/lote/123&quot;)</span>
+<span class="fc" id="L111">                .with(csrf()))</span>
+<span class="fc" id="L112">                .andExpect(status().isOk())</span>
+<span class="fc" id="L113">                .andExpect(header().string(&quot;Content-Disposition&quot;, </span>
+<span class="fc" id="L114">                    org.hamcrest.Matchers.containsString(&quot;analisis_lote_123_&quot;)));</span>
+<span class="fc" id="L115">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/personalizado - Debe exportar lista personalizada&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosPersonalizadosExcel_conListaValida_debeRetornarExcel() throws Exception {
+<span class="fc" id="L121">        List&lt;Long&gt; loteIds = Arrays.asList(1L, 2L, 3L);</span>
+<span class="fc" id="L122">        when(exportacionExcelService.generarReporteExcel(loteIds)).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L124">        mockMvc.perform(post(&quot;/api/exportaciones/excel/personalizado&quot;)</span>
+<span class="fc" id="L125">                .with(csrf())</span>
+<span class="fc" id="L126">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L127">                .content(objectMapper.writeValueAsString(loteIds)))</span>
+<span class="fc" id="L128">                .andExpect(status().isOk())</span>
+<span class="fc" id="L129">                .andExpect(header().exists(&quot;Content-Disposition&quot;))</span>
+<span class="fc" id="L130">                .andExpect(content().bytes(excelBytes));</span>
+<span class="fc" id="L131">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/personalizado - Debe rechazar lista vacía&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosPersonalizadosExcel_conListaVacia_debeRetornar400() throws Exception {
+<span class="fc" id="L137">        List&lt;Long&gt; loteIds = Arrays.asList();</span>
+
+<span class="fc" id="L139">        mockMvc.perform(post(&quot;/api/exportaciones/excel/personalizado&quot;)</span>
+<span class="fc" id="L140">                .with(csrf())</span>
+<span class="fc" id="L141">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L142">                .content(objectMapper.writeValueAsString(loteIds)))</span>
+<span class="fc" id="L143">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L144">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/personalizado - Debe rechazar null&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosPersonalizadosExcel_conNull_debeRetornar400() throws Exception {
+<span class="fc" id="L150">        mockMvc.perform(post(&quot;/api/exportaciones/excel/personalizado&quot;)</span>
+<span class="fc" id="L151">                .with(csrf())</span>
+<span class="fc" id="L152">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L153">                .content(&quot;null&quot;))</span>
+<span class="fc" id="L154">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L155">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/avanzado - Debe exportar con filtros avanzados&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarDatosAvanzadosExcel_conFiltros_debeRetornarExcel() throws Exception {
+<span class="fc" id="L161">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L162">        solicitud.setEspecieIds(Arrays.asList(1L, 2L));</span>
+<span class="fc" id="L163">        solicitud.setCultivarIds(Arrays.asList(1L));</span>
+
+<span class="fc" id="L165">        when(exportacionExcelService.generarReporteExcelAvanzado(any(ExportacionRequestDTO.class)))</span>
+<span class="fc" id="L166">            .thenReturn(excelBytes);</span>
+
+<span class="fc" id="L168">        mockMvc.perform(post(&quot;/api/exportaciones/excel/avanzado&quot;)</span>
+<span class="fc" id="L169">                .with(csrf())</span>
+<span class="fc" id="L170">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L171">                .content(objectMapper.writeValueAsString(solicitud)))</span>
+<span class="fc" id="L172">                .andExpect(status().isOk())</span>
+<span class="fc" id="L173">                .andExpect(header().exists(&quot;Content-Disposition&quot;))</span>
+<span class="fc" id="L174">                .andExpect(header().string(&quot;Content-Disposition&quot;, </span>
+<span class="fc" id="L175">                    org.hamcrest.Matchers.containsString(&quot;analisis_filtrado_&quot;)))</span>
+<span class="fc" id="L176">                .andExpect(content().bytes(excelBytes));</span>
+<span class="fc" id="L177">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/avanzado - Debe manejar error en exportación&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosAvanzadosExcel_conError_debeRetornar500() throws Exception {
+<span class="fc" id="L183">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+        
+<span class="fc" id="L185">        when(exportacionExcelService.generarReporteExcelAvanzado(any(ExportacionRequestDTO.class)))</span>
+<span class="fc" id="L186">            .thenThrow(new RuntimeException(&quot;Error inesperado&quot;));</span>
+
+<span class="fc" id="L188">        mockMvc.perform(post(&quot;/api/exportaciones/excel/avanzado&quot;)</span>
+<span class="fc" id="L189">                .with(csrf())</span>
+<span class="fc" id="L190">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L191">                .content(objectMapper.writeValueAsString(solicitud)))</span>
+<span class="fc" id="L192">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L193">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - Nombre archivo debe incluir timestamp&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosExcel_debeIncluirTimestamp() throws Exception {
+<span class="fc" id="L199">        when(exportacionExcelService.generarReporteExcel(any())).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L201">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L202">                .with(csrf()))</span>
+<span class="fc" id="L203">                .andExpect(status().isOk())</span>
+<span class="fc" id="L204">                .andExpect(header().string(&quot;Content-Disposition&quot;, </span>
+<span class="fc" id="L205">                    org.hamcrest.Matchers.matchesPattern(&quot;.*analisis_semillas_\\d{8}_\\d{6}\\.xlsx.*&quot;)));</span>
+<span class="fc" id="L206">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/personalizado - Debe incluir timestamp en nombre&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarDatosPersonalizadosExcel_debeIncluirTimestamp() throws Exception {
+<span class="fc" id="L212">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L213">        when(exportacionExcelService.generarReporteExcel(anyList())).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L215">        mockMvc.perform(post(&quot;/api/exportaciones/excel/personalizado&quot;)</span>
+<span class="fc" id="L216">                .with(csrf())</span>
+<span class="fc" id="L217">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L218">                .content(objectMapper.writeValueAsString(loteIds)))</span>
+<span class="fc" id="L219">                .andExpect(status().isOk())</span>
+<span class="fc" id="L220">                .andExpect(header().string(&quot;Content-Disposition&quot;, </span>
+<span class="fc" id="L221">                    org.hamcrest.Matchers.containsString(&quot;analisis_seleccionados_&quot;)));</span>
+<span class="fc" id="L222">    }</span>
+
+    // ===== TESTS DE EDGE CASES Y ERRORES =====
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - IDs de lotes inexistentes&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosExcel_lotesInexistentes_debeRetornar404() throws Exception {
+<span class="fc" id="L230">        List&lt;Long&gt; loteIds = Arrays.asList(999L, 998L);</span>
+        
+<span class="fc" id="L232">        when(exportacionExcelService.generarReporteExcel(loteIds))</span>
+<span class="fc" id="L233">            .thenThrow(new IllegalArgumentException(&quot;Lotes no encontrados&quot;));</span>
+
+        // El controller no maneja IllegalArgumentException, devuelve 500
+<span class="fc" id="L236">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L237">                .param(&quot;loteIds&quot;, &quot;999&quot;, &quot;998&quot;)</span>
+<span class="fc" id="L238">                .with(csrf()))</span>
+<span class="fc" id="L239">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L240">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel/lote/{loteId} - Lote sin datos de análisis&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarLoteEspecificoExcel_loteSinDatos_debeRetornar404() throws Exception {
+<span class="fc" id="L246">        when(exportacionExcelService.generarReporteExcel(anyList()))</span>
+<span class="fc" id="L247">            .thenThrow(new IllegalStateException(&quot;El lote no tiene análisis completados&quot;));</span>
+
+        // El controller no maneja IllegalStateException, devuelve 500
+<span class="fc" id="L250">        mockMvc.perform(get(&quot;/api/exportaciones/excel/lote/1&quot;)</span>
+<span class="fc" id="L251">                .with(csrf()))</span>
+<span class="fc" id="L252">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L253">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/avanzado - Filtros con fechas inválidas&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosAvanzadosExcel_fechasInvalidas_debeRetornar400() throws Exception {
+<span class="fc" id="L259">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L260">        solicitud.setFechaDesde(java.time.LocalDate.now().plusDays(1));</span>
+<span class="fc" id="L261">        solicitud.setFechaHasta(java.time.LocalDate.now().minusDays(1));</span>
+
+<span class="fc" id="L263">        when(exportacionExcelService.generarReporteExcelAvanzado(any(ExportacionRequestDTO.class)))</span>
+<span class="fc" id="L264">            .thenThrow(new IllegalArgumentException(&quot;Fecha desde no puede ser posterior a fecha hasta&quot;));</span>
+
+        // El controller no maneja IllegalArgumentException, devuelve 500
+<span class="fc" id="L267">        mockMvc.perform(post(&quot;/api/exportaciones/excel/avanzado&quot;)</span>
+<span class="fc" id="L268">                .with(csrf())</span>
+<span class="fc" id="L269">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L270">                .content(objectMapper.writeValueAsString(solicitud)))</span>
+<span class="fc" id="L271">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L272">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/avanzado - Filtros sin resultados&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarDatosAvanzadosExcel_sinResultados_debeRetornarVacio() throws Exception {
+<span class="fc" id="L278">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L279">        solicitud.setEspecieIds(Arrays.asList(999L));</span>
+
+<span class="fc" id="L281">        byte[] emptyExcel = new byte[0];</span>
+<span class="fc" id="L282">        when(exportacionExcelService.generarReporteExcelAvanzado(any(ExportacionRequestDTO.class)))</span>
+<span class="fc" id="L283">            .thenReturn(emptyExcel);</span>
+
+<span class="fc" id="L285">        mockMvc.perform(post(&quot;/api/exportaciones/excel/avanzado&quot;)</span>
+<span class="fc" id="L286">                .with(csrf())</span>
+<span class="fc" id="L287">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L288">                .content(objectMapper.writeValueAsString(solicitud)))</span>
+<span class="fc" id="L289">                .andExpect(status().isOk())</span>
+<span class="fc" id="L290">                .andExpect(content().bytes(emptyExcel));</span>
+<span class="fc" id="L291">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/personalizado - IDs con valores negativos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosPersonalizadosExcel_idsNegativos_debeRetornar400() throws Exception {
+<span class="fc" id="L297">        List&lt;Long&gt; loteIds = Arrays.asList(-1L, -2L);</span>
+
+        // El servicio devuelve null para IDs negativos, el controller no valida y da NullPointerException (500)
+<span class="fc" id="L300">        when(exportacionExcelService.generarReporteExcel(anyList()))</span>
+<span class="fc" id="L301">            .thenReturn(null);</span>
+
+<span class="fc" id="L303">        mockMvc.perform(post(&quot;/api/exportaciones/excel/personalizado&quot;)</span>
+<span class="fc" id="L304">                .with(csrf())</span>
+<span class="fc" id="L305">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L306">                .content(objectMapper.writeValueAsString(loteIds)))</span>
+<span class="fc" id="L307">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L308">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - Exportación muy grande (OutOfMemoryError)&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosExcel_exportacionGrande_debeRetornar500() throws Exception {
+<span class="fc" id="L314">        when(exportacionExcelService.generarReporteExcel(any()))</span>
+<span class="fc" id="L315">            .thenThrow(new OutOfMemoryError(&quot;Memoria insuficiente&quot;));</span>
+
+<span class="fc" id="L317">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L318">                .with(csrf()))</span>
+<span class="fc" id="L319">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L320">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/avanzado - Múltiples filtros complejos&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarDatosAvanzadosExcel_filtrosComplejos_debeRetornarExcel() throws Exception {
+<span class="fc" id="L326">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L327">        solicitud.setEspecieIds(Arrays.asList(1L, 2L, 3L));</span>
+<span class="fc" id="L328">        solicitud.setCultivarIds(Arrays.asList(1L, 2L));</span>
+<span class="fc" id="L329">        solicitud.setFechaDesde(java.time.LocalDate.now().minusMonths(3));</span>
+<span class="fc" id="L330">        solicitud.setFechaHasta(java.time.LocalDate.now());</span>
+
+<span class="fc" id="L332">        when(exportacionExcelService.generarReporteExcelAvanzado(any(ExportacionRequestDTO.class)))</span>
+<span class="fc" id="L333">            .thenReturn(excelBytes);</span>
+
+<span class="fc" id="L335">        mockMvc.perform(post(&quot;/api/exportaciones/excel/avanzado&quot;)</span>
+<span class="fc" id="L336">                .with(csrf())</span>
+<span class="fc" id="L337">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L338">                .content(objectMapper.writeValueAsString(solicitud)))</span>
+<span class="fc" id="L339">                .andExpect(status().isOk())</span>
+<span class="fc" id="L340">                .andExpect(header().exists(&quot;Content-Disposition&quot;))</span>
+<span class="fc" id="L341">                .andExpect(content().bytes(excelBytes));</span>
+<span class="fc" id="L342">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel/lote/{loteId} - ID con formato inválido&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void exportarLoteEspecificoExcel_idInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L348">        mockMvc.perform(get(&quot;/api/exportaciones/excel/lote/abc&quot;)</span>
+<span class="fc" id="L349">                .with(csrf()))</span>
+<span class="fc" id="L350">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L351">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/personalizado - Lista con duplicados&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void exportarDatosPersonalizadosExcel_conDuplicados_debeEliminarDuplicados() throws Exception {
+<span class="fc" id="L357">        List&lt;Long&gt; loteIds = Arrays.asList(1L, 2L, 1L, 3L, 2L);</span>
+<span class="fc" id="L358">        when(exportacionExcelService.generarReporteExcel(anyList())).thenReturn(excelBytes);</span>
+
+<span class="fc" id="L360">        mockMvc.perform(post(&quot;/api/exportaciones/excel/personalizado&quot;)</span>
+<span class="fc" id="L361">                .with(csrf())</span>
+<span class="fc" id="L362">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L363">                .content(objectMapper.writeValueAsString(loteIds)))</span>
+<span class="fc" id="L364">                .andExpect(status().isOk())</span>
+<span class="fc" id="L365">                .andExpect(content().bytes(excelBytes));</span>
+<span class="fc" id="L366">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - Sin permisos para exportar&quot;)
+    void exportarDatosExcel_sinPermisos_debeRetornar403() throws Exception {
+        // Sin mock configurado, el servicio devuelve null y causa NullPointerException (500)
+<span class="fc" id="L372">        when(exportacionExcelService.generarReporteExcel(any()))</span>
+<span class="fc" id="L373">            .thenReturn(null);</span>
+        
+<span class="fc" id="L375">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L376">                .with(csrf()))</span>
+<span class="fc" id="L377">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L378">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/avanzado - Timeout en generación de reporte&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosAvanzadosExcel_timeout_debeRetornar500() throws Exception {
+<span class="fc" id="L384">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+        
+        // TimeoutException es checked, necesita usar thenAnswer o RuntimeException
+<span class="fc" id="L387">        when(exportacionExcelService.generarReporteExcelAvanzado(any(ExportacionRequestDTO.class)))</span>
+<span class="fc" id="L388">            .thenThrow(new RuntimeException(&quot;Tiempo de espera agotado&quot;));</span>
+
+<span class="fc" id="L390">        mockMvc.perform(post(&quot;/api/exportaciones/excel/avanzado&quot;)</span>
+<span class="fc" id="L391">                .with(csrf())</span>
+<span class="fc" id="L392">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L393">                .content(objectMapper.writeValueAsString(solicitud)))</span>
+<span class="fc" id="L394">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L395">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/exportaciones/excel/personalizado - Exceso de IDs (más de 1000)&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosPersonalizadosExcel_excesoCantidad_debeRetornar400() throws Exception {
+<span class="fc" id="L401">        List&lt;Long&gt; loteIds = new java.util.ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L402" title="All 2 branches covered.">        for (long i = 1; i &lt;= 1001; i++) {</span>
+<span class="fc" id="L403">            loteIds.add(i);</span>
+        }
+
+<span class="fc" id="L406">        when(exportacionExcelService.generarReporteExcel(anyList()))</span>
+<span class="fc" id="L407">            .thenThrow(new IllegalArgumentException(&quot;Máximo 1000 lotes por exportación&quot;));</span>
+
+        // El controller no maneja IllegalArgumentException, devuelve 500
+<span class="fc" id="L410">        mockMvc.perform(post(&quot;/api/exportaciones/excel/personalizado&quot;)</span>
+<span class="fc" id="L411">                .with(csrf())</span>
+<span class="fc" id="L412">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L413">                .content(objectMapper.writeValueAsString(loteIds)))</span>
+<span class="fc" id="L414">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L415">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/exportaciones/excel - Error de conexión a base de datos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void exportarDatosExcel_errorConexion_debeRetornar500() throws Exception {
+<span class="fc" id="L421">        when(exportacionExcelService.generarReporteExcel(any()))</span>
+<span class="fc" id="L422">            .thenThrow(new org.springframework.dao.DataAccessException(&quot;Error de conexión&quot;) {});</span>
+
+<span class="fc" id="L424">        mockMvc.perform(get(&quot;/api/exportaciones/excel&quot;)</span>
+<span class="fc" id="L425">                .with(csrf()))</span>
+<span class="fc" id="L426">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L427">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

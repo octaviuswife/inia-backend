@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CatalogoServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">CatalogoServiceTest.java</span></div><h1>CatalogoServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoCrudRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CatalogoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoCatalogo;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Tests unitarios para CatalogoService
+ * 
+ * Funcionalidades testeadas:
+ * - Creación de catálogos (especies, sustratos, lugares, etc.)
+ * - Validación de duplicados por tipo y valor
+ * - Obtención de catálogos por tipo
+ * - Activación/Desactivación de catálogos
+ * - Actualización de valores
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de CatalogoService&quot;)
+<span class="fc" id="L37">class CatalogoServiceTest {</span>
+
+    @Mock
+    private CatalogoCrudRepository catalogoRepository;
+
+    @InjectMocks
+    private CatalogoService catalogoService;
+
+    private CatalogoRequestDTO catalogoRequestDTO;
+    private Catalogo catalogo;
+
+    @BeforeEach
+    void setUp() {
+        // ARRANGE: Preparar datos de prueba
+<span class="fc" id="L51">        catalogoRequestDTO = new CatalogoRequestDTO();</span>
+<span class="fc" id="L52">        catalogoRequestDTO.setTipo(&quot;HUMEDAD&quot;);</span>
+<span class="fc" id="L53">        catalogoRequestDTO.setValor(&quot;10%&quot;);</span>
+
+<span class="fc" id="L55">        catalogo = new Catalogo();</span>
+<span class="fc" id="L56">        catalogo.setId(1L);</span>
+<span class="fc" id="L57">        catalogo.setTipo(TipoCatalogo.HUMEDAD);</span>
+<span class="fc" id="L58">        catalogo.setValor(&quot;10%&quot;);</span>
+<span class="fc" id="L59">        catalogo.setActivo(true);</span>
+<span class="fc" id="L60">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear catálogo - debe crear con activo=true&quot;)
+    void crear_debeCrearCatalogoActivo() {
+        // ARRANGE
+<span class="fc" id="L66">        when(catalogoRepository.findByTipoAndValor(TipoCatalogo.HUMEDAD, &quot;10%&quot;))</span>
+<span class="fc" id="L67">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L68">        when(catalogoRepository.save(any(Catalogo.class))).thenReturn(catalogo);</span>
+
+        // ACT
+<span class="fc" id="L71">        CatalogoDTO resultado = catalogoService.crear(catalogoRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L74">        assertNotNull(resultado);</span>
+<span class="fc" id="L75">        assertEquals(&quot;10%&quot;, resultado.getValor());</span>
+<span class="fc" id="L76">        verify(catalogoRepository, times(1)).save(any(Catalogo.class));</span>
+<span class="fc" id="L77">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear catálogo duplicado - debe lanzar excepción&quot;)
+    void crear_conDuplicado_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L83">        when(catalogoRepository.findByTipoAndValor(TipoCatalogo.HUMEDAD, &quot;10%&quot;))</span>
+<span class="fc" id="L84">            .thenReturn(Optional.of(catalogo));</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L87">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L88">            catalogoService.crear(catalogoRequestDTO);</span>
+<span class="nc" id="L89">        });</span>
+        
+<span class="fc" id="L91">        assertTrue(exception.getMessage().contains(&quot;Ya existe un catálogo&quot;));</span>
+<span class="fc" id="L92">        verify(catalogoRepository, never()).save(any(Catalogo.class));</span>
+<span class="fc" id="L93">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener todos los catálogos activos - debe retornar solo activos&quot;)
+    void obtenerTodos_debeRetornarSoloActivos() {
+        // ARRANGE
+<span class="fc" id="L99">        Catalogo catalogo2 = new Catalogo();</span>
+<span class="fc" id="L100">        catalogo2.setId(2L);</span>
+<span class="fc" id="L101">        catalogo2.setTipo(TipoCatalogo.ORIGEN);</span>
+<span class="fc" id="L102">        catalogo2.setValor(&quot;Nacional&quot;);</span>
+<span class="fc" id="L103">        catalogo2.setActivo(true);</span>
+        
+<span class="fc" id="L105">        when(catalogoRepository.findByActivoTrue())</span>
+<span class="fc" id="L106">            .thenReturn(Arrays.asList(catalogo, catalogo2));</span>
+
+        // ACT
+<span class="fc" id="L109">        List&lt;CatalogoDTO&gt; resultado = catalogoService.obtenerTodos();</span>
+
+        // ASSERT
+<span class="fc" id="L112">        assertNotNull(resultado);</span>
+<span class="fc" id="L113">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L114">        verify(catalogoRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L115">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener por tipo - debe retornar solo del tipo especificado&quot;)
+    void obtenerPorTipo_debeRetornarSoloDelTipo() {
+        // ARRANGE
+<span class="fc" id="L121">        when(catalogoRepository.findByTipoAndActivoTrue(TipoCatalogo.HUMEDAD))</span>
+<span class="fc" id="L122">            .thenReturn(Arrays.asList(catalogo));</span>
+
+        // ACT
+<span class="fc" id="L125">        List&lt;CatalogoDTO&gt; resultado = catalogoService.obtenerPorTipo(&quot;HUMEDAD&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L128">        assertNotNull(resultado);</span>
+<span class="fc" id="L129">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L130">        assertEquals(&quot;10%&quot;, resultado.get(0).getValor());</span>
+<span class="fc" id="L131">        verify(catalogoRepository, times(1)).findByTipoAndActivoTrue(TipoCatalogo.HUMEDAD);</span>
+<span class="fc" id="L132">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener por tipo con filtro activo=true - debe retornar solo activos&quot;)
+    void obtenerPorTipoConFiltro_activos_debeRetornarSoloActivos() {
+        // ARRANGE
+<span class="fc" id="L138">        when(catalogoRepository.findByTipoAndActivoTrue(TipoCatalogo.HUMEDAD))</span>
+<span class="fc" id="L139">            .thenReturn(Arrays.asList(catalogo));</span>
+
+        // ACT
+<span class="fc" id="L142">        List&lt;CatalogoDTO&gt; resultado = catalogoService.obtenerPorTipo(&quot;HUMEDAD&quot;, true);</span>
+
+        // ASSERT
+<span class="fc" id="L145">        assertNotNull(resultado);</span>
+<span class="fc" id="L146">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L147">        verify(catalogoRepository, times(1)).findByTipoAndActivoTrue(TipoCatalogo.HUMEDAD);</span>
+<span class="fc" id="L148">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener por tipo con filtro activo=false - debe retornar solo inactivos&quot;)
+    void obtenerPorTipoConFiltro_inactivos_debeRetornarSoloInactivos() {
+        // ARRANGE
+<span class="fc" id="L154">        catalogo.setActivo(false);</span>
+<span class="fc" id="L155">        when(catalogoRepository.findByTipoAndActivoFalse(TipoCatalogo.HUMEDAD))</span>
+<span class="fc" id="L156">            .thenReturn(Arrays.asList(catalogo));</span>
+
+        // ACT
+<span class="fc" id="L159">        List&lt;CatalogoDTO&gt; resultado = catalogoService.obtenerPorTipo(&quot;HUMEDAD&quot;, false);</span>
+
+        // ASSERT
+<span class="fc" id="L162">        assertNotNull(resultado);</span>
+<span class="fc" id="L163">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L164">        verify(catalogoRepository, times(1)).findByTipoAndActivoFalse(TipoCatalogo.HUMEDAD);</span>
+<span class="fc" id="L165">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener por tipo sin filtro - debe retornar todos (activos e inactivos)&quot;)
+    void obtenerPorTipoSinFiltro_debeRetornarTodos() {
+        // ARRANGE
+<span class="fc" id="L171">        Catalogo catalogoInactivo = new Catalogo();</span>
+<span class="fc" id="L172">        catalogoInactivo.setId(2L);</span>
+<span class="fc" id="L173">        catalogoInactivo.setTipo(TipoCatalogo.HUMEDAD);</span>
+<span class="fc" id="L174">        catalogoInactivo.setValor(&quot;12%&quot;);</span>
+<span class="fc" id="L175">        catalogoInactivo.setActivo(false);</span>
+        
+<span class="fc" id="L177">        when(catalogoRepository.findByTipo(TipoCatalogo.HUMEDAD))</span>
+<span class="fc" id="L178">            .thenReturn(Arrays.asList(catalogo, catalogoInactivo));</span>
+
+        // ACT
+<span class="fc" id="L181">        List&lt;CatalogoDTO&gt; resultado = catalogoService.obtenerPorTipo(&quot;HUMEDAD&quot;, null);</span>
+
+        // ASSERT
+<span class="fc" id="L184">        assertNotNull(resultado);</span>
+<span class="fc" id="L185">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L186">        verify(catalogoRepository, times(1)).findByTipo(TipoCatalogo.HUMEDAD);</span>
+<span class="fc" id="L187">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener por ID - debe retornar el catálogo si existe&quot;)
+    void obtenerPorId_cuandoExiste_debeRetornarCatalogo() {
+        // ARRANGE
+<span class="fc" id="L193">        when(catalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));</span>
+
+        // ACT
+<span class="fc" id="L196">        CatalogoDTO resultado = catalogoService.obtenerPorId(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L199">        assertNotNull(resultado);</span>
+<span class="fc" id="L200">        assertEquals(1L, resultado.getId());</span>
+<span class="fc" id="L201">        assertEquals(&quot;10%&quot;, resultado.getValor());</span>
+<span class="fc" id="L202">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener por ID inexistente - debe retornar null&quot;)
+    void obtenerPorId_cuandoNoExiste_debeRetornarNull() {
+        // ARRANGE
+<span class="fc" id="L208">        when(catalogoRepository.findById(999L)).thenReturn(Optional.empty());</span>
+
+        // ACT
+<span class="fc" id="L211">        CatalogoDTO resultado = catalogoService.obtenerPorId(999L);</span>
+
+        // ASSERT
+<span class="fc" id="L214">        assertNull(resultado);</span>
+<span class="fc" id="L215">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar catálogo - debe actualizar correctamente&quot;)
+    void actualizar_debeActualizarCorrectamente() {
+        // ARRANGE
+<span class="fc" id="L221">        catalogoRequestDTO.setValor(&quot;12%&quot;);</span>
+        
+<span class="fc" id="L223">        when(catalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));</span>
+<span class="fc" id="L224">        when(catalogoRepository.findByTipoAndValor(TipoCatalogo.HUMEDAD, &quot;12%&quot;))</span>
+<span class="fc" id="L225">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L226">        when(catalogoRepository.save(any(Catalogo.class))).thenReturn(catalogo);</span>
+
+        // ACT
+<span class="fc" id="L229">        CatalogoDTO resultado = catalogoService.actualizar(1L, catalogoRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L232">        assertNotNull(resultado);</span>
+<span class="fc" id="L233">        verify(catalogoRepository, times(1)).save(any(Catalogo.class));</span>
+<span class="fc" id="L234">    }</span>
+
+    @Test
+    @DisplayName(&quot;Actualizar con valor duplicado - debe lanzar excepción&quot;)
+    void actualizar_conValorDuplicado_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L240">        Catalogo otroCatalogo = new Catalogo();</span>
+<span class="fc" id="L241">        otroCatalogo.setId(2L);</span>
+<span class="fc" id="L242">        otroCatalogo.setTipo(TipoCatalogo.HUMEDAD);</span>
+<span class="fc" id="L243">        otroCatalogo.setValor(&quot;15%&quot;);</span>
+        
+<span class="fc" id="L245">        catalogoRequestDTO.setValor(&quot;15%&quot;);</span>
+        
+<span class="fc" id="L247">        when(catalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));</span>
+<span class="fc" id="L248">        when(catalogoRepository.findByTipoAndValor(TipoCatalogo.HUMEDAD, &quot;15%&quot;))</span>
+<span class="fc" id="L249">            .thenReturn(Optional.of(otroCatalogo));</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L252">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L253">            catalogoService.actualizar(1L, catalogoRequestDTO);</span>
+<span class="nc" id="L254">        });</span>
+        
+<span class="fc" id="L256">        verify(catalogoRepository, never()).save(any(Catalogo.class));</span>
+<span class="fc" id="L257">    }</span>
+
+    @Test
+    @DisplayName(&quot;Eliminar catálogo - debe cambiar activo a false&quot;)
+    void eliminar_debeCambiarActivoAFalse() {
+        // ARRANGE
+<span class="fc" id="L263">        when(catalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));</span>
+<span class="fc" id="L264">        when(catalogoRepository.save(any(Catalogo.class))).thenReturn(catalogo);</span>
+
+        // ACT
+<span class="fc" id="L267">        catalogoService.eliminar(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L270">        verify(catalogoRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L271">        verify(catalogoRepository, times(1)).save(any(Catalogo.class));</span>
+<span class="fc" id="L272">    }</span>
+
+    @Test
+    @DisplayName(&quot;Reactivar catálogo - debe cambiar activo a true&quot;)
+    void reactivar_debeCambiarActivoATrue() {
+        // ARRANGE
+<span class="fc" id="L278">        catalogo.setActivo(false);</span>
+<span class="fc" id="L279">        when(catalogoRepository.findById(1L)).thenReturn(Optional.of(catalogo));</span>
+<span class="fc" id="L280">        when(catalogoRepository.save(any(Catalogo.class))).thenReturn(catalogo);</span>
+
+        // ACT
+<span class="fc" id="L283">        CatalogoDTO resultado = catalogoService.reactivar(1L);</span>
+
+        // ASSERT
+<span class="fc" id="L286">        assertNotNull(resultado);</span>
+<span class="fc" id="L287">        verify(catalogoRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L288">        verify(catalogoRepository, times(1)).save(any(Catalogo.class));</span>
+<span class="fc" id="L289">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear catálogos de diferentes tipos - debe permitir mismo valor en diferentes tipos&quot;)
+    void crear_mismoValorDiferentesTipos_debePermitir() {
+        // ARRANGE
+<span class="fc" id="L295">        CatalogoRequestDTO origenDTO = new CatalogoRequestDTO();</span>
+<span class="fc" id="L296">        origenDTO.setTipo(&quot;ORIGEN&quot;);</span>
+<span class="fc" id="L297">        origenDTO.setValor(&quot;Nacional&quot;);</span>
+        
+<span class="fc" id="L299">        Catalogo origenCatalogo = new Catalogo();</span>
+<span class="fc" id="L300">        origenCatalogo.setId(2L);</span>
+<span class="fc" id="L301">        origenCatalogo.setTipo(TipoCatalogo.ORIGEN);</span>
+<span class="fc" id="L302">        origenCatalogo.setValor(&quot;Nacional&quot;);</span>
+<span class="fc" id="L303">        origenCatalogo.setActivo(true);</span>
+        
+<span class="fc" id="L305">        when(catalogoRepository.findByTipoAndValor(TipoCatalogo.ORIGEN, &quot;Nacional&quot;))</span>
+<span class="fc" id="L306">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L307">        when(catalogoRepository.save(any(Catalogo.class))).thenReturn(origenCatalogo);</span>
+
+        // ACT
+<span class="fc" id="L310">        CatalogoDTO resultado = catalogoService.crear(origenDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L313">        assertNotNull(resultado);</span>
+<span class="fc" id="L314">        assertEquals(&quot;Nacional&quot;, resultado.getValor());</span>
+<span class="fc" id="L315">        verify(catalogoRepository, times(1)).save(any(Catalogo.class));</span>
+<span class="fc" id="L316">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

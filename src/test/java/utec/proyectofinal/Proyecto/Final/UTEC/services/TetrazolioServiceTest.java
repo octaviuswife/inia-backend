@@ -12,6 +12,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Tetrazolio;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.TetrazolioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepTetrazolioViabilidadRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.TetrazolioRequestDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TetrazolioDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
@@ -47,6 +48,9 @@ class TetrazolioServiceTest {
 
     @Mock
     private AnalisisService analisisService;
+
+    @Mock
+    private RepTetrazolioViabilidadRepository repeticionRepository;
 
     @InjectMocks
     private TetrazolioService tetrazolioService;
@@ -132,6 +136,69 @@ class TetrazolioServiceTest {
         assertThrows(RuntimeException.class, () -> {
             tetrazolioService.crearTetrazolio(tetrazolioRequestDTO);
         }, "Debe lanzar excepción cuando el lote está inactivo");
+    }
+
+    @Test
+    @DisplayName("Actualizar tetrazolio aprobado por analista - cambia a PENDIENTE_APROBACION")
+    void actualizarTetrazolio_aprobadoAnalista_cambiaEstado() {
+        tetrazolio.setEstado(Estado.APROBADO);
+        when(analisisService.esAnalista()).thenReturn(true);
+        when(tetrazolioRepository.findById(1L)).thenReturn(Optional.of(tetrazolio));
+        when(tetrazolioRepository.save(any(Tetrazolio.class))).thenReturn(tetrazolio);
+        TetrazolioRequestDTO req = new TetrazolioRequestDTO();
+        req.setIdLote(1L);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        TetrazolioDTO dto = tetrazolioService.actualizarTetrazolio(1L, req);
+        assertEquals(Estado.PENDIENTE_APROBACION, dto.getEstado());
+        verify(analisisHistorialService, times(1)).registrarModificacion(any());
+    }
+
+    @Test
+    @DisplayName("finalizarAnalisis Tetrazolio - completa sin lanzar excepciones")
+    void finalizarTetrazolio_conDatosCompletos_noFalla() {
+        // Mock AnalisisService.finalizarAnalisisGenerico to invoke the mapper
+        when(analisisService.finalizarAnalisisGenerico(eq(1L), eq(tetrazolioRepository), any(), any()))
+            .thenAnswer(invocation -> {
+                java.util.function.Function<Tetrazolio, TetrazolioDTO> mapper = invocation.getArgument(2);
+                return mapper.apply(tetrazolio);
+            });
+        
+        TetrazolioDTO resultado = tetrazolioService.finalizarAnalisis(1L);
+        
+        assertNotNull(resultado);
+        verify(analisisService, times(1)).finalizarAnalisisGenerico(eq(1L), eq(tetrazolioRepository), any(), any());
+    }
+
+    @Test
+    @DisplayName("aprobarAnalisis Tetrazolio - completa con mock de AnalisisService")
+    void aprobarTetrazolio_conAnalisisServiceMock_noFalla() {
+        // Mock AnalisisService.aprobarAnalisisGenerico to invoke the mapper
+        when(analisisService.aprobarAnalisisGenerico(eq(1L), eq(tetrazolioRepository), any(), any(), any()))
+            .thenAnswer(invocation -> {
+                java.util.function.Function<Tetrazolio, TetrazolioDTO> mapper = invocation.getArgument(2);
+                return mapper.apply(tetrazolio);
+            });
+        
+        TetrazolioDTO resultado = tetrazolioService.aprobarAnalisis(1L);
+        
+        assertNotNull(resultado);
+        verify(analisisService, times(1)).aprobarAnalisisGenerico(eq(1L), eq(tetrazolioRepository), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("marcarParaRepetir Tetrazolio - completa con mock de AnalisisService")
+    void marcarParaRepetirTetrazolio_conAnalisisServiceMock_noFalla() {
+        // Mock AnalisisService.marcarParaRepetirGenerico to invoke the mapper
+        when(analisisService.marcarParaRepetirGenerico(eq(1L), eq(tetrazolioRepository), any(), any()))
+            .thenAnswer(invocation -> {
+                java.util.function.Function<Tetrazolio, TetrazolioDTO> mapper = invocation.getArgument(2);
+                return mapper.apply(tetrazolio);
+            });
+        
+        TetrazolioDTO resultado = tetrazolioService.marcarParaRepetir(1L);
+        
+        assertNotNull(resultado);
+        verify(analisisService, times(1)).marcarParaRepetirGenerico(eq(1L), eq(tetrazolioRepository), any(), any());
     }
 
     @Test

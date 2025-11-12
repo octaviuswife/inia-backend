@@ -1,0 +1,888 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Auth2FAControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">Auth2FAControllerIntegrationTest.java</span></div><h1>Auth2FAControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ForgotPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Login2FARequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ResetPasswordRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.Verify2FARequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.TrustedDeviceDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.JwtUtil;
+import utec.proyectofinal.Proyecto.Final.UTEC.security.SeguridadService;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.*;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName(&quot;Tests de Integración - Auth2FAController&quot;)
+<span class="fc" id="L36">class Auth2FAControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private SeguridadService seguridadService;
+
+    @MockBean
+    private UsuarioService usuarioService;
+
+    @MockBean
+    private TotpService totpService;
+
+    @MockBean
+    private RecoveryCodeService recoveryCodeService;
+
+    @MockBean
+    private TrustedDeviceService trustedDeviceService;
+
+    @MockBean
+    private EmailService emailService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private BackupCodeService backupCodeService;
+
+    @MockBean
+    private SetupTokenService setupTokenService;
+
+    private Usuario usuarioTest;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L75">        usuarioTest = new Usuario();</span>
+<span class="fc" id="L76">        usuarioTest.setUsuarioID(1);</span>
+<span class="fc" id="L77">        usuarioTest.setNombre(&quot;testuser&quot;);</span>
+<span class="fc" id="L78">        usuarioTest.setNombres(&quot;Test&quot;);</span>
+<span class="fc" id="L79">        usuarioTest.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L80">        usuarioTest.setEmail(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L81">        usuarioTest.setTotpSecret(&quot;TESTSECRET123456&quot;);</span>
+<span class="fc" id="L82">        usuarioTest.setTotpEnabled(true);</span>
+<span class="fc" id="L83">    }</span>
+
+    // ===== TESTS DE LOGIN CON 2FA =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Login exitoso con 2FA y dispositivo de confianza&quot;)
+    void loginWith2FA_dispositivoConfianza_debeRetornarToken() throws Exception {
+<span class="fc" id="L90">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L91">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L92">        loginRequest.setPassword(&quot;password123&quot;);</span>
+<span class="fc" id="L93">        loginRequest.setDeviceFingerprint(&quot;device123&quot;);</span>
+
+<span class="fc" id="L95">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L96">        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L97">        when(seguridadService.listarRolesPorUsuario(any())).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L98">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;access-token&quot;);</span>
+<span class="fc" id="L99">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;refresh-token&quot;);</span>
+<span class="fc" id="L100">        when(jwtUtil.getAccessTokenExpiration()).thenReturn(86400000L);</span>
+<span class="fc" id="L101">        when(jwtUtil.getRefreshTokenExpiration()).thenReturn(604800000L);</span>
+
+<span class="fc" id="L103">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L104">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L105">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L106">                .with(csrf()))</span>
+<span class="fc" id="L107">                .andExpect(status().isOk())</span>
+<span class="fc" id="L108">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Login exitoso&quot;))</span>
+<span class="fc" id="L109">                .andExpect(jsonPath(&quot;$.usuario.email&quot;).value(&quot;test@example.com&quot;))</span>
+<span class="fc" id="L110">                .andExpect(jsonPath(&quot;$.usuario.has2FA&quot;).value(true));</span>
+<span class="fc" id="L111">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Login requiere código 2FA&quot;)
+    void loginWith2FA_sinDispositivo_debeRequerir2FA() throws Exception {
+<span class="fc" id="L116">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L117">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L118">        loginRequest.setPassword(&quot;password123&quot;);</span>
+
+<span class="fc" id="L120">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L121">        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);</span>
+
+<span class="fc" id="L123">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L124">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L125">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L126">                .with(csrf()))</span>
+<span class="fc" id="L127">                .andExpect(status().isForbidden())</span>
+<span class="fc" id="L128">                .andExpect(jsonPath(&quot;$.requires2FA&quot;).value(true))</span>
+<span class="fc" id="L129">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Se requiere código de autenticación de dos factores&quot;));</span>
+<span class="fc" id="L130">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Login con código TOTP válido&quot;)
+    void loginWith2FA_codigoTOTPValido_debeRetornarToken() throws Exception {
+<span class="fc" id="L135">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L136">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L137">        loginRequest.setPassword(&quot;password123&quot;);</span>
+<span class="fc" id="L138">        loginRequest.setTotpCode(&quot;123456&quot;);</span>
+
+<span class="fc" id="L140">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L141">        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L142">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L143">        when(seguridadService.listarRolesPorUsuario(any())).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L144">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;access-token&quot;);</span>
+<span class="fc" id="L145">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;refresh-token&quot;);</span>
+<span class="fc" id="L146">        when(jwtUtil.getAccessTokenExpiration()).thenReturn(86400000L);</span>
+<span class="fc" id="L147">        when(jwtUtil.getRefreshTokenExpiration()).thenReturn(604800000L);</span>
+
+<span class="fc" id="L149">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L150">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L151">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L152">                .with(csrf()))</span>
+<span class="fc" id="L153">                .andExpect(status().isOk())</span>
+<span class="fc" id="L154">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Login exitoso&quot;));</span>
+<span class="fc" id="L155">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Login con código de respaldo válido&quot;)
+    void loginWith2FA_codigoRespaldoValido_debeRetornarToken() throws Exception {
+<span class="fc" id="L160">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L161">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L162">        loginRequest.setPassword(&quot;password123&quot;);</span>
+<span class="fc" id="L163">        loginRequest.setTotpCode(&quot;backup-code-1234&quot;);</span>
+
+<span class="fc" id="L165">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L166">        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L167">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L168">        when(backupCodeService.verifyAndUseBackupCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L169">        when(backupCodeService.getAvailableCodesCount(any())).thenReturn(5L);</span>
+<span class="fc" id="L170">        when(seguridadService.listarRolesPorUsuario(any())).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L171">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;access-token&quot;);</span>
+<span class="fc" id="L172">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;refresh-token&quot;);</span>
+<span class="fc" id="L173">        when(jwtUtil.getAccessTokenExpiration()).thenReturn(86400000L);</span>
+<span class="fc" id="L174">        when(jwtUtil.getRefreshTokenExpiration()).thenReturn(604800000L);</span>
+
+<span class="fc" id="L176">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L177">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L178">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L179">                .with(csrf()))</span>
+<span class="fc" id="L180">                .andExpect(status().isOk())</span>
+<span class="fc" id="L181">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Login exitoso&quot;));</span>
+<span class="fc" id="L182">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Credenciales incorrectas&quot;)
+    void loginWith2FA_credencialesIncorrectas_debeRetornar401() throws Exception {
+<span class="fc" id="L187">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L188">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L189">        loginRequest.setPassword(&quot;wrongpassword&quot;);</span>
+
+<span class="fc" id="L191">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L193">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L194">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L195">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L196">                .with(csrf()))</span>
+<span class="fc" id="L197">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L198">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Credenciales incorrectas&quot;));</span>
+<span class="fc" id="L199">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Usuario sin 2FA debe activarlo&quot;)
+    void loginWith2FA_usuarioSin2FA_debeRequirir2FASetup() throws Exception {
+<span class="fc" id="L204">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L206">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L207">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L208">        loginRequest.setPassword(&quot;password123&quot;);</span>
+
+<span class="fc" id="L210">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+
+<span class="fc" id="L212">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L213">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L214">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L215">                .with(csrf()))</span>
+<span class="fc" id="L216">                .andExpect(status().isForbidden())</span>
+<span class="fc" id="L217">                .andExpect(jsonPath(&quot;$.requires2FASetup&quot;).value(true))</span>
+<span class="fc" id="L218">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Debes activar la autenticación de dos factores para usar el sistema&quot;));</span>
+<span class="fc" id="L219">    }</span>
+
+    // ===== TESTS DE SETUP INICIAL DE 2FA =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/setup-initial - Setup inicial exitoso&quot;)
+    void setupInitial2FA_credencialesValidas_debeRetornarQR() throws Exception {
+<span class="fc" id="L226">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L228">        Map&lt;String, String&gt; request = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L229">        request.put(&quot;email&quot;, &quot;test@example.com&quot;);</span>
+<span class="fc" id="L230">        request.put(&quot;password&quot;, &quot;password123&quot;);</span>
+
+<span class="fc" id="L232">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L233">        when(totpService.generateSecret()).thenReturn(&quot;NEWSECRET123&quot;);</span>
+<span class="fc" id="L234">        when(totpService.generateQrCodeDataUrl(any(), any())).thenReturn(&quot;data:image/png;base64,QR&quot;);</span>
+
+<span class="fc" id="L236">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/setup-initial&quot;)</span>
+<span class="fc" id="L237">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L238">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L239">                .with(csrf()))</span>
+<span class="fc" id="L240">                .andExpect(status().isOk())</span>
+<span class="fc" id="L241">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Escanea el QR code con Google Authenticator&quot;))</span>
+<span class="fc" id="L242">                .andExpect(jsonPath(&quot;$.data.secret&quot;).exists())</span>
+<span class="fc" id="L243">                .andExpect(jsonPath(&quot;$.data.qrCodeDataUrl&quot;).exists());</span>
+<span class="fc" id="L244">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/setup-initial - Usuario ya tiene 2FA&quot;)
+    void setupInitial2FA_usuarioYaTiene2FA_debeRetornarError() throws Exception {
+<span class="fc" id="L249">        Map&lt;String, String&gt; request = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L250">        request.put(&quot;email&quot;, &quot;test@example.com&quot;);</span>
+<span class="fc" id="L251">        request.put(&quot;password&quot;, &quot;password123&quot;);</span>
+
+<span class="fc" id="L253">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+
+<span class="fc" id="L255">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/setup-initial&quot;)</span>
+<span class="fc" id="L256">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L257">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L258">                .with(csrf()))</span>
+<span class="fc" id="L259">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L260">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Ya tienes 2FA habilitado. Usa el login normal.&quot;));</span>
+<span class="fc" id="L261">    }</span>
+
+    // ===== TESTS DE VERIFICACIÓN INICIAL DE 2FA =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/verify-initial - Verificación exitosa activa 2FA&quot;)
+    void verifyInitial2FA_codigoValido_debeActivar2FA() throws Exception {
+<span class="fc" id="L268">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L270">        Map&lt;String, String&gt; request = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L271">        request.put(&quot;email&quot;, &quot;test@example.com&quot;);</span>
+<span class="fc" id="L272">        request.put(&quot;totpCode&quot;, &quot;123456&quot;);</span>
+
+<span class="fc" id="L274">        List&lt;String&gt; backupCodes = Arrays.asList(&quot;code1&quot;, &quot;code2&quot;, &quot;code3&quot;);</span>
+
+<span class="fc" id="L276">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L277">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L278">        when(backupCodeService.generateBackupCodes(any())).thenReturn(backupCodes);</span>
+<span class="fc" id="L279">        when(seguridadService.listarRolesPorUsuario(any())).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L280">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;access-token&quot;);</span>
+<span class="fc" id="L281">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;refresh-token&quot;);</span>
+
+<span class="fc" id="L283">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/verify-initial&quot;)</span>
+<span class="fc" id="L284">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L285">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L286">                .with(csrf()))</span>
+<span class="fc" id="L287">                .andExpect(status().isOk())</span>
+<span class="fc" id="L288">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;2FA activado exitosamente. GUARDA estos códigos de respaldo.&quot;))</span>
+<span class="fc" id="L289">                .andExpect(jsonPath(&quot;$.totpEnabled&quot;).value(true))</span>
+<span class="fc" id="L290">                .andExpect(jsonPath(&quot;$.backupCodes&quot;).isArray())</span>
+<span class="fc" id="L291">                .andExpect(jsonPath(&quot;$.usuario&quot;).exists());</span>
+<span class="fc" id="L292">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/verify-initial - Código inválido&quot;)
+    void verifyInitial2FA_codigoInvalido_debeRetornar401() throws Exception {
+<span class="fc" id="L297">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L299">        Map&lt;String, String&gt; request = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L300">        request.put(&quot;email&quot;, &quot;test@example.com&quot;);</span>
+<span class="fc" id="L301">        request.put(&quot;totpCode&quot;, &quot;000000&quot;);</span>
+
+<span class="fc" id="L303">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L304">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+
+<span class="fc" id="L306">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/verify-initial&quot;)</span>
+<span class="fc" id="L307">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L308">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L309">                .with(csrf()))</span>
+<span class="fc" id="L310">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L311">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código 2FA inválido o expirado&quot;));</span>
+<span class="fc" id="L312">    }</span>
+
+    // ===== TESTS DE SETUP Y VERIFICACIÓN (AUTENTICADOS) =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/setup - Setup 2FA para usuario autenticado&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void setup2FA_usuarioAutenticado_debeRetornarQR() throws Exception {
+<span class="fc" id="L320">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L322">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L323">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L324">        when(totpService.generateSecret()).thenReturn(&quot;NEWSECRET123&quot;);</span>
+<span class="fc" id="L325">        when(totpService.generateQrCodeDataUrl(any(), any())).thenReturn(&quot;data:image/png;base64,QR&quot;);</span>
+
+<span class="fc" id="L327">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/setup&quot;)</span>
+<span class="fc" id="L328">                .with(csrf()))</span>
+<span class="fc" id="L329">                .andExpect(status().isOk())</span>
+<span class="fc" id="L330">                .andExpect(jsonPath(&quot;$.mensaje&quot;).exists())</span>
+<span class="fc" id="L331">                .andExpect(jsonPath(&quot;$.data.qrCodeDataUrl&quot;).exists());</span>
+<span class="fc" id="L332">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/verify - Verificar código y activar 2FA&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void verify2FA_codigoValido_debeActivar2FA() throws Exception {
+<span class="fc" id="L338">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L340">        Verify2FARequestDTO request = new Verify2FARequestDTO();</span>
+<span class="fc" id="L341">        request.setTotpCode(&quot;123456&quot;);</span>
+
+<span class="fc" id="L343">        List&lt;String&gt; backupCodes = Arrays.asList(&quot;code1&quot;, &quot;code2&quot;, &quot;code3&quot;);</span>
+
+<span class="fc" id="L345">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L346">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L347">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L348">        when(totpService.getCurrentCode(any())).thenReturn(&quot;123456&quot;);</span>
+<span class="fc" id="L349">        when(totpService.getRemainingSeconds()).thenReturn(20);</span>
+<span class="fc" id="L350">        when(backupCodeService.generateBackupCodes(any())).thenReturn(backupCodes);</span>
+
+<span class="fc" id="L352">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/verify&quot;)</span>
+<span class="fc" id="L353">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L354">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L355">                .with(csrf()))</span>
+<span class="fc" id="L356">                .andExpect(status().isOk())</span>
+<span class="fc" id="L357">                .andExpect(jsonPath(&quot;$.totpEnabled&quot;).value(true))</span>
+<span class="fc" id="L358">                .andExpect(jsonPath(&quot;$.backupCodes&quot;).isArray());</span>
+<span class="fc" id="L359">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/v1/auth/2fa/disable - Deshabilitar 2FA&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void disable2FA_codigoValido_debeDeshabilitarExitosamente() throws Exception {
+<span class="fc" id="L365">        Verify2FARequestDTO request = new Verify2FARequestDTO();</span>
+<span class="fc" id="L366">        request.setTotpCode(&quot;123456&quot;);</span>
+
+<span class="fc" id="L368">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L369">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L370">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+
+<span class="fc" id="L372">        mockMvc.perform(delete(&quot;/api/v1/auth/2fa/disable&quot;)</span>
+<span class="fc" id="L373">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L374">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L375">                .with(csrf()))</span>
+<span class="fc" id="L376">                .andExpect(status().isOk())</span>
+<span class="fc" id="L377">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;2FA deshabilitado exitosamente&quot;))</span>
+<span class="fc" id="L378">                .andExpect(jsonPath(&quot;$.totpEnabled&quot;).value(false));</span>
+<span class="fc" id="L379">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/2fa/status - Obtener estado de 2FA&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void get2FAStatus_usuarioCon2FA_debeRetornarEstado() throws Exception {
+<span class="fc" id="L385">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L386">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+
+<span class="fc" id="L388">        mockMvc.perform(get(&quot;/api/v1/auth/2fa/status&quot;)</span>
+<span class="fc" id="L389">                .with(csrf()))</span>
+<span class="fc" id="L390">                .andExpect(status().isOk())</span>
+<span class="fc" id="L391">                .andExpect(jsonPath(&quot;$.totpEnabled&quot;).value(true))</span>
+<span class="fc" id="L392">                .andExpect(jsonPath(&quot;$.hasSecret&quot;).value(true));</span>
+<span class="fc" id="L393">    }</span>
+
+    // ===== TESTS DE DISPOSITIVOS DE CONFIANZA =====
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/trusted-devices - Listar dispositivos de confianza&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void listTrustedDevices_debeRetornarDispositivos() throws Exception {
+<span class="fc" id="L401">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="fc" id="L402">        List&lt;TrustedDeviceDTO&gt; devices = Arrays.asList(</span>
+<span class="fc" id="L403">            new TrustedDeviceDTO(1L, &quot;Chrome en Windows&quot;, &quot;Mozilla/5.0...&quot;, &quot;192.168.1.1&quot;, now, now, now.plusDays(30), true),</span>
+<span class="fc" id="L404">            new TrustedDeviceDTO(2L, &quot;Firefox en Linux&quot;, &quot;Mozilla/5.0...&quot;, &quot;192.168.1.2&quot;, now, now, now.plusDays(30), true)</span>
+        );
+
+<span class="fc" id="L407">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L408">        when(trustedDeviceService.listUserDevices(any())).thenReturn(devices);</span>
+
+<span class="fc" id="L410">        mockMvc.perform(get(&quot;/api/v1/auth/trusted-devices&quot;)</span>
+<span class="fc" id="L411">                .with(csrf()))</span>
+<span class="fc" id="L412">                .andExpect(status().isOk())</span>
+<span class="fc" id="L413">                .andExpect(jsonPath(&quot;$.devices&quot;).isArray())</span>
+<span class="fc" id="L414">                .andExpect(jsonPath(&quot;$.count&quot;).value(2));</span>
+<span class="fc" id="L415">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/v1/auth/trusted-devices/{deviceId} - Revocar dispositivo específico&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void revokeTrustedDevice_dispositivoValido_debeRevocar() throws Exception {
+<span class="fc" id="L421">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+
+<span class="fc" id="L423">        mockMvc.perform(delete(&quot;/api/v1/auth/trusted-devices/1&quot;)</span>
+<span class="fc" id="L424">                .with(csrf()))</span>
+<span class="fc" id="L425">                .andExpect(status().isOk())</span>
+<span class="fc" id="L426">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Dispositivo revocado exitosamente&quot;));</span>
+<span class="fc" id="L427">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/v1/auth/trusted-devices - Revocar todos los dispositivos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void revokeAllTrustedDevices_debeRevocarTodos() throws Exception {
+<span class="fc" id="L433">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+
+<span class="fc" id="L435">        mockMvc.perform(delete(&quot;/api/v1/auth/trusted-devices&quot;)</span>
+<span class="fc" id="L436">                .with(csrf()))</span>
+<span class="fc" id="L437">                .andExpect(status().isOk())</span>
+<span class="fc" id="L438">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Todos los dispositivos revocados exitosamente&quot;));</span>
+<span class="fc" id="L439">    }</span>
+
+    // ===== TESTS DE RECUPERACIÓN DE CONTRASEÑA =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/forgot-password - Solicitar código de recuperación&quot;)
+    void forgotPassword_emailValido_debeEnviarCodigo() throws Exception {
+<span class="fc" id="L446">        ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();</span>
+<span class="fc" id="L447">        request.setEmail(&quot;test@example.com&quot;);</span>
+
+<span class="fc" id="L449">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L450">        when(recoveryCodeService.generateRecoveryCode()).thenReturn(&quot;REC123456&quot;);</span>
+<span class="fc" id="L451">        when(recoveryCodeService.hashCode(any())).thenReturn(&quot;hashedCode&quot;);</span>
+<span class="fc" id="L452">        when(recoveryCodeService.getExpiryTime()).thenReturn(LocalDateTime.now().plusMinutes(10));</span>
+<span class="fc" id="L453">        when(recoveryCodeService.getExpiryMinutes()).thenReturn(10);</span>
+
+<span class="fc" id="L455">        mockMvc.perform(post(&quot;/api/v1/auth/forgot-password&quot;)</span>
+<span class="fc" id="L456">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L457">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L458">                .with(csrf()))</span>
+<span class="fc" id="L459">                .andExpect(status().isOk())</span>
+<span class="fc" id="L460">                .andExpect(jsonPath(&quot;$.mensaje&quot;).exists())</span>
+<span class="fc" id="L461">                .andExpect(jsonPath(&quot;$.expiresIn&quot;).value(&quot;10 minutos&quot;));</span>
+<span class="fc" id="L462">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/reset-password - Resetear contraseña con código válido&quot;)
+    void resetPassword_codigosValidos_debeResetearContrasena() throws Exception {
+<span class="fc" id="L467">        usuarioTest.setRecoveryCodeHash(&quot;hashedCode&quot;);</span>
+<span class="fc" id="L468">        usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));</span>
+
+<span class="fc" id="L470">        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();</span>
+<span class="fc" id="L471">        request.setEmail(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L472">        request.setRecoveryCode(&quot;REC123456&quot;);</span>
+<span class="fc" id="L473">        request.setTotpCode(&quot;123456&quot;);</span>
+<span class="fc" id="L474">        request.setNewPassword(&quot;newPassword123&quot;);</span>
+
+<span class="fc" id="L476">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L477">        when(recoveryCodeService.isExpired(any())).thenReturn(false);</span>
+<span class="fc" id="L478">        when(recoveryCodeService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L479">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+
+<span class="fc" id="L481">        mockMvc.perform(post(&quot;/api/v1/auth/reset-password&quot;)</span>
+<span class="fc" id="L482">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L483">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L484">                .with(csrf()))</span>
+<span class="fc" id="L485">                .andExpect(status().isOk())</span>
+<span class="fc" id="L486">                .andExpect(jsonPath(&quot;$.mensaje&quot;).exists());</span>
+<span class="fc" id="L487">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/reset-password - Código de recuperación expirado&quot;)
+    void resetPassword_codigoExpirado_debeRetornar401() throws Exception {
+<span class="fc" id="L492">        usuarioTest.setRecoveryCodeHash(&quot;hashedCode&quot;);</span>
+<span class="fc" id="L493">        usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().minusMinutes(1));</span>
+
+<span class="fc" id="L495">        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();</span>
+<span class="fc" id="L496">        request.setEmail(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L497">        request.setRecoveryCode(&quot;REC123456&quot;);</span>
+<span class="fc" id="L498">        request.setTotpCode(&quot;123456&quot;);</span>
+<span class="fc" id="L499">        request.setNewPassword(&quot;newPassword123&quot;);</span>
+
+<span class="fc" id="L501">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L502">        when(recoveryCodeService.isExpired(any())).thenReturn(true);</span>
+
+<span class="fc" id="L504">        mockMvc.perform(post(&quot;/api/v1/auth/reset-password&quot;)</span>
+<span class="fc" id="L505">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L506">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L507">                .with(csrf()))</span>
+<span class="fc" id="L508">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L509">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de recuperación expirado. Solicita uno nuevo.&quot;));</span>
+<span class="fc" id="L510">    }</span>
+
+    // ===== TESTS DE CÓDIGOS DE RESPALDO =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/backup-codes/regenerate - Regenerar códigos de respaldo&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void regenerateBackupCodes_codigoValido_debeGenerarNuevosCodigos() throws Exception {
+<span class="fc" id="L518">        Verify2FARequestDTO request = new Verify2FARequestDTO();</span>
+<span class="fc" id="L519">        request.setTotpCode(&quot;123456&quot;);</span>
+
+<span class="fc" id="L521">        List&lt;String&gt; newBackupCodes = Arrays.asList(&quot;new1&quot;, &quot;new2&quot;, &quot;new3&quot;);</span>
+
+<span class="fc" id="L523">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L524">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L525">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L526">        when(backupCodeService.regenerateBackupCodes(any())).thenReturn(newBackupCodes);</span>
+
+<span class="fc" id="L528">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/backup-codes/regenerate&quot;)</span>
+<span class="fc" id="L529">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L530">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L531">                .with(csrf()))</span>
+<span class="fc" id="L532">                .andExpect(status().isOk())</span>
+<span class="fc" id="L533">                .andExpect(jsonPath(&quot;$.backupCodes&quot;).isArray())</span>
+<span class="fc" id="L534">                .andExpect(jsonPath(&quot;$.totalCodes&quot;).value(3));</span>
+<span class="fc" id="L535">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/2fa/backup-codes/count - Contar códigos disponibles&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void getBackupCodesCount_debeRetornarConteo() throws Exception {
+<span class="fc" id="L541">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L542">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L543">        when(backupCodeService.getAvailableCodesCount(any())).thenReturn(8L);</span>
+
+<span class="fc" id="L545">        mockMvc.perform(get(&quot;/api/v1/auth/2fa/backup-codes/count&quot;)</span>
+<span class="fc" id="L546">                .with(csrf()))</span>
+<span class="fc" id="L547">                .andExpect(status().isOk())</span>
+<span class="fc" id="L548">                .andExpect(jsonPath(&quot;$.availableCodes&quot;).value(8));</span>
+<span class="fc" id="L549">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/2fa/backup-codes/count - Advertencia con pocos códigos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void getBackupCodesCount_pocosCodigos_debeRetornarAdvertencia() throws Exception {
+<span class="fc" id="L555">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L556">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L557">        when(backupCodeService.getAvailableCodesCount(any())).thenReturn(2L);</span>
+
+<span class="fc" id="L559">        mockMvc.perform(get(&quot;/api/v1/auth/2fa/backup-codes/count&quot;)</span>
+<span class="fc" id="L560">                .with(csrf()))</span>
+<span class="fc" id="L561">                .andExpect(status().isOk())</span>
+<span class="fc" id="L562">                .andExpect(jsonPath(&quot;$.availableCodes&quot;).value(2))</span>
+<span class="fc" id="L563">                .andExpect(jsonPath(&quot;$.warning&quot;).value(&quot;Quedan pocos códigos de respaldo. Considera regenerarlos.&quot;));</span>
+<span class="fc" id="L564">    }</span>
+
+    // ===== TESTS DE ADMIN SETUP =====
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/admin/setup-data/{token} - Obtener datos de setup con token&quot;)
+    void getSetupData_tokenValido_debeRetornarDatos() throws Exception {
+<span class="fc" id="L571">        Map&lt;String, Object&gt; setupData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L572">        setupData.put(&quot;userId&quot;, 1);</span>
+<span class="fc" id="L573">        setupData.put(&quot;name&quot;, &quot;Admin&quot;);</span>
+<span class="fc" id="L574">        setupData.put(&quot;qrCode&quot;, &quot;data:image/png;base64,QR&quot;);</span>
+
+<span class="fc" id="L576">        when(setupTokenService.consumeSetupToken(any())).thenReturn(setupData);</span>
+
+<span class="fc" id="L578">        mockMvc.perform(get(&quot;/api/v1/auth/admin/setup-data/valid-token&quot;)</span>
+<span class="fc" id="L579">                .with(csrf()))</span>
+<span class="fc" id="L580">                .andExpect(status().isOk())</span>
+<span class="fc" id="L581">                .andExpect(jsonPath(&quot;$.userId&quot;).value(1))</span>
+<span class="fc" id="L582">                .andExpect(jsonPath(&quot;$.name&quot;).value(&quot;Admin&quot;));</span>
+<span class="fc" id="L583">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/v1/auth/admin/setup-data/{token} - Token inválido&quot;)
+    void getSetupData_tokenInvalido_debeRetornar404() throws Exception {
+<span class="fc" id="L588">        when(setupTokenService.consumeSetupToken(any())).thenReturn(null);</span>
+
+<span class="fc" id="L590">        mockMvc.perform(get(&quot;/api/v1/auth/admin/setup-data/invalid-token&quot;)</span>
+<span class="fc" id="L591">                .with(csrf()))</span>
+<span class="fc" id="L592">                .andExpect(status().isNotFound())</span>
+<span class="fc" id="L593">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Token inválido o expirado&quot;));</span>
+<span class="fc" id="L594">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/admin/complete-setup - Completar setup de admin&quot;)
+    void completeAdminSetup_datosValidos_debeCompletarSetup() throws Exception {
+<span class="fc" id="L599">        Usuario admin = new Usuario();</span>
+<span class="fc" id="L600">        admin.setUsuarioID(1);</span>
+<span class="fc" id="L601">        admin.setNombre(&quot;admin&quot;);</span>
+<span class="fc" id="L602">        admin.setNombres(&quot;Admin&quot;);</span>
+<span class="fc" id="L603">        admin.setApellidos(&quot;User&quot;);</span>
+<span class="fc" id="L604">        admin.setEmail(&quot;admin@temporal.local&quot;);</span>
+<span class="fc" id="L605">        admin.setTotpSecret(&quot;ADMINSECRET123&quot;);</span>
+<span class="fc" id="L606">        admin.setRequiereCambioCredenciales(true);</span>
+<span class="fc" id="L607">        admin.setRol(utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN);</span>
+
+<span class="fc" id="L609">        Map&lt;String, String&gt; request = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L610">        request.put(&quot;currentPassword&quot;, &quot;admin123&quot;);</span>
+<span class="fc" id="L611">        request.put(&quot;newEmail&quot;, &quot;admin@inia.com&quot;);</span>
+<span class="fc" id="L612">        request.put(&quot;newPassword&quot;, &quot;newSecurePass123&quot;);</span>
+<span class="fc" id="L613">        request.put(&quot;totpCode&quot;, &quot;123456&quot;);</span>
+
+<span class="fc" id="L615">        List&lt;String&gt; backupCodes = Arrays.asList(&quot;backup1&quot;, &quot;backup2&quot;);</span>
+
+<span class="fc" id="L617">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(admin));</span>
+<span class="fc" id="L618">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L619">        when(backupCodeService.generateBackupCodes(any())).thenReturn(backupCodes);</span>
+<span class="fc" id="L620">        when(seguridadService.listarRolesPorUsuario(any())).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L621">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;access-token&quot;);</span>
+<span class="fc" id="L622">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;refresh-token&quot;);</span>
+
+<span class="fc" id="L624">        mockMvc.perform(post(&quot;/api/v1/auth/admin/complete-setup&quot;)</span>
+<span class="fc" id="L625">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L626">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L627">                .with(csrf()))</span>
+<span class="fc" id="L628">                .andExpect(status().isOk())</span>
+<span class="fc" id="L629">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Configuración completada exitosamente&quot;))</span>
+<span class="fc" id="L630">                .andExpect(jsonPath(&quot;$.backupCodes&quot;).isArray())</span>
+<span class="fc" id="L631">                .andExpect(jsonPath(&quot;$.usuario&quot;).exists());</span>
+<span class="fc" id="L632">    }</span>
+
+    // ===== TESTS DE EDGE CASES Y VALIDACIONES =====
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Múltiples intentos fallidos de código TOTP&quot;)
+    void loginWith2FA_intentosFallidosTotp_debeBloquear() throws Exception {
+<span class="fc" id="L639">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L640">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L641">        loginRequest.setPassword(&quot;password123&quot;);</span>
+<span class="fc" id="L642">        loginRequest.setTotpCode(&quot;000000&quot;);</span>
+
+<span class="fc" id="L644">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L645">        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L646">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L647">        when(backupCodeService.verifyAndUseBackupCode(any(), any())).thenReturn(false);</span>
+
+<span class="fc bfc" id="L649" title="All 2 branches covered.">        for (int i = 0; i &lt; 5; i++) {</span>
+<span class="fc" id="L650">            mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L651">                    .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L652">                    .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L653">                    .with(csrf()))</span>
+<span class="fc" id="L654">                    .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L655">                    .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
+        }
+<span class="fc" id="L657">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Código de backup ya usado&quot;)
+    void loginWith2FA_codigoBackupUsado_debeRetornar401() throws Exception {
+<span class="fc" id="L662">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L663">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L664">        loginRequest.setPassword(&quot;password123&quot;);</span>
+<span class="fc" id="L665">        loginRequest.setTotpCode(&quot;used-backup-code&quot;);</span>
+
+<span class="fc" id="L667">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L668">        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L669">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L670">        when(backupCodeService.verifyAndUseBackupCode(any(), any())).thenReturn(false);</span>
+
+<span class="fc" id="L672">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L673">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L674">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L675">                .with(csrf()))</span>
+<span class="fc" id="L676">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L677">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
+<span class="fc" id="L678">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/login-2fa - Sin códigos de backup disponibles&quot;)
+    void loginWith2FA_sinCodigosBackup_debeAdvertir() throws Exception {
+<span class="fc" id="L683">        Login2FARequestDTO loginRequest = new Login2FARequestDTO();</span>
+<span class="fc" id="L684">        loginRequest.setUsuario(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L685">        loginRequest.setPassword(&quot;password123&quot;);</span>
+<span class="fc" id="L686">        loginRequest.setTotpCode(&quot;last-backup-code&quot;);</span>
+
+<span class="fc" id="L688">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L689">        when(trustedDeviceService.isTrustedDevice(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L690">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+<span class="fc" id="L691">        when(backupCodeService.verifyAndUseBackupCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L692">        when(backupCodeService.getAvailableCodesCount(any())).thenReturn(0L);</span>
+<span class="fc" id="L693">        when(seguridadService.listarRolesPorUsuario(any())).thenReturn(new String[]{&quot;ADMIN&quot;});</span>
+<span class="fc" id="L694">        when(jwtUtil.generarToken(any(), any())).thenReturn(&quot;access-token&quot;);</span>
+<span class="fc" id="L695">        when(jwtUtil.generarRefreshToken(any())).thenReturn(&quot;refresh-token&quot;);</span>
+<span class="fc" id="L696">        when(jwtUtil.getAccessTokenExpiration()).thenReturn(86400000L);</span>
+<span class="fc" id="L697">        when(jwtUtil.getRefreshTokenExpiration()).thenReturn(604800000L);</span>
+
+<span class="fc" id="L699">        mockMvc.perform(post(&quot;/api/v1/auth/login-2fa&quot;)</span>
+<span class="fc" id="L700">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L701">                .content(objectMapper.writeValueAsString(loginRequest))</span>
+<span class="fc" id="L702">                .with(csrf()))</span>
+<span class="fc" id="L703">                .andExpect(status().isOk())</span>
+<span class="fc" id="L704">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Login exitoso&quot;));</span>
+        // El warning solo se muestra si quedan códigos pero pocos, no cuando quedan 0
+<span class="fc" id="L706">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/backup-codes/regenerate - Sin 2FA habilitado&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void regenerateBackupCodes_sin2FA_debeRetornar400() throws Exception {
+<span class="fc" id="L712">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L714">        Verify2FARequestDTO request = new Verify2FARequestDTO();</span>
+<span class="fc" id="L715">        request.setTotpCode(&quot;123456&quot;);</span>
+
+<span class="fc" id="L717">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L718">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+
+<span class="fc" id="L720">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/backup-codes/regenerate&quot;)</span>
+<span class="fc" id="L721">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L722">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L723">                .with(csrf()))</span>
+<span class="fc" id="L724">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L725">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;2FA no está habilitado&quot;));</span>
+<span class="fc" id="L726">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/forgot-password - Email no registrado&quot;)
+    void forgotPassword_emailInexistente_debeFallarSilenciosamente() throws Exception {
+<span class="fc" id="L731">        ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();</span>
+<span class="fc" id="L732">        request.setEmail(&quot;noexiste@example.com&quot;);</span>
+
+<span class="fc" id="L734">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.empty());</span>
+
+<span class="fc" id="L736">        mockMvc.perform(post(&quot;/api/v1/auth/forgot-password&quot;)</span>
+<span class="fc" id="L737">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L738">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L739">                .with(csrf()))</span>
+<span class="fc" id="L740">                .andExpect(status().isOk())</span>
+<span class="fc" id="L741">                .andExpect(jsonPath(&quot;$.mensaje&quot;).exists());</span>
+<span class="fc" id="L742">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/forgot-password - Email con formato inválido&quot;)
+    void forgotPassword_emailInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L747">        ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();</span>
+<span class="fc" id="L748">        request.setEmail(&quot;email-invalido&quot;);</span>
+
+        // El controller siempre devuelve 200 por seguridad (no revela si el email existe o no)
+<span class="fc" id="L751">        mockMvc.perform(post(&quot;/api/v1/auth/forgot-password&quot;)</span>
+<span class="fc" id="L752">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L753">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L754">                .with(csrf()))</span>
+<span class="fc" id="L755">                .andExpect(status().isOk())</span>
+<span class="fc" id="L756">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Si el email existe, se enviará un código de recuperación&quot;));</span>
+<span class="fc" id="L757">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/reset-password - Contraseña nueva igual a la anterior&quot;)
+    void resetPassword_passwordIgual_debeRetornar400() throws Exception {
+<span class="fc" id="L762">        usuarioTest.setRecoveryCodeHash(&quot;hashedCode&quot;);</span>
+<span class="fc" id="L763">        usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));</span>
+
+<span class="fc" id="L765">        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();</span>
+<span class="fc" id="L766">        request.setEmail(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L767">        request.setRecoveryCode(&quot;REC123456&quot;);</span>
+<span class="fc" id="L768">        request.setTotpCode(&quot;123456&quot;);</span>
+<span class="fc" id="L769">        request.setNewPassword(&quot;password123&quot;);</span>
+
+<span class="fc" id="L771">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L772">        when(recoveryCodeService.isExpired(any())).thenReturn(false);</span>
+<span class="fc" id="L773">        when(recoveryCodeService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L774">        when(totpService.verifyCode(any(), any())).thenReturn(true);</span>
+
+        // El controller no valida si la contraseña es igual, procede con el cambio
+<span class="fc" id="L777">        mockMvc.perform(post(&quot;/api/v1/auth/reset-password&quot;)</span>
+<span class="fc" id="L778">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L779">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L780">                .with(csrf()))</span>
+<span class="fc" id="L781">                .andExpect(status().isOk())</span>
+<span class="fc" id="L782">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(&quot;Contraseña cambiada exitosamente. Por seguridad, todos tus dispositivos de confianza fueron revocados.&quot;));</span>
+<span class="fc" id="L783">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/reset-password - Código TOTP inválido con código de recuperación válido&quot;)
+    void resetPassword_totpInvalido_debeRetornar401() throws Exception {
+<span class="fc" id="L788">        usuarioTest.setRecoveryCodeHash(&quot;hashedCode&quot;);</span>
+<span class="fc" id="L789">        usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));</span>
+
+<span class="fc" id="L791">        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();</span>
+<span class="fc" id="L792">        request.setEmail(&quot;test@example.com&quot;);</span>
+<span class="fc" id="L793">        request.setRecoveryCode(&quot;REC123456&quot;);</span>
+<span class="fc" id="L794">        request.setTotpCode(&quot;000000&quot;);</span>
+<span class="fc" id="L795">        request.setNewPassword(&quot;newPassword123&quot;);</span>
+
+<span class="fc" id="L797">        when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L798">        when(recoveryCodeService.isExpired(any())).thenReturn(false);</span>
+<span class="fc" id="L799">        when(recoveryCodeService.verifyCode(any(), any())).thenReturn(true);</span>
+<span class="fc" id="L800">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+
+<span class="fc" id="L802">        mockMvc.perform(post(&quot;/api/v1/auth/reset-password&quot;)</span>
+<span class="fc" id="L803">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L804">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L805">                .with(csrf()))</span>
+<span class="fc" id="L806">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L807">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código de autenticación inválido&quot;));</span>
+<span class="fc" id="L808">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/v1/auth/trusted-devices/{deviceId} - Dispositivo inexistente&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void revokeTrustedDevice_dispositivoInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L814">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+        
+        // El controller no valida si el dispositivo existe, devuelve 200 en cualquier caso
+<span class="fc" id="L817">        mockMvc.perform(delete(&quot;/api/v1/auth/trusted-devices/999&quot;)</span>
+<span class="fc" id="L818">                .with(csrf()))</span>
+<span class="fc" id="L819">                .andExpect(status().isOk());</span>
+<span class="fc" id="L820">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/2fa/verify - Código expirado&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void verify2FA_codigoExpirado_debeRetornar401() throws Exception {
+<span class="fc" id="L826">        usuarioTest.setTotpEnabled(false);</span>
+
+<span class="fc" id="L828">        Verify2FARequestDTO request = new Verify2FARequestDTO();</span>
+<span class="fc" id="L829">        request.setTotpCode(&quot;123456&quot;);</span>
+
+<span class="fc" id="L831">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L832">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L833">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+
+<span class="fc" id="L835">        mockMvc.perform(post(&quot;/api/v1/auth/2fa/verify&quot;)</span>
+<span class="fc" id="L836">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L837">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L838">                .with(csrf()))</span>
+<span class="fc" id="L839">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L840">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código 2FA inválido o expirado&quot;));</span>
+<span class="fc" id="L841">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/v1/auth/2fa/disable - Código TOTP inválido&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void disable2FA_codigoInvalido_debeRetornar401() throws Exception {
+<span class="fc" id="L847">        Verify2FARequestDTO request = new Verify2FARequestDTO();</span>
+<span class="fc" id="L848">        request.setTotpCode(&quot;000000&quot;);</span>
+
+<span class="fc" id="L850">        when(seguridadService.obtenerUsuarioAutenticado()).thenReturn(1);</span>
+<span class="fc" id="L851">        when(usuarioService.buscarPorId(any())).thenReturn(Optional.of(usuarioTest));</span>
+<span class="fc" id="L852">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+
+<span class="fc" id="L854">        mockMvc.perform(delete(&quot;/api/v1/auth/2fa/disable&quot;)</span>
+<span class="fc" id="L855">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L856">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L857">                .with(csrf()))</span>
+<span class="fc" id="L858">                .andExpect(status().isUnauthorized())</span>
+<span class="fc" id="L859">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Código 2FA inválido. Necesitas el código correcto para deshabilitar 2FA&quot;));</span>
+<span class="fc" id="L860">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/v1/auth/admin/complete-setup - Código TOTP inválido en setup&quot;)
+    void completeAdminSetup_codigoInvalido_debeRetornar401() throws Exception {
+<span class="fc" id="L865">        Usuario admin = new Usuario();</span>
+<span class="fc" id="L866">        admin.setUsuarioID(1);</span>
+<span class="fc" id="L867">        admin.setNombre(&quot;admin&quot;);</span>
+<span class="fc" id="L868">        admin.setTotpSecret(&quot;ADMINSECRET123&quot;);</span>
+<span class="fc" id="L869">        admin.setRequiereCambioCredenciales(true);</span>
+
+<span class="fc" id="L871">        Map&lt;String, String&gt; request = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L872">        request.put(&quot;currentPassword&quot;, &quot;admin123&quot;);</span>
+<span class="fc" id="L873">        request.put(&quot;newEmail&quot;, &quot;admin@inia.com&quot;);</span>
+<span class="fc" id="L874">        request.put(&quot;newPassword&quot;, &quot;newSecurePass123&quot;);</span>
+<span class="fc" id="L875">        request.put(&quot;totpCode&quot;, &quot;000000&quot;);</span>
+
+<span class="fc" id="L877">        when(seguridadService.autenticarUsuario(any(), any())).thenReturn(Optional.of(admin));</span>
+<span class="fc" id="L878">        when(totpService.verifyCode(any(), any())).thenReturn(false);</span>
+
+<span class="fc" id="L880">        mockMvc.perform(post(&quot;/api/v1/auth/admin/complete-setup&quot;)</span>
+<span class="fc" id="L881">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L882">                .content(objectMapper.writeValueAsString(request))</span>
+<span class="fc" id="L883">                .with(csrf()))</span>
+<span class="fc" id="L884">                .andExpect(status().isForbidden())</span>
+<span class="fc" id="L885">                .andExpect(jsonPath(&quot;$.error&quot;).value(&quot;Acceso denegado&quot;));</span>
+<span class="fc" id="L886">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

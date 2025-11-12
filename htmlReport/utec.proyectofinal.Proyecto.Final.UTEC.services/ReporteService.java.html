@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReporteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">ReporteService.java</span></div><h1>ReporteService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ReporteService {
+
+    private final GerminacionRepository germinacionRepository;
+    private final PurezaRepository purezaRepository;
+    private final PmsRepository pmsRepository;
+    private final TetrazolioRepository tetrazolioRepository;
+    private final DosnRepository dosnRepository;
+
+    public ReporteGeneralDTO obtenerReporteGeneral(LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L33">        List&lt;Analisis&gt; todosAnalisis = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L34">        todosAnalisis.addAll(obtenerAnalisisPorFecha(germinacionRepository.findAll(), inicio, fin));</span>
+<span class="fc" id="L35">        todosAnalisis.addAll(obtenerAnalisisPorFecha(purezaRepository.findAll(), inicio, fin));</span>
+<span class="fc" id="L36">        todosAnalisis.addAll(obtenerAnalisisPorFecha(pmsRepository.findAll(), inicio, fin));</span>
+<span class="fc" id="L37">        todosAnalisis.addAll(obtenerAnalisisPorFecha(tetrazolioRepository.findAll(), inicio, fin));</span>
+<span class="fc" id="L38">        todosAnalisis.addAll(obtenerAnalisisPorFecha(dosnRepository.findAll(), inicio, fin));</span>
+
+<span class="fc" id="L40">        Long totalAnalisis = (long) todosAnalisis.size();</span>
+
+<span class="fc" id="L42">        Map&lt;String, Long&gt; analisisPorPeriodo = calcularAnalisisPorPeriodo(todosAnalisis);</span>
+<span class="fc" id="L43">        Map&lt;String, Long&gt; analisisPorEstado = calcularAnalisisPorEstado(todosAnalisis);</span>
+<span class="fc" id="L44">        Map&lt;String, Double&gt; porcentajeCompletitud = calcularPorcentajeCompletitud(analisisPorEstado, totalAnalisis);</span>
+<span class="fc" id="L45">        Double tiempoMedioFinalizacion = calcularTiempoMedioFinalizacion(todosAnalisis);</span>
+<span class="fc" id="L46">        Map&lt;String, Long&gt; topAnalisisProblemas = calcularTopAnalisisProblemas(inicio, fin);</span>
+
+<span class="fc" id="L48">        return new ReporteGeneralDTO(</span>
+            totalAnalisis,
+            analisisPorPeriodo,
+            analisisPorEstado,
+            porcentajeCompletitud,
+            tiempoMedioFinalizacion,
+            topAnalisisProblemas
+        );
+    }
+
+    public ReporteGerminacionDTO obtenerReporteGerminacion(LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L62">        List&lt;Germinacion&gt; germinaciones = obtenerAnalisisPorFecha(germinacionRepository.findAll(), inicio, fin);</span>
+
+<span class="fc" id="L64">        Map&lt;String, Double&gt; mediaGerminacionPorEspecie = calcularMediaGerminacionPorEspecie(germinaciones);</span>
+<span class="fc" id="L65">        Map&lt;String, Double&gt; tiempoPromedioPrimerConteo = calcularTiempoPromedioPrimerConteo(germinaciones);</span>
+<span class="fc" id="L66">        Map&lt;String, Double&gt; tiempoPromedioUltimoConteo = calcularTiempoPromedioUltimoConteo(germinaciones);</span>
+
+<span class="fc" id="L68">        return new ReporteGerminacionDTO(</span>
+            mediaGerminacionPorEspecie,
+            tiempoPromedioPrimerConteo,
+            tiempoPromedioUltimoConteo,
+<span class="fc" id="L72">            (long) germinaciones.size()</span>
+        );
+    }
+
+    public ReportePMSDTO obtenerReportePms(LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L80">        List&lt;Pms&gt; pmsList = obtenerAnalisisPorFecha(pmsRepository.findAll(), inicio, fin);</span>
+
+<span class="fc" id="L82">        long totalPms = pmsList.size();</span>
+<span class="fc" id="L83">        long muestrasConCVSuperado = pmsList.stream()</span>
+<span class="pc bpc" id="L84" title="1 of 4 branches missed.">            .filter(pms -&gt; pms.getCoefVariacion() != null &amp;&amp; pms.getCoefVariacion().compareTo(BigDecimal.valueOf(6.0)) &gt; 0)</span>
+<span class="fc" id="L85">            .count();</span>
+
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        double porcentaje = totalPms &gt; 0 ? (muestrasConCVSuperado * 100.0 / totalPms) : 0.0;</span>
+
+<span class="fc" id="L89">        long muestrasConRepeticionesMaximas = pmsList.stream()</span>
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">            .filter(pms -&gt; pms.getNumRepeticionesEsperadas() != null &amp;&amp; pms.getNumRepeticionesEsperadas() &gt;= 16)</span>
+<span class="fc" id="L91">            .count();</span>
+
+<span class="fc" id="L93">        return new ReportePMSDTO(</span>
+<span class="fc" id="L94">            totalPms,</span>
+<span class="fc" id="L95">            muestrasConCVSuperado,</span>
+<span class="fc" id="L96">            porcentaje,</span>
+<span class="fc" id="L97">            muestrasConRepeticionesMaximas</span>
+        );
+    }
+
+    public ReportePurezaDTO obtenerReportePureza(LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L105">        List&lt;Pureza&gt; purezas = obtenerAnalisisPorFecha(purezaRepository.findAll(), inicio, fin);</span>
+
+<span class="fc" id="L107">        Map&lt;String, Long&gt; contaminantesPorEspecie = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L108">        Map&lt;String, Double&gt; porcentajeMalezas = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L109">        Map&lt;String, Double&gt; porcentajeOtrasSemillas = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L110">        Map&lt;String, Double&gt; porcentajeCumpleEstandar = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L112">        Map&lt;String, List&lt;Pureza&gt;&gt; purezasPorEspecie = purezas.stream()</span>
+<span class="pc bpc" id="L113" title="3 of 6 branches missed.">            .filter(p -&gt; p.getLote() != null &amp;&amp; p.getLote().getCultivar() != null &amp;&amp; p.getLote().getCultivar().getEspecie() != null)</span>
+<span class="fc" id="L114">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L115">                p -&gt; p.getLote().getCultivar().getEspecie().getNombreComun(),</span>
+<span class="fc" id="L116">                Collectors.toList()</span>
+            ));
+
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        for (Map.Entry&lt;String, List&lt;Pureza&gt;&gt; entry : purezasPorEspecie.entrySet()) {</span>
+<span class="fc" id="L120">            String especie = entry.getKey();</span>
+<span class="fc" id="L121">            List&lt;Pureza&gt; purezasEspecie = entry.getValue();</span>
+
+<span class="fc" id="L123">            double totalMalezas = purezasEspecie.stream()</span>
+<span class="pc bpc" id="L124" title="3 of 6 branches missed.">                .filter(p -&gt; p.getMalezas_g() != null &amp;&amp; p.getPesoInicial_g() != null &amp;&amp; p.getPesoInicial_g().compareTo(BigDecimal.ZERO) &gt; 0)</span>
+<span class="fc" id="L125">                .mapToDouble(p -&gt; p.getMalezas_g().divide(p.getPesoInicial_g(), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue())</span>
+<span class="fc" id="L126">                .average()</span>
+<span class="fc" id="L127">                .orElse(0.0);</span>
+
+<span class="fc" id="L129">            double totalOtrasSemillas = purezasEspecie.stream()</span>
+<span class="pc bpc" id="L130" title="3 of 6 branches missed.">                .filter(p -&gt; p.getOtrosCultivos_g() != null &amp;&amp; p.getPesoInicial_g() != null &amp;&amp; p.getPesoInicial_g().compareTo(BigDecimal.ZERO) &gt; 0)</span>
+<span class="fc" id="L131">                .mapToDouble(p -&gt; p.getOtrosCultivos_g().divide(p.getPesoInicial_g(), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue())</span>
+<span class="fc" id="L132">                .average()</span>
+<span class="fc" id="L133">                .orElse(0.0);</span>
+
+<span class="fc" id="L135">            long cumpleEstandar = purezasEspecie.stream()</span>
+<span class="pc bpc" id="L136" title="1 of 4 branches missed.">                .filter(p -&gt; p.getCumpleEstandar() != null &amp;&amp; p.getCumpleEstandar())</span>
+<span class="fc" id="L137">                .count();</span>
+
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            double porcentajeCumple = purezasEspecie.size() &gt; 0 ? (cumpleEstandar * 100.0 / purezasEspecie.size()) : 0.0;</span>
+
+<span class="fc" id="L141">            contaminantesPorEspecie.put(especie, (long) purezasEspecie.size());</span>
+<span class="fc" id="L142">            porcentajeMalezas.put(especie, totalMalezas);</span>
+<span class="fc" id="L143">            porcentajeOtrasSemillas.put(especie, totalOtrasSemillas);</span>
+<span class="fc" id="L144">            porcentajeCumpleEstandar.put(especie, porcentajeCumple);</span>
+<span class="fc" id="L145">        }</span>
+
+<span class="fc" id="L147">        return new ReportePurezaDTO(</span>
+            contaminantesPorEspecie,
+            porcentajeMalezas,
+            porcentajeOtrasSemillas,
+            porcentajeCumpleEstandar,
+<span class="fc" id="L152">            (long) purezas.size()</span>
+        );
+    }
+
+    public ReporteTetrazolioDTO obtenerReporteTetrazolio(LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L160">        List&lt;Tetrazolio&gt; tetrazolios = obtenerAnalisisPorFecha(tetrazolioRepository.findAll(), inicio, fin);</span>
+
+<span class="fc" id="L162">        Map&lt;String, Double&gt; viabilidadPorEspecie = tetrazolios.stream()</span>
+<span class="pc bpc" id="L163" title="3 of 6 branches missed.">            .filter(t -&gt; t.getLote() != null &amp;&amp; t.getLote().getCultivar() != null &amp;&amp; t.getLote().getCultivar().getEspecie() != null)</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">            .filter(t -&gt; t.getViabilidadInase() != null)</span>
+<span class="fc" id="L165">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L166">                t -&gt; t.getLote().getCultivar().getEspecie().getNombreComun(),</span>
+<span class="fc" id="L167">                Collectors.averagingDouble(t -&gt; t.getViabilidadInase().doubleValue())</span>
+            ));
+
+<span class="fc" id="L170">        return new ReporteTetrazolioDTO(</span>
+            viabilidadPorEspecie,
+<span class="fc" id="L172">            (long) tetrazolios.size()</span>
+        );
+    }
+
+    private &lt;T extends Analisis&gt; List&lt;T&gt; obtenerAnalisisPorFecha(List&lt;T&gt; analisis, LocalDateTime inicio, LocalDateTime fin) {
+<span class="fc" id="L177">        return analisis.stream()</span>
+<span class="pc bpc" id="L178" title="1 of 4 branches missed.">            .filter(a -&gt; a.getActivo() != null &amp;&amp; a.getActivo())</span>
+<span class="fc" id="L179">            .filter(a -&gt; {</span>
+<span class="pc bpc" id="L180" title="1 of 6 branches missed.">                if (inicio != null &amp;&amp; a.getFechaInicio() != null &amp;&amp; a.getFechaInicio().isBefore(inicio)) {</span>
+<span class="fc" id="L181">                    return false;</span>
+                }
+<span class="pc bpc" id="L183" title="2 of 6 branches missed.">                if (fin != null &amp;&amp; a.getFechaInicio() != null &amp;&amp; a.getFechaInicio().isAfter(fin)) {</span>
+<span class="nc" id="L184">                    return false;</span>
+                }
+<span class="fc" id="L186">                return true;</span>
+            })
+<span class="fc" id="L188">            .collect(Collectors.toList());</span>
+    }
+
+    private Map&lt;String, Long&gt; calcularAnalisisPorPeriodo(List&lt;Analisis&gt; analisis) {
+<span class="fc" id="L192">        Map&lt;String, Long&gt; resultado = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L193">        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM&quot;);</span>
+
+<span class="fc" id="L195">        analisis.stream()</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">            .filter(a -&gt; a.getFechaInicio() != null)</span>
+<span class="fc" id="L197">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L198">                a -&gt; a.getFechaInicio().format(formatter),</span>
+<span class="fc" id="L199">                Collectors.counting()</span>
+            ))
+<span class="fc" id="L201">            .entrySet().stream()</span>
+<span class="fc" id="L202">            .sorted(Map.Entry.comparingByKey())</span>
+<span class="fc" id="L203">            .forEach(e -&gt; resultado.put(e.getKey(), e.getValue()));</span>
+
+<span class="fc" id="L205">        return resultado;</span>
+    }
+
+    private Map&lt;String, Long&gt; calcularAnalisisPorEstado(List&lt;Analisis&gt; analisis) {
+<span class="fc" id="L209">        return analisis.stream()</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">            .filter(a -&gt; a.getEstado() != null)</span>
+<span class="fc" id="L211">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L212">                a -&gt; a.getEstado().name(),</span>
+<span class="fc" id="L213">                Collectors.counting()</span>
+            ));
+    }
+
+    private Map&lt;String, Double&gt; calcularPorcentajeCompletitud(Map&lt;String, Long&gt; analisisPorEstado, Long total) {
+<span class="fc" id="L218">        Map&lt;String, Double&gt; resultado = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (total == 0) return resultado;</span>
+
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        for (Map.Entry&lt;String, Long&gt; entry : analisisPorEstado.entrySet()) {</span>
+<span class="fc" id="L222">            double porcentaje = (entry.getValue() * 100.0) / total;</span>
+<span class="fc" id="L223">            resultado.put(entry.getKey(), Math.round(porcentaje * 100.0) / 100.0);</span>
+<span class="fc" id="L224">        }</span>
+
+<span class="fc" id="L226">        return resultado;</span>
+    }
+
+    private Double calcularTiempoMedioFinalizacion(List&lt;Analisis&gt; analisis) {
+<span class="fc" id="L230">        List&lt;Long&gt; duraciones = analisis.stream()</span>
+<span class="pc bpc" id="L231" title="2 of 4 branches missed.">            .filter(a -&gt; a.getFechaInicio() != null &amp;&amp; a.getFechaFin() != null)</span>
+<span class="pc" id="L232">            .map(a -&gt; Duration.between(a.getFechaInicio(), a.getFechaFin()).toDays())</span>
+<span class="fc" id="L233">            .collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">        if (duraciones.isEmpty()) return 0.0;</span>
+
+<span class="nc" id="L237">        return duraciones.stream()</span>
+<span class="nc" id="L238">            .mapToLong(Long::longValue)</span>
+<span class="nc" id="L239">            .average()</span>
+<span class="nc" id="L240">            .orElse(0.0);</span>
+    }
+
+    private Map&lt;String, Long&gt; calcularTopAnalisisProblemas(LocalDateTime inicio, LocalDateTime fin) {
+<span class="fc" id="L244">        Map&lt;String, Long&gt; problemas = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L246">        long germinacionProblemas = obtenerAnalisisPorFecha(germinacionRepository.findAll(), inicio, fin).stream()</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">            .filter(g -&gt; g.getEstado() == Estado.A_REPETIR)</span>
+<span class="fc" id="L248">            .count();</span>
+
+<span class="fc" id="L250">        long purezaProblemas = obtenerAnalisisPorFecha(purezaRepository.findAll(), inicio, fin).stream()</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">            .filter(p -&gt; p.getEstado() == Estado.A_REPETIR)</span>
+<span class="fc" id="L252">            .count();</span>
+
+<span class="fc" id="L254">        long pmsProblemas = obtenerAnalisisPorFecha(pmsRepository.findAll(), inicio, fin).stream()</span>
+<span class="pc bnc" id="L255" title="All 2 branches missed.">            .filter(p -&gt; p.getEstado() == Estado.A_REPETIR)</span>
+<span class="fc" id="L256">            .count();</span>
+
+<span class="fc" id="L258">        long tetrazolioProblemas = obtenerAnalisisPorFecha(tetrazolioRepository.findAll(), inicio, fin).stream()</span>
+<span class="pc bnc" id="L259" title="All 2 branches missed.">            .filter(t -&gt; t.getEstado() == Estado.A_REPETIR)</span>
+<span class="fc" id="L260">            .count();</span>
+
+<span class="fc" id="L262">        long dosnProblemas = obtenerAnalisisPorFecha(dosnRepository.findAll(), inicio, fin).stream()</span>
+<span class="pc bnc" id="L263" title="All 2 branches missed.">            .filter(d -&gt; d.getEstado() == Estado.A_REPETIR)</span>
+<span class="fc" id="L264">            .count();</span>
+
+<span class="fc" id="L266">        problemas.put(&quot;GERMINACION&quot;, germinacionProblemas);</span>
+<span class="fc" id="L267">        problemas.put(&quot;PUREZA&quot;, purezaProblemas);</span>
+<span class="fc" id="L268">        problemas.put(&quot;PMS&quot;, pmsProblemas);</span>
+<span class="fc" id="L269">        problemas.put(&quot;TETRAZOLIO&quot;, tetrazolioProblemas);</span>
+<span class="fc" id="L270">        problemas.put(&quot;DOSN&quot;, dosnProblemas);</span>
+
+<span class="fc" id="L272">        return problemas.entrySet().stream()</span>
+<span class="fc" id="L273">            .sorted(Map.Entry.&lt;String, Long&gt;comparingByValue().reversed())</span>
+<span class="fc" id="L274">            .limit(5)</span>
+<span class="fc" id="L275">            .collect(Collectors.toMap(</span>
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+<span class="nc" id="L278">                (e1, e2) -&gt; e1,</span>
+                LinkedHashMap::new
+            ));
+    }
+
+    private Map&lt;String, Double&gt; calcularMediaGerminacionPorEspecie(List&lt;Germinacion&gt; germinaciones) {
+<span class="fc" id="L284">        return germinaciones.stream()</span>
+<span class="pc bpc" id="L285" title="3 of 6 branches missed.">            .filter(g -&gt; g.getLote() != null &amp;&amp; g.getLote().getCultivar() != null &amp;&amp; g.getLote().getCultivar().getEspecie() != null)</span>
+<span class="pc bpc" id="L286" title="2 of 4 branches missed.">            .filter(g -&gt; g.getTablaGerm() != null &amp;&amp; !g.getTablaGerm().isEmpty())</span>
+<span class="fc" id="L287">            .flatMap(g -&gt; g.getTablaGerm().stream()</span>
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">                .filter(t -&gt; t.getPorcentajeNormalesConRedondeo() != null)</span>
+<span class="fc" id="L289">                .map(t -&gt; new Object() {</span>
+<span class="fc" id="L290">                    String especie = g.getLote().getCultivar().getEspecie().getNombreComun();</span>
+<span class="fc" id="L291">                    Double porcentaje = t.getPorcentajeNormalesConRedondeo().doubleValue();</span>
+                }))
+<span class="fc" id="L293">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L294">                obj -&gt; obj.especie,</span>
+<span class="fc" id="L295">                Collectors.averagingDouble(obj -&gt; obj.porcentaje)</span>
+            ));
+    }
+
+    private Map&lt;String, Double&gt; calcularTiempoPromedioPrimerConteo(List&lt;Germinacion&gt; germinaciones) {
+<span class="fc" id="L300">        return germinaciones.stream()</span>
+<span class="pc bpc" id="L301" title="3 of 6 branches missed.">            .filter(g -&gt; g.getLote() != null &amp;&amp; g.getLote().getCultivar() != null &amp;&amp; g.getLote().getCultivar().getEspecie() != null)</span>
+<span class="pc bpc" id="L302" title="2 of 4 branches missed.">            .filter(g -&gt; g.getTablaGerm() != null &amp;&amp; !g.getTablaGerm().isEmpty())</span>
+<span class="fc" id="L303">            .flatMap(g -&gt; g.getTablaGerm().stream()</span>
+<span class="pc bpc" id="L304" title="3 of 6 branches missed.">                .filter(t -&gt; t.getFechaConteos() != null &amp;&amp; !t.getFechaConteos().isEmpty() &amp;&amp; t.getFechaGerminacion() != null)</span>
+<span class="fc" id="L305">                .map(t -&gt; new Object() {</span>
+<span class="fc" id="L306">                    String especie = g.getLote().getCultivar().getEspecie().getNombreComun();</span>
+<span class="fc" id="L307">                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaGerminacion(), t.getFechaConteos().get(0));</span>
+                }))
+<span class="fc" id="L309">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L310">                obj -&gt; obj.especie,</span>
+<span class="fc" id="L311">                Collectors.averagingDouble(obj -&gt; obj.dias)</span>
+            ));
+    }
+
+    private Map&lt;String, Double&gt; calcularTiempoPromedioUltimoConteo(List&lt;Germinacion&gt; germinaciones) {
+<span class="fc" id="L316">        return germinaciones.stream()</span>
+<span class="pc bpc" id="L317" title="3 of 6 branches missed.">            .filter(g -&gt; g.getLote() != null &amp;&amp; g.getLote().getCultivar() != null &amp;&amp; g.getLote().getCultivar().getEspecie() != null)</span>
+<span class="pc bpc" id="L318" title="2 of 4 branches missed.">            .filter(g -&gt; g.getTablaGerm() != null &amp;&amp; !g.getTablaGerm().isEmpty())</span>
+<span class="fc" id="L319">            .flatMap(g -&gt; g.getTablaGerm().stream()</span>
+<span class="pc bpc" id="L320" title="2 of 4 branches missed.">                .filter(t -&gt; t.getFechaUltConteo() != null &amp;&amp; t.getFechaGerminacion() != null)</span>
+<span class="fc" id="L321">                .map(t -&gt; new Object() {</span>
+<span class="fc" id="L322">                    String especie = g.getLote().getCultivar().getEspecie().getNombreComun();</span>
+<span class="fc" id="L323">                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaGerminacion(), t.getFechaUltConteo());</span>
+                }))
+<span class="fc" id="L325">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L326">                obj -&gt; obj.especie,</span>
+<span class="fc" id="L327">                Collectors.averagingDouble(obj -&gt; obj.dias)</span>
+            ));
+    }
+    
+    public ReportePurezaDTO obtenerReporteDosn(LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="pc bpc" id="L332" title="1 of 2 branches missed.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L335">        List&lt;Dosn&gt; dosns = obtenerAnalisisPorFecha(dosnRepository.findAll(), inicio, fin);</span>
+
+<span class="fc" id="L337">        Map&lt;String, Long&gt; contaminantesPorEspecie = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L338">        Map&lt;String, Double&gt; porcentajeMalezas = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L339">        Map&lt;String, Double&gt; porcentajeOtrasSemillas = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L340">        Map&lt;String, Double&gt; porcentajeCumpleEstandar = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L342">        Map&lt;String, List&lt;Dosn&gt;&gt; dosnsPorEspecie = dosns.stream()</span>
+<span class="pc bpc" id="L343" title="3 of 6 branches missed.">            .filter(d -&gt; d.getLote() != null &amp;&amp; d.getLote().getCultivar() != null &amp;&amp; d.getLote().getCultivar().getEspecie() != null)</span>
+<span class="fc" id="L344">            .collect(Collectors.groupingBy(</span>
+<span class="fc" id="L345">                d -&gt; d.getLote().getCultivar().getEspecie().getNombreComun(),</span>
+<span class="fc" id="L346">                Collectors.toList()</span>
+            ));
+
+<span class="fc bfc" id="L349" title="All 2 branches covered.">        for (Map.Entry&lt;String, List&lt;Dosn&gt;&gt; entry : dosnsPorEspecie.entrySet()) {</span>
+<span class="fc" id="L350">            String especie = entry.getKey();</span>
+<span class="fc" id="L351">            List&lt;Dosn&gt; dosnsEspecie = entry.getValue();</span>
+
+<span class="fc" id="L353">            long cumpleEstandar = dosnsEspecie.stream()</span>
+<span class="pc bpc" id="L354" title="2 of 4 branches missed.">                .filter(d -&gt; d.getCumpleEstandar() != null &amp;&amp; d.getCumpleEstandar())</span>
+<span class="fc" id="L355">                .count();</span>
+
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">            double porcentajeCumple = dosnsEspecie.size() &gt; 0 ? (cumpleEstandar * 100.0 / dosnsEspecie.size()) : 0.0;</span>
+
+<span class="fc" id="L359">            contaminantesPorEspecie.put(especie, (long) dosnsEspecie.size());</span>
+<span class="fc" id="L360">            porcentajeMalezas.put(especie, 0.0); // DOSN no tiene campos directos de malezas</span>
+<span class="fc" id="L361">            porcentajeOtrasSemillas.put(especie, 0.0); // DOSN usa estructura diferente</span>
+<span class="fc" id="L362">            porcentajeCumpleEstandar.put(especie, porcentajeCumple);</span>
+<span class="fc" id="L363">        }</span>
+
+<span class="fc" id="L365">        return new ReportePurezaDTO(</span>
+            contaminantesPorEspecie,
+            porcentajeMalezas,
+            porcentajeOtrasSemillas,
+            porcentajeCumpleEstandar,
+<span class="fc" id="L370">            (long) dosns.size()</span>
+        );
+    }
+
+    public Map&lt;String, Double&gt; obtenerContaminantesPorEspeciePureza(String especie, LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="pc bpc" id="L376" title="1 of 2 branches missed.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L378">        List&lt;Pureza&gt; purezas = obtenerAnalisisPorFecha(purezaRepository.findAll(), inicio, fin).stream()</span>
+<span class="pc bpc" id="L379" title="3 of 6 branches missed.">            .filter(p -&gt; p.getLote() != null &amp;&amp; p.getLote().getCultivar() != null &amp;&amp; p.getLote().getCultivar().getEspecie() != null)</span>
+<span class="fc" id="L380">            .filter(p -&gt; p.getLote().getCultivar().getEspecie().getNombreComun().equals(especie))</span>
+<span class="fc" id="L381">            .collect(Collectors.toList());</span>
+
+<span class="fc" id="L383">        Map&lt;String, Double&gt; contaminantes = new HashMap&lt;&gt;();</span>
+        
+        // Agregar detalle de malezas específicas desde listados (catálogo)
+<span class="fc" id="L386">        Map&lt;String, Long&gt; malezasDetalle = purezas.stream()</span>
+<span class="pc bpc" id="L387" title="2 of 4 branches missed.">            .filter(p -&gt; p.getListados() != null &amp;&amp; !p.getListados().isEmpty())</span>
+<span class="pc" id="L388">            .flatMap(p -&gt; p.getListados().stream())</span>
+<span class="pc bnc" id="L389" title="All 4 branches missed.">            .filter(l -&gt; l.getCatalogo() != null &amp;&amp; l.getCatalogo().getNombreComun() != null)</span>
+<span class="fc" id="L390">            .collect(Collectors.groupingBy(</span>
+<span class="nc" id="L391">                l -&gt; l.getCatalogo().getNombreComun(),</span>
+<span class="fc" id="L392">                Collectors.counting()</span>
+            ));
+        
+        // Agregar detalle de otros cultivos específicos desde listados (especie)
+<span class="fc" id="L396">        Map&lt;String, Long&gt; cultivosDetalle = purezas.stream()</span>
+<span class="pc bpc" id="L397" title="2 of 4 branches missed.">            .filter(p -&gt; p.getListados() != null &amp;&amp; !p.getListados().isEmpty())</span>
+<span class="pc" id="L398">            .flatMap(p -&gt; p.getListados().stream())</span>
+<span class="pc bnc" id="L399" title="All 4 branches missed.">            .filter(l -&gt; l.getEspecie() != null &amp;&amp; l.getEspecie().getNombreComun() != null)</span>
+<span class="fc" id="L400">            .collect(Collectors.groupingBy(</span>
+<span class="nc" id="L401">                l -&gt; l.getEspecie().getNombreComun(),</span>
+<span class="fc" id="L402">                Collectors.counting()</span>
+            ));
+
+        // Calcular totales sumando los detalles
+<span class="fc" id="L406">        long totalMalezas = malezasDetalle.values().stream().mapToLong(Long::longValue).sum();</span>
+<span class="fc" id="L407">        long totalOtrosCultivos = cultivosDetalle.values().stream().mapToLong(Long::longValue).sum();</span>
+        
+<span class="pc bpc" id="L409" title="1 of 2 branches missed.">        if (totalMalezas &gt; 0) {</span>
+<span class="nc" id="L410">            contaminantes.put(&quot;Total Malezas&quot;, (double) totalMalezas);</span>
+        }
+        
+<span class="pc bpc" id="L413" title="1 of 2 branches missed.">        if (totalOtrosCultivos &gt; 0) {</span>
+<span class="nc" id="L414">            contaminantes.put(&quot;Total Otros Cultivos&quot;, (double) totalOtrosCultivos);</span>
+        }
+
+        // Agregar malezas individuales
+<span class="fc" id="L418">        malezasDetalle.forEach((nombre, cantidad) -&gt; {</span>
+<span class="nc" id="L419">            contaminantes.put(&quot;Maleza: &quot; + nombre, (double) cantidad);</span>
+<span class="nc" id="L420">        });</span>
+        
+        // Agregar cultivos individuales
+<span class="fc" id="L423">        cultivosDetalle.forEach((nombre, cantidad) -&gt; {</span>
+<span class="nc" id="L424">            contaminantes.put(&quot;Cultivo: &quot; + nombre, (double) cantidad);</span>
+<span class="nc" id="L425">        });</span>
+
+<span class="fc" id="L427">        return contaminantes;</span>
+    }
+
+    public Map&lt;String, Double&gt; obtenerContaminantesPorEspecieDosn(String especie, LocalDate fechaInicio, LocalDate fechaFin) {
+<span class="pc bpc" id="L431" title="1 of 2 branches missed.">        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : null;</span>
+<span class="pc bpc" id="L432" title="1 of 2 branches missed.">        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : null;</span>
+
+<span class="fc" id="L434">        List&lt;Dosn&gt; dosns = obtenerAnalisisPorFecha(dosnRepository.findAll(), inicio, fin).stream()</span>
+<span class="pc bpc" id="L435" title="3 of 6 branches missed.">            .filter(d -&gt; d.getLote() != null &amp;&amp; d.getLote().getCultivar() != null &amp;&amp; d.getLote().getCultivar().getEspecie() != null)</span>
+<span class="fc" id="L436">            .filter(d -&gt; d.getLote().getCultivar().getEspecie().getNombreComun().equals(especie))</span>
+<span class="fc" id="L437">            .collect(Collectors.toList());</span>
+
+<span class="fc" id="L439">        Map&lt;String, Double&gt; contaminantes = new HashMap&lt;&gt;();</span>
+        
+        // Agregar detalle de malezas específicas desde listados (catálogo)
+<span class="fc" id="L442">        Map&lt;String, Long&gt; malezasDetalle = dosns.stream()</span>
+<span class="pc bpc" id="L443" title="2 of 4 branches missed.">            .filter(d -&gt; d.getListados() != null &amp;&amp; !d.getListados().isEmpty())</span>
+<span class="pc" id="L444">            .flatMap(d -&gt; d.getListados().stream())</span>
+<span class="pc bnc" id="L445" title="All 4 branches missed.">            .filter(l -&gt; l.getCatalogo() != null &amp;&amp; l.getCatalogo().getNombreComun() != null)</span>
+<span class="fc" id="L446">            .collect(Collectors.groupingBy(</span>
+<span class="nc" id="L447">                l -&gt; l.getCatalogo().getNombreComun(),</span>
+<span class="fc" id="L448">                Collectors.counting()</span>
+            ));
+        
+        // Agregar detalle de otros cultivos específicos desde listados (especie)
+<span class="fc" id="L452">        Map&lt;String, Long&gt; cultivosDetalle = dosns.stream()</span>
+<span class="pc bpc" id="L453" title="2 of 4 branches missed.">            .filter(d -&gt; d.getListados() != null &amp;&amp; !d.getListados().isEmpty())</span>
+<span class="pc" id="L454">            .flatMap(d -&gt; d.getListados().stream())</span>
+<span class="pc bnc" id="L455" title="All 4 branches missed.">            .filter(l -&gt; l.getEspecie() != null &amp;&amp; l.getEspecie().getNombreComun() != null)</span>
+<span class="fc" id="L456">            .collect(Collectors.groupingBy(</span>
+<span class="nc" id="L457">                l -&gt; l.getEspecie().getNombreComun(),</span>
+<span class="fc" id="L458">                Collectors.counting()</span>
+            ));
+
+        // Calcular totales sumando los detalles
+<span class="fc" id="L462">        long totalMalezas = malezasDetalle.values().stream().mapToLong(Long::longValue).sum();</span>
+<span class="fc" id="L463">        long totalOtrosCultivos = cultivosDetalle.values().stream().mapToLong(Long::longValue).sum();</span>
+        
+        // Contar registros de cuscuta
+<span class="fc" id="L466">        long totalCuscuta = dosns.stream()</span>
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">            .filter(d -&gt; d.getCuscutaRegistros() != null)</span>
+<span class="fc" id="L468">            .flatMap(d -&gt; d.getCuscutaRegistros().stream())</span>
+<span class="fc" id="L469">            .count();</span>
+        
+<span class="pc bpc" id="L471" title="1 of 2 branches missed.">        if (totalMalezas &gt; 0) {</span>
+<span class="nc" id="L472">            contaminantes.put(&quot;Total Malezas&quot;, (double) totalMalezas);</span>
+        }
+        
+<span class="pc bpc" id="L475" title="1 of 2 branches missed.">        if (totalOtrosCultivos &gt; 0) {</span>
+<span class="nc" id="L476">            contaminantes.put(&quot;Total Otros Cultivos&quot;, (double) totalOtrosCultivos);</span>
+        }
+        
+<span class="pc bpc" id="L479" title="1 of 2 branches missed.">        if (totalCuscuta &gt; 0) {</span>
+<span class="nc" id="L480">            contaminantes.put(&quot;Total Registros de Cuscuta&quot;, (double) totalCuscuta);</span>
+        }
+
+        // Agregar malezas individuales
+<span class="fc" id="L484">        malezasDetalle.forEach((nombre, cantidad) -&gt; {</span>
+<span class="nc" id="L485">            contaminantes.put(&quot;Maleza: &quot; + nombre, (double) cantidad);</span>
+<span class="nc" id="L486">        });</span>
+        
+        // Agregar cultivos individuales
+<span class="fc" id="L489">        cultivosDetalle.forEach((nombre, cantidad) -&gt; {</span>
+<span class="nc" id="L490">            contaminantes.put(&quot;Cultivo: &quot; + nombre, (double) cantidad);</span>
+<span class="nc" id="L491">        });</span>
+
+<span class="fc" id="L493">        return contaminantes;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

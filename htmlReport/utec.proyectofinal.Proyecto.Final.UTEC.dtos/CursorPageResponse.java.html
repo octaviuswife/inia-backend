@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CursorPageResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.dtos</a> &gt; <span class="el_source">CursorPageResponse.java</span></div><h1>CursorPageResponse.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
+
+/**
+ * Respuesta genérica para paginación basada en cursor (keyset).
+ * Evita el overhead de COUNT y permite scroll infinito eficiente.
+ * 
+ * El cursor se devuelve como String Base64 para seguridad y portabilidad.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CursorPageResponse&lt;T&gt; {
+    private List&lt;T&gt; items;
+    private String nextCursor;  // Base64-encoded cursor
+    private boolean hasMore;
+    private int size;
+    
+    /**
+     * Constructor para página sin más resultados
+     */
+<span class="nc" id="L26">    public CursorPageResponse(List&lt;T&gt; items, int size) {</span>
+<span class="nc" id="L27">        this.items = items;</span>
+<span class="nc" id="L28">        this.nextCursor = null;</span>
+<span class="nc" id="L29">        this.hasMore = false;</span>
+<span class="nc" id="L30">        this.size = size;</span>
+<span class="nc" id="L31">    }</span>
+    
+    /**
+     * Constructor para página con más resultados.
+     * Codifica el cursor automáticamente.
+     */
+    public static &lt;T&gt; CursorPageResponse&lt;T&gt; of(List&lt;T&gt; items, KeysetCursor nextCursor, int size) {
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        String encodedCursor = nextCursor != null ? nextCursor.encode() : null;</span>
+<span class="fc" id="L39">        return new CursorPageResponse&lt;&gt;(items, encodedCursor, true, size);</span>
+    }
+    
+    /**
+     * Constructor para última página
+     */
+    public static &lt;T&gt; CursorPageResponse&lt;T&gt; lastPage(List&lt;T&gt; items, int size) {
+<span class="fc" id="L46">        return new CursorPageResponse&lt;&gt;(items, null, false, size);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

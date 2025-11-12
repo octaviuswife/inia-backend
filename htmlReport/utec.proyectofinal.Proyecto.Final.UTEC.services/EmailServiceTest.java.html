@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">EmailServiceTest.java</span></div><h1>EmailServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.javamail.JavaMailSender;
+
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de EmailService&quot;)
+<span class="fc" id="L20">class EmailServiceTest {</span>
+
+    @Mock
+    private JavaMailSender mailSender;
+
+    private MimeMessage mimeMessage;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L29">        mimeMessage = new MimeMessage((Session) null);</span>
+<span class="fc" id="L30">        lenient().when(mailSender.createMimeMessage()).thenReturn(mimeMessage);</span>
+<span class="fc" id="L31">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear MimeMessage - debe retornar mensaje válido&quot;)
+    void crearMimeMessage_debeRetornarMensajeValido() {
+<span class="fc" id="L36">        MimeMessage resultado = mailSender.createMimeMessage();</span>
+
+<span class="fc" id="L38">        assertNotNull(resultado);</span>
+<span class="fc" id="L39">        verify(mailSender, times(1)).createMimeMessage();</span>
+<span class="fc" id="L40">    }</span>
+
+    @Test
+    @DisplayName(&quot;JavaMailSender mock - debe estar configurado correctamente&quot;)
+    void javaMailSender_debeEstarConfigurado() {
+<span class="fc" id="L45">        assertNotNull(mailSender);</span>
+<span class="fc" id="L46">        doNothing().when(mailSender).send(any(MimeMessage.class));</span>
+        
+<span class="fc" id="L48">        mailSender.send(mimeMessage);</span>
+        
+<span class="fc" id="L50">        verify(mailSender, times(1)).send(any(MimeMessage.class));</span>
+<span class="fc" id="L51">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

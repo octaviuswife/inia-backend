@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportacionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">ExportacionController.java</span></div><h1>ExportacionController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.ExportacionExcelService;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ExportacionRequestDTO;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/exportaciones&quot;)
+@Tag(name = &quot;Exportaciones&quot;, description = &quot;API para exportar datos de análisis de semillas&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L27">public class ExportacionController {</span>
+
+    @Autowired
+    private ExportacionExcelService exportacionExcelService;
+
+    @GetMapping(&quot;/excel&quot;)
+    @Operation(
+        summary = &quot;Exportar datos a Excel&quot;, 
+        description = &quot;Genera un archivo Excel con los datos de análisis de semillas según la estructura de la planilla de ejemplo. Si no se especifican IDs de lotes, se exportan todos los lotes activos.&quot;
+    )
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;byte[]&gt; exportarDatosExcel(
+            @Parameter(description = &quot;Lista de IDs de lotes a exportar. Si está vacío, se exportan todos los lotes activos.&quot;)
+            @RequestParam(required = false) List&lt;Long&gt; loteIds) {
+        
+        try {
+<span class="fc" id="L43">            byte[] excelBytes = exportacionExcelService.generarReporteExcel(loteIds);</span>
+            
+            // Generar nombre de archivo con timestamp
+<span class="fc" id="L46">            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;yyyyMMdd_HHmmss&quot;));</span>
+<span class="fc" id="L47">            String filename = &quot;analisis_semillas_&quot; + timestamp + &quot;.xlsx&quot;;</span>
+            
+<span class="fc" id="L49">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L50">            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);</span>
+<span class="fc" id="L51">            headers.setContentDispositionFormData(&quot;attachment&quot;, filename);</span>
+<span class="fc" id="L52">            headers.setContentLength(excelBytes.length);</span>
+            
+<span class="fc" id="L54">            return new ResponseEntity&lt;&gt;(excelBytes, headers, HttpStatus.OK);</span>
+            
+<span class="fc" id="L56">        } catch (IOException e) {</span>
+<span class="fc" id="L57">            System.err.println(&quot;Error al generar archivo Excel: &quot; + e.getMessage());</span>
+<span class="fc" id="L58">            e.printStackTrace();</span>
+<span class="fc" id="L59">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+<span class="fc" id="L60">        } catch (Exception e) {</span>
+<span class="fc" id="L61">            System.err.println(&quot;Error inesperado al exportar datos: &quot; + e.getMessage());</span>
+<span class="fc" id="L62">            e.printStackTrace();</span>
+<span class="fc" id="L63">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    @GetMapping(&quot;/excel/lote/{loteId}&quot;)
+    @Operation(
+        summary = &quot;Exportar datos de un lote específico a Excel&quot;, 
+        description = &quot;Genera un archivo Excel con los datos de análisis de un lote específico&quot;
+    )
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;byte[]&gt; exportarLoteEspecificoExcel(
+            @Parameter(description = &quot;ID del lote a exportar&quot;)
+            @PathVariable Long loteId) {
+        
+        try {
+<span class="fc" id="L78">            List&lt;Long&gt; loteIds = List.of(loteId);</span>
+<span class="fc" id="L79">            byte[] excelBytes = exportacionExcelService.generarReporteExcel(loteIds);</span>
+            
+            // Generar nombre de archivo con el ID del lote
+<span class="fc" id="L82">            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;yyyyMMdd_HHmmss&quot;));</span>
+<span class="fc" id="L83">            String filename = &quot;analisis_lote_&quot; + loteId + &quot;_&quot; + timestamp + &quot;.xlsx&quot;;</span>
+            
+<span class="fc" id="L85">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L86">            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);</span>
+<span class="fc" id="L87">            headers.setContentDispositionFormData(&quot;attachment&quot;, filename);</span>
+<span class="fc" id="L88">            headers.setContentLength(excelBytes.length);</span>
+            
+<span class="fc" id="L90">            return new ResponseEntity&lt;&gt;(excelBytes, headers, HttpStatus.OK);</span>
+            
+<span class="nc" id="L92">        } catch (IOException e) {</span>
+<span class="nc" id="L93">            System.err.println(&quot;Error al generar archivo Excel para lote &quot; + loteId + &quot;: &quot; + e.getMessage());</span>
+<span class="nc" id="L94">            e.printStackTrace();</span>
+<span class="nc" id="L95">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+<span class="fc" id="L96">        } catch (Exception e) {</span>
+<span class="fc" id="L97">            System.err.println(&quot;Error inesperado al exportar lote &quot; + loteId + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L98">            e.printStackTrace();</span>
+<span class="fc" id="L99">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    @PostMapping(&quot;/excel/personalizado&quot;)
+    @Operation(
+        summary = &quot;Exportar datos personalizados a Excel&quot;, 
+        description = &quot;Genera un archivo Excel con una lista específica de lotes proporcionada en el cuerpo de la petición&quot;
+    )
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;byte[]&gt; exportarDatosPersonalizadosExcel(
+            @Parameter(description = &quot;Lista de IDs de lotes a exportar&quot;)
+            @RequestBody List&lt;Long&gt; loteIds) {
+        
+        try {
+<span class="pc bpc" id="L114" title="1 of 4 branches missed.">            if (loteIds == null || loteIds.isEmpty()) {</span>
+<span class="fc" id="L115">                return new ResponseEntity&lt;&gt;(null, HttpStatus.BAD_REQUEST);</span>
+            }
+            
+<span class="fc" id="L118">            byte[] excelBytes = exportacionExcelService.generarReporteExcel(loteIds);</span>
+            
+            // Generar nombre de archivo con timestamp
+<span class="fc" id="L121">            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;yyyyMMdd_HHmmss&quot;));</span>
+<span class="fc" id="L122">            String filename = &quot;analisis_seleccionados_&quot; + timestamp + &quot;.xlsx&quot;;</span>
+            
+<span class="fc" id="L124">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L125">            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);</span>
+<span class="fc" id="L126">            headers.setContentDispositionFormData(&quot;attachment&quot;, filename);</span>
+<span class="fc" id="L127">            headers.setContentLength(excelBytes.length);</span>
+            
+<span class="fc" id="L129">            return new ResponseEntity&lt;&gt;(excelBytes, headers, HttpStatus.OK);</span>
+            
+<span class="nc" id="L131">        } catch (IOException e) {</span>
+<span class="nc" id="L132">            System.err.println(&quot;Error al generar archivo Excel personalizado: &quot; + e.getMessage());</span>
+<span class="nc" id="L133">            e.printStackTrace();</span>
+<span class="nc" id="L134">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+<span class="fc" id="L135">        } catch (Exception e) {</span>
+<span class="fc" id="L136">            System.err.println(&quot;Error inesperado al exportar datos personalizados: &quot; + e.getMessage());</span>
+<span class="fc" id="L137">            e.printStackTrace();</span>
+<span class="fc" id="L138">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    @PostMapping(&quot;/excel/avanzado&quot;)
+    @Operation(
+        summary = &quot;Exportar datos con filtros avanzados a Excel&quot;, 
+        description = &quot;Genera un archivo Excel con filtros avanzados como fechas, especies, cultivares y tipos de análisis&quot;
+    )
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    public ResponseEntity&lt;byte[]&gt; exportarDatosAvanzadosExcel(
+            @Parameter(description = &quot;Configuración de exportación con filtros avanzados&quot;)
+            @RequestBody ExportacionRequestDTO solicitud) {
+        
+        try {
+<span class="fc" id="L153">            byte[] excelBytes = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
+            
+            // Generar nombre de archivo con timestamp
+<span class="fc" id="L156">            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;yyyyMMdd_HHmmss&quot;));</span>
+<span class="fc" id="L157">            String filename = &quot;analisis_filtrado_&quot; + timestamp + &quot;.xlsx&quot;;</span>
+            
+<span class="fc" id="L159">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L160">            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);</span>
+<span class="fc" id="L161">            headers.setContentDispositionFormData(&quot;attachment&quot;, filename);</span>
+<span class="fc" id="L162">            headers.setContentLength(excelBytes.length);</span>
+            
+<span class="fc" id="L164">            return new ResponseEntity&lt;&gt;(excelBytes, headers, HttpStatus.OK);</span>
+            
+<span class="nc" id="L166">        } catch (IOException e) {</span>
+<span class="nc" id="L167">            System.err.println(&quot;Error al generar archivo Excel avanzado: &quot; + e.getMessage());</span>
+<span class="nc" id="L168">            e.printStackTrace();</span>
+<span class="nc" id="L169">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+<span class="fc" id="L170">        } catch (Exception e) {</span>
+<span class="fc" id="L171">            System.err.println(&quot;Error inesperado al exportar datos avanzados: &quot; + e.getMessage());</span>
+<span class="fc" id="L172">            e.printStackTrace();</span>
+<span class="fc" id="L173">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

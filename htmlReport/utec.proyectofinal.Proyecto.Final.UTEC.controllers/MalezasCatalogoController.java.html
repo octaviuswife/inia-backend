@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MalezasCatalogoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">MalezasCatalogoController.java</span></div><h1>MalezasCatalogoController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.MalezasCatalogoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.MalezasCatalogoService;
+
+@RestController
+@RequestMapping(&quot;/api/malezas&quot;)
+@Tag(name = &quot;Malezas&quot;, description = &quot;API para gestión del catálogo de malezas&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L22">public class MalezasCatalogoController {</span>
+    @Autowired
+    private MalezasCatalogoService service;
+
+    @GetMapping
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Listar malezas activas&quot;)
+    public ResponseEntity&lt;List&lt;MalezasCatalogoDTO&gt;&gt; obtenerTodos() {
+<span class="fc" id="L30">        return ResponseEntity.ok(service.obtenerTodos());</span>
+    }
+
+    @GetMapping(&quot;/inactivos&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Listar malezas inactivas&quot;)
+    public ResponseEntity&lt;List&lt;MalezasCatalogoDTO&gt;&gt; obtenerInactivos() {
+<span class="fc" id="L37">        return ResponseEntity.ok(service.obtenerInactivos());</span>
+    }
+
+    @GetMapping(&quot;/buscar/comun&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Buscar por nombre com�n&quot;)
+    public ResponseEntity&lt;List&lt;MalezasCatalogoDTO&gt;&gt; buscarPorNombreComun(@RequestParam String nombre) {
+<span class="fc" id="L44">        return ResponseEntity.ok(service.buscarPorNombreComun(nombre));</span>
+    }
+
+    @GetMapping(&quot;/buscar/cientifico&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Buscar por nombre cient�fico&quot;)
+    public ResponseEntity&lt;List&lt;MalezasCatalogoDTO&gt;&gt; buscarPorNombreCientifico(@RequestParam String nombre) {
+<span class="fc" id="L51">        return ResponseEntity.ok(service.buscarPorNombreCientifico(nombre));</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Obtener por ID&quot;)
+    public ResponseEntity&lt;MalezasCatalogoDTO&gt; obtenerPorId(@PathVariable Long id) {
+<span class="fc" id="L58">        MalezasCatalogoDTO catalogo = service.obtenerPorId(id);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        return catalogo != null ? ResponseEntity.ok(catalogo) : ResponseEntity.notFound().build();</span>
+    }
+
+    @PostMapping
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Crear maleza&quot;)
+    public ResponseEntity&lt;MalezasCatalogoDTO&gt; crear(@RequestBody MalezasCatalogoRequestDTO solicitud) {
+<span class="fc" id="L66">        return ResponseEntity.ok(service.crear(solicitud));</span>
+    }
+
+    @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Actualizar maleza&quot;)
+    public ResponseEntity&lt;MalezasCatalogoDTO&gt; actualizar(@PathVariable Long id, @RequestBody MalezasCatalogoRequestDTO solicitud) {
+<span class="fc" id="L73">        MalezasCatalogoDTO actualizado = service.actualizar(id, solicitud);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Eliminar maleza&quot;)
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+<span class="fc" id="L81">        service.eliminar(id);</span>
+<span class="fc" id="L82">        return ResponseEntity.ok().build();</span>
+    }
+
+    @PutMapping(&quot;/{id}/reactivar&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @Operation(summary = &quot;Reactivar maleza&quot;)
+    public ResponseEntity&lt;MalezasCatalogoDTO&gt; reactivar(@PathVariable Long id) {
+<span class="fc" id="L89">        MalezasCatalogoDTO reactivado = service.reactivar(id);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        return reactivado != null ? ResponseEntity.ok(reactivado) : ResponseEntity.notFound().build();</span>
+    }
+
+    // Obtener Malezas con paginado para listado
+    @GetMapping(&quot;/listado&quot;)
+    @PreAuthorize(&quot;hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')&quot;)
+    @Operation(summary = &quot;Obtener malezas paginadas&quot;, 
+              description = &quot;Obtiene la lista paginada de malezas para el listado&quot;)
+    public ResponseEntity&lt;Page&lt;MalezasCatalogoDTO&gt;&gt; obtenerMalezasPaginadas(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo) {
+<span class="fc" id="L103">        Pageable pageable = PageRequest.of(page, size);</span>
+<span class="fc" id="L104">        Page&lt;MalezasCatalogoDTO&gt; response = service.obtenerMalezasPaginadasConFiltros(pageable, search, activo);</span>
+<span class="fc" id="L105">        return ResponseEntity.ok(response);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

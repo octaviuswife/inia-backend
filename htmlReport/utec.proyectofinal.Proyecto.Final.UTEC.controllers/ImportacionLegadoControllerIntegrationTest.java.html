@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportacionLegadoControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">ImportacionLegadoControllerIntegrationTest.java</span></div><h1>ImportacionLegadoControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ImportacionLegadoResponseDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.ImportacionLegadoService;
+
+import java.util.ArrayList;
+
+@WebMvcTest(ImportacionLegadoController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName(&quot;Tests de integración para ImportacionLegadoController&quot;)
+<span class="fc" id="L27">class ImportacionLegadoControllerIntegrationTest {</span>
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private ImportacionLegadoService importacionLegadoService;
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/validar - Debe validar archivo Excel correctamente&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void validarArchivoExcel_conArchivoValido_debeRetornarResultado() throws Exception {
+<span class="fc" id="L39">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+<span class="fc" id="L43">            &quot;Excel content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L46">        ImportacionLegadoResponseDTO resultado = new ImportacionLegadoResponseDTO();</span>
+<span class="fc" id="L47">        resultado.setExitoso(true);</span>
+<span class="fc" id="L48">        resultado.setTotalFilas(100);</span>
+<span class="fc" id="L49">        resultado.setFilasImportadas(95);</span>
+<span class="fc" id="L50">        resultado.setFilasConErrores(5);</span>
+<span class="fc" id="L51">        resultado.setErrores(new ArrayList&lt;&gt;());</span>
+
+<span class="fc" id="L53">        when(importacionLegadoService.importarDesdeExcel(any(), any(Boolean.class))).thenReturn(resultado);</span>
+
+<span class="fc" id="L55">        mockMvc.perform(multipart(&quot;/api/importacion/legado/validar&quot;)</span>
+<span class="fc" id="L56">                .file(archivo)</span>
+<span class="fc" id="L57">                .with(csrf()))</span>
+<span class="fc" id="L58">                .andExpect(status().isOk())</span>
+<span class="fc" id="L59">                .andExpect(jsonPath(&quot;$.exitoso&quot;).value(true))</span>
+<span class="fc" id="L60">                .andExpect(jsonPath(&quot;$.totalFilas&quot;).value(100))</span>
+<span class="fc" id="L61">                .andExpect(jsonPath(&quot;$.filasImportadas&quot;).value(95))</span>
+<span class="fc" id="L62">                .andExpect(jsonPath(&quot;$.filasConErrores&quot;).value(5));</span>
+<span class="fc" id="L63">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/validar - Debe rechazar archivo sin extensión xlsx&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void validarArchivoExcel_conArchivoInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L69">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.txt&quot;,
+            &quot;text/plain&quot;,
+<span class="fc" id="L73">            &quot;Text content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L76">        mockMvc.perform(multipart(&quot;/api/importacion/legado/validar&quot;)</span>
+<span class="fc" id="L77">                .file(archivo)</span>
+<span class="fc" id="L78">                .with(csrf()))</span>
+<span class="fc" id="L79">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L80">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/validar - Debe rechazar archivo vacío&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void validarArchivoExcel_conArchivoVacio_debeRetornar400() throws Exception {
+<span class="fc" id="L86">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+            new byte[0]
+        );
+
+<span class="fc" id="L93">        mockMvc.perform(multipart(&quot;/api/importacion/legado/validar&quot;)</span>
+<span class="fc" id="L94">                .file(archivo)</span>
+<span class="fc" id="L95">                .with(csrf()))</span>
+<span class="fc" id="L96">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L97">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/validar - Analista puede validar archivo&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void validarArchivoExcel_comoAnalista_debeRetornarResultado() throws Exception {
+<span class="fc" id="L103">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+<span class="fc" id="L107">            &quot;Excel content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L110">        ImportacionLegadoResponseDTO resultado = new ImportacionLegadoResponseDTO();</span>
+<span class="fc" id="L111">        resultado.setExitoso(true);</span>
+<span class="fc" id="L112">        resultado.setTotalFilas(50);</span>
+<span class="fc" id="L113">        resultado.setFilasImportadas(50);</span>
+<span class="fc" id="L114">        resultado.setFilasConErrores(0);</span>
+<span class="fc" id="L115">        resultado.setErrores(new ArrayList&lt;&gt;());</span>
+
+<span class="fc" id="L117">        when(importacionLegadoService.importarDesdeExcel(any(), any(Boolean.class))).thenReturn(resultado);</span>
+
+<span class="fc" id="L119">        mockMvc.perform(multipart(&quot;/api/importacion/legado/validar&quot;)</span>
+<span class="fc" id="L120">                .file(archivo)</span>
+<span class="fc" id="L121">                .with(csrf()))</span>
+<span class="fc" id="L122">                .andExpect(status().isOk())</span>
+<span class="fc" id="L123">                .andExpect(jsonPath(&quot;$.exitoso&quot;).value(true));</span>
+<span class="fc" id="L124">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/validar - Debe manejar error en validación&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void validarArchivoExcel_conError_debeRetornar500() throws Exception {
+<span class="fc" id="L130">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+<span class="fc" id="L134">            &quot;Excel content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L137">        when(importacionLegadoService.importarDesdeExcel(any(), any(Boolean.class)))</span>
+<span class="fc" id="L138">            .thenThrow(new RuntimeException(&quot;Error al validar&quot;));</span>
+
+<span class="fc" id="L140">        mockMvc.perform(multipart(&quot;/api/importacion/legado/validar&quot;)</span>
+<span class="fc" id="L141">                .file(archivo)</span>
+<span class="fc" id="L142">                .with(csrf()))</span>
+<span class="fc" id="L143">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L144">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/importar - Admin puede importar archivo&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void importarArchivoExcel_comoAdmin_debeRetornar200() throws Exception {
+<span class="fc" id="L150">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+<span class="fc" id="L154">            &quot;Excel content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L157">        ImportacionLegadoResponseDTO resultado = new ImportacionLegadoResponseDTO();</span>
+<span class="fc" id="L158">        resultado.setExitoso(true);</span>
+<span class="fc" id="L159">        resultado.setMensaje(&quot;Importación completada exitosamente&quot;);</span>
+<span class="fc" id="L160">        resultado.setErrores(new ArrayList&lt;&gt;());</span>
+
+<span class="fc" id="L162">        when(importacionLegadoService.importarDesdeExcel(any(), any(Boolean.class))).thenReturn(resultado);</span>
+
+<span class="fc" id="L164">        mockMvc.perform(multipart(&quot;/api/importacion/legado/importar&quot;)</span>
+<span class="fc" id="L165">                .file(archivo)</span>
+<span class="fc" id="L166">                .with(csrf()))</span>
+<span class="fc" id="L167">                .andExpect(status().isOk());</span>
+<span class="fc" id="L168">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/importar - Debe rechazar archivo sin extensión xlsx&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void importarArchivoExcel_conArchivoInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L174">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.csv&quot;,
+            &quot;text/csv&quot;,
+<span class="fc" id="L178">            &quot;CSV content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L181">        mockMvc.perform(multipart(&quot;/api/importacion/legado/importar&quot;)</span>
+<span class="fc" id="L182">                .file(archivo)</span>
+<span class="fc" id="L183">                .with(csrf()))</span>
+<span class="fc" id="L184">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L185">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/importar - Debe rechazar archivo vacío&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void importarArchivoExcel_conArchivoVacio_debeRetornar400() throws Exception {
+<span class="fc" id="L191">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+            new byte[0]
+        );
+
+<span class="fc" id="L198">        mockMvc.perform(multipart(&quot;/api/importacion/legado/importar&quot;)</span>
+<span class="fc" id="L199">                .file(archivo)</span>
+<span class="fc" id="L200">                .with(csrf()))</span>
+<span class="fc" id="L201">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L202">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/importar - Debe manejar error en importación&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void importarArchivoExcel_conError_debeRetornar500() throws Exception {
+<span class="fc" id="L208">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+<span class="fc" id="L212">            &quot;Excel content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L215">        when(importacionLegadoService.importarDesdeExcel(any(), any(Boolean.class)))</span>
+<span class="fc" id="L216">            .thenThrow(new RuntimeException(&quot;Error al importar&quot;));</span>
+
+<span class="fc" id="L218">        mockMvc.perform(multipart(&quot;/api/importacion/legado/importar&quot;)</span>
+<span class="fc" id="L219">                .file(archivo)</span>
+<span class="fc" id="L220">                .with(csrf()))</span>
+<span class="fc" id="L221">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L222">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/importar - Debe retornar mensaje de éxito&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void importarArchivoExcel_exitoso_debeRetornarMensaje() throws Exception {
+<span class="fc" id="L228">        MockMultipartFile archivo = new MockMultipartFile(</span>
+            &quot;archivo&quot;,
+            &quot;legado.xlsx&quot;,
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+<span class="fc" id="L232">            &quot;Excel content&quot;.getBytes()</span>
+        );
+
+<span class="fc" id="L235">        ImportacionLegadoResponseDTO resultado = new ImportacionLegadoResponseDTO();</span>
+<span class="fc" id="L236">        resultado.setExitoso(true);</span>
+<span class="fc" id="L237">        resultado.setMensaje(&quot;Importación completada exitosamente&quot;);</span>
+<span class="fc" id="L238">        resultado.setErrores(new ArrayList&lt;&gt;());</span>
+
+<span class="fc" id="L240">        when(importacionLegadoService.importarDesdeExcel(any(), any(Boolean.class))).thenReturn(resultado);</span>
+
+<span class="fc" id="L242">        mockMvc.perform(multipart(&quot;/api/importacion/legado/importar&quot;)</span>
+<span class="fc" id="L243">                .file(archivo)</span>
+<span class="fc" id="L244">                .with(csrf()))</span>
+<span class="fc" id="L245">                .andExpect(status().isOk())</span>
+<span class="fc" id="L246">                .andExpect(jsonPath(&quot;$.mensaje&quot;).value(org.hamcrest.Matchers.containsString(&quot;Importación completada exitosamente&quot;)));</span>
+<span class="fc" id="L247">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/validar - Debe rechazar request sin archivo&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void validarArchivoExcel_sinArchivo_debeRetornar400() throws Exception {
+<span class="fc" id="L253">        mockMvc.perform(multipart(&quot;/api/importacion/legado/validar&quot;)</span>
+<span class="fc" id="L254">                .with(csrf()))</span>
+<span class="fc" id="L255">                .andExpect(status().isInternalServerError()); // Spring retorna 500 cuando falta parámetro required</span>
+<span class="fc" id="L256">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/importacion/legado/importar - Debe rechazar request sin archivo&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void importarArchivoExcel_sinArchivo_debeRetornar400() throws Exception {
+<span class="fc" id="L262">        mockMvc.perform(multipart(&quot;/api/importacion/legado/importar&quot;)</span>
+<span class="fc" id="L263">                .with(csrf()))</span>
+<span class="fc" id="L264">                .andExpect(status().isInternalServerError()); // Spring retorna 500 cuando falta parámetro required</span>
+<span class="fc" id="L265">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

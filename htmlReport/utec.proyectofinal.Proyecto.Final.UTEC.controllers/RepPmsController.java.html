@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepPmsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">RepPmsController.java</span></div><h1>RepPmsController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RepPmsRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepPmsDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.RepPmsService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/pms/{pmsId}/repeticiones&quot;)
+@Tag(name = &quot;Repeticiones PMS&quot;, description = &quot;API para gestión de repeticiones de análisis PMS&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L31">public class RepPmsController {</span>
+
+    @Autowired
+    private RepPmsService repeticionService;
+
+    // Crear nueva repetición para un Pms específico
+    @Operation(summary = &quot;Crear repetición de PMS&quot;, 
+              description = &quot;Crea una nueva repetición para un análisis PMS específico&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;RepPmsDTO&gt; crearRepeticion(
+            @PathVariable Long pmsId,
+            @RequestBody RepPmsRequestDTO solicitud) {
+        try {
+<span class="fc" id="L45">            RepPmsDTO repeticionCreada = repeticionService.crearRepeticion(pmsId, solicitud);</span>
+<span class="fc" id="L46">            return new ResponseEntity&lt;&gt;(repeticionCreada, HttpStatus.CREATED);</span>
+<span class="fc" id="L47">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L48">            return new ResponseEntity&lt;&gt;(null, HttpStatus.BAD_REQUEST);</span>
+<span class="nc" id="L49">        } catch (Exception e) {</span>
+<span class="nc" id="L50">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Obtener todas las repeticiones de un Pms
+    @Operation(summary = &quot;Listar repeticiones de PMS&quot;, 
+              description = &quot;Obtiene todas las repeticiones asociadas a un análisis PMS específico&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;List&lt;RepPmsDTO&gt;&gt; obtenerRepeticionesPorPms(@PathVariable Long pmsId) {
+        try {
+<span class="fc" id="L61">            List&lt;RepPmsDTO&gt; repeticiones = repeticionService.obtenerPorPms(pmsId);</span>
+<span class="fc" id="L62">            return new ResponseEntity&lt;&gt;(repeticiones, HttpStatus.OK);</span>
+<span class="nc" id="L63">        } catch (Exception e) {</span>
+<span class="nc" id="L64">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Contar repeticiones de un Pms
+    @Operation(summary = &quot;Contar repeticiones de PMS&quot;, 
+              description = &quot;Cuenta el número de repeticiones asociadas a un análisis PMS específico&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/count&quot;)
+    public ResponseEntity&lt;Long&gt; contarRepeticionesPorPms(@PathVariable Long pmsId) {
+        try {
+<span class="fc" id="L75">            Long count = repeticionService.contarPorPms(pmsId);</span>
+<span class="fc" id="L76">            return new ResponseEntity&lt;&gt;(count, HttpStatus.OK);</span>
+<span class="nc" id="L77">        } catch (Exception e) {</span>
+<span class="nc" id="L78">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Obtener repetición específica por ID
+    @Operation(summary = &quot;Obtener repetición de PMS por ID&quot;, 
+              description = &quot;Obtiene una repetición específica de un análisis PMS por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{repeticionId}&quot;)
+    public ResponseEntity&lt;RepPmsDTO&gt; obtenerRepeticionPorId(
+            @PathVariable Long pmsId,
+            @PathVariable Long repeticionId) {
+        try {
+<span class="fc" id="L91">            RepPmsDTO repeticion = repeticionService.obtenerPorId(repeticionId);</span>
+<span class="fc" id="L92">            return new ResponseEntity&lt;&gt;(repeticion, HttpStatus.OK);</span>
+<span class="fc" id="L93">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L94">            return new ResponseEntity&lt;&gt;(null, HttpStatus.NOT_FOUND);</span>
+<span class="nc" id="L95">        } catch (Exception e) {</span>
+<span class="nc" id="L96">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Actualizar repetición específica
+    @Operation(summary = &quot;Actualizar repetición de PMS&quot;, 
+              description = &quot;Actualiza una repetición específica de un análisis PMS&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PutMapping(&quot;/{repeticionId}&quot;)
+    public ResponseEntity&lt;RepPmsDTO&gt; actualizarRepeticion(
+            @PathVariable Long pmsId,
+            @PathVariable Long repeticionId,
+            @RequestBody RepPmsRequestDTO solicitud) {
+        try {
+<span class="fc" id="L110">            RepPmsDTO repeticionActualizada = repeticionService.actualizarRepeticion(repeticionId, solicitud);</span>
+<span class="fc" id="L111">            return new ResponseEntity&lt;&gt;(repeticionActualizada, HttpStatus.OK);</span>
+<span class="fc" id="L112">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L113">            return new ResponseEntity&lt;&gt;(null, HttpStatus.NOT_FOUND);</span>
+<span class="nc" id="L114">        } catch (Exception e) {</span>
+<span class="nc" id="L115">            return new ResponseEntity&lt;&gt;(null, HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+
+    // Eliminar repetición específica
+    @Operation(summary = &quot;Eliminar repetición de PMS&quot;, 
+              description = &quot;Elimina una repetición específica de un análisis PMS (eliminación física)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{repeticionId}&quot;)
+    public ResponseEntity&lt;HttpStatus&gt; eliminarRepeticion(
+            @PathVariable Long pmsId,
+            @PathVariable Long repeticionId) {
+        try {
+<span class="fc" id="L128">            repeticionService.eliminarRepeticion(repeticionId);</span>
+<span class="fc" id="L129">            return new ResponseEntity&lt;&gt;(HttpStatus.NO_CONTENT);</span>
+<span class="nc" id="L130">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L131">            return new ResponseEntity&lt;&gt;(HttpStatus.NOT_FOUND);</span>
+<span class="nc" id="L132">        } catch (Exception e) {</span>
+<span class="nc" id="L133">            return new ResponseEntity&lt;&gt;(HttpStatus.INTERNAL_SERVER_ERROR);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

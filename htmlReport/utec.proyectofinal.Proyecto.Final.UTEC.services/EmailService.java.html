@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">EmailService.java</span></div><h1>EmailService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
+/**
+ * Servicio para envío de correos electrónicos
+ * 
+ * Maneja el envío de emails HTML con la paleta de colores de INIA
+ */
+@Service
+<span class="fc" id="L17">public class EmailService {</span>
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Value(&quot;${spring.mail.username}&quot;)
+    private String fromEmail;
+
+    private static final String INIA_GREEN = &quot;#2d5016&quot;;
+    private static final String INIA_LIGHT_GREEN = &quot;#4a7c2c&quot;;
+    private static final String INIA_YELLOW = &quot;#f4c430&quot;;
+    private static final String INIA_GRAY = &quot;#f5f5f5&quot;;
+
+    /**
+     * Enviar email a analistas cuando un usuario se registra
+     */
+    public void enviarEmailNuevoRegistro(String analistaEmail, String analistaNombre, 
+                                        String usuarioNombre, String usuarioEmail) {
+<span class="nc" id="L35">        String asunto = &quot;Nuevo Usuario Registrado - Sistema INIA&quot;;</span>
+        
+<span class="nc" id="L37">        String contenidoHtml = &quot;&lt;!DOCTYPE html&gt;&quot; +</span>
+            &quot;&lt;html lang='es'&gt;&quot; +
+            &quot;&lt;head&gt;&quot; +
+            &quot;    &lt;meta charset='UTF-8'&gt;&quot; +
+            &quot;    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;&quot; +
+            &quot;    &lt;title&gt;Nuevo Registro INIA&lt;/title&gt;&quot; +
+            &quot;&lt;/head&gt;&quot; +
+            &quot;&lt;body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'&gt;&quot; +
+            &quot;    &lt;table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'&gt;&quot; +
+            &quot;        &lt;tr&gt;&quot; +
+            &quot;            &lt;td align='center'&gt;&quot; +
+            &quot;                &lt;table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Header --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); padding: 40px 30px; text-align: center;'&gt;&quot; +
+            &quot;                            &lt;h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'&gt;INIA&lt;/h1&gt;&quot; +
+            &quot;                            &lt;p style='margin: 10px 0 0 0; color: &quot; + INIA_YELLOW + &quot;; font-size: 14px;'&gt;Instituto Nacional de Investigación Agropecuaria&lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Body --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='padding: 40px 30px;'&gt;&quot; +
+            &quot;                            &lt;h2 style='margin: 0 0 20px 0; color: &quot; + INIA_GREEN + &quot;; font-size: 22px;'&gt;Hola &quot; + analistaNombre + &quot;,&lt;/h2&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 15px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Te informamos que un nuevo usuario se ha registrado en el &lt;strong&gt;Sistema INIA&lt;/strong&gt; y requiere aprobación para acceder a la plataforma.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: &quot; + INIA_GRAY + &quot;; border-left: 4px solid &quot; + INIA_GREEN + &quot;; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 14px; font-weight: bold;'&gt;DATOS DEL USUARIO:&lt;/p&gt;&quot; +
+            &quot;                                &lt;p style='margin: 5px 0; color: #333; font-size: 15px;'&gt;&lt;strong&gt;Nombre:&lt;/strong&gt; &quot; + usuarioNombre + &quot;&lt;/p&gt;&quot; +
+            &quot;                                &lt;p style='margin: 5px 0; color: #333; font-size: 15px;'&gt;&lt;strong&gt;Email:&lt;/strong&gt; &quot; + usuarioEmail + &quot;&lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 20px 0 30px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Por favor, ingresa al sistema para revisar y aprobar esta solicitud.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='text-align: center;'&gt;&quot; +
+            &quot;                                &lt;a href='http://localhost:3000/administracion/usuarios' &quot; +
+            &quot;                                   style='display: inline-block; background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); &quot; +
+            &quot;                                   color: white; text-decoration: none; padding: 14px 40px; border-radius: 6px; &quot; +
+            &quot;                                   font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'&gt;&quot; +
+            &quot;                                    Revisar Solicitud&quot; +
+            &quot;                                &lt;/a&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Footer --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background-color: &quot; + INIA_GRAY + &quot;; padding: 30px; text-align: center; border-top: 1px solid #ddd;'&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'&gt;&quot; +
+            &quot;                                Este es un correo automático del Sistema INIA.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0; color: #999; font-size: 12px;'&gt;&quot; +
+            &quot;                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                &lt;/table&gt;&quot; +
+            &quot;            &lt;/td&gt;&quot; +
+            &quot;        &lt;/tr&gt;&quot; +
+            &quot;    &lt;/table&gt;&quot; +
+            &quot;&lt;/body&gt;&quot; +
+            &quot;&lt;/html&gt;&quot;;
+
+<span class="nc" id="L106">        enviarEmail(analistaEmail, asunto, contenidoHtml);</span>
+<span class="nc" id="L107">    }</span>
+
+    /**
+     * Enviar email de confirmación al usuario registrado
+     */
+    public void enviarEmailConfirmacionRegistro(String usuarioEmail, String usuarioNombre) {
+<span class="nc" id="L113">        String asunto = &quot;Registro Exitoso - Sistema INIA&quot;;</span>
+        
+<span class="nc" id="L115">        String contenidoHtml = &quot;&lt;!DOCTYPE html&gt;&quot; +</span>
+            &quot;&lt;html lang='es'&gt;&quot; +
+            &quot;&lt;head&gt;&quot; +
+            &quot;    &lt;meta charset='UTF-8'&gt;&quot; +
+            &quot;    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;&quot; +
+            &quot;    &lt;title&gt;Registro Exitoso INIA&lt;/title&gt;&quot; +
+            &quot;&lt;/head&gt;&quot; +
+            &quot;&lt;body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'&gt;&quot; +
+            &quot;    &lt;table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'&gt;&quot; +
+            &quot;        &lt;tr&gt;&quot; +
+            &quot;            &lt;td align='center'&gt;&quot; +
+            &quot;                &lt;table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Header --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); padding: 40px 30px; text-align: center;'&gt;&quot; +
+            &quot;                            &lt;h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'&gt;INIA&lt;/h1&gt;&quot; +
+            &quot;                            &lt;p style='margin: 10px 0 0 0; color: &quot; + INIA_YELLOW + &quot;; font-size: 14px;'&gt;Instituto Nacional de Investigación Agropecuaria&lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Body --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='padding: 40px 30px;'&gt;&quot; +
+            &quot;                            &lt;div style='text-align: center; margin-bottom: 30px;'&gt;&quot; +
+            &quot;                                &lt;div style='display: inline-block; background-color: &quot; + INIA_YELLOW + &quot;; width: 80px; height: 80px; border-radius: 50%; &quot; +
+            &quot;                                     line-height: 80px; font-size: 40px;'&gt;✓&lt;/div&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;h2 style='margin: 0 0 20px 0; color: &quot; + INIA_GREEN + &quot;; font-size: 24px; text-align: center;'&gt;¡Registro Exitoso!&lt;/h2&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 15px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Estimado/a &lt;strong&gt;&quot; + usuarioNombre + &quot;&lt;/strong&gt;,&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 15px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Te has registrado exitosamente en el &lt;strong&gt;Sistema INIA&lt;/strong&gt;.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: #fff3cd; border-left: 4px solid &quot; + INIA_YELLOW + &quot;; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0; color: #856404; font-size: 15px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt;Pendiente de Aprobación&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    Tu solicitud está siendo revisada por nuestro equipo. Te notificaremos por correo cuando tu cuenta sea aprobada.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Una vez aprobada tu cuenta, podrás acceder a todas las funcionalidades del sistema.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0; color: #666; font-size: 14px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Si tienes alguna pregunta, no dudes en contactarnos.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Footer --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background-color: &quot; + INIA_GRAY + &quot;; padding: 30px; text-align: center; border-top: 1px solid #ddd;'&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'&gt;&quot; +
+            &quot;                                Este es un correo automático del Sistema INIA.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0; color: #999; font-size: 12px;'&gt;&quot; +
+            &quot;                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                &lt;/table&gt;&quot; +
+            &quot;            &lt;/td&gt;&quot; +
+            &quot;        &lt;/tr&gt;&quot; +
+            &quot;    &lt;/table&gt;&quot; +
+            &quot;&lt;/body&gt;&quot; +
+            &quot;&lt;/html&gt;&quot;;
+
+<span class="nc" id="L189">        enviarEmail(usuarioEmail, asunto, contenidoHtml);</span>
+<span class="nc" id="L190">    }</span>
+
+    /**
+     * Enviar email de bienvenida cuando el usuario es aprobado
+     */
+    public void enviarEmailBienvenida(String usuarioEmail, String usuarioNombre) {
+<span class="nc" id="L196">        String asunto = &quot;¡Bienvenido al Sistema INIA!&quot;;</span>
+        
+<span class="nc" id="L198">        String contenidoHtml = &quot;&lt;!DOCTYPE html&gt;&quot; +</span>
+            &quot;&lt;html lang='es'&gt;&quot; +
+            &quot;&lt;head&gt;&quot; +
+            &quot;    &lt;meta charset='UTF-8'&gt;&quot; +
+            &quot;    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;&quot; +
+            &quot;    &lt;title&gt;Bienvenida INIA&lt;/title&gt;&quot; +
+            &quot;&lt;/head&gt;&quot; +
+            &quot;&lt;body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'&gt;&quot; +
+            &quot;    &lt;table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'&gt;&quot; +
+            &quot;        &lt;tr&gt;&quot; +
+            &quot;            &lt;td align='center'&gt;&quot; +
+            &quot;                &lt;table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Header --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); padding: 40px 30px; text-align: center;'&gt;&quot; +
+            &quot;                            &lt;h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'&gt;INIA&lt;/h1&gt;&quot; +
+            &quot;                            &lt;p style='margin: 10px 0 0 0; color: &quot; + INIA_YELLOW + &quot;; font-size: 14px;'&gt;Instituto Nacional de Investigación Agropecuaria&lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Body --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='padding: 40px 30px;'&gt;&quot; +
+            &quot;                            &lt;div style='text-align: center; margin-bottom: 30px;'&gt;&quot; +
+            &quot;                                &lt;div style='display: inline-block; background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); &quot; +
+            &quot;                                     width: 80px; height: 80px; border-radius: 50%; line-height: 80px; font-size: 40px; color: white;'&gt;🎉&lt;/div&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;h2 style='margin: 0 0 20px 0; color: &quot; + INIA_GREEN + &quot;; font-size: 26px; text-align: center;'&gt;¡Bienvenido al Sistema INIA!&lt;/h2&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Estimado/a &lt;strong&gt;&quot; + usuarioNombre + &quot;&lt;/strong&gt;,&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0; color: #155724; font-size: 15px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt; Cuenta Aprobada&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    ¡Felicitaciones! Tu cuenta ha sido aprobada y ya puedes acceder al Sistema INIA.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Ahora tienes acceso a nuestra plataforma de gestión agropecuaria.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &lt;div style='text-align: center; margin: 30px 0;'&gt;&quot; +
+            &quot;                                &lt;a href='http://localhost:3000/login' &quot; +
+            &quot;                                   style='display: inline-block; background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); &quot; +
+            &quot;                                   color: white; text-decoration: none; padding: 14px 40px; border-radius: 6px; &quot; +
+            &quot;                                   font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'&gt;&quot; +
+            &quot;                                    Iniciar Sesión&quot; +
+            &quot;                                &lt;/a&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Footer --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background-color: &quot; + INIA_GRAY + &quot;; padding: 30px; text-align: center; border-top: 1px solid #ddd;'&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'&gt;&quot; +
+            &quot;                                Este es un correo automático del Sistema INIA.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0; color: #999; font-size: 12px;'&gt;&quot; +
+            &quot;                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                &lt;/table&gt;&quot; +
+            &quot;            &lt;/td&gt;&quot; +
+            &quot;        &lt;/tr&gt;&quot; +
+            &quot;    &lt;/table&gt;&quot; +
+            &quot;&lt;/body&gt;&quot; +
+            &quot;&lt;/html&gt;&quot;;
+
+<span class="nc" id="L273">        enviarEmail(usuarioEmail, asunto, contenidoHtml);</span>
+<span class="nc" id="L274">    }</span>
+
+    /**
+     * Enviar código de recuperación de contraseña
+     */
+    public void enviarCodigoRecuperacion(String usuarioEmail, String usuarioNombre, String codigoRecuperacion) {
+<span class="nc" id="L280">        String asunto = &quot;Código de Recuperación - Sistema INIA&quot;;</span>
+        
+<span class="nc" id="L282">        String contenidoHtml = &quot;&lt;!DOCTYPE html&gt;&quot; +</span>
+            &quot;&lt;html lang='es'&gt;&quot; +
+            &quot;&lt;head&gt;&quot; +
+            &quot;    &lt;meta charset='UTF-8'&gt;&quot; +
+            &quot;    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;&quot; +
+            &quot;    &lt;title&gt;Código de Recuperación INIA&lt;/title&gt;&quot; +
+            &quot;&lt;/head&gt;&quot; +
+            &quot;&lt;body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'&gt;&quot; +
+            &quot;    &lt;table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'&gt;&quot; +
+            &quot;        &lt;tr&gt;&quot; +
+            &quot;            &lt;td align='center'&gt;&quot; +
+            &quot;                &lt;table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Header --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); padding: 40px 30px; text-align: center;'&gt;&quot; +
+            &quot;                            &lt;h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'&gt;INIA&lt;/h1&gt;&quot; +
+            &quot;                            &lt;p style='margin: 10px 0 0 0; color: &quot; + INIA_YELLOW + &quot;; font-size: 14px;'&gt;Instituto Nacional de Investigación Agropecuaria&lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Body --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='padding: 40px 30px;'&gt;&quot; +
+            &quot;                            &lt;div style='text-align: center; margin-bottom: 30px;'&gt;&quot; +
+            &quot;                                &lt;div style='display: inline-block; background-color: #ff9800; width: 80px; height: 80px; border-radius: 50%; &quot; +
+            &quot;                                     line-height: 80px; font-size: 40px; color: white;'&gt;🔐&lt;/div&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;h2 style='margin: 0 0 20px 0; color: &quot; + INIA_GREEN + &quot;; font-size: 24px; text-align: center;'&gt;Recuperación de Contraseña&lt;/h2&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Hola &lt;strong&gt;&quot; + usuarioNombre + &quot;&lt;/strong&gt;,&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Recibimos una solicitud para restablecer tu contraseña. Usa el siguiente código:&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: &quot; + INIA_GRAY + &quot;; border: 2px dashed &quot; + INIA_GREEN + &quot;; padding: 25px; margin: 30px 0; border-radius: 8px; text-align: center;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 14px; font-weight: bold;'&gt;TU CÓDIGO DE RECUPERACIÓN:&lt;/p&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0; color: &quot; + INIA_GREEN + &quot;; font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: monospace;'&gt;&quot; + codigoRecuperacion + &quot;&lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0 0 10px 0; color: #856404; font-size: 15px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt;⏱️ IMPORTANTE:&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    Este código es válido solo por &lt;strong&gt;10 minutos&lt;/strong&gt;.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                                &lt;p style='margin: 10px 0 0 0; color: #856404; font-size: 15px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt;🔐 SEGURIDAD:&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    También necesitarás tu código de Google Authenticator para completar el cambio de contraseña.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0; color: #721c24; font-size: 14px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt;¿No solicitaste este código?&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    Si no fuiste tú, ignora este correo. Tu contraseña permanecerá segura.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Footer --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background-color: &quot; + INIA_GRAY + &quot;; padding: 30px; text-align: center; border-top: 1px solid #ddd;'&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'&gt;&quot; +
+            &quot;                                Este es un correo automático del Sistema INIA.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0; color: #999; font-size: 12px;'&gt;&quot; +
+            &quot;                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                &lt;/table&gt;&quot; +
+            &quot;            &lt;/td&gt;&quot; +
+            &quot;        &lt;/tr&gt;&quot; +
+            &quot;    &lt;/table&gt;&quot; +
+            &quot;&lt;/body&gt;&quot; +
+            &quot;&lt;/html&gt;&quot;;
+
+<span class="nc" id="L365">        enviarEmail(usuarioEmail, asunto, contenidoHtml);</span>
+<span class="nc" id="L366">    }</span>
+
+    /**
+     * Enviar notificación de activación de 2FA
+     */
+    public void enviar2FAActivado(String usuarioEmail, String usuarioNombre) {
+<span class="nc" id="L372">        String asunto = &quot;Autenticación de Dos Factores Activada - Sistema INIA&quot;;</span>
+        
+<span class="nc" id="L374">        String contenidoHtml = &quot;&lt;!DOCTYPE html&gt;&quot; +</span>
+            &quot;&lt;html lang='es'&gt;&quot; +
+            &quot;&lt;head&gt;&quot; +
+            &quot;    &lt;meta charset='UTF-8'&gt;&quot; +
+            &quot;    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;&quot; +
+            &quot;    &lt;title&gt;2FA Activado INIA&lt;/title&gt;&quot; +
+            &quot;&lt;/head&gt;&quot; +
+            &quot;&lt;body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'&gt;&quot; +
+            &quot;    &lt;table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'&gt;&quot; +
+            &quot;        &lt;tr&gt;&quot; +
+            &quot;            &lt;td align='center'&gt;&quot; +
+            &quot;                &lt;table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Header --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); padding: 40px 30px; text-align: center;'&gt;&quot; +
+            &quot;                            &lt;h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'&gt;INIA&lt;/h1&gt;&quot; +
+            &quot;                            &lt;p style='margin: 10px 0 0 0; color: &quot; + INIA_YELLOW + &quot;; font-size: 14px;'&gt;Instituto Nacional de Investigación Agropecuaria&lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Body --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='padding: 40px 30px;'&gt;&quot; +
+            &quot;                            &lt;div style='text-align: center; margin-bottom: 30px;'&gt;&quot; +
+            &quot;                                &lt;div style='display: inline-block; background-color: #28a745; width: 80px; height: 80px; border-radius: 50%; &quot; +
+            &quot;                                     line-height: 80px; font-size: 40px; color: white;'&gt;🛡️&lt;/div&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;h2 style='margin: 0 0 20px 0; color: &quot; + INIA_GREEN + &quot;; font-size: 24px; text-align: center;'&gt;Seguridad Mejorada&lt;/h2&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Hola &lt;strong&gt;&quot; + usuarioNombre + &quot;&lt;/strong&gt;,&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0; color: #155724; font-size: 15px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt;✅ Autenticación de Dos Factores Activada&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    Has activado exitosamente la autenticación de dos factores (2FA) en tu cuenta.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Tu cuenta ahora está protegida con una capa adicional de seguridad:&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;ul style='color: #333; font-size: 15px; line-height: 1.8; margin: 20px 0;'&gt;&quot; +
+            &quot;                                &lt;li&gt;Necesitarás tu código de Google Authenticator para iniciar sesión en nuevos dispositivos&lt;/li&gt;&quot; +
+            &quot;                                &lt;li&gt;Los dispositivos de confianza no requerirán 2FA por 30 días&lt;/li&gt;&quot; +
+            &quot;                                &lt;li&gt;Se requiere 2FA para recuperación de contraseña&lt;/li&gt;&quot; +
+            &quot;                            &lt;/ul&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0; color: #856404; font-size: 14px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt;⚠️ ¿No fuiste tú?&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    Si no activaste 2FA, contacta inmediatamente al administrador.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Footer --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background-color: &quot; + INIA_GRAY + &quot;; padding: 30px; text-align: center; border-top: 1px solid #ddd;'&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'&gt;&quot; +
+            &quot;                                Este es un correo automático del Sistema INIA.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0; color: #999; font-size: 12px;'&gt;&quot; +
+            &quot;                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                &lt;/table&gt;&quot; +
+            &quot;            &lt;/td&gt;&quot; +
+            &quot;        &lt;/tr&gt;&quot; +
+            &quot;    &lt;/table&gt;&quot; +
+            &quot;&lt;/body&gt;&quot; +
+            &quot;&lt;/html&gt;&quot;;
+
+<span class="nc" id="L454">        enviarEmail(usuarioEmail, asunto, contenidoHtml);</span>
+<span class="nc" id="L455">    }</span>
+
+    /**
+     * Enviar notificación de nuevo dispositivo de confianza
+     */
+    public void enviarNuevoDispositivo(String usuarioEmail, String usuarioNombre, String nombreDispositivo, String ipAddress) {
+<span class="nc" id="L461">        String asunto = &quot;Nuevo Dispositivo de Confianza - Sistema INIA&quot;;</span>
+        
+<span class="nc" id="L463">        String contenidoHtml = &quot;&lt;!DOCTYPE html&gt;&quot; +</span>
+            &quot;&lt;html lang='es'&gt;&quot; +
+            &quot;&lt;head&gt;&quot; +
+            &quot;    &lt;meta charset='UTF-8'&gt;&quot; +
+            &quot;    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;&quot; +
+            &quot;    &lt;title&gt;Nuevo Dispositivo INIA&lt;/title&gt;&quot; +
+            &quot;&lt;/head&gt;&quot; +
+            &quot;&lt;body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;'&gt;&quot; +
+            &quot;    &lt;table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f5f5f5; padding: 20px;'&gt;&quot; +
+            &quot;        &lt;tr&gt;&quot; +
+            &quot;            &lt;td align='center'&gt;&quot; +
+            &quot;                &lt;table role='presentation' cellpadding='0' cellspacing='0' width='600' style='background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Header --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background: linear-gradient(135deg, &quot; + INIA_GREEN + &quot; 0%, &quot; + INIA_LIGHT_GREEN + &quot; 100%); padding: 40px 30px; text-align: center;'&gt;&quot; +
+            &quot;                            &lt;h1 style='margin: 0; color: white; font-size: 28px; font-weight: bold;'&gt;INIA&lt;/h1&gt;&quot; +
+            &quot;                            &lt;p style='margin: 10px 0 0 0; color: &quot; + INIA_YELLOW + &quot;; font-size: 14px;'&gt;Instituto Nacional de Investigación Agropecuaria&lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Body --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='padding: 40px 30px;'&gt;&quot; +
+            &quot;                            &lt;div style='text-align: center; margin-bottom: 30px;'&gt;&quot; +
+            &quot;                                &lt;div style='display: inline-block; background-color: #17a2b8; width: 80px; height: 80px; border-radius: 50%; &quot; +
+            &quot;                                     line-height: 80px; font-size: 40px; color: white;'&gt;📱&lt;/div&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;h2 style='margin: 0 0 20px 0; color: &quot; + INIA_GREEN + &quot;; font-size: 24px; text-align: center;'&gt;Nuevo Dispositivo de Confianza&lt;/h2&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Hola &lt;strong&gt;&quot; + usuarioNombre + &quot;&lt;/strong&gt;,&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Se ha agregado un nuevo dispositivo de confianza a tu cuenta:&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: &quot; + INIA_GRAY + &quot;; border-left: 4px solid &quot; + INIA_GREEN + &quot;; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 14px; font-weight: bold;'&gt;DETALLES DEL DISPOSITIVO:&lt;/p&gt;&quot; +
+            &quot;                                &lt;p style='margin: 5px 0; color: #333; font-size: 15px;'&gt;&lt;strong&gt;Dispositivo:&lt;/strong&gt; &quot; + nombreDispositivo + &quot;&lt;/p&gt;&quot; +
+            &quot;                                &lt;p style='margin: 5px 0; color: #333; font-size: 15px;'&gt;&lt;strong&gt;IP:&lt;/strong&gt; &quot; + ipAddress + &quot;&lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;p style='margin: 20px 0; color: #333; font-size: 16px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                Este dispositivo no requerirá código 2FA durante los próximos 30 días.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                            &lt;div style='background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 25px 0; border-radius: 4px;'&gt;&quot; +
+            &quot;                                &lt;p style='margin: 0; color: #721c24; font-size: 14px; line-height: 1.6;'&gt;&quot; +
+            &quot;                                    &lt;strong&gt;⚠️ ¿No reconoces este dispositivo?&lt;/strong&gt;&lt;br&gt;&quot; +
+            &quot;                                    Inicia sesión inmediatamente y revoca este dispositivo desde tu perfil.&quot; +
+            &quot;                                &lt;/p&gt;&quot; +
+            &quot;                            &lt;/div&gt;&quot; +
+            &quot;                            &quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                    &quot; +
+            &quot;                    &lt;!-- Footer --&gt;&quot; +
+            &quot;                    &lt;tr&gt;&quot; +
+            &quot;                        &lt;td style='background-color: &quot; + INIA_GRAY + &quot;; padding: 30px; text-align: center; border-top: 1px solid #ddd;'&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0 0 10px 0; color: #666; font-size: 13px;'&gt;&quot; +
+            &quot;                                Este es un correo automático del Sistema INIA.&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                            &lt;p style='margin: 0; color: #999; font-size: 12px;'&gt;&quot; +
+            &quot;                                © 2025 INIA - Instituto Nacional de Investigación Agropecuaria&quot; +
+            &quot;                            &lt;/p&gt;&quot; +
+            &quot;                        &lt;/td&gt;&quot; +
+            &quot;                    &lt;/tr&gt;&quot; +
+            &quot;                &lt;/table&gt;&quot; +
+            &quot;            &lt;/td&gt;&quot; +
+            &quot;        &lt;/tr&gt;&quot; +
+            &quot;    &lt;/table&gt;&quot; +
+            &quot;&lt;/body&gt;&quot; +
+            &quot;&lt;/html&gt;&quot;;
+
+<span class="nc" id="L540">        enviarEmail(usuarioEmail, asunto, contenidoHtml);</span>
+<span class="nc" id="L541">    }</span>
+
+    /**
+     * Método genérico para enviar emails
+     */
+    private void enviarEmail(String destinatario, String asunto, String contenidoHtml) {
+        try {
+<span class="nc" id="L548">            MimeMessage mensaje = mailSender.createMimeMessage();</span>
+<span class="nc" id="L549">            MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, &quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L551">            helper.setFrom(fromEmail, &quot;Sistema INIA&quot;);</span>
+<span class="nc" id="L552">            helper.setTo(destinatario);</span>
+<span class="nc" id="L553">            helper.setSubject(asunto);</span>
+<span class="nc" id="L554">            helper.setText(contenidoHtml, true);</span>
+
+<span class="nc" id="L556">            mailSender.send(mensaje);</span>
+<span class="nc" id="L557">            System.out.println(&quot;✉️ Email enviado exitosamente a: &quot; + destinatario);</span>
+
+<span class="nc" id="L559">        } catch (MessagingException e) {</span>
+<span class="nc" id="L560">            System.err.println(&quot;❌ Error al enviar email a &quot; + destinatario + &quot;: &quot; + e.getMessage());</span>
+<span class="nc" id="L561">            e.printStackTrace();</span>
+<span class="nc" id="L562">        } catch (Exception e) {</span>
+<span class="nc" id="L563">            System.err.println(&quot;❌ Error inesperado al enviar email: &quot; + e.getMessage());</span>
+<span class="nc" id="L564">            e.printStackTrace();</span>
+<span class="nc" id="L565">        }</span>
+<span class="nc" id="L566">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

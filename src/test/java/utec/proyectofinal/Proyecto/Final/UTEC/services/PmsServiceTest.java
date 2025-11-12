@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Lote;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Pms;
-import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.RepPms;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.LoteRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.PmsRepository;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.RepPmsRepository;
@@ -23,7 +22,6 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PmsDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -89,6 +87,7 @@ class PmsServiceTest {
         pms.setNumRepeticionesEsperadas(8);
         pms.setEstado(Estado.REGISTRADO);
         pms.setActivo(true);
+        pms.setNumTandas(1); // asegurar valor inicial para las validaciones internas
     }
 
     @Test
@@ -362,5 +361,138 @@ class PmsServiceTest {
         // ASSERT
         assertNotNull(resultado);
         verify(pmsRepository, times(1)).save(any(Pms.class));
+    }
+
+    @Test
+    @DisplayName("finalizarAnalisis PMS - valida y llama al método genérico sin fallar si datos ok")
+    void finalizarAnalisisPms_conDatosCompletos_noFalla() {
+        // Configurar para que pase las validaciones
+        pms.setNumTandas(1);
+        pms.setPmsconRedon(new BigDecimal("10.50"));
+        pms.setEstado(Estado.EN_PROCESO);
+        
+        // Mock AnalisisService.finalizarAnalisisGenerico
+        when(analisisService.finalizarAnalisisGenerico(
+            eq(1L),
+            eq(pmsRepository),
+            any(),
+            any()
+        )).thenAnswer(invocation -> {
+            // Obtener el mapper (tercer argumento) y aplicarlo al pms
+            java.util.function.Function<Pms, PmsDTO> mapper = invocation.getArgument(2);
+            return mapper.apply(pms);
+        });
+        
+        // Debería finalizar sin lanzar excepción
+        PmsDTO result = pmsService.finalizarAnalisis(1L);
+        assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("aprobarAnalisis PMS - con datos completos no falla")
+    void aprobarAnalisisPms_conDatos_noFalla() {
+        pms.setEstado(Estado.PENDIENTE_APROBACION);
+        pms.setPmsconRedon(new BigDecimal("10.50"));
+        pms.setNumTandas(1);
+        
+        // Mock AnalisisService.aprobarAnalisisGenerico
+        when(analisisService.aprobarAnalisisGenerico(
+            eq(1L),
+            eq(pmsRepository),
+            any(),
+            any(),
+            any()
+        )).thenAnswer(invocation -> {
+            // Obtener el mapper y aplicarlo al pms
+            java.util.function.Function<Pms, PmsDTO> mapper = invocation.getArgument(2);
+            return mapper.apply(pms);
+        });
+        
+        PmsDTO result = pmsService.aprobarAnalisis(1L);
+        assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("marcarParaRepetir PMS - con datos completos no falla")
+    void marcarParaRepetirPms_conDatos_noFalla() {
+        pms.setEstado(Estado.APROBADO);
+        pms.setPmsconRedon(new BigDecimal("10.50"));
+        pms.setNumTandas(1);
+        
+        // Mock AnalisisService.marcarParaRepetirGenerico
+        when(analisisService.marcarParaRepetirGenerico(
+            eq(1L),
+            eq(pmsRepository),
+            any(),
+            any()
+        )).thenAnswer(invocation -> {
+            // Obtener el mapper y aplicarlo al pms
+            pms.setEstado(Estado.A_REPETIR); // Simular cambio de estado
+            java.util.function.Function<Pms, PmsDTO> mapper = invocation.getArgument(2);
+            return mapper.apply(pms);
+        });
+        
+        PmsDTO result = pmsService.marcarParaRepetir(1L);
+        assertNotNull(result);
+        assertEquals(Estado.A_REPETIR, result.getEstado());
+    }
+
+    @Test
+    @DisplayName("desactivarPms cambia activo a false usando servicio genérico")
+    void desactivarPms_llamaServicioGenerico() {
+        pms.setActivo(true);
+        
+        // Mock AnalisisService.desactivarAnalisis - debe modificar el pms en memoria
+        doAnswer(invocation -> {
+            pms.setActivo(false); // Simular desactivación
+            return null;
+        }).when(analisisService).desactivarAnalisis(eq(1L), eq(pmsRepository));
+        
+        pmsService.desactivarPms(1L);
+        
+        // Verificar que el servicio de análisis fue llamado
+        verify(analisisService, times(1)).desactivarAnalisis(eq(1L), eq(pmsRepository));
+        assertFalse(pms.getActivo());
+    }
+
+    @Test
+    @DisplayName("reactivarPms - éxito cuando estaba inactivo y error si ya activo")
+    void reactivarPms_casos() {
+        // Caso 1: Reactivar PMS inactivo - debe funcionar
+        Pms pmsInactivo = new Pms();
+        pmsInactivo.setAnalisisID(1L);
+        pmsInactivo.setActivo(false);
+        pmsInactivo.setLote(lote);
+        pmsInactivo.setNumRepeticionesEsperadas(8);
+        pmsInactivo.setNumTandas(1);
+        
+        // Mock AnalisisService.reactivarAnalisis
+        when(analisisService.reactivarAnalisis(
+            eq(1L),
+            eq(pmsRepository),
+            any()
+        )).thenAnswer(invocation -> {
+            pmsInactivo.setActivo(true); // Simular reactivación
+            java.util.function.Function<Pms, PmsDTO> mapper = invocation.getArgument(2);
+            PmsDTO dto = mapper.apply(pmsInactivo);
+            // Asegurar que activo esté seteado
+            if (dto != null && dto.getActivo() == null) {
+                dto.setActivo(true);
+            }
+            return dto;
+        });
+        
+        PmsDTO dto = pmsService.reactivarPms(1L);
+        assertNotNull(dto);
+        assertTrue(dto.getActivo());
+        
+        // Caso 2: Intentar reactivar PMS ya activo - debe lanzar excepción
+        when(analisisService.reactivarAnalisis(
+            eq(2L),
+            eq(pmsRepository),
+            any()
+        )).thenThrow(new RuntimeException("El análisis ya está activo"));
+        
+        assertThrows(RuntimeException.class, () -> pmsService.reactivarPms(2L));
     }
 }

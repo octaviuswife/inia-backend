@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificacionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">NotificacionService.java</span></div><h1>NotificacionService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Analisis;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.AnalisisHistorial;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Notificacion;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.AnalisisHistorialRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.AnalisisRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.NotificacionRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.NotificacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.NotificacionDTO;
+
+import static utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoNotificacion.*;
+
+@Service
+@Transactional
+<span class="fc" id="L30">public class NotificacionService {</span>
+
+    @Autowired
+    private NotificacionRepository notificacionRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private AnalisisRepository analisisRepository;
+
+    @Autowired
+    private AnalisisHistorialRepository analisisHistorialRepository;
+
+    // NUEVO: Servicio WebSocket para notificaciones en tiempo real
+    @Autowired
+    private NotificationWebSocketService wsService;
+
+    // Crear notificación manual
+    public NotificacionDTO crearNotificacion(NotificacionRequestDTO request) {
+<span class="fc" id="L50">        Usuario usuario = usuarioRepository.findById(request.getUsuarioId().intValue())</span>
+<span class="fc" id="L51">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+
+<span class="fc" id="L53">        Notificacion notificacion = new Notificacion();</span>
+<span class="fc" id="L54">        notificacion.setNombre(request.getNombre());</span>
+<span class="fc" id="L55">        notificacion.setMensaje(request.getMensaje());</span>
+<span class="fc" id="L56">        notificacion.setUsuario(usuario);</span>
+<span class="fc" id="L57">        notificacion.setAnalisisId(request.getAnalisisId());</span>
+<span class="fc" id="L58">        notificacion.setTipo(request.getTipo());</span>
+
+<span class="fc" id="L60">        notificacion = notificacionRepository.save(notificacion);</span>
+<span class="fc" id="L61">        return convertToDTO(notificacion);</span>
+    }
+
+    // Notificación cuando se registra un nuevo usuario
+    public void notificarNuevoUsuario(Long usuarioId) {
+        // Buscar todos los administradores
+<span class="fc" id="L67">        List&lt;Usuario&gt; administradores = usuarioRepository.findByEstado(utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario.ACTIVO)</span>
+<span class="fc" id="L68">                .stream()</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                .filter(u -&gt; u.getRol() == utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)</span>
+<span class="fc" id="L70">                .collect(Collectors.toList());</span>
+        
+<span class="fc" id="L72">        Usuario usuarioNuevo = usuarioRepository.findById(usuarioId.intValue())</span>
+<span class="pc" id="L73">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        for (Usuario admin : administradores) {</span>
+<span class="fc" id="L76">            Notificacion notificacion = new Notificacion();</span>
+<span class="fc" id="L77">            notificacion.setNombre(&quot;Nuevo usuario registrado&quot;);</span>
+<span class="fc" id="L78">            notificacion.setMensaje(&quot;El usuario &quot; + usuarioNuevo.getNombres() + &quot; &quot; + usuarioNuevo.getApellidos() + </span>
+                                  &quot; se ha registrado y requiere aprobación.&quot;);
+<span class="fc" id="L80">            notificacion.setUsuario(admin);</span>
+<span class="fc" id="L81">            notificacion.setTipo(USUARIO_REGISTRO);</span>
+            
+<span class="fc" id="L83">            notificacion = notificacionRepository.save(notificacion);</span>
+            
+            // EMITIR VÍA WEBSOCKET - El admin recibe la notificación instantáneamente
+<span class="fc" id="L86">            NotificacionDTO dto = convertToDTO(notificacion);</span>
+<span class="fc" id="L87">            wsService.sendToUser(admin.getUsuarioID(), dto);</span>
+<span class="fc" id="L88">            wsService.sendUnreadCount(admin.getUsuarioID(), </span>
+<span class="fc" id="L89">                contarNotificacionesNoLeidas(admin.getUsuarioID().longValue()));</span>
+<span class="fc" id="L90">        }</span>
+<span class="fc" id="L91">    }</span>
+
+    // Notificación cuando se aprueba un usuario
+    public void notificarUsuarioAprobado(Long usuarioId) {
+<span class="fc" id="L95">        Usuario usuario = usuarioRepository.findById(usuarioId.intValue())</span>
+<span class="pc" id="L96">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+
+<span class="fc" id="L98">        Notificacion notificacion = new Notificacion();</span>
+<span class="fc" id="L99">        notificacion.setNombre(&quot;Cuenta aprobada&quot;);</span>
+<span class="fc" id="L100">        notificacion.setMensaje(&quot;Su cuenta ha sido aprobada por el administrador. Ya puede iniciar sesión en el sistema.&quot;);</span>
+<span class="fc" id="L101">        notificacion.setUsuario(usuario);</span>
+<span class="fc" id="L102">        notificacion.setTipo(USUARIO_APROBADO);</span>
+        
+<span class="fc" id="L104">        notificacion = notificacionRepository.save(notificacion);</span>
+        
+        // EMITIR VÍA WEBSOCKET
+<span class="fc" id="L107">        NotificacionDTO dto = convertToDTO(notificacion);</span>
+<span class="fc" id="L108">        wsService.sendToUser(usuario.getUsuarioID(), dto);</span>
+<span class="fc" id="L109">        wsService.sendUnreadCount(usuario.getUsuarioID(), </span>
+<span class="fc" id="L110">            contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));</span>
+<span class="fc" id="L111">    }</span>
+
+    // Notificación cuando se rechaza un usuario
+    public void notificarUsuarioRechazado(Long usuarioId) {
+<span class="fc" id="L115">        Usuario usuario = usuarioRepository.findById(usuarioId.intValue())</span>
+<span class="pc" id="L116">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado&quot;));</span>
+
+<span class="fc" id="L118">        Notificacion notificacion = new Notificacion();</span>
+<span class="fc" id="L119">        notificacion.setNombre(&quot;Solicitud rechazada&quot;);</span>
+<span class="fc" id="L120">        notificacion.setMensaje(&quot;Su solicitud de registro ha sido rechazada por el administrador.&quot;);</span>
+<span class="fc" id="L121">        notificacion.setUsuario(usuario);</span>
+<span class="fc" id="L122">        notificacion.setTipo(USUARIO_RECHAZADO);</span>
+        
+<span class="fc" id="L124">        notificacion = notificacionRepository.save(notificacion);</span>
+        
+        // EMITIR VÍA WEBSOCKET
+<span class="fc" id="L127">        NotificacionDTO dto = convertToDTO(notificacion);</span>
+<span class="fc" id="L128">        wsService.sendToUser(usuario.getUsuarioID(), dto);</span>
+<span class="fc" id="L129">        wsService.sendUnreadCount(usuario.getUsuarioID(), </span>
+<span class="fc" id="L130">            contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));</span>
+<span class="fc" id="L131">    }</span>
+
+    // Notificación cuando se finaliza un análisis
+    public void notificarAnalisisFinalizado(Long analisisId) {
+        // Buscar todos los administradores
+<span class="fc" id="L136">        List&lt;Usuario&gt; administradores = usuarioRepository.findByEstado(utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario.ACTIVO)</span>
+<span class="fc" id="L137">                .stream()</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">                .filter(u -&gt; u.getRol() == utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)</span>
+<span class="fc" id="L139">                .collect(Collectors.toList());</span>
+        
+<span class="fc" id="L141">        Analisis analisis = analisisRepository.findById(analisisId)</span>
+<span class="pc" id="L142">                .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado&quot;));</span>
+
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        for (Usuario admin : administradores) {</span>
+<span class="fc" id="L145">            Notificacion notificacion = new Notificacion();</span>
+<span class="fc" id="L146">            notificacion.setNombre(&quot;Análisis finalizado&quot;);</span>
+<span class="fc" id="L147">            notificacion.setMensaje(&quot;El análisis ID &quot; + analisisId + &quot; del lote &quot; + analisis.getLote().getFicha() + </span>
+                                  &quot; ha sido finalizado y requiere aprobación.&quot;);
+<span class="fc" id="L149">            notificacion.setUsuario(admin);</span>
+<span class="fc" id="L150">            notificacion.setAnalisisId(analisisId);</span>
+<span class="fc" id="L151">            notificacion.setTipo(ANALISIS_FINALIZADO);</span>
+            
+<span class="fc" id="L153">            notificacion = notificacionRepository.save(notificacion);</span>
+            
+            // EMITIR VÍA WEBSOCKET
+<span class="fc" id="L156">            NotificacionDTO dto = convertToDTO(notificacion);</span>
+<span class="fc" id="L157">            wsService.sendToUser(admin.getUsuarioID(), dto);</span>
+<span class="fc" id="L158">            wsService.sendUnreadCount(admin.getUsuarioID(), </span>
+<span class="fc" id="L159">                contarNotificacionesNoLeidas(admin.getUsuarioID().longValue()));</span>
+<span class="fc" id="L160">        }</span>
+<span class="fc" id="L161">    }</span>
+
+    // Notificación cuando se aprueba un análisis
+    public void notificarAnalisisAprobado(Long analisisId) {
+        // Buscar usuarios que modificaron el análisis (excluyendo administradores)
+<span class="nc" id="L166">        List&lt;AnalisisHistorial&gt; historial = analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(analisisId);</span>
+<span class="nc" id="L167">        List&lt;Usuario&gt; usuariosInvolucrados = historial.stream()</span>
+<span class="nc" id="L168">                .map(AnalisisHistorial::getUsuario)</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                .filter(usuario -&gt; usuario.getRol() != utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)</span>
+<span class="nc" id="L170">                .distinct()</span>
+<span class="nc" id="L171">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L173">        Analisis analisis = analisisRepository.findById(analisisId)</span>
+<span class="nc" id="L174">                .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado&quot;));</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        for (Usuario usuario : usuariosInvolucrados) {</span>
+<span class="nc" id="L177">            Notificacion notificacion = new Notificacion();</span>
+<span class="nc" id="L178">            notificacion.setNombre(&quot;Análisis aprobado&quot;);</span>
+<span class="nc" id="L179">            notificacion.setMensaje(&quot;El análisis ID &quot; + analisisId + &quot; del lote &quot; + analisis.getLote().getFicha() + </span>
+                                  &quot; ha sido aprobado por el administrador.&quot;);
+<span class="nc" id="L181">            notificacion.setUsuario(usuario);</span>
+<span class="nc" id="L182">            notificacion.setAnalisisId(analisisId);</span>
+<span class="nc" id="L183">            notificacion.setTipo(ANALISIS_APROBADO);</span>
+            
+<span class="nc" id="L185">            notificacion = notificacionRepository.save(notificacion);</span>
+            
+            // EMITIR VÍA WEBSOCKET
+<span class="nc" id="L188">            NotificacionDTO dto = convertToDTO(notificacion);</span>
+<span class="nc" id="L189">            wsService.sendToUser(usuario.getUsuarioID(), dto);</span>
+<span class="nc" id="L190">            wsService.sendUnreadCount(usuario.getUsuarioID(), </span>
+<span class="nc" id="L191">                contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));</span>
+<span class="nc" id="L192">        }</span>
+<span class="nc" id="L193">    }</span>
+
+    // Notificación cuando se marca un análisis para repetir
+    public void notificarAnalisisRepetir(Long analisisId) {
+        // Buscar usuarios que modificaron el análisis (excluyendo administradores)
+<span class="nc" id="L198">        List&lt;AnalisisHistorial&gt; historial = analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(analisisId);</span>
+<span class="nc" id="L199">        List&lt;Usuario&gt; usuariosInvolucrados = historial.stream()</span>
+<span class="nc" id="L200">                .map(AnalisisHistorial::getUsuario)</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                .filter(usuario -&gt; usuario.getRol() != utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)</span>
+<span class="nc" id="L202">                .distinct()</span>
+<span class="nc" id="L203">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L205">        Analisis analisis = analisisRepository.findById(analisisId)</span>
+<span class="nc" id="L206">                .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado&quot;));</span>
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        for (Usuario usuario : usuariosInvolucrados) {</span>
+<span class="nc" id="L209">            Notificacion notificacion = new Notificacion();</span>
+<span class="nc" id="L210">            notificacion.setNombre(&quot;Análisis marcado para repetir&quot;);</span>
+<span class="nc" id="L211">            notificacion.setMensaje(&quot;El análisis ID &quot; + analisisId + &quot; del lote &quot; + analisis.getLote().getFicha() + </span>
+                                  &quot; ha sido marcado para repetir por el administrador.&quot;);
+<span class="nc" id="L213">            notificacion.setUsuario(usuario);</span>
+<span class="nc" id="L214">            notificacion.setAnalisisId(analisisId);</span>
+<span class="nc" id="L215">            notificacion.setTipo(ANALISIS_REPETIR);</span>
+            
+<span class="nc" id="L217">            notificacion = notificacionRepository.save(notificacion);</span>
+            
+            // EMITIR VÍA WEBSOCKET
+<span class="nc" id="L220">            NotificacionDTO dto = convertToDTO(notificacion);</span>
+<span class="nc" id="L221">            wsService.sendToUser(usuario.getUsuarioID(), dto);</span>
+<span class="nc" id="L222">            wsService.sendUnreadCount(usuario.getUsuarioID(), </span>
+<span class="nc" id="L223">                contarNotificacionesNoLeidas(usuario.getUsuarioID().longValue()));</span>
+<span class="nc" id="L224">        }</span>
+<span class="nc" id="L225">    }</span>
+
+    // Notificación cuando un análisis editado vuelve a estado pendiente de aprobación
+    public void notificarAnalisisPendienteAprobacion(Long analisisId) {
+        // Buscar todos los administradores
+<span class="nc" id="L230">        List&lt;Usuario&gt; administradores = usuarioRepository.findByEstado(utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario.ACTIVO)</span>
+<span class="nc" id="L231">                .stream()</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">                .filter(u -&gt; u.getRol() == utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)</span>
+<span class="nc" id="L233">                .collect(Collectors.toList());</span>
+        
+<span class="nc" id="L235">        Analisis analisis = analisisRepository.findById(analisisId)</span>
+<span class="nc" id="L236">                .orElseThrow(() -&gt; new RuntimeException(&quot;Análisis no encontrado&quot;));</span>
+
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        for (Usuario admin : administradores) {</span>
+<span class="nc" id="L239">            Notificacion notificacion = new Notificacion();</span>
+<span class="nc" id="L240">            notificacion.setNombre(&quot;Análisis modificado - Requiere nueva aprobación&quot;);</span>
+<span class="nc" id="L241">            notificacion.setMensaje(&quot;El análisis ID &quot; + analisisId + &quot; del lote &quot; + analisis.getLote().getFicha() + </span>
+                                  &quot; ha sido modificado y requiere nueva aprobación.&quot;);
+<span class="nc" id="L243">            notificacion.setUsuario(admin);</span>
+<span class="nc" id="L244">            notificacion.setAnalisisId(analisisId);</span>
+<span class="nc" id="L245">            notificacion.setTipo(ANALISIS_FINALIZADO); // Reutilizamos el tipo existente</span>
+            
+<span class="nc" id="L247">            notificacionRepository.save(notificacion);</span>
+<span class="nc" id="L248">        }</span>
+<span class="nc" id="L249">    }</span>
+
+    // Obtener notificaciones de un usuario
+    public Page&lt;NotificacionDTO&gt; obtenerNotificacionesPorUsuario(Long usuarioId, Pageable pageable) {
+<span class="fc" id="L253">        Page&lt;Notificacion&gt; notificaciones = notificacionRepository.findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(usuarioId.intValue(), pageable);</span>
+<span class="fc" id="L254">        return notificaciones.map(this::convertToDTO);</span>
+    }
+
+    // Obtener notificaciones no leídas de un usuario
+    public List&lt;NotificacionDTO&gt; obtenerNotificacionesNoLeidas(Long usuarioId) {
+<span class="fc" id="L259">        List&lt;Notificacion&gt; notificaciones = notificacionRepository.findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrueOrderByFechaCreacionDesc(usuarioId.intValue());</span>
+<span class="fc" id="L260">        return notificaciones.stream().map(this::convertToDTO).collect(Collectors.toList());</span>
+    }
+
+    // Marcar notificación como leída
+    public NotificacionDTO marcarComoLeida(Long notificacionId) {
+<span class="fc" id="L265">        Notificacion notificacion = notificacionRepository.findById(notificacionId)</span>
+<span class="pc" id="L266">                .orElseThrow(() -&gt; new RuntimeException(&quot;Notificación no encontrada&quot;));</span>
+        
+        // Validar que el usuario actual puede marcar esta notificación
+<span class="fc" id="L269">        Usuario usuarioActual = obtenerUsuarioActual();</span>
+<span class="pc bpc" id="L270" title="2 of 4 branches missed.">        if (!usuarioActual.esAdmin() &amp;&amp; !notificacion.getUsuario().getUsuarioID().equals(usuarioActual.getUsuarioID())) {</span>
+<span class="nc" id="L271">            throw new RuntimeException(&quot;No tiene permisos para marcar esta notificación como leída&quot;);</span>
+        }
+        
+<span class="fc" id="L274">        notificacion.setLeido(true);</span>
+<span class="fc" id="L275">        notificacion = notificacionRepository.save(notificacion);</span>
+        
+<span class="fc" id="L277">        return convertToDTO(notificacion);</span>
+    }
+
+    // Marcar todas las notificaciones de un usuario como leídas
+    public void marcarTodasComoLeidas(Long usuarioId) {
+<span class="fc" id="L282">        List&lt;Notificacion&gt; notificaciones = notificacionRepository.findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(usuarioId.intValue());</span>
+<span class="fc" id="L283">        notificaciones.forEach(n -&gt; n.setLeido(true));</span>
+<span class="fc" id="L284">        notificacionRepository.saveAll(notificaciones);</span>
+<span class="fc" id="L285">    }</span>
+
+    // Eliminar notificación (marcar como inactiva)
+    public void eliminarNotificacion(Long notificacionId) {
+<span class="fc" id="L289">        Notificacion notificacion = notificacionRepository.findById(notificacionId)</span>
+<span class="pc" id="L290">                .orElseThrow(() -&gt; new RuntimeException(&quot;Notificación no encontrada&quot;));</span>
+        
+        // Validar que el usuario actual puede eliminar esta notificación
+<span class="fc" id="L293">        Usuario usuarioActual = obtenerUsuarioActual();</span>
+<span class="pc bpc" id="L294" title="1 of 4 branches missed.">        if (!usuarioActual.esAdmin() &amp;&amp; !notificacion.getUsuario().getUsuarioID().equals(usuarioActual.getUsuarioID())) {</span>
+<span class="fc" id="L295">            throw new RuntimeException(&quot;No tiene permisos para eliminar esta notificación&quot;);</span>
+        }
+        
+<span class="fc" id="L298">        notificacion.setActivo(false);</span>
+<span class="fc" id="L299">        notificacionRepository.save(notificacion);</span>
+<span class="fc" id="L300">    }</span>
+
+    // Contar notificaciones no leídas
+    public Long contarNotificacionesNoLeidas(Long usuarioId) {
+<span class="fc" id="L304">        return notificacionRepository.countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(usuarioId.intValue());</span>
+    }
+
+    // === MÉTODOS SEGUROS QUE USAN EL USUARIO AUTENTICADO ===
+
+    // Obtener usuario actual autenticado
+    private Usuario obtenerUsuarioActual() {
+<span class="fc" id="L311">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L312" title="2 of 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
+<span class="nc" id="L313">            throw new RuntimeException(&quot;No hay usuario autenticado&quot;);</span>
+        }
+
+<span class="fc" id="L316">        return usuarioRepository.findByNombre(auth.getName())</span>
+<span class="pc" id="L317">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario autenticado no encontrado en base de datos&quot;));</span>
+    }
+
+    // Validar que el usuario actual puede acceder a las notificaciones del usuarioId especificado
+    private void validarAccesoANotificaciones(Integer usuarioId) {
+<span class="nc" id="L322">        Usuario usuarioActual = obtenerUsuarioActual();</span>
+        
+        // Los administradores pueden ver las notificaciones de cualquier usuario
+<span class="nc bnc" id="L325" title="All 2 branches missed.">        if (usuarioActual.esAdmin()) {</span>
+<span class="nc" id="L326">            return;</span>
+        }
+        
+        // Los demás usuarios solo pueden ver sus propias notificaciones
+<span class="nc bnc" id="L330" title="All 2 branches missed.">        if (!Objects.equals(usuarioActual.getUsuarioID(), usuarioId)) {</span>
+<span class="nc" id="L331">            throw new RuntimeException(&quot;No tiene permisos para acceder a las notificaciones de este usuario&quot;);</span>
+        }
+<span class="nc" id="L333">    }</span>
+
+    // Métodos seguros que obtienen las notificaciones del usuario actual
+    public Page&lt;NotificacionDTO&gt; obtenerMisNotificaciones(Pageable pageable) {
+<span class="nc" id="L337">        Usuario usuarioActual = obtenerUsuarioActual();</span>
+<span class="nc" id="L338">        Page&lt;Notificacion&gt; notificaciones = notificacionRepository.findByUsuarioUsuarioIDAndActivoTrueOrderByFechaCreacionDesc(</span>
+<span class="nc" id="L339">            usuarioActual.getUsuarioID(), pageable);</span>
+<span class="nc" id="L340">        return notificaciones.map(this::convertToDTO);</span>
+    }
+
+    public List&lt;NotificacionDTO&gt; obtenerMisNotificacionesNoLeidas() {
+<span class="nc" id="L344">        Usuario usuarioActual = obtenerUsuarioActual();</span>
+<span class="nc" id="L345">        List&lt;Notificacion&gt; notificaciones = notificacionRepository.findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrueOrderByFechaCreacionDesc(</span>
+<span class="nc" id="L346">            usuarioActual.getUsuarioID());</span>
+<span class="nc" id="L347">        return notificaciones.stream().map(this::convertToDTO).collect(Collectors.toList());</span>
+    }
+
+    public Long contarMisNotificacionesNoLeidas() {
+<span class="nc" id="L351">        Usuario usuarioActual = obtenerUsuarioActual();</span>
+<span class="nc" id="L352">        return notificacionRepository.countByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(usuarioActual.getUsuarioID());</span>
+    }
+
+    public void marcarTodasMisNotificacionesComoLeidas() {
+<span class="nc" id="L356">        Usuario usuarioActual = obtenerUsuarioActual();</span>
+<span class="nc" id="L357">        List&lt;Notificacion&gt; notificaciones = notificacionRepository.findByUsuarioUsuarioIDAndLeidoFalseAndActivoTrue(usuarioActual.getUsuarioID());</span>
+<span class="nc" id="L358">        notificaciones.forEach(n -&gt; n.setLeido(true));</span>
+<span class="nc" id="L359">        notificacionRepository.saveAll(notificaciones);</span>
+<span class="nc" id="L360">    }</span>
+
+    // Métodos que requieren validación de acceso (para administradores o acceso propio)
+    public Page&lt;NotificacionDTO&gt; obtenerNotificacionesPorUsuarioConValidacion(Long usuarioId, Pageable pageable) {
+<span class="nc" id="L364">        validarAccesoANotificaciones(usuarioId.intValue());</span>
+<span class="nc" id="L365">        return obtenerNotificacionesPorUsuario(usuarioId, pageable);</span>
+    }
+
+    public List&lt;NotificacionDTO&gt; obtenerNotificacionesNoLeidasConValidacion(Long usuarioId) {
+<span class="nc" id="L369">        validarAccesoANotificaciones(usuarioId.intValue());</span>
+<span class="nc" id="L370">        return obtenerNotificacionesNoLeidas(usuarioId);</span>
+    }
+
+    public Long contarNotificacionesNoLeidasConValidacion(Long usuarioId) {
+<span class="nc" id="L374">        validarAccesoANotificaciones(usuarioId.intValue());</span>
+<span class="nc" id="L375">        return contarNotificacionesNoLeidas(usuarioId);</span>
+    }
+
+    public void marcarTodasComoLeidasConValidacion(Long usuarioId) {
+<span class="nc" id="L379">        validarAccesoANotificaciones(usuarioId.intValue());</span>
+<span class="nc" id="L380">        marcarTodasComoLeidas(usuarioId);</span>
+<span class="nc" id="L381">    }</span>
+
+    private NotificacionDTO convertToDTO(Notificacion notificacion) {
+<span class="fc" id="L384">        NotificacionDTO dto = new NotificacionDTO();</span>
+<span class="fc" id="L385">        dto.setId(notificacion.getId());</span>
+<span class="fc" id="L386">        dto.setNombre(notificacion.getNombre());</span>
+<span class="fc" id="L387">        dto.setMensaje(notificacion.getMensaje());</span>
+<span class="fc" id="L388">        dto.setLeido(notificacion.getLeido());</span>
+<span class="fc" id="L389">        dto.setActivo(notificacion.getActivo());</span>
+<span class="fc" id="L390">        dto.setFechaCreacion(notificacion.getFechaCreacion());</span>
+<span class="fc" id="L391">        dto.setUsuarioId(notificacion.getUsuario().getUsuarioID().longValue());</span>
+<span class="fc" id="L392">        dto.setUsuarioNombre(notificacion.getUsuario().getNombres() + &quot; &quot; + notificacion.getUsuario().getApellidos());</span>
+<span class="fc" id="L393">        dto.setAnalisisId(notificacion.getAnalisisId());</span>
+<span class="fc" id="L394">        dto.setTipo(notificacion.getTipo());</span>
+<span class="fc" id="L395">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

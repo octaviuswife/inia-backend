@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CatalogoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">CatalogoService.java</span></div><h1>CatalogoService.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Catalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.CatalogoCrudRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.CatalogoRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.CatalogoDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoCatalogo;
+
+@Service
+<span class="fc" id="L19">public class CatalogoService {</span>
+
+    @Autowired
+    private CatalogoCrudRepository catalogoRepository;
+
+    // Obtener todos los catálogos activos
+    public List&lt;CatalogoDTO&gt; obtenerTodos() {
+<span class="fc" id="L26">        return catalogoRepository.findByActivoTrue().stream()</span>
+<span class="fc" id="L27">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L28">                .collect(Collectors.toList());</span>
+    }
+
+    // Obtener catálogos por tipo
+    public List&lt;CatalogoDTO&gt; obtenerPorTipo(String tipo) {
+<span class="fc" id="L33">        TipoCatalogo tipoCatalogo = TipoCatalogo.valueOf(tipo.toUpperCase());</span>
+<span class="fc" id="L34">        return catalogoRepository.findByTipoAndActivoTrue(tipoCatalogo).stream()</span>
+<span class="fc" id="L35">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L36">                .collect(Collectors.toList());</span>
+    }
+
+    // Obtener catálogos por tipo con filtro de estado opcional
+    public List&lt;CatalogoDTO&gt; obtenerPorTipo(String tipo, Boolean activo) {
+<span class="fc" id="L41">        TipoCatalogo tipoCatalogo = TipoCatalogo.valueOf(tipo.toUpperCase());</span>
+        
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (activo == null) {</span>
+            // Si no se especifica, devolver todos (activos e inactivos)
+<span class="fc" id="L45">            return catalogoRepository.findByTipo(tipoCatalogo).stream()</span>
+<span class="fc" id="L46">                    .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L47">                    .collect(Collectors.toList());</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        } else if (activo) {</span>
+            // Solo activos
+<span class="fc" id="L50">            return catalogoRepository.findByTipoAndActivoTrue(tipoCatalogo).stream()</span>
+<span class="fc" id="L51">                    .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L52">                    .collect(Collectors.toList());</span>
+        } else {
+            // Solo inactivos
+<span class="fc" id="L55">            return catalogoRepository.findByTipoAndActivoFalse(tipoCatalogo).stream()</span>
+<span class="fc" id="L56">                    .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L57">                    .collect(Collectors.toList());</span>
+        }
+    }
+    
+
+    // Obtener por ID
+    public CatalogoDTO obtenerPorId(Long id) {
+<span class="fc" id="L64">        return catalogoRepository.findById(id)</span>
+<span class="fc" id="L65">                .map(this::mapearEntidadADTO)</span>
+<span class="fc" id="L66">                .orElse(null);</span>
+    }
+
+    // Crear nuevo catálogo
+    public CatalogoDTO crear(CatalogoRequestDTO solicitud) {
+        // Verificar si ya existe el mismo valor para el mismo tipo
+<span class="fc" id="L72">        TipoCatalogo tipo = TipoCatalogo.valueOf(solicitud.getTipo().toUpperCase());</span>
+<span class="fc" id="L73">        Optional&lt;Catalogo&gt; existente = catalogoRepository.findByTipoAndValor(tipo, solicitud.getValor());</span>
+        
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (existente.isPresent()) {</span>
+<span class="fc" id="L76">            throw new RuntimeException(&quot;Ya existe un catálogo con el mismo tipo y valor&quot;);</span>
+        }
+
+<span class="fc" id="L79">        Catalogo catalogo = new Catalogo();</span>
+<span class="fc" id="L80">        catalogo.setTipo(tipo);</span>
+<span class="fc" id="L81">        catalogo.setValor(solicitud.getValor());</span>
+<span class="fc" id="L82">        catalogo.setActivo(true); // Siempre activo al crear</span>
+
+<span class="fc" id="L84">        Catalogo guardado = catalogoRepository.save(catalogo);</span>
+<span class="fc" id="L85">        return mapearEntidadADTO(guardado);</span>
+    }
+
+    // Actualizar catálogo
+    public CatalogoDTO actualizar(Long id, CatalogoRequestDTO solicitud) {
+<span class="fc" id="L90">        return catalogoRepository.findById(id)</span>
+<span class="fc" id="L91">                .map(catalogo -&gt; {</span>
+                    // Verificar si el nuevo valor ya existe para otro registro del mismo tipo
+<span class="fc" id="L93">                    TipoCatalogo tipo = TipoCatalogo.valueOf(solicitud.getTipo().toUpperCase());</span>
+<span class="fc" id="L94">                    Optional&lt;Catalogo&gt; existente = catalogoRepository.findByTipoAndValor(tipo, solicitud.getValor());</span>
+                    
+<span class="pc bpc" id="L96" title="1 of 4 branches missed.">                    if (existente.isPresent() &amp;&amp; !existente.get().getId().equals(id)) {</span>
+<span class="fc" id="L97">                        throw new RuntimeException(&quot;Ya existe un catálogo con el mismo tipo y valor&quot;);</span>
+                    }
+
+<span class="fc" id="L100">                    catalogo.setTipo(tipo);</span>
+<span class="fc" id="L101">                    catalogo.setValor(solicitud.getValor());</span>
+
+<span class="fc" id="L103">                    Catalogo actualizado = catalogoRepository.save(catalogo);</span>
+<span class="fc" id="L104">                    return mapearEntidadADTO(actualizado);</span>
+                })
+<span class="fc" id="L106">                .orElse(null);</span>
+    }
+
+    // Eliminar (desactivar)
+    public void eliminar(Long id) {
+<span class="fc" id="L111">        catalogoRepository.findById(id)</span>
+<span class="fc" id="L112">                .ifPresent(catalogo -&gt; {</span>
+<span class="fc" id="L113">                    catalogo.setActivo(false);</span>
+<span class="fc" id="L114">                    catalogoRepository.save(catalogo);</span>
+<span class="fc" id="L115">                });</span>
+<span class="fc" id="L116">    }</span>
+
+    // Reactivar catálogo
+    public CatalogoDTO reactivar(Long id) {
+<span class="fc" id="L120">        return catalogoRepository.findById(id)</span>
+<span class="fc" id="L121">                .map(catalogo -&gt; {</span>
+<span class="fc" id="L122">                    catalogo.setActivo(true);</span>
+<span class="fc" id="L123">                    Catalogo reactivado = catalogoRepository.save(catalogo);</span>
+<span class="fc" id="L124">                    return mapearEntidadADTO(reactivado);</span>
+                })
+<span class="fc" id="L126">                .orElse(null);</span>
+    }
+
+    // Eliminar físicamente
+    public void eliminarFisicamente(Long id) {
+<span class="nc" id="L131">        catalogoRepository.deleteById(id);</span>
+<span class="nc" id="L132">    }</span>
+
+    // Mapeo de entidad a DTO
+    private CatalogoDTO mapearEntidadADTO(Catalogo catalogo) {
+<span class="fc" id="L136">        CatalogoDTO dto = new CatalogoDTO();</span>
+<span class="fc" id="L137">        dto.setId(catalogo.getId());</span>
+<span class="fc" id="L138">        dto.setTipo(catalogo.getTipo().name());</span>
+<span class="fc" id="L139">        dto.setValor(catalogo.getValor());</span>
+<span class="fc" id="L140">        dto.setActivo(catalogo.getActivo());</span>
+<span class="fc" id="L141">        return dto;</span>
+    }
+
+    // Obtener catálogo por ID para uso interno
+    public Catalogo obtenerEntidadPorId(Long id) {
+<span class="nc" id="L146">        return catalogoRepository.findById(id).orElse(null);</span>
+    }
+
+    // Listar Catálogos con paginado (para listado)
+    public Page&lt;CatalogoDTO&gt; obtenerCatalogosPaginados(Pageable pageable) {
+<span class="nc" id="L151">        Page&lt;Catalogo&gt; catalogoPage = catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable);</span>
+<span class="nc" id="L152">        return catalogoPage.map(this::mapearEntidadADTO);</span>
+    }
+
+    // Listar Catálogos con paginado y filtro por activo
+    public Page&lt;CatalogoDTO&gt; obtenerCatalogosPaginadosConFiltro(Pageable pageable, String filtroActivo) {
+        Page&lt;Catalogo&gt; catalogoPage;
+        
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (&quot;activos&quot;.equalsIgnoreCase(filtroActivo)) {</span>
+<span class="nc" id="L160">            catalogoPage = catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        } else if (&quot;inactivos&quot;.equalsIgnoreCase(filtroActivo)) {</span>
+<span class="nc" id="L162">            catalogoPage = catalogoRepository.findByActivoFalseOrderByTipoAscValorAsc(pageable);</span>
+        } else {
+            // &quot;todos&quot; o cualquier otro valor
+<span class="nc" id="L165">            catalogoPage = catalogoRepository.findAllByOrderByTipoAscValorAsc(pageable);</span>
+        }
+        
+<span class="nc" id="L168">        return catalogoPage.map(this::mapearEntidadADTO);</span>
+    }
+
+    /**
+     * Listar Catálogos con paginado y filtros dinámicos
+     * @param pageable Información de paginación
+     * @param searchTerm Término de búsqueda (opcional)
+     * @param activo Filtro por estado activo (opcional)
+     * @param tipo Filtro por tipo de catálogo (opcional)
+     * @return Página de CatalogoDTO filtrados
+     */
+    public Page&lt;CatalogoDTO&gt; obtenerCatalogosPaginadosConFiltros(
+            Pageable pageable,
+            String searchTerm,
+            Boolean activo,
+            String tipo) {
+        
+        Page&lt;Catalogo&gt; catalogoPage;
+        
+        // Si hay tipo específico
+<span class="nc bnc" id="L188" title="All 4 branches missed.">        if (tipo != null &amp;&amp; !tipo.trim().isEmpty()) {</span>
+            try {
+<span class="nc" id="L190">                TipoCatalogo tipoCatalogo = TipoCatalogo.valueOf(tipo.toUpperCase());</span>
+                
+                // Si hay búsqueda
+<span class="nc bnc" id="L193" title="All 4 branches missed.">                if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
+                    List&lt;Catalogo&gt; catalogos;
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                    if (activo == null) {</span>
+<span class="nc" id="L196">                        catalogos = catalogoRepository.findByTipo(tipoCatalogo);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">                    } else if (activo) {</span>
+<span class="nc" id="L198">                        catalogos = catalogoRepository.findByTipoAndActivoTrue(tipoCatalogo);</span>
+                    } else {
+<span class="nc" id="L200">                        catalogos = catalogoRepository.findByTipoAndActivoFalse(tipoCatalogo);</span>
+                    }
+                    
+                    // Filtrar por término de búsqueda
+<span class="nc" id="L204">                    catalogos = catalogos.stream()</span>
+<span class="nc bnc" id="L205" title="All 4 branches missed.">                        .filter(c -&gt; c.getValor() != null &amp;&amp; c.getValor().toLowerCase().contains(searchTerm.toLowerCase()))</span>
+<span class="nc" id="L206">                        .collect(Collectors.toList());</span>
+                    
+                    // Convertir lista a página
+<span class="nc" id="L209">                    int start = (int) pageable.getOffset();</span>
+<span class="nc" id="L210">                    int end = Math.min(start + pageable.getPageSize(), catalogos.size());</span>
+<span class="nc" id="L211">                    List&lt;Catalogo&gt; pageContent = catalogos.subList(start, end);</span>
+<span class="nc" id="L212">                    catalogoPage = new org.springframework.data.domain.PageImpl&lt;&gt;(pageContent, pageable, catalogos.size());</span>
+<span class="nc" id="L213">                } else {</span>
+                    // Sin búsqueda, solo filtro de activo y tipo
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                    if (activo == null) {</span>
+<span class="nc" id="L216">                        catalogoPage = catalogoRepository.findByTipoOrderByValorAsc(tipoCatalogo, pageable);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                    } else if (activo) {</span>
+<span class="nc" id="L218">                        catalogoPage = catalogoRepository.findByTipoAndActivoTrueOrderByValorAsc(tipoCatalogo, pageable);</span>
+                    } else {
+<span class="nc" id="L220">                        catalogoPage = catalogoRepository.findByTipoAndActivoFalseOrderByValorAsc(tipoCatalogo, pageable);</span>
+                    }
+                }
+<span class="nc" id="L223">            } catch (IllegalArgumentException e) {</span>
+                // Tipo inválido, devolver página vacía
+<span class="nc" id="L225">                catalogoPage = Page.empty(pageable);</span>
+<span class="nc" id="L226">            }</span>
+        } else {
+            // Sin tipo específico
+<span class="nc bnc" id="L229" title="All 4 branches missed.">            if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
+                List&lt;Catalogo&gt; catalogos;
+<span class="nc bnc" id="L231" title="All 2 branches missed.">                if (activo == null) {</span>
+<span class="nc" id="L232">                    catalogos = catalogoRepository.findAll();</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">                } else if (activo) {</span>
+<span class="nc" id="L234">                    catalogos = catalogoRepository.findByActivoTrue();</span>
+                } else {
+<span class="nc" id="L236">                    catalogos = catalogoRepository.findAll().stream()</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                        .filter(c -&gt; !c.getActivo())</span>
+<span class="nc" id="L238">                        .collect(Collectors.toList());</span>
+                }
+                
+                // Filtrar por término de búsqueda
+<span class="nc" id="L242">                catalogos = catalogos.stream()</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">                    .filter(c -&gt; c.getValor() != null &amp;&amp; c.getValor().toLowerCase().contains(searchTerm.toLowerCase()))</span>
+<span class="nc" id="L244">                    .collect(Collectors.toList());</span>
+                
+                // Convertir lista a página
+<span class="nc" id="L247">                int start = (int) pageable.getOffset();</span>
+<span class="nc" id="L248">                int end = Math.min(start + pageable.getPageSize(), catalogos.size());</span>
+<span class="nc" id="L249">                List&lt;Catalogo&gt; pageContent = catalogos.subList(start, end);</span>
+<span class="nc" id="L250">                catalogoPage = new org.springframework.data.domain.PageImpl&lt;&gt;(pageContent, pageable, catalogos.size());</span>
+<span class="nc" id="L251">            } else {</span>
+                // Sin búsqueda ni tipo, solo filtro de activo
+<span class="nc bnc" id="L253" title="All 2 branches missed.">                if (activo == null) {</span>
+<span class="nc" id="L254">                    catalogoPage = catalogoRepository.findAllByOrderByTipoAscValorAsc(pageable);</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">                } else if (activo) {</span>
+<span class="nc" id="L256">                    catalogoPage = catalogoRepository.findByActivoTrueOrderByTipoAscValorAsc(pageable);</span>
+                } else {
+<span class="nc" id="L258">                    catalogoPage = catalogoRepository.findByActivoFalseOrderByTipoAscValorAsc(pageable);</span>
+                }
+            }
+        }
+        
+<span class="nc" id="L263">        return catalogoPage.map(this::mapearEntidadADTO);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

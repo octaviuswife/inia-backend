@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TotpServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">TotpServiceTest.java</span></div><h1>TotpServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Tests unitarios para TotpService (Autenticación 2FA)
+ * 
+ * Funcionalidades testeadas:
+ * - Generación de secret keys
+ * - Generación de QR codes para Google Authenticator
+ * - Verificación de códigos TOTP
+ * - Validación de códigos con ventana de tolerancia
+ * - Manejo de códigos inválidos
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de TotpService (2FA)&quot;)
+<span class="fc" id="L23">class TotpServiceTest {</span>
+
+    private TotpService totpService;
+
+    @BeforeEach
+    void setUp() {
+<span class="fc" id="L29">        totpService = new TotpService();</span>
+<span class="fc" id="L30">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar secret - debe retornar string Base32 no vacío&quot;)
+    void generateSecret_debeRetornarSecretValido() {
+        // ACT
+<span class="fc" id="L36">        String secret = totpService.generateSecret();</span>
+
+        // ASSERT
+<span class="fc" id="L39">        assertNotNull(secret, &quot;El secret no debe ser nulo&quot;);</span>
+<span class="fc" id="L40">        assertFalse(secret.isEmpty(), &quot;El secret no debe estar vacío&quot;);</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        assertTrue(secret.length() &gt; 10, &quot;El secret debe tener longitud suficiente&quot;);</span>
+<span class="fc" id="L42">        assertTrue(secret.matches(&quot;[A-Z2-7]+&quot;), &quot;El secret debe estar en formato Base32&quot;);</span>
+<span class="fc" id="L43">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar secret - debe generar secrets únicos en cada llamada&quot;)
+    void generateSecret_debeGenerarSecretsUnicos() {
+        // ACT
+<span class="fc" id="L49">        String secret1 = totpService.generateSecret();</span>
+<span class="fc" id="L50">        String secret2 = totpService.generateSecret();</span>
+
+        // ASSERT
+<span class="fc" id="L53">        assertNotEquals(secret1, secret2, &quot;Los secrets generados deben ser únicos&quot;);</span>
+<span class="fc" id="L54">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar QR code - debe retornar data URL válido&quot;)
+    void generateQrCodeDataUrl_debeRetornarDataUrlValido() {
+        // ARRANGE
+<span class="fc" id="L60">        String secret = totpService.generateSecret();</span>
+<span class="fc" id="L61">        String accountName = &quot;test@example.com&quot;;</span>
+
+        // ACT
+<span class="fc" id="L64">        String qrCodeDataUrl = totpService.generateQrCodeDataUrl(secret, accountName);</span>
+
+        // ASSERT
+<span class="fc" id="L67">        assertNotNull(qrCodeDataUrl, &quot;El QR code data URL no debe ser nulo&quot;);</span>
+<span class="fc" id="L68">        assertTrue(qrCodeDataUrl.startsWith(&quot;data:image/png;base64,&quot;), </span>
+            &quot;El QR code debe ser una data URL de imagen PNG&quot;);
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        assertTrue(qrCodeDataUrl.length() &gt; 100, &quot;El QR code debe tener contenido&quot;);</span>
+<span class="fc" id="L71">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código válido generado en el momento - debe retornar true&quot;)
+    void verifyCode_conCodigoValido_debeRetornarTrue() throws Exception {
+        // ARRANGE
+<span class="fc" id="L77">        String secret = totpService.generateSecret();</span>
+        
+        // Generar código actual usando la misma lógica que TotpService
+<span class="fc" id="L80">        long currentTimeMillis = System.currentTimeMillis();</span>
+<span class="fc" id="L81">        long currentBucket = Math.floorDiv(currentTimeMillis, 30000);</span>
+        
+        // Usamos el servicio real para generar el código esperado
+        // (en producción el usuario lo obtendría de Google Authenticator)
+<span class="fc" id="L85">        dev.samstevens.totp.code.CodeGenerator codeGenerator = new dev.samstevens.totp.code.DefaultCodeGenerator();</span>
+<span class="fc" id="L86">        String validCode = codeGenerator.generate(secret, currentBucket);</span>
+
+        // ACT
+<span class="fc" id="L89">        boolean isValid = totpService.verifyCode(secret, validCode);</span>
+
+        // ASSERT
+<span class="fc" id="L92">        assertTrue(isValid, &quot;El código generado en el momento actual debe ser válido&quot;);</span>
+<span class="fc" id="L93">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código con espacios - debe limpiar y validar correctamente&quot;)
+    void verifyCode_conEspacios_debeLimpiarYValidar() throws Exception {
+        // ARRANGE
+<span class="fc" id="L99">        String secret = totpService.generateSecret();</span>
+        
+<span class="fc" id="L101">        long currentTimeMillis = System.currentTimeMillis();</span>
+<span class="fc" id="L102">        long currentBucket = Math.floorDiv(currentTimeMillis, 30000);</span>
+<span class="fc" id="L103">        dev.samstevens.totp.code.CodeGenerator codeGenerator = new dev.samstevens.totp.code.DefaultCodeGenerator();</span>
+<span class="fc" id="L104">        String validCode = codeGenerator.generate(secret, currentBucket);</span>
+        
+        // Agregar espacios al código
+<span class="fc" id="L107">        String codeWithSpaces = validCode.substring(0, 3) + &quot; &quot; + validCode.substring(3);</span>
+
+        // ACT
+<span class="fc" id="L110">        boolean isValid = totpService.verifyCode(secret, codeWithSpaces);</span>
+
+        // ASSERT
+<span class="fc" id="L113">        assertTrue(isValid, &quot;El código con espacios debe ser válido después de limpiarlo&quot;);</span>
+<span class="fc" id="L114">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código inválido - debe retornar false&quot;)
+    void verifyCode_conCodigoInvalido_debeRetornarFalse() {
+        // ARRANGE
+<span class="fc" id="L120">        String secret = totpService.generateSecret();</span>
+<span class="fc" id="L121">        String invalidCode = &quot;000000&quot;; // Código que probablemente no coincida</span>
+
+        // ACT
+<span class="fc" id="L124">        boolean isValid = totpService.verifyCode(secret, invalidCode);</span>
+
+        // ASSERT
+<span class="fc" id="L127">        assertFalse(isValid, &quot;Un código incorrecto debe retornar false&quot;);</span>
+<span class="fc" id="L128">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código con longitud incorrecta - debe retornar false&quot;)
+    void verifyCode_conLongitudIncorrecta_debeRetornarFalse() {
+        // ARRANGE
+<span class="fc" id="L134">        String secret = totpService.generateSecret();</span>
+<span class="fc" id="L135">        String shortCode = &quot;123&quot;; // Muy corto</span>
+<span class="fc" id="L136">        String longCode = &quot;1234567&quot;; // Muy largo</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L139">        assertFalse(totpService.verifyCode(secret, shortCode), </span>
+            &quot;Un código muy corto debe retornar false&quot;);
+<span class="fc" id="L141">        assertFalse(totpService.verifyCode(secret, longCode), </span>
+            &quot;Un código muy largo debe retornar false&quot;);
+<span class="fc" id="L143">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código nulo - debe retornar false&quot;)
+    void verifyCode_conCodigoNulo_debeRetornarFalse() {
+        // ARRANGE
+<span class="fc" id="L149">        String secret = totpService.generateSecret();</span>
+
+        // ACT
+<span class="fc" id="L152">        boolean isValid = totpService.verifyCode(secret, null);</span>
+
+        // ASSERT
+<span class="fc" id="L155">        assertFalse(isValid, &quot;Un código nulo debe retornar false&quot;);</span>
+<span class="fc" id="L156">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código con secret nulo - debe retornar false&quot;)
+    void verifyCode_conSecretNulo_debeRetornarFalse() {
+        // ACT
+<span class="fc" id="L162">        boolean isValid = totpService.verifyCode(null, &quot;123456&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L165">        assertFalse(isValid, &quot;Un secret nulo debe retornar false&quot;);</span>
+<span class="fc" id="L166">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar código con caracteres no numéricos - debe limpiar y validar&quot;)
+    void verifyCode_conCaracteresNoNumericos_debeLimpiar() throws Exception {
+        // ARRANGE
+<span class="fc" id="L172">        String secret = totpService.generateSecret();</span>
+        
+<span class="fc" id="L174">        long currentTimeMillis = System.currentTimeMillis();</span>
+<span class="fc" id="L175">        long currentBucket = Math.floorDiv(currentTimeMillis, 30000);</span>
+<span class="fc" id="L176">        dev.samstevens.totp.code.CodeGenerator codeGenerator = new dev.samstevens.totp.code.DefaultCodeGenerator();</span>
+<span class="fc" id="L177">        String validCode = codeGenerator.generate(secret, currentBucket);</span>
+        
+        // Agregar caracteres no numéricos
+<span class="fc" id="L180">        String codeWithChars = validCode.substring(0, 3) + &quot;-&quot; + validCode.substring(3);</span>
+
+        // ACT
+<span class="fc" id="L183">        boolean isValid = totpService.verifyCode(secret, codeWithChars);</span>
+
+        // ASSERT
+<span class="fc" id="L186">        assertTrue(isValid, &quot;El código con guiones debe ser válido después de limpiarlo&quot;);</span>
+<span class="fc" id="L187">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar QR code con nombre de cuenta largo - debe funcionar correctamente&quot;)
+    void generateQrCodeDataUrl_conNombreLargo_debeFuncionar() {
+        // ARRANGE
+<span class="fc" id="L193">        String secret = totpService.generateSecret();</span>
+<span class="fc" id="L194">        String longAccountName = &quot;usuario.con.nombre.muy.largo@example.com&quot;;</span>
+
+        // ACT
+<span class="fc" id="L197">        String qrCodeDataUrl = totpService.generateQrCodeDataUrl(secret, longAccountName);</span>
+
+        // ASSERT
+<span class="fc" id="L200">        assertNotNull(qrCodeDataUrl, &quot;Debe generar QR code incluso con nombre largo&quot;);</span>
+<span class="fc" id="L201">        assertTrue(qrCodeDataUrl.startsWith(&quot;data:image/png;base64,&quot;), </span>
+            &quot;Debe ser una data URL válida&quot;);
+<span class="fc" id="L203">    }</span>
+
+    @Test
+    @DisplayName(&quot;Verificar mismo secret genera códigos consistentes en el mismo período&quot;)
+    void verifyCode_mismoSecret_generaCodigosConsistentes() throws Exception {
+        // ARRANGE
+<span class="fc" id="L209">        String secret = totpService.generateSecret();</span>
+        
+<span class="fc" id="L211">        long currentTimeMillis = System.currentTimeMillis();</span>
+<span class="fc" id="L212">        long currentBucket = Math.floorDiv(currentTimeMillis, 30000);</span>
+<span class="fc" id="L213">        dev.samstevens.totp.code.CodeGenerator codeGenerator = new dev.samstevens.totp.code.DefaultCodeGenerator();</span>
+        
+        // ACT - Generar el mismo código dos veces
+<span class="fc" id="L216">        String code1 = codeGenerator.generate(secret, currentBucket);</span>
+<span class="fc" id="L217">        String code2 = codeGenerator.generate(secret, currentBucket);</span>
+
+        // ASSERT
+<span class="fc" id="L220">        assertEquals(code1, code2, </span>
+            &quot;El mismo secret debe generar el mismo código en el mismo período de tiempo&quot;);
+<span class="fc" id="L222">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar QR code con caracteres especiales en account name - debe funcionar&quot;)
+    void generateQrCodeDataUrl_conCaracteresEspeciales_debeFuncionar() {
+        // ARRANGE
+<span class="fc" id="L228">        String secret = totpService.generateSecret();</span>
+<span class="fc" id="L229">        String accountWithSpecialChars = &quot;user+test@example.com&quot;;</span>
+
+        // ACT
+<span class="fc" id="L232">        String qrCodeDataUrl = totpService.generateQrCodeDataUrl(secret, accountWithSpecialChars);</span>
+
+        // ASSERT
+<span class="fc" id="L235">        assertNotNull(qrCodeDataUrl, &quot;Debe generar QR code con caracteres especiales&quot;);</span>
+<span class="fc" id="L236">        assertTrue(qrCodeDataUrl.startsWith(&quot;data:image/png;base64,&quot;), </span>
+            &quot;Debe ser una data URL válida&quot;);
+<span class="fc" id="L238">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

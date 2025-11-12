@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DosnController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">DosnController.java</span></div><h1>DosnController.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.DosnRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoDosn;
+import utec.proyectofinal.Proyecto.Final.UTEC.services.DosnService;
+
+// CORS configurado globalmente en WebSecurityConfig
+@RestController
+@RequestMapping(&quot;/api/dosn&quot;)
+@Tag(name = &quot;Determinacion de Otras Semillas en Número (DOSN)&quot;, description = &quot;API para gestión de DOSN&quot;)
+@SecurityRequirement(name = &quot;bearerAuth&quot;)
+<span class="fc" id="L25">public class DosnController {</span>
+
+    @Autowired
+    private DosnService dosnService;
+
+    // Crear nueva Dosn
+    @Operation(summary = &quot;Crear declaración de origen y sanidad (DOSN)&quot;, 
+              description = &quot;Crea una nueva declaración de origen y sanidad (DOSN)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PostMapping
+    public ResponseEntity&lt;DosnDTO&gt; crearDosn(@RequestBody DosnRequestDTO solicitud) {
+<span class="fc" id="L36">        DosnDTO dosnCreado = dosnService.crearDosn(solicitud);</span>
+<span class="fc" id="L37">        return ResponseEntity.status(HttpStatus.CREATED).body(dosnCreado);</span>
+    }
+
+    // Obtener todas las Dosn activas
+    @Operation(summary = &quot;Listar todos los DOSN&quot;, 
+              description = &quot;Obtiene todos los DOSN activas&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping
+    public ResponseEntity&lt;ResponseListadoDosn&gt; obtenerTodasDosnActivas() {
+<span class="fc" id="L46">        ResponseListadoDosn respuesta = dosnService.obtenerTodasDosnActivas();</span>
+<span class="fc" id="L47">        return ResponseEntity.ok(respuesta);</span>
+    }
+
+    // Obtener Dosn por ID
+    @Operation(summary = &quot;Obtener declaración de origen y sanidad (DOSN) por ID&quot;, 
+              description = &quot;Obtiene una declaración de origen y sanidad (DOSN) específica por su ID&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;DosnDTO&gt; obtenerDosnPorId(@PathVariable Long id) {
+<span class="fc" id="L56">        DosnDTO dosn = dosnService.obtenerDosnPorId(id);</span>
+<span class="fc" id="L57">        return ResponseEntity.ok(dosn);</span>
+    }
+
+    // Actualizar Dosn
+    @Operation(summary = &quot;Actualizar declaración de origen y sanidad (DOSN)&quot;, 
+              description = &quot;Actualiza una declaración de origen y sanidad (DOSN) existente&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;DosnDTO&gt; actualizarDosn(@PathVariable Long id, @RequestBody DosnRequestDTO solicitud) {
+<span class="fc" id="L66">        DosnDTO dosnActualizado = dosnService.actualizarDosn(id, solicitud);</span>
+<span class="fc" id="L67">        return ResponseEntity.ok(dosnActualizado);</span>
+    }
+
+    // Eliminar Dosn (cambiar estado a INACTIVO)
+    @Operation(summary = &quot;Eliminar análisis de DOSN&quot;, 
+              description = &quot;Elimina una declaración de origen y sanidad (DOSN) cambiando su estado a INACTIVO&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminarDosn(@PathVariable Long id) {
+<span class="fc" id="L76">        dosnService.eliminarDosn(id);</span>
+<span class="fc" id="L77">        return ResponseEntity.noContent().build();</span>
+    }
+
+    // Desactivar DOSN (soft delete)
+    @Operation(summary = &quot;Desactivar análisis DOSN&quot;, 
+              description = &quot;Desactiva un análisis DOSN (cambiar activo a false)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/desactivar&quot;)
+    public ResponseEntity&lt;Void&gt; desactivarDosn(@PathVariable Long id) {
+<span class="fc" id="L86">        dosnService.desactivarDosn(id);</span>
+<span class="fc" id="L87">        return ResponseEntity.ok().build();</span>
+    }
+
+    // Reactivar DOSN
+    @Operation(summary = &quot;Reactivar análisis DOSN&quot;, 
+              description = &quot;Reactiva un análisis DOSN desactivado (solo administradores)&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/reactivar&quot;)
+    public ResponseEntity&lt;DosnDTO&gt; reactivarDosn(@PathVariable Long id) {
+<span class="fc" id="L96">        DosnDTO dosnReactivada = dosnService.reactivarDosn(id);</span>
+<span class="fc" id="L97">        return ResponseEntity.ok(dosnReactivada);</span>
+    }
+
+    // Obtener Dosn por Lote
+    @Operation(summary = &quot;Obtener DOSN por ID de lote&quot;, 
+              description = &quot;Obtiene todos los DOSN asociados a un lote específico&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/lote/{idLote}&quot;)
+    public ResponseEntity&lt;List&lt;DosnDTO&gt;&gt; obtenerDosnPorIdLote(@PathVariable Integer idLote) {
+<span class="fc" id="L106">        List&lt;DosnDTO&gt; dosn = dosnService.obtenerDosnPorIdLote(idLote);</span>
+<span class="fc" id="L107">        return ResponseEntity.ok(dosn);</span>
+    }
+
+
+    // Obtener DOSN con paginado para listado
+    @Operation(summary = &quot;Obtener DOSN paginadas&quot;, 
+              description = &quot;Obtiene la lista paginada de análisis de DOSN para el listado&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
+    @GetMapping(&quot;/listado&quot;)
+    public ResponseEntity&lt;org.springframework.data.domain.Page&lt;utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO&gt;&gt; obtenerDosnPaginadas(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = &quot;0&quot;) int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = &quot;10&quot;) int size,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String search,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Boolean activo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String estado,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long loteId) {
+<span class="fc" id="L123">        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);</span>
+<span class="fc" id="L124">        org.springframework.data.domain.Page&lt;utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO&gt; response = dosnService.obtenerDosnPaginadasConFiltros(pageable, search, activo, estado, loteId);</span>
+<span class="fc" id="L125">        return ResponseEntity.ok(response);</span>
+    }
+
+    // Finalizar análisis de DOSN
+    @Operation(summary = &quot;Finalizar análisis de DOSN&quot;, 
+              description = &quot;Finaliza un DOSN según el rol del usuario&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA')&quot;)
+    @PutMapping(&quot;/{id}/finalizar&quot;)
+    public ResponseEntity&lt;DosnDTO&gt; finalizarAnalisis(@PathVariable Long id) {
+<span class="fc" id="L134">        DosnDTO dosnFinalizada = dosnService.finalizarAnalisis(id);</span>
+<span class="fc" id="L135">        return ResponseEntity.ok(dosnFinalizada);</span>
+    }
+
+    // Aprobar análisis de DOSN (solo admin)
+    @Operation(summary = &quot;Aprobar análisis de DOSN&quot;, 
+              description = &quot;Aprueba un DOSN - solo administradores&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/aprobar&quot;)
+    public ResponseEntity&lt;DosnDTO&gt; aprobarAnalisis(@PathVariable Long id) {
+<span class="fc" id="L144">        DosnDTO dosnAprobada = dosnService.aprobarAnalisis(id);</span>
+<span class="fc" id="L145">        return ResponseEntity.ok(dosnAprobada);</span>
+    }
+
+    // Marcar análisis para repetir (solo admin)
+    @Operation(summary = &quot;Marcar análisis de DOSN para repetir&quot;, 
+              description = &quot;Marca un DOSN para repetir - solo administradores&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PutMapping(&quot;/{id}/repetir&quot;)
+    public ResponseEntity&lt;DosnDTO&gt; marcarParaRepetir(@PathVariable Long id) {
+<span class="fc" id="L154">        DosnDTO dosnRepetir = dosnService.marcarParaRepetir(id);</span>
+<span class="fc" id="L155">        return ResponseEntity.ok(dosnRepetir);</span>
+    }
+    }
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">UsuarioServiceTest.java</span></div><h1>UsuarioServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Usuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.UsuarioRepository;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.AprobarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.GestionarUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.RegistroUsuarioRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.UsuarioDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+/**
+ * Tests unitarios para UsuarioService
+ * 
+ * Funcionalidades testeadas:
+ * - Registro de nuevos usuarios
+ * - Validación de duplicados (username y email)
+ * - Aprobación de solicitudes pendientes
+ * - Cambio de contraseña
+ * - Activación/Desactivación de usuarios
+ * - Gestión de roles
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName(&quot;Tests de UsuarioService&quot;)
+<span class="fc" id="L47">class UsuarioServiceTest {</span>
+
+    @Mock
+    private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private NotificacionService notificacionService;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private TotpService totpService;
+
+    @Mock
+    private BackupCodeService backupCodeService;
+
+    @InjectMocks
+    private UsuarioService usuarioService;
+
+    private RegistroUsuarioRequestDTO registroRequestDTO;
+    private Usuario usuario;
+    private Usuario analista;
+
+    @BeforeEach
+    void setUp() {
+        // ARRANGE: Preparar datos de prueba
+<span class="fc" id="L77">        registroRequestDTO = new RegistroUsuarioRequestDTO();</span>
+<span class="fc" id="L78">        registroRequestDTO.setNombre(&quot;jperez&quot;);</span>
+<span class="fc" id="L79">        registroRequestDTO.setNombres(&quot;Juan&quot;);</span>
+<span class="fc" id="L80">        registroRequestDTO.setApellidos(&quot;Pérez&quot;);</span>
+<span class="fc" id="L81">        registroRequestDTO.setEmail(&quot;jperez@example.com&quot;);</span>
+<span class="fc" id="L82">        registroRequestDTO.setContrasenia(&quot;Password123!&quot;);</span>
+
+<span class="fc" id="L84">        usuario = new Usuario();</span>
+<span class="fc" id="L85">        usuario.setUsuarioID(1);</span>
+<span class="fc" id="L86">        usuario.setNombre(&quot;jperez&quot;);</span>
+<span class="fc" id="L87">        usuario.setNombres(&quot;Juan&quot;);</span>
+<span class="fc" id="L88">        usuario.setApellidos(&quot;Pérez&quot;);</span>
+<span class="fc" id="L89">        usuario.setEmail(&quot;jperez@example.com&quot;);</span>
+<span class="fc" id="L90">        usuario.setEstado(EstadoUsuario.PENDIENTE);</span>
+<span class="fc" id="L91">        usuario.setActivo(false);</span>
+
+<span class="fc" id="L93">        analista = new Usuario();</span>
+<span class="fc" id="L94">        analista.setUsuarioID(2);</span>
+<span class="fc" id="L95">        analista.setNombre(&quot;analista1&quot;);</span>
+<span class="fc" id="L96">        analista.setNombres(&quot;Ana&quot;);</span>
+<span class="fc" id="L97">        analista.setApellidos(&quot;Listas&quot;);</span>
+<span class="fc" id="L98">        analista.setEmail(&quot;analista@inia.com&quot;);</span>
+<span class="fc" id="L99">        analista.setRol(Rol.ANALISTA);</span>
+<span class="fc" id="L100">        analista.setActivo(true);</span>
+<span class="fc" id="L101">        analista.setEstado(EstadoUsuario.ACTIVO);</span>
+<span class="fc" id="L102">    }</span>
+
+    @Test
+    @DisplayName(&quot;Registrar usuario - debe crear usuario en estado PENDIENTE&quot;)
+    void registrarSolicitud_debeCrearUsuarioPendiente() {
+        // ARRANGE
+<span class="fc" id="L108">        when(usuarioRepository.findByNombre(anyString())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L109">        when(usuarioRepository.findByEmail(anyString())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L110">        when(passwordEncoder.encode(anyString())).thenReturn(&quot;encodedPassword&quot;);</span>
+<span class="fc" id="L111">        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);</span>
+<span class="fc" id="L112">        when(usuarioRepository.findAllByRol(Rol.ANALISTA)).thenReturn(Arrays.asList(analista));</span>
+<span class="fc" id="L113">        doNothing().when(notificacionService).notificarNuevoUsuario(anyLong());</span>
+<span class="fc" id="L114">        doNothing().when(emailService).enviarEmailConfirmacionRegistro(anyString(), anyString());</span>
+<span class="fc" id="L115">        doNothing().when(emailService).enviarEmailNuevoRegistro(anyString(), anyString(), anyString(), anyString());</span>
+
+        // ACT
+<span class="fc" id="L118">        UsuarioDTO resultado = usuarioService.registrarSolicitud(registroRequestDTO);</span>
+
+        // ASSERT
+<span class="fc" id="L121">        assertNotNull(resultado, &quot;El usuario registrado no debe ser nulo&quot;);</span>
+<span class="fc" id="L122">        assertEquals(&quot;jperez&quot;, resultado.getNombre());</span>
+<span class="fc" id="L123">        assertEquals(&quot;Juan&quot;, resultado.getNombres());</span>
+<span class="fc" id="L124">        assertEquals(&quot;Pérez&quot;, resultado.getApellidos());</span>
+<span class="fc" id="L125">        assertEquals(&quot;jperez@example.com&quot;, resultado.getEmail());</span>
+        
+<span class="fc" id="L127">        verify(usuarioRepository, times(1)).save(any(Usuario.class));</span>
+<span class="fc" id="L128">        verify(passwordEncoder, times(1)).encode(&quot;Password123!&quot;);</span>
+<span class="fc" id="L129">        verify(notificacionService, times(1)).notificarNuevoUsuario(anyLong());</span>
+<span class="fc" id="L130">    }</span>
+
+    @Test
+    @DisplayName(&quot;Registrar usuario con nombre duplicado - debe lanzar excepción&quot;)
+    void registrarSolicitud_conNombreDuplicado_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L136">        when(usuarioRepository.findByNombre(&quot;jperez&quot;)).thenReturn(Optional.of(usuario));</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L139">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L140">            usuarioService.registrarSolicitud(registroRequestDTO);</span>
+<span class="nc" id="L141">        });</span>
+        
+<span class="fc" id="L143">        assertEquals(&quot;El nombre de usuario ya existe&quot;, exception.getMessage());</span>
+<span class="fc" id="L144">        verify(usuarioRepository, never()).save(any(Usuario.class));</span>
+<span class="fc" id="L145">    }</span>
+
+    @Test
+    @DisplayName(&quot;Registrar usuario con email duplicado - debe lanzar excepción&quot;)
+    void registrarSolicitud_conEmailDuplicado_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L151">        when(usuarioRepository.findByNombre(anyString())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L152">        when(usuarioRepository.findByEmail(&quot;jperez@example.com&quot;)).thenReturn(Optional.of(usuario));</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L155">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L156">            usuarioService.registrarSolicitud(registroRequestDTO);</span>
+<span class="nc" id="L157">        });</span>
+        
+<span class="fc" id="L159">        assertEquals(&quot;El email ya está registrado&quot;, exception.getMessage());</span>
+<span class="fc" id="L160">        verify(usuarioRepository, never()).save(any(Usuario.class));</span>
+<span class="fc" id="L161">    }</span>
+
+    @Test
+    @DisplayName(&quot;Listar solicitudes pendientes - debe retornar solo usuarios PENDIENTES&quot;)
+    void listarSolicitudesPendientes_debeRetornarSoloPendientes() {
+        // ARRANGE
+<span class="fc" id="L167">        Usuario usuario2 = new Usuario();</span>
+<span class="fc" id="L168">        usuario2.setUsuarioID(3);</span>
+<span class="fc" id="L169">        usuario2.setNombre(&quot;mgarcia&quot;);</span>
+<span class="fc" id="L170">        usuario2.setEstado(EstadoUsuario.PENDIENTE);</span>
+        
+<span class="fc" id="L172">        when(usuarioRepository.findByEstado(EstadoUsuario.PENDIENTE))</span>
+<span class="fc" id="L173">            .thenReturn(Arrays.asList(usuario, usuario2));</span>
+
+        // ACT
+<span class="fc" id="L176">        List&lt;UsuarioDTO&gt; resultado = usuarioService.listarSolicitudesPendientes();</span>
+
+        // ASSERT
+<span class="fc" id="L179">        assertNotNull(resultado);</span>
+<span class="fc" id="L180">        assertEquals(2, resultado.size());</span>
+<span class="fc" id="L181">        verify(usuarioRepository, times(1)).findByEstado(EstadoUsuario.PENDIENTE);</span>
+<span class="fc" id="L182">    }</span>
+
+    @Test
+    @DisplayName(&quot;Listar solicitudes pendientes paginadas - debe retornar página correcta&quot;)
+    void listarSolicitudesPendientesPaginadas_debeRetornarPaginaCorrecta() {
+        // ARRANGE
+<span class="fc" id="L188">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L189">        Page&lt;Usuario&gt; usuariosPage = new PageImpl&lt;&gt;(Arrays.asList(usuario));</span>
+        
+<span class="fc" id="L191">        when(usuarioRepository.findByEstado(eq(EstadoUsuario.PENDIENTE), any(Pageable.class)))</span>
+<span class="fc" id="L192">            .thenReturn(usuariosPage);</span>
+
+        // ACT
+<span class="fc" id="L195">        Page&lt;UsuarioDTO&gt; resultado = usuarioService.listarSolicitudesPendientesPaginadas(0, 10, null);</span>
+
+        // ASSERT
+<span class="fc" id="L198">        assertNotNull(resultado);</span>
+<span class="fc" id="L199">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L200">        assertEquals(1, resultado.getContent().size());</span>
+<span class="fc" id="L201">    }</span>
+
+    @Test
+    @DisplayName(&quot;Listar solicitudes con búsqueda - debe filtrar resultados&quot;)
+    void listarSolicitudesPendientesPaginadas_conBusqueda_debeFiltrar() {
+        // ARRANGE
+<span class="fc" id="L207">        Pageable pageable = PageRequest.of(0, 10);</span>
+<span class="fc" id="L208">        Page&lt;Usuario&gt; usuariosPage = new PageImpl&lt;&gt;(Arrays.asList(usuario));</span>
+        
+<span class="fc" id="L210">        when(usuarioRepository.findByEstadoAndSearchTerm(</span>
+<span class="fc" id="L211">            eq(EstadoUsuario.PENDIENTE), eq(&quot;juan&quot;), any(Pageable.class)))</span>
+<span class="fc" id="L212">            .thenReturn(usuariosPage);</span>
+
+        // ACT
+<span class="fc" id="L215">        Page&lt;UsuarioDTO&gt; resultado = usuarioService.listarSolicitudesPendientesPaginadas(0, 10, &quot;juan&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L218">        assertNotNull(resultado);</span>
+<span class="fc" id="L219">        assertEquals(1, resultado.getTotalElements());</span>
+<span class="fc" id="L220">        verify(usuarioRepository, times(1))</span>
+<span class="fc" id="L221">            .findByEstadoAndSearchTerm(eq(EstadoUsuario.PENDIENTE), eq(&quot;juan&quot;), any(Pageable.class));</span>
+<span class="fc" id="L222">    }</span>
+
+    @Test
+    @DisplayName(&quot;Aprobar usuario - debe cambiar estado a APROBADO y asignar rol&quot;)
+    void aprobarUsuario_debeCambiarEstadoYAsignarRol() {
+        // ARRANGE
+<span class="fc" id="L228">        AprobarUsuarioRequestDTO aprobarRequest = new AprobarUsuarioRequestDTO();</span>
+<span class="fc" id="L229">        aprobarRequest.setRol(Rol.ANALISTA);</span>
+        
+<span class="fc" id="L231">        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));</span>
+<span class="fc" id="L232">        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);</span>
+<span class="fc" id="L233">        doNothing().when(emailService).enviarEmailBienvenida(anyString(), anyString());</span>
+
+        // ACT
+<span class="fc" id="L236">        UsuarioDTO resultado = usuarioService.aprobarUsuario(1, aprobarRequest);</span>
+
+        // ASSERT
+<span class="fc" id="L239">        assertNotNull(resultado);</span>
+<span class="fc" id="L240">        verify(usuarioRepository, times(1)).findById(1);</span>
+<span class="fc" id="L241">        verify(usuarioRepository, times(1)).save(any(Usuario.class));</span>
+<span class="fc" id="L242">    }</span>
+
+    @Test
+    @DisplayName(&quot;Aprobar usuario inexistente - debe lanzar excepción&quot;)
+    void aprobarUsuario_usuarioInexistente_debeLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L248">        AprobarUsuarioRequestDTO aprobarRequest = new AprobarUsuarioRequestDTO();</span>
+<span class="fc" id="L249">        aprobarRequest.setRol(Rol.ANALISTA);</span>
+        
+<span class="fc" id="L251">        when(usuarioRepository.findById(999)).thenReturn(Optional.empty());</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L254">        assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L255">            usuarioService.aprobarUsuario(999, aprobarRequest);</span>
+<span class="nc" id="L256">        });</span>
+        
+<span class="fc" id="L258">        verify(usuarioRepository, never()).save(any(Usuario.class));</span>
+<span class="fc" id="L259">    }</span>
+
+    @Test
+    @DisplayName(&quot;Buscar usuario por ID - debe retornar usuario si existe&quot;)
+    void buscarPorId_cuandoExiste_debeRetornarUsuario() {
+        // ARRANGE
+<span class="fc" id="L265">        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));</span>
+
+        // ACT
+<span class="fc" id="L268">        Optional&lt;Usuario&gt; resultado = usuarioService.buscarPorId(1);</span>
+
+        // ASSERT
+<span class="fc" id="L271">        assertTrue(resultado.isPresent());</span>
+<span class="fc" id="L272">        assertEquals(1, resultado.get().getUsuarioID());</span>
+<span class="fc" id="L273">        assertEquals(&quot;jperez&quot;, resultado.get().getNombre());</span>
+<span class="fc" id="L274">    }</span>
+
+    @Test
+    @DisplayName(&quot;Buscar usuario por ID inexistente - debe retornar Optional vacío&quot;)
+    void buscarPorId_cuandoNoExiste_debeRetornarOptionalVacio() {
+        // ARRANGE
+<span class="fc" id="L280">        when(usuarioRepository.findById(999)).thenReturn(Optional.empty());</span>
+
+        // ACT
+<span class="fc" id="L283">        Optional&lt;Usuario&gt; resultado = usuarioService.buscarPorId(999);</span>
+
+        // ASSERT
+<span class="fc" id="L286">        assertFalse(resultado.isPresent());</span>
+<span class="fc" id="L287">    }</span>
+
+    @Test
+    @DisplayName(&quot;Gestionar usuario - debe cambiar rol y estado de usuario&quot;)
+    void gestionarUsuario_debeCambiarRolYEstado() {
+        // ARRANGE
+<span class="fc" id="L293">        GestionarUsuarioRequestDTO gestionRequest = new GestionarUsuarioRequestDTO();</span>
+<span class="fc" id="L294">        gestionRequest.setRol(Rol.ADMIN);</span>
+<span class="fc" id="L295">        gestionRequest.setActivo(true);</span>
+        
+<span class="fc" id="L297">        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));</span>
+<span class="fc" id="L298">        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -&gt; {</span>
+<span class="fc" id="L299">            Usuario u = invocation.getArgument(0);</span>
+<span class="fc" id="L300">            return u;</span>
+        });
+
+        // ACT
+<span class="fc" id="L304">        UsuarioDTO resultado = usuarioService.gestionarUsuario(1, gestionRequest);</span>
+
+        // ASSERT
+<span class="fc" id="L307">        assertNotNull(resultado);</span>
+<span class="fc" id="L308">        verify(usuarioRepository, times(1)).findById(1);</span>
+<span class="fc" id="L309">        verify(usuarioRepository, times(1)).save(any(Usuario.class));</span>
+<span class="fc" id="L310">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
