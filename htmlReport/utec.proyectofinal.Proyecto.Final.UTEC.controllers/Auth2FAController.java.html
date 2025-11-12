@@ -118,7 +118,7 @@ import java.util.Optional;
 <span class="nc" id="L118">                String setupToken = setupTokenService.createSetupToken(</span>
 <span class="nc" id="L119">                    user.getUsuarioID(),</span>
 <span class="nc" id="L120">                    user.getNombre(),</span>
-                    qrCodeDataUrl,
+<span class="nc" id="L121">                    qrCodeDataUrl,</span>
 <span class="nc" id="L122">                    user.getTotpSecret()</span>
                 );
                 
@@ -128,8 +128,8 @@ import java.util.Optional;
 <span class="nc" id="L128">                return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
 <span class="nc" id="L129">                        .body(Map.of(</span>
 <span class="nc" id="L130">                            &quot;requiresCredentialChange&quot;, true,</span>
-                            &quot;mensaje&quot;, &quot;Debes configurar tus credenciales y 2FA en el primer acceso&quot;,
-                            &quot;setupToken&quot;, setupToken  // Solo el token, no los datos
+<span class="nc" id="L131">                            &quot;mensaje&quot;, &quot;Debes configurar tus credenciales y 2FA en el primer acceso&quot;,</span>
+<span class="nc" id="L132">                            &quot;setupToken&quot;, setupToken  // Solo el token, no los datos</span>
                         ));
             }
             
@@ -142,7 +142,7 @@ import java.util.Optional;
 <span class="fc" id="L142">                return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
 <span class="fc" id="L143">                        .body(Map.of(</span>
 <span class="fc" id="L144">                            &quot;requires2FASetup&quot;, true,</span>
-                            &quot;mensaje&quot;, &quot;Debes activar la autenticación de dos factores para usar el sistema&quot;,
+<span class="fc" id="L145">                            &quot;mensaje&quot;, &quot;Debes activar la autenticación de dos factores para usar el sistema&quot;,</span>
 <span class="fc" id="L146">                            &quot;userId&quot;, user.getUsuarioID(),</span>
 <span class="fc" id="L147">                            &quot;email&quot;, user.getEmail(),</span>
 <span class="fc" id="L148">                            &quot;nombre&quot;, user.getNombreCompleto()</span>
@@ -173,7 +173,7 @@ import java.util.Optional;
 <span class="fc" id="L173">                return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
 <span class="fc" id="L174">                        .body(Map.of(</span>
 <span class="fc" id="L175">                            &quot;requires2FA&quot;, true,</span>
-                            &quot;mensaje&quot;, &quot;Se requiere código de autenticación de dos factores&quot;,
+<span class="fc" id="L176">                            &quot;mensaje&quot;, &quot;Se requiere código de autenticación de dos factores&quot;,</span>
 <span class="fc" id="L177">                            &quot;userId&quot;, user.getUsuarioID()</span>
                         ));
             }
@@ -223,13 +223,13 @@ import java.util.Optional;
 <span class="nc" id="L223">                    emailService.enviarNuevoDispositivo(</span>
 <span class="nc" id="L224">                        user.getEmail(),</span>
 <span class="nc" id="L225">                        user.getNombreCompleto(),</span>
-                        deviceName,
-                        ipAddress
+<span class="nc" id="L226">                        deviceName,</span>
+<span class="nc" id="L227">                        ipAddress</span>
                     );
 <span class="nc" id="L229">                } catch (Exception e) {</span>
                     // No fallar el login si falla el registro del dispositivo
 <span class="nc" id="L231">                    System.err.println(&quot;⚠️ [LOGIN-2FA] Error registrando dispositivo de confianza: &quot; + e.getMessage());</span>
-<span class="nc" id="L232">                }</span>
+                }
             }
             
             // PASO 7: Completar login exitoso
@@ -283,7 +283,7 @@ import java.util.Optional;
 <span class="fc" id="L283">            &quot;nombres&quot;, user.getNombres(),</span>
 <span class="fc" id="L284">            &quot;apellidos&quot;, user.getApellidos(),</span>
 <span class="fc" id="L285">            &quot;email&quot;, user.getEmail(),</span>
-            &quot;roles&quot;, roles,
+<span class="fc" id="L286">            &quot;roles&quot;, roles,</span>
 <span class="pc bpc" id="L287" title="2 of 4 branches missed.">            &quot;has2FA&quot;, user.getTotpEnabled() != null &amp;&amp; user.getTotpEnabled()</span>
         ));
         
@@ -295,7 +295,7 @@ import java.util.Optional;
      */
     private void configurarCookieToken(HttpServletResponse response, String nombre, String valor, int maxAgeSegundos) {
 <span class="fc" id="L297">        String cookieValue = String.format(</span>
-            &quot;%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax&quot;,
+<span class="fc" id="L298">            &quot;%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax&quot;,</span>
 <span class="fc" id="L299">            nombre, valor, maxAgeSegundos</span>
         );
 <span class="fc" id="L301">        response.addHeader(&quot;Set-Cookie&quot;, cookieValue);</span>
@@ -387,17 +387,17 @@ import java.util.Optional;
 <span class="fc" id="L387">            usuarioService.guardar(user);</span>
             
 <span class="fc" id="L389">            Setup2FAResponseDTO response = new Setup2FAResponseDTO(</span>
-                secret,
-                qrCodeDataUrl,
-                &quot;INIA&quot;,
-                accountName
+<span class="fc" id="L390">                secret,</span>
+<span class="fc" id="L391">                qrCodeDataUrl,</span>
+<span class="fc" id="L392">                &quot;INIA&quot;,</span>
+<span class="fc" id="L393">                accountName</span>
             );
             
 <span class="fc" id="L396">            System.out.println(&quot;✅ [SETUP-INITIAL] QR generado para: &quot; + user.getNombre());</span>
             
 <span class="fc" id="L398">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;Escanea el QR code con Google Authenticator&quot;,
-                &quot;data&quot;, response,
+<span class="fc" id="L399">                &quot;mensaje&quot;, &quot;Escanea el QR code con Google Authenticator&quot;,</span>
+<span class="fc" id="L400">                &quot;data&quot;, response,</span>
 <span class="fc" id="L401">                &quot;userId&quot;, user.getUsuarioID(),</span>
 <span class="fc" id="L402">                &quot;email&quot;, user.getEmail()</span>
             ));
@@ -498,7 +498,7 @@ import java.util.Optional;
 <span class="fc" id="L498">                &quot;nombres&quot;, usuario.getNombres(),</span>
 <span class="fc" id="L499">                &quot;apellidos&quot;, usuario.getApellidos(),</span>
 <span class="fc" id="L500">                &quot;email&quot;, usuario.getEmail(),</span>
-                &quot;roles&quot;, roles,
+<span class="fc" id="L501">                &quot;roles&quot;, roles,</span>
 <span class="fc" id="L502">                &quot;has2FA&quot;, true</span>
             ));
             
@@ -614,9 +614,9 @@ import java.util.Optional;
             try {
 <span class="fc" id="L615">                emailService.enviar2FAActivado(newEmail, admin.getNombreCompleto());</span>
 <span class="fc" id="L616">                System.out.println(&quot;📧 [ADMIN-SETUP] Email de notificación enviado&quot;);</span>
-<span class="nc" id="L617">            } catch (Exception e) {</span>
+<span class="pc" id="L617">            } catch (Exception e) {</span>
 <span class="nc" id="L618">                System.err.println(&quot;⚠️ [ADMIN-SETUP] No se pudo enviar email: &quot; + e.getMessage());</span>
-<span class="fc" id="L619">            }</span>
+            }
             
 <span class="fc" id="L621">            System.out.println(&quot;✅ [ADMIN-SETUP] Configuración completada, creando sesión...&quot;);</span>
             
@@ -661,7 +661,7 @@ import java.util.Optional;
 <span class="fc" id="L661">                &quot;nombres&quot;, admin.getNombres(),</span>
 <span class="fc" id="L662">                &quot;apellidos&quot;, admin.getApellidos(),</span>
 <span class="fc" id="L663">                &quot;email&quot;, admin.getEmail(),</span>
-                &quot;roles&quot;, roles,
+<span class="fc" id="L664">                &quot;roles&quot;, roles,</span>
 <span class="fc" id="L665">                &quot;has2FA&quot;, true</span>
             ));
             
@@ -712,17 +712,17 @@ import java.util.Optional;
 <span class="fc" id="L712">            usuarioService.guardar(usuario);</span>
             
 <span class="fc" id="L714">            Setup2FAResponseDTO response = new Setup2FAResponseDTO(</span>
-                secret,
-                qrCodeDataUrl,
-                &quot;INIA&quot;,
-                accountName
+<span class="fc" id="L715">                secret,</span>
+<span class="fc" id="L716">                qrCodeDataUrl,</span>
+<span class="fc" id="L717">                &quot;INIA&quot;,</span>
+<span class="fc" id="L718">                accountName</span>
             );
             
 <span class="fc" id="L721">            System.out.println(&quot;🔐 2FA setup iniciado para usuario: &quot; + usuario.getNombre());</span>
             
 <span class="fc" id="L723">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;Escanea el QR code con Google Authenticator y verifica el código&quot;,
-                &quot;data&quot;, response
+<span class="fc" id="L724">                &quot;mensaje&quot;, &quot;Escanea el QR code con Google Authenticator y verifica el código&quot;,</span>
+<span class="fc" id="L725">                &quot;data&quot;, response</span>
             ));
             
 <span class="nc" id="L728">        } catch (Exception e) {</span>
@@ -854,7 +854,7 @@ import java.util.Optional;
 <span class="fc" id="L854">            System.out.println(&quot;🔓 2FA deshabilitado para usuario: &quot; + usuario.getNombre());</span>
             
 <span class="fc" id="L856">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;2FA deshabilitado exitosamente&quot;,
+<span class="fc" id="L857">                &quot;mensaje&quot;, &quot;2FA deshabilitado exitosamente&quot;,</span>
 <span class="fc" id="L858">                &quot;totpEnabled&quot;, false</span>
             ));
             
@@ -910,7 +910,7 @@ import java.util.Optional;
 <span class="fc" id="L910">            devices.forEach(d -&gt; System.out.println(&quot;  - &quot; + d.getDeviceName() + &quot; (ID: &quot; + d.getId() + &quot;)&quot;));</span>
             
 <span class="fc" id="L912">            return ResponseEntity.ok(Map.of(</span>
-                &quot;devices&quot;, devices,
+<span class="fc" id="L913">                &quot;devices&quot;, devices,</span>
 <span class="fc" id="L914">                &quot;count&quot;, devices.size()</span>
             ));
             
@@ -971,7 +971,7 @@ import java.util.Optional;
 <span class="fc bfc" id="L971" title="All 2 branches covered.">            if (usuarioOpt.isEmpty()) {</span>
                 // Por seguridad, no revelar si el email existe o no
 <span class="fc" id="L973">                return ResponseEntity.ok(Map.of(</span>
-                    &quot;mensaje&quot;, &quot;Si el email existe, se enviará un código de recuperación&quot;
+<span class="fc" id="L974">                    &quot;mensaje&quot;, &quot;Si el email existe, se enviará un código de recuperación&quot;</span>
                 ));
             }
             
@@ -996,13 +996,13 @@ import java.util.Optional;
 <span class="fc" id="L996">            emailService.enviarCodigoRecuperacion(</span>
 <span class="fc" id="L997">                usuario.getEmail(),</span>
 <span class="fc" id="L998">                usuario.getNombreCompleto(),</span>
-                recoveryCode
+<span class="fc" id="L999">                recoveryCode</span>
             );
             
 <span class="fc" id="L1002">            System.out.println(&quot;📧 Código de recuperación enviado a: &quot; + usuario.getEmail());</span>
             
 <span class="fc" id="L1004">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;Código de recuperación enviado a tu email. Válido por 10 minutos.&quot;,
+<span class="fc" id="L1005">                &quot;mensaje&quot;, &quot;Código de recuperación enviado a tu email. Válido por 10 minutos.&quot;,</span>
 <span class="fc" id="L1006">                &quot;expiresIn&quot;, recoveryCodeService.getExpiryMinutes() + &quot; minutos&quot;</span>
             ));
             
@@ -1096,7 +1096,7 @@ import java.util.Optional;
 <span class="fc" id="L1096">            System.out.println(&quot;🔑 Contraseña reseteada exitosamente para: &quot; + usuario.getEmail());</span>
             
 <span class="fc" id="L1098">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;Contraseña cambiada exitosamente. Por seguridad, todos tus dispositivos de confianza fueron revocados.&quot;
+<span class="fc" id="L1099">                &quot;mensaje&quot;, &quot;Contraseña cambiada exitosamente. Por seguridad, todos tus dispositivos de confianza fueron revocados.&quot;</span>
             ));
             
 <span class="nc" id="L1102">        } catch (Exception e) {</span>
@@ -1183,7 +1183,7 @@ import java.util.Optional;
 <span class="pc bpc" id="L1183" title="2 of 4 branches missed.">            if (usuario.getTotpEnabled() == null || !usuario.getTotpEnabled()) {</span>
 <span class="nc" id="L1184">                return ResponseEntity.ok(Map.of(</span>
 <span class="nc" id="L1185">                    &quot;availableCodes&quot;, 0,</span>
-                    &quot;mensaje&quot;, &quot;2FA no está habilitado&quot;
+<span class="nc" id="L1186">                    &quot;mensaje&quot;, &quot;2FA no está habilitado&quot;</span>
                 ));
             }
             

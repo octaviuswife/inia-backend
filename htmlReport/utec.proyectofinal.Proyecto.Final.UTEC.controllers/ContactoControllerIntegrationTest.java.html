@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContactoControllerIntegrationTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.controllers</a> &gt; <span class="el_source">ContactoControllerIntegrationTest.java</span></div><h1>ContactoControllerIntegrationTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -28,9 +29,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.ContactoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoContacto;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.ContactoService;
 
+
 @WebMvcTest(ContactoController.class)
 @DisplayName(&quot;Tests de integración para ContactoController&quot;)
-<span class="fc" id="L33">class ContactoControllerIntegrationTest {</span>
+<span class="fc" id="L35">class ContactoControllerIntegrationTest {</span>
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,141 +48,537 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ContactoService;
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L49">        contactoRequest = new ContactoRequestDTO();</span>
-<span class="fc" id="L50">        contactoRequest.setNombre(&quot;Empresa Test S.A.&quot;);</span>
-<span class="fc" id="L51">        contactoRequest.setContacto(&quot;contacto@empresa.com&quot;);</span>
-<span class="fc" id="L52">        contactoRequest.setTipo(TipoContacto.EMPRESA);</span>
+<span class="fc" id="L51">        contactoRequest = new ContactoRequestDTO();</span>
+<span class="fc" id="L52">        contactoRequest.setNombre(&quot;Empresa Test S.A.&quot;);</span>
+<span class="fc" id="L53">        contactoRequest.setContacto(&quot;contacto@empresa.com&quot;);</span>
+<span class="fc" id="L54">        contactoRequest.setTipo(TipoContacto.EMPRESA);</span>
 
-<span class="fc" id="L54">        contactoResponse = new ContactoDTO();</span>
-<span class="fc" id="L55">        contactoResponse.setContactoID(1L);</span>
-<span class="fc" id="L56">        contactoResponse.setNombre(&quot;Empresa Test S.A.&quot;);</span>
-<span class="fc" id="L57">        contactoResponse.setContacto(&quot;contacto@empresa.com&quot;);</span>
-<span class="fc" id="L58">        contactoResponse.setTipo(TipoContacto.EMPRESA);</span>
-<span class="fc" id="L59">        contactoResponse.setActivo(true);</span>
-<span class="fc" id="L60">    }</span>
+<span class="fc" id="L56">        contactoResponse = new ContactoDTO();</span>
+<span class="fc" id="L57">        contactoResponse.setContactoID(1L);</span>
+<span class="fc" id="L58">        contactoResponse.setNombre(&quot;Empresa Test S.A.&quot;);</span>
+<span class="fc" id="L59">        contactoResponse.setContacto(&quot;contacto@empresa.com&quot;);</span>
+<span class="fc" id="L60">        contactoResponse.setTipo(TipoContacto.EMPRESA);</span>
+<span class="fc" id="L61">        contactoResponse.setActivo(true);</span>
+<span class="fc" id="L62">    }</span>
 
     @Test
     @DisplayName(&quot;POST /api/contactos - Debe crear un contacto exitosamente&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void crearContacto_conDatosValidos_debeRetornarCreado() throws Exception {
-<span class="fc" id="L66">        when(contactoService.crearContacto(any(ContactoRequestDTO.class))).thenReturn(contactoResponse);</span>
+<span class="fc" id="L68">        when(contactoService.crearContacto(any(ContactoRequestDTO.class))).thenReturn(contactoResponse);</span>
 
-<span class="fc" id="L68">        mockMvc.perform(post(&quot;/api/contactos&quot;)</span>
-<span class="fc" id="L69">                .with(csrf())</span>
-<span class="fc" id="L70">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L71">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
-<span class="fc" id="L72">                .andExpect(status().isCreated())</span>
-<span class="fc" id="L73">                .andExpect(jsonPath(&quot;$.contactoID&quot;).value(1L))</span>
-<span class="fc" id="L74">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Empresa Test S.A.&quot;))</span>
-<span class="fc" id="L75">                .andExpect(jsonPath(&quot;$.contacto&quot;).value(&quot;contacto@empresa.com&quot;))</span>
-<span class="fc" id="L76">                .andExpect(jsonPath(&quot;$.tipo&quot;).value(&quot;EMPRESA&quot;))</span>
-<span class="fc" id="L77">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L70">        mockMvc.perform(post(&quot;/api/contactos&quot;)</span>
+<span class="fc" id="L71">                .with(csrf())</span>
+<span class="fc" id="L72">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L73">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
+<span class="fc" id="L74">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L75">                .andExpect(jsonPath(&quot;$.contactoID&quot;).value(1L))</span>
+<span class="fc" id="L76">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Empresa Test S.A.&quot;))</span>
+<span class="fc" id="L77">                .andExpect(jsonPath(&quot;$.contacto&quot;).value(&quot;contacto@empresa.com&quot;))</span>
+<span class="fc" id="L78">                .andExpect(jsonPath(&quot;$.tipo&quot;).value(&quot;EMPRESA&quot;))</span>
+<span class="fc" id="L79">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
+<span class="fc" id="L80">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/contactos - Debe listar todos los contactos&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void obtenerTodos_debeRetornarListaDeContactos() throws Exception {
-<span class="fc" id="L84">        ContactoDTO contacto2 = new ContactoDTO();</span>
-<span class="fc" id="L85">        contacto2.setContactoID(2L);</span>
-<span class="fc" id="L86">        contacto2.setNombre(&quot;Cliente Test&quot;);</span>
-<span class="fc" id="L87">        contacto2.setContacto(&quot;cliente@test.com&quot;);</span>
-<span class="fc" id="L88">        contacto2.setTipo(TipoContacto.CLIENTE);</span>
-<span class="fc" id="L89">        contacto2.setActivo(true);</span>
+<span class="fc" id="L86">        ContactoDTO contacto2 = new ContactoDTO();</span>
+<span class="fc" id="L87">        contacto2.setContactoID(2L);</span>
+<span class="fc" id="L88">        contacto2.setNombre(&quot;Cliente Test&quot;);</span>
+<span class="fc" id="L89">        contacto2.setContacto(&quot;cliente@test.com&quot;);</span>
+<span class="fc" id="L90">        contacto2.setTipo(TipoContacto.CLIENTE);</span>
+<span class="fc" id="L91">        contacto2.setActivo(true);</span>
 
-<span class="fc" id="L91">        List&lt;ContactoDTO&gt; contactos = Arrays.asList(contactoResponse, contacto2);</span>
-<span class="fc" id="L92">        when(contactoService.obtenerTodosLosContactos()).thenReturn(contactos);</span>
+<span class="fc" id="L93">        List&lt;ContactoDTO&gt; contactos = Arrays.asList(contactoResponse, contacto2);</span>
+<span class="fc" id="L94">        when(contactoService.obtenerTodosLosContactos()).thenReturn(contactos);</span>
 
-<span class="fc" id="L94">        mockMvc.perform(get(&quot;/api/contactos&quot;)</span>
-<span class="fc" id="L95">                .with(csrf()))</span>
-<span class="fc" id="L96">                .andExpect(status().isOk())</span>
-<span class="fc" id="L97">                .andExpect(jsonPath(&quot;$.length()&quot;).value(2))</span>
-<span class="fc" id="L98">                .andExpect(jsonPath(&quot;$[0].contactoID&quot;).value(1L))</span>
-<span class="fc" id="L99">                .andExpect(jsonPath(&quot;$[1].contactoID&quot;).value(2L));</span>
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L96">        mockMvc.perform(get(&quot;/api/contactos&quot;)</span>
+<span class="fc" id="L97">                .with(csrf()))</span>
+<span class="fc" id="L98">                .andExpect(status().isOk())</span>
+<span class="fc" id="L99">                .andExpect(jsonPath(&quot;$.length()&quot;).value(2))</span>
+<span class="fc" id="L100">                .andExpect(jsonPath(&quot;$[0].contactoID&quot;).value(1L))</span>
+<span class="fc" id="L101">                .andExpect(jsonPath(&quot;$[1].contactoID&quot;).value(2L));</span>
+<span class="fc" id="L102">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/contactos/{id} - Debe obtener contacto por ID&quot;)
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     void obtenerPorId_conIdExistente_debeRetornarContacto() throws Exception {
-<span class="fc" id="L106">        when(contactoService.obtenerContactoPorId(1L)).thenReturn(contactoResponse);</span>
+<span class="fc" id="L108">        when(contactoService.obtenerContactoPorId(1L)).thenReturn(contactoResponse);</span>
 
-<span class="fc" id="L108">        mockMvc.perform(get(&quot;/api/contactos/1&quot;)</span>
-<span class="fc" id="L109">                .with(csrf()))</span>
-<span class="fc" id="L110">                .andExpect(status().isOk())</span>
-<span class="fc" id="L111">                .andExpect(jsonPath(&quot;$.contactoID&quot;).value(1L))</span>
-<span class="fc" id="L112">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Empresa Test S.A.&quot;));</span>
-<span class="fc" id="L113">    }</span>
+<span class="fc" id="L110">        mockMvc.perform(get(&quot;/api/contactos/1&quot;)</span>
+<span class="fc" id="L111">                .with(csrf()))</span>
+<span class="fc" id="L112">                .andExpect(status().isOk())</span>
+<span class="fc" id="L113">                .andExpect(jsonPath(&quot;$.contactoID&quot;).value(1L))</span>
+<span class="fc" id="L114">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Empresa Test S.A.&quot;));</span>
+<span class="fc" id="L115">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/contactos/empresas - Debe filtrar contactos por tipo EMPRESA&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void obtenerPorTipo_conTipoEmpresa_debeRetornarContactosFiltrados() throws Exception {
-<span class="fc" id="L119">        List&lt;ContactoDTO&gt; contactos = Arrays.asList(contactoResponse);</span>
-<span class="fc" id="L120">        when(contactoService.obtenerEmpresas(null)).thenReturn(contactos);</span>
+<span class="fc" id="L121">        List&lt;ContactoDTO&gt; contactos = Arrays.asList(contactoResponse);</span>
+<span class="fc" id="L122">        when(contactoService.obtenerEmpresas(null)).thenReturn(contactos);</span>
 
-<span class="fc" id="L122">        mockMvc.perform(get(&quot;/api/contactos/empresas&quot;)</span>
-<span class="fc" id="L123">                .with(csrf()))</span>
-<span class="fc" id="L124">                .andExpect(status().isOk())</span>
-<span class="fc" id="L125">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
-<span class="fc" id="L126">                .andExpect(jsonPath(&quot;$[0].tipo&quot;).value(&quot;EMPRESA&quot;));</span>
-<span class="fc" id="L127">    }</span>
+<span class="fc" id="L124">        mockMvc.perform(get(&quot;/api/contactos/empresas&quot;)</span>
+<span class="fc" id="L125">                .with(csrf()))</span>
+<span class="fc" id="L126">                .andExpect(status().isOk())</span>
+<span class="fc" id="L127">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L128">                .andExpect(jsonPath(&quot;$[0].tipo&quot;).value(&quot;EMPRESA&quot;));</span>
+<span class="fc" id="L129">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/contactos/buscar - Debe buscar contactos por nombre&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void buscarPorNombre_conNombreValido_debeRetornarContactos() throws Exception {
-<span class="fc" id="L133">        List&lt;ContactoDTO&gt; contactos = Arrays.asList(contactoResponse);</span>
-<span class="fc" id="L134">        when(contactoService.buscarContactosPorNombre(&quot;Empresa&quot;)).thenReturn(contactos);</span>
+<span class="fc" id="L135">        List&lt;ContactoDTO&gt; contactos = Arrays.asList(contactoResponse);</span>
+<span class="fc" id="L136">        when(contactoService.buscarContactosPorNombre(&quot;Empresa&quot;)).thenReturn(contactos);</span>
 
-<span class="fc" id="L136">        mockMvc.perform(get(&quot;/api/contactos/buscar&quot;)</span>
-<span class="fc" id="L137">                .param(&quot;nombre&quot;, &quot;Empresa&quot;)</span>
-<span class="fc" id="L138">                .with(csrf()))</span>
-<span class="fc" id="L139">                .andExpect(status().isOk())</span>
-<span class="fc" id="L140">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
-<span class="fc" id="L141">                .andExpect(jsonPath(&quot;$[0].nombre&quot;).value(&quot;Empresa Test S.A.&quot;));</span>
-<span class="fc" id="L142">    }</span>
+<span class="fc" id="L138">        mockMvc.perform(get(&quot;/api/contactos/buscar&quot;)</span>
+<span class="fc" id="L139">                .param(&quot;nombre&quot;, &quot;Empresa&quot;)</span>
+<span class="fc" id="L140">                .with(csrf()))</span>
+<span class="fc" id="L141">                .andExpect(status().isOk())</span>
+<span class="fc" id="L142">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L143">                .andExpect(jsonPath(&quot;$[0].nombre&quot;).value(&quot;Empresa Test S.A.&quot;));</span>
+<span class="fc" id="L144">    }</span>
 
     @Test
     @DisplayName(&quot;PUT /api/contactos/{id} - Debe actualizar un contacto existente&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void actualizarContacto_conDatosValidos_debeRetornarActualizado() throws Exception {
-<span class="fc" id="L148">        contactoResponse.setNombre(&quot;Empresa Actualizada S.A.&quot;);</span>
-<span class="fc" id="L149">        when(contactoService.actualizarContacto(eq(1L), any(ContactoRequestDTO.class))).thenReturn(contactoResponse);</span>
+<span class="fc" id="L150">        contactoResponse.setNombre(&quot;Empresa Actualizada S.A.&quot;);</span>
+<span class="fc" id="L151">        when(contactoService.actualizarContacto(eq(1L), any(ContactoRequestDTO.class))).thenReturn(contactoResponse);</span>
 
-<span class="fc" id="L151">        contactoRequest.setNombre(&quot;Empresa Actualizada S.A.&quot;);</span>
+<span class="fc" id="L153">        contactoRequest.setNombre(&quot;Empresa Actualizada S.A.&quot;);</span>
 
-<span class="fc" id="L153">        mockMvc.perform(put(&quot;/api/contactos/1&quot;)</span>
-<span class="fc" id="L154">                .with(csrf())</span>
-<span class="fc" id="L155">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L156">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
-<span class="fc" id="L157">                .andExpect(status().isOk())</span>
-<span class="fc" id="L158">                .andExpect(jsonPath(&quot;$.contactoID&quot;).value(1L))</span>
-<span class="fc" id="L159">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Empresa Actualizada S.A.&quot;));</span>
-<span class="fc" id="L160">    }</span>
+<span class="fc" id="L155">        mockMvc.perform(put(&quot;/api/contactos/1&quot;)</span>
+<span class="fc" id="L156">                .with(csrf())</span>
+<span class="fc" id="L157">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L158">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
+<span class="fc" id="L159">                .andExpect(status().isOk())</span>
+<span class="fc" id="L160">                .andExpect(jsonPath(&quot;$.contactoID&quot;).value(1L))</span>
+<span class="fc" id="L161">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Empresa Actualizada S.A.&quot;));</span>
+<span class="fc" id="L162">    }</span>
 
     @Test
     @DisplayName(&quot;PUT /api/contactos/{id}/reactivar - Debe reactivar un contacto&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void reactivarContacto_conIdValido_debeRetornarReactivado() throws Exception {
-<span class="fc" id="L166">        contactoResponse.setActivo(true);</span>
-<span class="fc" id="L167">        when(contactoService.reactivarContacto(1L)).thenReturn(contactoResponse);</span>
+<span class="fc" id="L168">        contactoResponse.setActivo(true);</span>
+<span class="fc" id="L169">        when(contactoService.reactivarContacto(1L)).thenReturn(contactoResponse);</span>
 
-<span class="fc" id="L169">        mockMvc.perform(put(&quot;/api/contactos/1/reactivar&quot;)</span>
-<span class="fc" id="L170">                .with(csrf()))</span>
-<span class="fc" id="L171">                .andExpect(status().isOk())</span>
-<span class="fc" id="L172">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
-<span class="fc" id="L173">    }</span>
+<span class="fc" id="L171">        mockMvc.perform(put(&quot;/api/contactos/1/reactivar&quot;)</span>
+<span class="fc" id="L172">                .with(csrf()))</span>
+<span class="fc" id="L173">                .andExpect(status().isOk())</span>
+<span class="fc" id="L174">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
+<span class="fc" id="L175">    }</span>
 
     @Test
     @DisplayName(&quot;DELETE /api/contactos/{id} - Debe desactivar un contacto&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void eliminarContacto_conIdValido_debeDesactivar() throws Exception {
-<span class="fc" id="L179">        doNothing().when(contactoService).eliminarContacto(1L);</span>
+<span class="fc" id="L181">        doNothing().when(contactoService).eliminarContacto(1L);</span>
 
-<span class="fc" id="L181">        mockMvc.perform(delete(&quot;/api/contactos/1&quot;)</span>
-<span class="fc" id="L182">                .with(csrf()))</span>
-<span class="fc" id="L183">                .andExpect(status().isNoContent());</span>
-<span class="fc" id="L184">    }</span>
+<span class="fc" id="L183">        mockMvc.perform(delete(&quot;/api/contactos/1&quot;)</span>
+<span class="fc" id="L184">                .with(csrf()))</span>
+<span class="fc" id="L185">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L186">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerTodos_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L192">        when(contactoService.obtenerTodosLosContactos()).thenThrow(new RuntimeException(&quot;Error interno&quot;));</span>
+
+<span class="fc" id="L194">        mockMvc.perform(get(&quot;/api/contactos&quot;)</span>
+<span class="fc" id="L195">                .with(csrf()))</span>
+<span class="fc" id="L196">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L197">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/clientes - Debe obtener solo clientes activos&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerClientes_sinFiltro_debeRetornarClientes() throws Exception {
+<span class="fc" id="L203">        ContactoDTO cliente = new ContactoDTO();</span>
+<span class="fc" id="L204">        cliente.setContactoID(3L);</span>
+<span class="fc" id="L205">        cliente.setNombre(&quot;Cliente Test&quot;);</span>
+<span class="fc" id="L206">        cliente.setContacto(&quot;cliente@test.com&quot;);</span>
+<span class="fc" id="L207">        cliente.setTipo(TipoContacto.CLIENTE);</span>
+<span class="fc" id="L208">        cliente.setActivo(true);</span>
+
+<span class="fc" id="L210">        when(contactoService.obtenerClientes(null)).thenReturn(Arrays.asList(cliente));</span>
+
+<span class="fc" id="L212">        mockMvc.perform(get(&quot;/api/contactos/clientes&quot;)</span>
+<span class="fc" id="L213">                .with(csrf()))</span>
+<span class="fc" id="L214">                .andExpect(status().isOk())</span>
+<span class="fc" id="L215">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L216">                .andExpect(jsonPath(&quot;$[0].tipo&quot;).value(&quot;CLIENTE&quot;));</span>
+<span class="fc" id="L217">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/clientes - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerClientes_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L223">        when(contactoService.obtenerClientes(null)).thenThrow(new RuntimeException(&quot;Error&quot;));</span>
+
+<span class="fc" id="L225">        mockMvc.perform(get(&quot;/api/contactos/clientes&quot;)</span>
+<span class="fc" id="L226">                .with(csrf()))</span>
+<span class="fc" id="L227">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L228">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/clientes - Con filtro activo=true&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerClientes_conFiltroActivo_debeRetornarClientesActivos() throws Exception {
+<span class="fc" id="L234">        ContactoDTO cliente = new ContactoDTO();</span>
+<span class="fc" id="L235">        cliente.setContactoID(3L);</span>
+<span class="fc" id="L236">        cliente.setNombre(&quot;Cliente Activo&quot;);</span>
+<span class="fc" id="L237">        cliente.setActivo(true);</span>
+
+<span class="fc" id="L239">        when(contactoService.obtenerClientes(true)).thenReturn(Arrays.asList(cliente));</span>
+
+<span class="fc" id="L241">        mockMvc.perform(get(&quot;/api/contactos/clientes&quot;)</span>
+<span class="fc" id="L242">                .param(&quot;activo&quot;, &quot;true&quot;)</span>
+<span class="fc" id="L243">                .with(csrf()))</span>
+<span class="fc" id="L244">                .andExpect(status().isOk())</span>
+<span class="fc" id="L245">                .andExpect(jsonPath(&quot;$[0].activo&quot;).value(true));</span>
+<span class="fc" id="L246">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/empresas - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerEmpresas_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L252">        when(contactoService.obtenerEmpresas(null)).thenThrow(new RuntimeException(&quot;Error&quot;));</span>
+
+<span class="fc" id="L254">        mockMvc.perform(get(&quot;/api/contactos/empresas&quot;)</span>
+<span class="fc" id="L255">                .with(csrf()))</span>
+<span class="fc" id="L256">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L257">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/empresas - Con filtro activo=false&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerEmpresas_conFiltroInactivo_debeRetornarEmpresasInactivas() throws Exception {
+<span class="fc" id="L263">        ContactoDTO empresa = new ContactoDTO();</span>
+<span class="fc" id="L264">        empresa.setContactoID(4L);</span>
+<span class="fc" id="L265">        empresa.setNombre(&quot;Empresa Inactiva&quot;);</span>
+<span class="fc" id="L266">        empresa.setActivo(false);</span>
+
+<span class="fc" id="L268">        when(contactoService.obtenerEmpresas(false)).thenReturn(Arrays.asList(empresa));</span>
+
+<span class="fc" id="L270">        mockMvc.perform(get(&quot;/api/contactos/empresas&quot;)</span>
+<span class="fc" id="L271">                .param(&quot;activo&quot;, &quot;false&quot;)</span>
+<span class="fc" id="L272">                .with(csrf()))</span>
+<span class="fc" id="L273">                .andExpect(status().isOk())</span>
+<span class="fc" id="L274">                .andExpect(jsonPath(&quot;$[0].activo&quot;).value(false));</span>
+<span class="fc" id="L275">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/{id} - Debe retornar 404 si no existe&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerPorId_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L281">        when(contactoService.obtenerContactoPorId(999L)).thenThrow(new RuntimeException(&quot;Contacto no encontrado&quot;));</span>
+
+<span class="fc" id="L283">        mockMvc.perform(get(&quot;/api/contactos/999&quot;)</span>
+<span class="fc" id="L284">                .with(csrf()))</span>
+<span class="fc" id="L285">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L286">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/{id} - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerPorId_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L292">        when(contactoService.obtenerContactoPorId(1L)).thenThrow(new IllegalStateException(&quot;Error interno&quot;));</span>
+
+<span class="fc" id="L294">        mockMvc.perform(get(&quot;/api/contactos/1&quot;)</span>
+<span class="fc" id="L295">                .with(csrf()))</span>
+<span class="fc" id="L296">                .andExpect(status().isNotFound()); // RuntimeException se mapea a 404</span>
+<span class="fc" id="L297">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/contactos - Debe retornar 400 con datos inválidos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void crearContacto_conDatosInvalidos_debeRetornar400() throws Exception {
+<span class="fc" id="L303">        when(contactoService.crearContacto(any(ContactoRequestDTO.class)))</span>
+<span class="fc" id="L304">                .thenThrow(new RuntimeException(&quot;El nombre del contacto es requerido&quot;));</span>
+
+<span class="fc" id="L306">        mockMvc.perform(post(&quot;/api/contactos&quot;)</span>
+<span class="fc" id="L307">                .with(csrf())</span>
+<span class="fc" id="L308">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L309">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
+<span class="fc" id="L310">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L311">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/contactos - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void crearContacto_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L317">        when(contactoService.crearContacto(any(ContactoRequestDTO.class)))</span>
+<span class="fc" id="L318">                .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L320">        mockMvc.perform(post(&quot;/api/contactos&quot;)</span>
+<span class="fc" id="L321">                .with(csrf())</span>
+<span class="fc" id="L322">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L323">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
+<span class="fc" id="L324">                .andExpect(status().isBadRequest()); // RuntimeException se mapea a badRequest con mensaje</span>
+<span class="fc" id="L325">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/contactos/{id} - Debe retornar 404 si no existe&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarContacto_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L331">        when(contactoService.actualizarContacto(eq(999L), any(ContactoRequestDTO.class)))</span>
+<span class="fc" id="L332">                .thenThrow(new RuntimeException(&quot;Contacto no encontrado&quot;));</span>
+
+<span class="fc" id="L334">        mockMvc.perform(put(&quot;/api/contactos/999&quot;)</span>
+<span class="fc" id="L335">                .with(csrf())</span>
+<span class="fc" id="L336">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L337">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
+<span class="fc" id="L338">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L339">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/contactos/{id} - Debe retornar 400 con datos inválidos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarContacto_conDatosInvalidos_debeRetornar400() throws Exception {
+<span class="fc" id="L345">        when(contactoService.actualizarContacto(eq(1L), any(ContactoRequestDTO.class)))</span>
+<span class="fc" id="L346">                .thenThrow(new RuntimeException(&quot;Ya existe un cliente con ese nombre&quot;));</span>
+
+<span class="fc" id="L348">        mockMvc.perform(put(&quot;/api/contactos/1&quot;)</span>
+<span class="fc" id="L349">                .with(csrf())</span>
+<span class="fc" id="L350">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L351">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
+<span class="fc" id="L352">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L353">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/contactos/{id} - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarContacto_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L359">        when(contactoService.actualizarContacto(eq(1L), any(ContactoRequestDTO.class)))</span>
+<span class="fc" id="L360">                .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L362">        mockMvc.perform(put(&quot;/api/contactos/1&quot;)</span>
+<span class="fc" id="L363">                .with(csrf())</span>
+<span class="fc" id="L364">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L365">                .content(objectMapper.writeValueAsString(contactoRequest)))</span>
+<span class="fc" id="L366">                .andExpect(status().isBadRequest()); // RuntimeException se mapea a badRequest</span>
+<span class="fc" id="L367">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/contactos/{id} - Debe retornar 404 si no existe&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void eliminarContacto_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L373">        org.mockito.Mockito.doThrow(new RuntimeException(&quot;Contacto no encontrado&quot;))</span>
+<span class="fc" id="L374">                .when(contactoService).eliminarContacto(999L);</span>
+
+<span class="fc" id="L376">        mockMvc.perform(delete(&quot;/api/contactos/999&quot;)</span>
+<span class="fc" id="L377">                .with(csrf()))</span>
+<span class="fc" id="L378">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L379">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/contactos/{id} - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void eliminarContacto_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L385">        org.mockito.Mockito.doThrow(new IllegalStateException(&quot;Error de base de datos&quot;))</span>
+<span class="fc" id="L386">                .when(contactoService).eliminarContacto(1L);</span>
+
+<span class="fc" id="L388">        mockMvc.perform(delete(&quot;/api/contactos/1&quot;)</span>
+<span class="fc" id="L389">                .with(csrf()))</span>
+<span class="fc" id="L390">                .andExpect(status().isNotFound()); // RuntimeException se mapea a 404</span>
+<span class="fc" id="L391">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/contactos/{id}/reactivar - Debe retornar 404 si no existe&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void reactivarContacto_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L397">        when(contactoService.reactivarContacto(999L))</span>
+<span class="fc" id="L398">                .thenThrow(new RuntimeException(&quot;Contacto no encontrado&quot;));</span>
+
+<span class="fc" id="L400">        mockMvc.perform(put(&quot;/api/contactos/999/reactivar&quot;)</span>
+<span class="fc" id="L401">                .with(csrf()))</span>
+<span class="fc" id="L402">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L403">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/contactos/{id}/reactivar - Debe retornar 400 si ya está activo&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void reactivarContacto_yaActivo_debeRetornar400() throws Exception {
+<span class="fc" id="L409">        when(contactoService.reactivarContacto(1L))</span>
+<span class="fc" id="L410">                .thenThrow(new RuntimeException(&quot;El contacto ya está activo&quot;));</span>
+
+<span class="fc" id="L412">        mockMvc.perform(put(&quot;/api/contactos/1/reactivar&quot;)</span>
+<span class="fc" id="L413">                .with(csrf()))</span>
+<span class="fc" id="L414">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L415">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/contactos/{id}/reactivar - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void reactivarContacto_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L421">        when(contactoService.reactivarContacto(1L))</span>
+<span class="fc" id="L422">                .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L424">        mockMvc.perform(put(&quot;/api/contactos/1/reactivar&quot;)</span>
+<span class="fc" id="L425">                .with(csrf()))</span>
+<span class="fc" id="L426">                .andExpect(status().isBadRequest()); // RuntimeException se mapea a badRequest</span>
+<span class="fc" id="L427">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/buscar - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void buscarPorNombre_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L433">        when(contactoService.buscarContactosPorNombre(anyString()))</span>
+<span class="fc" id="L434">                .thenThrow(new RuntimeException(&quot;Error&quot;));</span>
+
+<span class="fc" id="L436">        mockMvc.perform(get(&quot;/api/contactos/buscar&quot;)</span>
+<span class="fc" id="L437">                .param(&quot;nombre&quot;, &quot;Test&quot;)</span>
+<span class="fc" id="L438">                .with(csrf()))</span>
+<span class="fc" id="L439">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L440">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/clientes/buscar - Debe buscar clientes por nombre&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void buscarClientes_conNombre_debeRetornarClientes() throws Exception {
+<span class="fc" id="L446">        ContactoDTO cliente = new ContactoDTO();</span>
+<span class="fc" id="L447">        cliente.setContactoID(3L);</span>
+<span class="fc" id="L448">        cliente.setNombre(&quot;Cliente Encontrado&quot;);</span>
+<span class="fc" id="L449">        cliente.setTipo(TipoContacto.CLIENTE);</span>
+
+<span class="fc" id="L451">        when(contactoService.buscarClientes(&quot;Cliente&quot;)).thenReturn(Arrays.asList(cliente));</span>
+
+<span class="fc" id="L453">        mockMvc.perform(get(&quot;/api/contactos/clientes/buscar&quot;)</span>
+<span class="fc" id="L454">                .param(&quot;nombre&quot;, &quot;Cliente&quot;)</span>
+<span class="fc" id="L455">                .with(csrf()))</span>
+<span class="fc" id="L456">                .andExpect(status().isOk())</span>
+<span class="fc" id="L457">                .andExpect(jsonPath(&quot;$[0].tipo&quot;).value(&quot;CLIENTE&quot;));</span>
+<span class="fc" id="L458">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/clientes/buscar - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void buscarClientes_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L464">        when(contactoService.buscarClientes(anyString()))</span>
+<span class="fc" id="L465">                .thenThrow(new RuntimeException(&quot;Error&quot;));</span>
+
+<span class="fc" id="L467">        mockMvc.perform(get(&quot;/api/contactos/clientes/buscar&quot;)</span>
+<span class="fc" id="L468">                .param(&quot;nombre&quot;, &quot;Test&quot;)</span>
+<span class="fc" id="L469">                .with(csrf()))</span>
+<span class="fc" id="L470">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L471">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/empresas/buscar - Debe buscar empresas por nombre&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void buscarEmpresas_conNombre_debeRetornarEmpresas() throws Exception {
+<span class="fc" id="L477">        when(contactoService.buscarEmpresas(&quot;Empresa&quot;)).thenReturn(Arrays.asList(contactoResponse));</span>
+
+<span class="fc" id="L479">        mockMvc.perform(get(&quot;/api/contactos/empresas/buscar&quot;)</span>
+<span class="fc" id="L480">                .param(&quot;nombre&quot;, &quot;Empresa&quot;)</span>
+<span class="fc" id="L481">                .with(csrf()))</span>
+<span class="fc" id="L482">                .andExpect(status().isOk())</span>
+<span class="fc" id="L483">                .andExpect(jsonPath(&quot;$[0].tipo&quot;).value(&quot;EMPRESA&quot;));</span>
+<span class="fc" id="L484">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/empresas/buscar - Debe manejar error interno&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void buscarEmpresas_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L490">        when(contactoService.buscarEmpresas(anyString()))</span>
+<span class="fc" id="L491">                .thenThrow(new RuntimeException(&quot;Error&quot;));</span>
+
+<span class="fc" id="L493">        mockMvc.perform(get(&quot;/api/contactos/empresas/buscar&quot;)</span>
+<span class="fc" id="L494">                .param(&quot;nombre&quot;, &quot;Test&quot;)</span>
+<span class="fc" id="L495">                .with(csrf()))</span>
+<span class="fc" id="L496">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L497">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/listado - Debe obtener contactos paginados sin filtros&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerContactosPaginados_sinFiltros_debeRetornarPagina() throws Exception {
+<span class="fc" id="L503">        org.springframework.data.domain.Page&lt;ContactoDTO&gt; page = </span>
+<span class="fc" id="L504">            new org.springframework.data.domain.PageImpl&lt;&gt;(Arrays.asList(contactoResponse));</span>
+        
+<span class="fc" id="L506">        when(contactoService.obtenerContactosPaginadosConFiltros(</span>
+<span class="fc" id="L507">                any(org.springframework.data.domain.Pageable.class), </span>
+<span class="fc" id="L508">                eq(null), </span>
+<span class="fc" id="L509">                eq(null), </span>
+<span class="fc" id="L510">                eq(null)))</span>
+<span class="fc" id="L511">            .thenReturn(page);</span>
+
+<span class="fc" id="L513">        mockMvc.perform(get(&quot;/api/contactos/listado&quot;)</span>
+<span class="fc" id="L514">                .with(csrf()))</span>
+<span class="fc" id="L515">                .andExpect(status().isOk())</span>
+<span class="fc" id="L516">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
+<span class="fc" id="L517">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/listado - Con búsqueda y filtros&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerContactosPaginados_conFiltros_debeRetornarPaginaFiltrada() throws Exception {
+<span class="fc" id="L523">        org.springframework.data.domain.Page&lt;ContactoDTO&gt; page = </span>
+<span class="fc" id="L524">            new org.springframework.data.domain.PageImpl&lt;&gt;(Arrays.asList(contactoResponse));</span>
+        
+<span class="fc" id="L526">        when(contactoService.obtenerContactosPaginadosConFiltros(</span>
+<span class="fc" id="L527">                any(org.springframework.data.domain.Pageable.class), </span>
+<span class="fc" id="L528">                eq(&quot;Empresa&quot;), </span>
+<span class="fc" id="L529">                eq(true), </span>
+<span class="fc" id="L530">                eq(TipoContacto.EMPRESA)))</span>
+<span class="fc" id="L531">            .thenReturn(page);</span>
+
+<span class="fc" id="L533">        mockMvc.perform(get(&quot;/api/contactos/listado&quot;)</span>
+<span class="fc" id="L534">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L535">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L536">                .param(&quot;search&quot;, &quot;Empresa&quot;)</span>
+<span class="fc" id="L537">                .param(&quot;activo&quot;, &quot;true&quot;)</span>
+<span class="fc" id="L538">                .param(&quot;tipo&quot;, &quot;EMPRESA&quot;)</span>
+<span class="fc" id="L539">                .with(csrf()))</span>
+<span class="fc" id="L540">                .andExpect(status().isOk())</span>
+<span class="fc" id="L541">                .andExpect(jsonPath(&quot;$.content[0].tipo&quot;).value(&quot;EMPRESA&quot;));</span>
+<span class="fc" id="L542">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/listado - Con tipo inválido debe ignorar filtro&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerContactosPaginados_conTipoInvalido_debeIgnorarFiltro() throws Exception {
+<span class="fc" id="L548">        org.springframework.data.domain.Page&lt;ContactoDTO&gt; page = </span>
+<span class="fc" id="L549">            new org.springframework.data.domain.PageImpl&lt;&gt;(Arrays.asList(contactoResponse));</span>
+        
+<span class="fc" id="L551">        when(contactoService.obtenerContactosPaginadosConFiltros(</span>
+<span class="fc" id="L552">                any(org.springframework.data.domain.Pageable.class), </span>
+<span class="fc" id="L553">                eq(null), </span>
+<span class="fc" id="L554">                eq(null), </span>
+<span class="fc" id="L555">                eq(null)))</span>
+<span class="fc" id="L556">            .thenReturn(page);</span>
+
+<span class="fc" id="L558">        mockMvc.perform(get(&quot;/api/contactos/listado&quot;)</span>
+<span class="fc" id="L559">                .param(&quot;tipo&quot;, &quot;TIPO_INVALIDO&quot;)</span>
+<span class="fc" id="L560">                .with(csrf()))</span>
+<span class="fc" id="L561">                .andExpect(status().isOk());</span>
+<span class="fc" id="L562">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/contactos/listado - Con tipo vacío debe ignorar filtro&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerContactosPaginados_conTipoVacio_debeIgnorarFiltro() throws Exception {
+<span class="fc" id="L568">        org.springframework.data.domain.Page&lt;ContactoDTO&gt; page = </span>
+<span class="fc" id="L569">            new org.springframework.data.domain.PageImpl&lt;&gt;(Arrays.asList(contactoResponse));</span>
+        
+<span class="fc" id="L571">        when(contactoService.obtenerContactosPaginadosConFiltros(</span>
+<span class="fc" id="L572">                any(org.springframework.data.domain.Pageable.class), </span>
+<span class="fc" id="L573">                eq(null), </span>
+<span class="fc" id="L574">                eq(null), </span>
+<span class="fc" id="L575">                eq(null)))</span>
+<span class="fc" id="L576">            .thenReturn(page);</span>
+
+<span class="fc" id="L578">        mockMvc.perform(get(&quot;/api/contactos/listado&quot;)</span>
+<span class="fc" id="L579">                .param(&quot;tipo&quot;, &quot;&quot;)</span>
+<span class="fc" id="L580">                .with(csrf()))</span>
+<span class="fc" id="L581">                .andExpect(status().isOk());</span>
+<span class="fc" id="L582">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

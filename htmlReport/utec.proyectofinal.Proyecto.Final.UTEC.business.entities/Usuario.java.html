@@ -94,10 +94,10 @@ public class Usuario {
 
     // Método para obtener roles como lista (compatibilidad con JWT)
     public List&lt;String&gt; getRoles() {
-<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (rol == null) {</span>
-<span class="nc" id="L98">            return Arrays.asList(); // Usuario sin rol asignado</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (rol == null) {</span>
+<span class="fc" id="L98">            return Arrays.asList(); // Usuario sin rol asignado</span>
         }
-<span class="nc" id="L100">        return Arrays.asList(rol.name());</span>
+<span class="fc" id="L100">        return Arrays.asList(rol.name());</span>
     }
     
     // Método para obtener el nombre completo

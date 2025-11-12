@@ -69,7 +69,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
                 }
                 
             
-<span class="nc" id="L72">            } else {</span>
+            } else {
                 // Si no hay tablas existentes, es la primera tabla: cambiar estado a EN_PROCESO
 <span class="fc" id="L74">                germinacion.setEstado(Estado.EN_PROCESO);</span>
 <span class="fc" id="L75">                germinacionRepository.save(germinacion);</span>
@@ -137,16 +137,16 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         }
         
         // Si hay días de prefrío, validar que haya suficientes días entre fechaIngreso y fechaGerminacion
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        int diasPrefrio = (solicitud.getDiasPrefrio() != null) ? solicitud.getDiasPrefrio() : 0;</span>
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if (diasPrefrio &gt; 0) {</span>
-<span class="nc" id="L142">            long diasEntreFechas = java.time.temporal.ChronoUnit.DAYS.between(</span>
-<span class="nc" id="L143">                solicitud.getFechaIngreso(), </span>
-<span class="nc" id="L144">                solicitud.getFechaGerminacion()</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        int diasPrefrio = (solicitud.getDiasPrefrio() != null) ? solicitud.getDiasPrefrio() : 0;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (diasPrefrio &gt; 0) {</span>
+<span class="fc" id="L142">            long diasEntreFechas = java.time.temporal.ChronoUnit.DAYS.between(</span>
+<span class="fc" id="L143">                solicitud.getFechaIngreso(), </span>
+<span class="fc" id="L144">                solicitud.getFechaGerminacion()</span>
             );
-<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (diasEntreFechas &lt; diasPrefrio) {</span>
-<span class="nc" id="L147">                throw new RuntimeException(&quot;Debe haber al menos &quot; + diasPrefrio + </span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (diasEntreFechas &lt; diasPrefrio) {</span>
+<span class="fc" id="L147">                throw new RuntimeException(&quot;Debe haber al menos &quot; + diasPrefrio + </span>
                     &quot; días entre la fecha de ingreso y la fecha de germinación (días de prefrío requeridos). &quot; +
-                    &quot;Actualmente hay &quot; + diasEntreFechas + &quot; días.&quot;);
+<span class="fc" id="L149">                    &quot;Actualmente hay &quot; + diasEntreFechas + &quot; días.&quot;);</span>
             }
         }
         
@@ -156,8 +156,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         }
         
         // Validar fechaFinal (debe estar entre fechaGerminacion y fechaUltConteo, o después)
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (solicitud.getFechaFinal().isBefore(solicitud.getFechaGerminacion())) {</span>
-<span class="nc" id="L160">            throw new RuntimeException(&quot;La fecha final debe ser posterior o igual a la fecha de germinación&quot;);</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (solicitud.getFechaFinal().isBefore(solicitud.getFechaGerminacion())) {</span>
+<span class="fc" id="L160">            throw new RuntimeException(&quot;La fecha final debe ser posterior o igual a la fecha de germinación&quot;);</span>
         }
         
 <span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (solicitud.getFechaFinal().isBefore(solicitud.getFechaUltConteo())) {</span>
@@ -169,16 +169,16 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="nc" id="L169">            throw new RuntimeException(&quot;Debe especificar un número válido de repeticiones (mayor a 0)&quot;);</span>
         }
         
-<span class="pc bpc" id="L172" title="2 of 4 branches missed.">        if (solicitud.getNumeroRepeticiones() &lt; 1 || solicitud.getNumeroRepeticiones() &gt; 20) {</span>
-<span class="nc" id="L173">            throw new RuntimeException(&quot;El número de repeticiones debe estar entre 1 y 20&quot;);</span>
+<span class="pc bpc" id="L172" title="1 of 4 branches missed.">        if (solicitud.getNumeroRepeticiones() &lt; 1 || solicitud.getNumeroRepeticiones() &gt; 20) {</span>
+<span class="fc" id="L173">            throw new RuntimeException(&quot;El número de repeticiones debe estar entre 1 y 20&quot;);</span>
         }
         
 <span class="pc bpc" id="L176" title="2 of 4 branches missed.">        if (solicitud.getNumeroConteos() == null || solicitud.getNumeroConteos() &lt;= 0) {</span>
 <span class="nc" id="L177">            throw new RuntimeException(&quot;Debe especificar un número válido de conteos (mayor a 0)&quot;);</span>
         }
         
-<span class="pc bpc" id="L180" title="2 of 4 branches missed.">        if (solicitud.getNumeroConteos() &lt; 1 || solicitud.getNumeroConteos() &gt; 15) {</span>
-<span class="nc" id="L181">            throw new RuntimeException(&quot;El número de conteos debe estar entre 1 y 15&quot;);</span>
+<span class="pc bpc" id="L180" title="1 of 4 branches missed.">        if (solicitud.getNumeroConteos() &lt; 1 || solicitud.getNumeroConteos() &gt; 15) {</span>
+<span class="fc" id="L181">            throw new RuntimeException(&quot;El número de conteos debe estar entre 1 y 15&quot;);</span>
         }
         
         // Validar fechas de conteos
@@ -191,9 +191,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         }
         
         // Validar días de prefrío según el flag booleano y verificar que haya suficiente tiempo
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (Boolean.TRUE.equals(solicitud.getTienePrefrio())) {</span>
-<span class="nc bnc" id="L195" title="All 4 branches missed.">            if (solicitud.getDiasPrefrio() != null &amp;&amp; solicitud.getDiasPrefrio() &gt; 0) {</span>
-<span class="nc bnc" id="L196" title="All 2 branches missed.">                if (diasPrefrio &lt; 0) {</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (Boolean.TRUE.equals(solicitud.getTienePrefrio())) {</span>
+<span class="pc bpc" id="L195" title="2 of 4 branches missed.">            if (solicitud.getDiasPrefrio() != null &amp;&amp; solicitud.getDiasPrefrio() &gt; 0) {</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">                if (diasPrefrio &lt; 0) {</span>
 <span class="nc" id="L197">                    throw new RuntimeException(&quot;Los días de prefrío deben ser mayores o iguales a 0&quot;);</span>
                 }
             }
@@ -209,9 +209,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
             }
             
             // Validar que la primera fecha de conteo sea posterior a la fecha de germinación
-<span class="pc bpc" id="L212" title="1 of 4 branches missed.">            if (i == 0 &amp;&amp; !fechaConteo.isAfter(solicitud.getFechaGerminacion())) {</span>
-<span class="nc" id="L213">                throw new RuntimeException(&quot;El primer conteo debe realizarse después de la fecha de germinación (fecha mínima: &quot; + </span>
-<span class="nc" id="L214">                    solicitud.getFechaGerminacion().plusDays(1) + &quot;)&quot;);</span>
+<span class="fc bfc" id="L212" title="All 4 branches covered.">            if (i == 0 &amp;&amp; !fechaConteo.isAfter(solicitud.getFechaGerminacion())) {</span>
+<span class="fc" id="L213">                throw new RuntimeException(&quot;El primer conteo debe realizarse después de la fecha de germinación (fecha mínima: &quot; + </span>
+<span class="fc" id="L214">                    solicitud.getFechaGerminacion().plusDays(1) + &quot;)&quot;);</span>
             }
             
             // Validar que esté dentro del rango permitido
@@ -222,9 +222,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
             }
             
             // Validar orden cronológico - debe ser igual o posterior al anterior
-<span class="pc bpc" id="L225" title="1 of 4 branches missed.">            if (i &gt; 0 &amp;&amp; fechaConteo.isBefore(solicitud.getFechaConteos().get(i - 1))) {</span>
-<span class="nc" id="L226">                throw new RuntimeException(&quot;La fecha de conteo &quot; + (i + 1) + </span>
-                    &quot; debe ser igual o posterior a la fecha de conteo &quot; + i);
+<span class="fc bfc" id="L225" title="All 4 branches covered.">            if (i &gt; 0 &amp;&amp; fechaConteo.isBefore(solicitud.getFechaConteos().get(i - 1))) {</span>
+<span class="fc" id="L226">                throw new RuntimeException(&quot;La fecha de conteo &quot; + (i + 1) + </span>
+<span class="fc" id="L227">                    &quot; debe ser igual o posterior a la fecha de conteo &quot; + i);</span>
             }
         }
 <span class="fc" id="L230">    }</span>
@@ -318,9 +318,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L318">                System.out.println(&quot;  Fecha anterior es presente/pasada: &quot; + fechaAnteriorEsPresenteOPasada);</span>
 <span class="fc" id="L319">                System.out.println(&quot;  Fecha nueva es futura: &quot; + fechaNuevaEsFutura);</span>
                 
-<span class="pc bpc" id="L321" title="2 of 4 branches missed.">                if (fechaAnteriorEsPresenteOPasada &amp;&amp; fechaNuevaEsFutura) {</span>
-<span class="nc" id="L322">                    debeReiniciarCamposUltimoConteo = true;</span>
-<span class="nc" id="L323">                    System.out.println(&quot;  ️ Se detectó cambio de fecha último conteo a futuro - se reiniciarán campos&quot;);</span>
+<span class="pc bpc" id="L321" title="1 of 4 branches missed.">                if (fechaAnteriorEsPresenteOPasada &amp;&amp; fechaNuevaEsFutura) {</span>
+<span class="fc" id="L322">                    debeReiniciarCamposUltimoConteo = true;</span>
+<span class="fc" id="L323">                    System.out.println(&quot;  ️ Se detectó cambio de fecha último conteo a futuro - se reiniciarán campos&quot;);</span>
                 }
             }
             
@@ -331,8 +331,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L331">            validarDatosTablaGerm(solicitud, tablaGerm.getGerminacion());</span>
             
             // Si necesitamos reiniciar campos, hacerlo ANTES de actualizar la entidad
-<span class="pc bpc" id="L334" title="1 of 2 branches missed.">            if (debeReiniciarCamposUltimoConteo) {</span>
-<span class="nc" id="L335">                reiniciarCamposUltimoConteo(tablaGerm);</span>
+<span class="fc bfc" id="L334" title="All 2 branches covered.">            if (debeReiniciarCamposUltimoConteo) {</span>
+<span class="fc" id="L335">                reiniciarCamposUltimoConteo(tablaGerm);</span>
             }
             
 <span class="fc" id="L338">            actualizarEntidadDesdeSolicitud(tablaGerm, solicitud);</span>
@@ -469,7 +469,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc bpc" id="L469" title="5 of 6 branches missed.">            if (total != null &amp;&amp; (total &lt; limiteMinimo || total &gt; limiteMaximo)) {</span>
 <span class="nc" id="L470">                repeticionesFueraDeRango.add(&quot;Repetición &quot; + rep.getNumRep() + &quot; (total: &quot; + total + &quot;)&quot;);</span>
             }
-<span class="fc" id="L472">        }</span>
+        }
         
 <span class="pc bpc" id="L474" title="1 of 2 branches missed.">        if (!repeticionesFueraDeRango.isEmpty()) {</span>
 <span class="nc" id="L475">            throw new RuntimeException(&quot;No se puede finalizar la tabla. Las siguientes repeticiones están fuera del rango de tolerancia del 5% (&quot; + </span>
@@ -515,7 +515,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc bpc" id="L515" title="1 of 2 branches missed.">                if (normal == null) {</span>
 <span class="nc" id="L516">                    return false;</span>
                 }
-<span class="fc" id="L518">            }</span>
+            }
             
             // Verificar que al menos algunos valores sean mayores a 0 (que haya datos reales ingresados)
 <span class="fc" id="L521">            boolean tieneValoresIngresados = repeticion.getNormales().stream()</span>
@@ -524,7 +524,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc bpc" id="L524" title="1 of 2 branches missed.">            if (!tieneValoresIngresados) {</span>
 <span class="nc" id="L525">                return false; // La repetición no tiene datos reales ingresados</span>
             }
-<span class="fc" id="L527">        }</span>
+        }
         
 <span class="fc" id="L529">        return true;</span>
     }
@@ -587,31 +587,31 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L587">        Optional&lt;ValoresGerm&gt; valoresIniaOpt = valoresGermRepository.findByTablaGermIdAndInstituto(</span>
 <span class="fc" id="L588">            tablaGerm.getTablaGermID(), Instituto.INIA);</span>
         
-<span class="pc bpc" id="L590" title="1 of 2 branches missed.">        if (valoresIniaOpt.isPresent()) {</span>
-<span class="nc" id="L591">            ValoresGerm valoresInia = valoresIniaOpt.get();</span>
+<span class="fc bfc" id="L590" title="All 2 branches covered.">        if (valoresIniaOpt.isPresent()) {</span>
+<span class="fc" id="L591">            ValoresGerm valoresInia = valoresIniaOpt.get();</span>
             
             // Los valores de INIA son iguales a los porcentajes con redondeo
-<span class="nc bnc" id="L594" title="All 2 branches missed.">            if (tablaGerm.getPorcentajeNormalesConRedondeo() != null) {</span>
-<span class="nc" id="L595">                valoresInia.setNormales(tablaGerm.getPorcentajeNormalesConRedondeo());</span>
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">            if (tablaGerm.getPorcentajeNormalesConRedondeo() != null) {</span>
+<span class="fc" id="L595">                valoresInia.setNormales(tablaGerm.getPorcentajeNormalesConRedondeo());</span>
             }
-<span class="nc bnc" id="L597" title="All 2 branches missed.">            if (tablaGerm.getPorcentajeAnormalesConRedondeo() != null) {</span>
-<span class="nc" id="L598">                valoresInia.setAnormales(tablaGerm.getPorcentajeAnormalesConRedondeo());</span>
+<span class="pc bpc" id="L597" title="1 of 2 branches missed.">            if (tablaGerm.getPorcentajeAnormalesConRedondeo() != null) {</span>
+<span class="fc" id="L598">                valoresInia.setAnormales(tablaGerm.getPorcentajeAnormalesConRedondeo());</span>
             }
-<span class="nc bnc" id="L600" title="All 2 branches missed.">            if (tablaGerm.getPorcentajeDurasConRedondeo() != null) {</span>
-<span class="nc" id="L601">                valoresInia.setDuras(tablaGerm.getPorcentajeDurasConRedondeo());</span>
+<span class="pc bpc" id="L600" title="1 of 2 branches missed.">            if (tablaGerm.getPorcentajeDurasConRedondeo() != null) {</span>
+<span class="fc" id="L601">                valoresInia.setDuras(tablaGerm.getPorcentajeDurasConRedondeo());</span>
             }
-<span class="nc bnc" id="L603" title="All 2 branches missed.">            if (tablaGerm.getPorcentajeFrescasConRedondeo() != null) {</span>
-<span class="nc" id="L604">                valoresInia.setFrescas(tablaGerm.getPorcentajeFrescasConRedondeo());</span>
+<span class="pc bpc" id="L603" title="1 of 2 branches missed.">            if (tablaGerm.getPorcentajeFrescasConRedondeo() != null) {</span>
+<span class="fc" id="L604">                valoresInia.setFrescas(tablaGerm.getPorcentajeFrescasConRedondeo());</span>
             }
-<span class="nc bnc" id="L606" title="All 2 branches missed.">            if (tablaGerm.getPorcentajeMuertasConRedondeo() != null) {</span>
-<span class="nc" id="L607">                valoresInia.setMuertas(tablaGerm.getPorcentajeMuertasConRedondeo());</span>
+<span class="pc bpc" id="L606" title="1 of 2 branches missed.">            if (tablaGerm.getPorcentajeMuertasConRedondeo() != null) {</span>
+<span class="fc" id="L607">                valoresInia.setMuertas(tablaGerm.getPorcentajeMuertasConRedondeo());</span>
             }
             
             // Calcular germinación como la suma de normales
-<span class="nc bnc" id="L611" title="All 2 branches missed.">            valoresInia.setGerminacion(tablaGerm.getPorcentajeNormalesConRedondeo() != null ? </span>
-<span class="nc" id="L612">                tablaGerm.getPorcentajeNormalesConRedondeo() : BigDecimal.ZERO);</span>
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">            valoresInia.setGerminacion(tablaGerm.getPorcentajeNormalesConRedondeo() != null ? </span>
+<span class="pc" id="L612">                tablaGerm.getPorcentajeNormalesConRedondeo() : BigDecimal.ZERO);</span>
             
-<span class="nc" id="L614">            valoresGermRepository.save(valoresInia);</span>
+<span class="fc" id="L614">            valoresGermRepository.save(valoresInia);</span>
         }
 <span class="fc" id="L616">    }</span>
 
@@ -640,7 +640,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc bpc" id="L640" title="1 of 2 branches missed.">        if (Boolean.TRUE.equals(solicitud.getTienePrefrio())) {</span>
 <span class="nc" id="L641">            tablaGerm.setDescripcionPrefrio(solicitud.getDescripcionPrefrio());</span>
 <span class="nc bnc" id="L642" title="All 2 branches missed.">            tablaGerm.setDiasPrefrio(solicitud.getDiasPrefrio() != null ? solicitud.getDiasPrefrio() : 0);</span>
-        } else {
+<span class="nc" id="L643">        } else {</span>
 <span class="fc" id="L644">            tablaGerm.setDescripcionPrefrio(null);</span>
 <span class="fc" id="L645">            tablaGerm.setDiasPrefrio(0);</span>
         }
@@ -648,7 +648,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L648">        tablaGerm.setTienePretratamiento(solicitud.getTienePretratamiento());</span>
 <span class="pc bpc" id="L649" title="1 of 2 branches missed.">        if (Boolean.TRUE.equals(solicitud.getTienePretratamiento())) {</span>
 <span class="nc" id="L650">            tablaGerm.setDescripcionPretratamiento(solicitud.getDescripcionPretratamiento());</span>
-        } else {
+<span class="nc" id="L651">        } else {</span>
 <span class="fc" id="L652">            tablaGerm.setDescripcionPretratamiento(null);</span>
         }
         
@@ -679,86 +679,86 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         
         // Campos Boolean para prefrío y pretratamiento con lógica condicional
 <span class="fc" id="L681">        tablaGerm.setTienePrefrio(solicitud.getTienePrefrio());</span>
-<span class="pc bpc" id="L682" title="1 of 2 branches missed.">        if (Boolean.TRUE.equals(solicitud.getTienePrefrio())) {</span>
-<span class="nc" id="L683">            tablaGerm.setDescripcionPrefrio(solicitud.getDescripcionPrefrio());</span>
-<span class="nc bnc" id="L684" title="All 2 branches missed.">            tablaGerm.setDiasPrefrio(solicitud.getDiasPrefrio() != null ? solicitud.getDiasPrefrio() : 0);</span>
-        } else {
+<span class="fc bfc" id="L682" title="All 2 branches covered.">        if (Boolean.TRUE.equals(solicitud.getTienePrefrio())) {</span>
+<span class="fc" id="L683">            tablaGerm.setDescripcionPrefrio(solicitud.getDescripcionPrefrio());</span>
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">            tablaGerm.setDiasPrefrio(solicitud.getDiasPrefrio() != null ? solicitud.getDiasPrefrio() : 0);</span>
+<span class="fc" id="L685">        } else {</span>
 <span class="fc" id="L686">            tablaGerm.setDescripcionPrefrio(null);</span>
 <span class="fc" id="L687">            tablaGerm.setDiasPrefrio(0);</span>
         }
         
 <span class="fc" id="L690">        tablaGerm.setTienePretratamiento(solicitud.getTienePretratamiento());</span>
-<span class="pc bpc" id="L691" title="1 of 2 branches missed.">        if (Boolean.TRUE.equals(solicitud.getTienePretratamiento())) {</span>
-<span class="nc" id="L692">            tablaGerm.setDescripcionPretratamiento(solicitud.getDescripcionPretratamiento());</span>
-        } else {
+<span class="fc bfc" id="L691" title="All 2 branches covered.">        if (Boolean.TRUE.equals(solicitud.getTienePretratamiento())) {</span>
+<span class="fc" id="L692">            tablaGerm.setDescripcionPretratamiento(solicitud.getDescripcionPretratamiento());</span>
+<span class="fc" id="L693">        } else {</span>
 <span class="fc" id="L694">            tablaGerm.setDescripcionPretratamiento(null);</span>
         };
         
         // Manejar cambios en el número de conteos
 <span class="pc bpc" id="L698" title="2 of 4 branches missed.">        if (solicitud.getNumeroConteos() != null &amp;&amp; tablaGerm.getNumeroConteos() != null &amp;&amp;</span>
-<span class="pc bpc" id="L699" title="1 of 2 branches missed.">            !solicitud.getNumeroConteos().equals(tablaGerm.getNumeroConteos())) {</span>
+<span class="fc bfc" id="L699" title="All 2 branches covered.">            !solicitud.getNumeroConteos().equals(tablaGerm.getNumeroConteos())) {</span>
             
-<span class="nc" id="L701">            Integer conteosAnteriores = tablaGerm.getNumeroConteos();</span>
-<span class="nc" id="L702">            Integer conteosNuevos = solicitud.getNumeroConteos();</span>
+<span class="fc" id="L701">            Integer conteosAnteriores = tablaGerm.getNumeroConteos();</span>
+<span class="fc" id="L702">            Integer conteosNuevos = solicitud.getNumeroConteos();</span>
             
-<span class="nc" id="L704">            System.out.println(&quot; Cambio en número de conteos detectado: &quot; + conteosAnteriores + &quot; -&gt; &quot; + conteosNuevos);</span>
+<span class="fc" id="L704">            System.out.println(&quot; Cambio en número de conteos detectado: &quot; + conteosAnteriores + &quot; -&gt; &quot; + conteosNuevos);</span>
             
             // Ajustar el array de normales en todas las repeticiones
-<span class="nc bnc" id="L707" title="All 4 branches missed.">            if (tablaGerm.getRepGerm() != null &amp;&amp; !tablaGerm.getRepGerm().isEmpty()) {</span>
-<span class="nc bnc" id="L708" title="All 2 branches missed.">                for (RepGerm rep : tablaGerm.getRepGerm()) {</span>
-<span class="nc bnc" id="L709" title="All 2 branches missed.">                    List&lt;Integer&gt; normalesActuales = rep.getNormales() != null ? </span>
-<span class="nc" id="L710">                        new ArrayList&lt;&gt;(rep.getNormales()) : new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L707" title="2 of 4 branches missed.">            if (tablaGerm.getRepGerm() != null &amp;&amp; !tablaGerm.getRepGerm().isEmpty()) {</span>
+<span class="fc bfc" id="L708" title="All 2 branches covered.">                for (RepGerm rep : tablaGerm.getRepGerm()) {</span>
+<span class="pc bpc" id="L709" title="1 of 2 branches missed.">                    List&lt;Integer&gt; normalesActuales = rep.getNormales() != null ? </span>
+<span class="pc" id="L710">                        new ArrayList&lt;&gt;(rep.getNormales()) : new ArrayList&lt;&gt;();</span>
                     
-<span class="nc bnc" id="L712" title="All 2 branches missed.">                    if (conteosNuevos &gt; conteosAnteriores) {</span>
+<span class="fc bfc" id="L712" title="All 2 branches covered.">                    if (conteosNuevos &gt; conteosAnteriores) {</span>
                         // Agregar conteos al final (inicializados en 0)
-<span class="nc" id="L714">                        int conteosAAgregar = conteosNuevos - conteosAnteriores;</span>
-<span class="nc bnc" id="L715" title="All 2 branches missed.">                        for (int i = 0; i &lt; conteosAAgregar; i++) {</span>
-<span class="nc" id="L716">                            normalesActuales.add(0);</span>
+<span class="fc" id="L714">                        int conteosAAgregar = conteosNuevos - conteosAnteriores;</span>
+<span class="fc bfc" id="L715" title="All 2 branches covered.">                        for (int i = 0; i &lt; conteosAAgregar; i++) {</span>
+<span class="fc" id="L716">                            normalesActuales.add(0);</span>
                         }
-<span class="nc" id="L718">                        System.out.println(&quot;   Repetición &quot; + rep.getNumRep() + &quot;: agregados &quot; + conteosAAgregar + &quot; conteos al final&quot;);</span>
-<span class="nc" id="L719">                    } else {</span>
+<span class="fc" id="L718">                        System.out.println(&quot;   Repetición &quot; + rep.getNumRep() + &quot;: agregados &quot; + conteosAAgregar + &quot; conteos al final&quot;);</span>
+<span class="fc" id="L719">                    } else {</span>
                         // Eliminar conteos desde el final
-<span class="nc" id="L721">                        int conteosAEliminar = conteosAnteriores - conteosNuevos;</span>
-<span class="nc bnc" id="L722" title="All 4 branches missed.">                        for (int i = 0; i &lt; conteosAEliminar &amp;&amp; !normalesActuales.isEmpty(); i++) {</span>
-<span class="nc" id="L723">                            normalesActuales.remove(normalesActuales.size() - 1);</span>
+<span class="fc" id="L721">                        int conteosAEliminar = conteosAnteriores - conteosNuevos;</span>
+<span class="pc bpc" id="L722" title="1 of 4 branches missed.">                        for (int i = 0; i &lt; conteosAEliminar &amp;&amp; !normalesActuales.isEmpty(); i++) {</span>
+<span class="fc" id="L723">                            normalesActuales.remove(normalesActuales.size() - 1);</span>
                         }
-<span class="nc" id="L725">                        System.out.println(&quot;   Repetición &quot; + rep.getNumRep() + &quot;: eliminados &quot; + conteosAEliminar + &quot; conteos desde el final&quot;);</span>
+<span class="fc" id="L725">                        System.out.println(&quot;   Repetición &quot; + rep.getNumRep() + &quot;: eliminados &quot; + conteosAEliminar + &quot; conteos desde el final&quot;);</span>
                     }
                     
-<span class="nc" id="L728">                    rep.setNormales(normalesActuales);</span>
-<span class="nc" id="L729">                    repGermRepository.save(rep);</span>
-<span class="nc" id="L730">                }</span>
+<span class="fc" id="L728">                    rep.setNormales(normalesActuales);</span>
+<span class="fc" id="L729">                    repGermRepository.save(rep);</span>
+                }
             }
             
             // Actualizar el número de conteos en la tabla
-<span class="nc" id="L734">            tablaGerm.setNumeroConteos(conteosNuevos);</span>
+<span class="fc" id="L734">            tablaGerm.setNumeroConteos(conteosNuevos);</span>
         }
         
         // Manejar cambios en el número de repeticiones
 <span class="pc bpc" id="L738" title="2 of 4 branches missed.">        if (solicitud.getNumeroRepeticiones() != null &amp;&amp; tablaGerm.getNumeroRepeticiones() != null &amp;&amp;</span>
-<span class="pc bpc" id="L739" title="1 of 2 branches missed.">            !solicitud.getNumeroRepeticiones().equals(tablaGerm.getNumeroRepeticiones())) {</span>
+<span class="fc bfc" id="L739" title="All 2 branches covered.">            !solicitud.getNumeroRepeticiones().equals(tablaGerm.getNumeroRepeticiones())) {</span>
             
-<span class="nc" id="L741">            Integer repeticionesAnteriores = tablaGerm.getNumeroRepeticiones();</span>
-<span class="nc" id="L742">            Integer repeticionesNuevas = solicitud.getNumeroRepeticiones();</span>
+<span class="fc" id="L741">            Integer repeticionesAnteriores = tablaGerm.getNumeroRepeticiones();</span>
+<span class="fc" id="L742">            Integer repeticionesNuevas = solicitud.getNumeroRepeticiones();</span>
             
-<span class="nc" id="L744">            System.out.println(&quot; Cambio en número de repeticiones detectado: &quot; + repeticionesAnteriores + &quot; -&gt; &quot; + repeticionesNuevas);</span>
+<span class="fc" id="L744">            System.out.println(&quot; Cambio en número de repeticiones detectado: &quot; + repeticionesAnteriores + &quot; -&gt; &quot; + repeticionesNuevas);</span>
             
-<span class="nc bnc" id="L746" title="All 2 branches missed.">            if (repeticionesNuevas &lt; repeticionesAnteriores) {</span>
+<span class="pc bpc" id="L746" title="1 of 2 branches missed.">            if (repeticionesNuevas &lt; repeticionesAnteriores) {</span>
                 // Eliminar repeticiones desde el final
-<span class="nc" id="L748">                List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());</span>
-<span class="nc" id="L749">                repeticiones.sort((r1, r2) -&gt; Integer.compare(r2.getNumRep(), r1.getNumRep())); // Ordenar descendente</span>
+<span class="fc" id="L748">                List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());</span>
+<span class="fc" id="L749">                repeticiones.sort((r1, r2) -&gt; Integer.compare(r2.getNumRep(), r1.getNumRep())); // Ordenar descendente</span>
                 
-<span class="nc" id="L751">                int repeticionesAEliminar = repeticionesAnteriores - repeticionesNuevas;</span>
-<span class="nc bnc" id="L752" title="All 4 branches missed.">                for (int i = 0; i &lt; repeticionesAEliminar &amp;&amp; i &lt; repeticiones.size(); i++) {</span>
-<span class="nc" id="L753">                    RepGerm repAEliminar = repeticiones.get(i);</span>
-<span class="nc" id="L754">                    System.out.println(&quot;  ️ Eliminando repetición &quot; + repAEliminar.getNumRep());</span>
-<span class="nc" id="L755">                    repGermRepository.delete(repAEliminar);</span>
+<span class="fc" id="L751">                int repeticionesAEliminar = repeticionesAnteriores - repeticionesNuevas;</span>
+<span class="pc bpc" id="L752" title="1 of 4 branches missed.">                for (int i = 0; i &lt; repeticionesAEliminar &amp;&amp; i &lt; repeticiones.size(); i++) {</span>
+<span class="fc" id="L753">                    RepGerm repAEliminar = repeticiones.get(i);</span>
+<span class="fc" id="L754">                    System.out.println(&quot;  ️ Eliminando repetición &quot; + repAEliminar.getNumRep());</span>
+<span class="fc" id="L755">                    repGermRepository.delete(repAEliminar);</span>
                 }
             }
             // Si se aumentan las repeticiones, el usuario las creará manualmente
             
             // Actualizar el número de repeticiones en la tabla
-<span class="nc" id="L761">            tablaGerm.setNumeroRepeticiones(repeticionesNuevas);</span>
+<span class="fc" id="L761">            tablaGerm.setNumeroRepeticiones(repeticionesNuevas);</span>
         }
         
         // Actualizar fechas de conteos si se proporcionan
@@ -766,25 +766,25 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
             // Verificar si alguna fecha cambió
 <span class="fc" id="L767">            boolean fechasCambiaron = false;</span>
 <span class="pc bpc" id="L768" title="1 of 2 branches missed.">            if (tablaGerm.getFechaConteos() == null || </span>
-<span class="pc bpc" id="L769" title="1 of 2 branches missed.">                tablaGerm.getFechaConteos().size() != solicitud.getFechaConteos().size()) {</span>
-<span class="nc" id="L770">                fechasCambiaron = true;</span>
-            } else {
+<span class="fc bfc" id="L769" title="All 2 branches covered.">                tablaGerm.getFechaConteos().size() != solicitud.getFechaConteos().size()) {</span>
+<span class="fc" id="L770">                fechasCambiaron = true;</span>
+<span class="fc" id="L771">            } else {</span>
 <span class="fc bfc" id="L772" title="All 2 branches covered.">                for (int i = 0; i &lt; solicitud.getFechaConteos().size(); i++) {</span>
-<span class="pc bpc" id="L773" title="1 of 2 branches missed.">                    if (!solicitud.getFechaConteos().get(i).equals(tablaGerm.getFechaConteos().get(i))) {</span>
-<span class="nc" id="L774">                        fechasCambiaron = true;</span>
+<span class="fc bfc" id="L773" title="All 2 branches covered.">                    if (!solicitud.getFechaConteos().get(i).equals(tablaGerm.getFechaConteos().get(i))) {</span>
+<span class="fc" id="L774">                        fechasCambiaron = true;</span>
                         // Verificar si la nueva fecha es posterior a la original
-<span class="nc bnc" id="L776" title="All 2 branches missed.">                        if (solicitud.getFechaConteos().get(i).isAfter(tablaGerm.getFechaConteos().get(i))) {</span>
+<span class="fc bfc" id="L776" title="All 2 branches covered.">                        if (solicitud.getFechaConteos().get(i).isAfter(tablaGerm.getFechaConteos().get(i))) {</span>
                             // Reiniciar datos de las repeticiones para este conteo
-<span class="nc" id="L778">                            reiniciarDatosConteo(tablaGerm, i);</span>
+<span class="fc" id="L778">                            reiniciarDatosConteo(tablaGerm, i);</span>
                         }
                     }
                 }
             }
             
-<span class="pc bpc" id="L784" title="1 of 2 branches missed.">            if (fechasCambiaron) {</span>
+<span class="fc bfc" id="L784" title="All 2 branches covered.">            if (fechasCambiaron) {</span>
                 // Validar las nuevas fechas
-<span class="nc" id="L786">                validarFechasConteosEnEdicion(solicitud, tablaGerm);</span>
-<span class="nc" id="L787">                tablaGerm.setFechaConteos(solicitud.getFechaConteos());</span>
+<span class="fc" id="L786">                validarFechasConteosEnEdicion(solicitud, tablaGerm);</span>
+<span class="fc" id="L787">                tablaGerm.setFechaConteos(solicitud.getFechaConteos());</span>
             }
         }
         
@@ -806,7 +806,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         }
         
         // Actualizar días de prefrío
-<span class="pc bpc" id="L809" title="1 of 2 branches missed.">        if (solicitud.getDiasPrefrio() != null) {</span>
+<span class="fc bfc" id="L809" title="All 2 branches covered.">        if (solicitud.getDiasPrefrio() != null) {</span>
 <span class="fc" id="L810">            tablaGerm.setDiasPrefrio(solicitud.getDiasPrefrio());</span>
         }
 <span class="fc" id="L812">    }</span>
@@ -815,54 +815,54 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
      * Reiniciar datos de un conteo específico en todas las repeticiones
      */
     private void reiniciarDatosConteo(TablaGerm tablaGerm, int indiceConteo) {
-<span class="nc bnc" id="L818" title="All 2 branches missed.">        if (tablaGerm.getRepGerm() != null) {</span>
-<span class="nc bnc" id="L819" title="All 2 branches missed.">            for (RepGerm rep : tablaGerm.getRepGerm()) {</span>
-<span class="nc bnc" id="L820" title="All 4 branches missed.">                if (rep.getNormales() != null &amp;&amp; indiceConteo &lt; rep.getNormales().size()) {</span>
-<span class="nc" id="L821">                    rep.getNormales().set(indiceConteo, 0);</span>
-<span class="nc" id="L822">                    repGermRepository.save(rep);</span>
+<span class="fc bfc" id="L818" title="All 2 branches covered.">        if (tablaGerm.getRepGerm() != null) {</span>
+<span class="fc bfc" id="L819" title="All 2 branches covered.">            for (RepGerm rep : tablaGerm.getRepGerm()) {</span>
+<span class="pc bpc" id="L820" title="2 of 4 branches missed.">                if (rep.getNormales() != null &amp;&amp; indiceConteo &lt; rep.getNormales().size()) {</span>
+<span class="fc" id="L821">                    rep.getNormales().set(indiceConteo, 0);</span>
+<span class="fc" id="L822">                    repGermRepository.save(rep);</span>
                 }
-<span class="nc" id="L824">            }</span>
+            }
         }
-<span class="nc" id="L826">    }</span>
+<span class="fc" id="L826">    }</span>
     
     /**
      * Reiniciar campos del último conteo (anormales, duras, frescas, muertas) cuando 
      * la fecha de último conteo cambia de presente/pasada a futura
      */
     private void reiniciarCamposUltimoConteo(TablaGerm tablaGerm) {
-<span class="nc" id="L833">        System.out.println(&quot; Reiniciando campos del último conteo para tabla ID: &quot; + tablaGerm.getTablaGermID());</span>
+<span class="fc" id="L833">        System.out.println(&quot; Reiniciando campos del último conteo para tabla ID: &quot; + tablaGerm.getTablaGermID());</span>
         
         // Cargar repeticiones explícitamente desde la base de datos
-<span class="nc" id="L836">        List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());</span>
+<span class="fc" id="L836">        List&lt;RepGerm&gt; repeticiones = repGermRepository.findByTablaGermId(tablaGerm.getTablaGermID());</span>
         
-<span class="nc" id="L838">        System.out.println(&quot;   Repeticiones encontradas: &quot; + repeticiones.size());</span>
+<span class="fc" id="L838">        System.out.println(&quot;   Repeticiones encontradas: &quot; + repeticiones.size());</span>
         
-<span class="nc bnc" id="L840" title="All 4 branches missed.">        if (repeticiones != null &amp;&amp; !repeticiones.isEmpty()) {</span>
-<span class="nc bnc" id="L841" title="All 2 branches missed.">            for (RepGerm rep : repeticiones) {</span>
-<span class="nc" id="L842">                System.out.println(&quot;   Limpiando repetición &quot; + rep.getNumRep() + </span>
-<span class="nc" id="L843">                    &quot; (ID: &quot; + rep.getRepGermID() + &quot;)&quot; +</span>
-<span class="nc" id="L844">                    &quot; - Valores anteriores: anormales=&quot; + rep.getAnormales() + </span>
-<span class="nc" id="L845">                    &quot;, duras=&quot; + rep.getDuras() + </span>
-<span class="nc" id="L846">                    &quot;, frescas=&quot; + rep.getFrescas() + </span>
-<span class="nc" id="L847">                    &quot;, muertas=&quot; + rep.getMuertas());</span>
+<span class="pc bpc" id="L840" title="2 of 4 branches missed.">        if (repeticiones != null &amp;&amp; !repeticiones.isEmpty()) {</span>
+<span class="fc bfc" id="L841" title="All 2 branches covered.">            for (RepGerm rep : repeticiones) {</span>
+<span class="fc" id="L842">                System.out.println(&quot;   Limpiando repetición &quot; + rep.getNumRep() + </span>
+<span class="fc" id="L843">                    &quot; (ID: &quot; + rep.getRepGermID() + &quot;)&quot; +</span>
+<span class="fc" id="L844">                    &quot; - Valores anteriores: anormales=&quot; + rep.getAnormales() + </span>
+<span class="fc" id="L845">                    &quot;, duras=&quot; + rep.getDuras() + </span>
+<span class="fc" id="L846">                    &quot;, frescas=&quot; + rep.getFrescas() + </span>
+<span class="fc" id="L847">                    &quot;, muertas=&quot; + rep.getMuertas());</span>
                 
                 // Establecer todos los campos del último conteo a 0
-<span class="nc" id="L850">                rep.setAnormales(0);</span>
-<span class="nc" id="L851">                rep.setDuras(0);</span>
-<span class="nc" id="L852">                rep.setFrescas(0);</span>
-<span class="nc" id="L853">                rep.setMuertas(0);</span>
+<span class="fc" id="L850">                rep.setAnormales(0);</span>
+<span class="fc" id="L851">                rep.setDuras(0);</span>
+<span class="fc" id="L852">                rep.setFrescas(0);</span>
+<span class="fc" id="L853">                rep.setMuertas(0);</span>
                 
-<span class="nc" id="L855">                RepGerm repGuardada = repGermRepository.save(rep);</span>
-<span class="nc" id="L856">                System.out.println(&quot;   Repetición &quot; + rep.getNumRep() + &quot; limpiada - Nuevos valores: anormales=&quot; + </span>
-<span class="nc" id="L857">                    repGuardada.getAnormales() + &quot;, duras=&quot; + repGuardada.getDuras() + </span>
-<span class="nc" id="L858">                    &quot;, frescas=&quot; + repGuardada.getFrescas() + &quot;, muertas=&quot; + repGuardada.getMuertas());</span>
-<span class="nc" id="L859">            }</span>
-        } else {
+<span class="fc" id="L855">                RepGerm repGuardada = repGermRepository.save(rep);</span>
+<span class="fc" id="L856">                System.out.println(&quot;   Repetición &quot; + rep.getNumRep() + &quot; limpiada - Nuevos valores: anormales=&quot; + </span>
+<span class="fc" id="L857">                    repGuardada.getAnormales() + &quot;, duras=&quot; + repGuardada.getDuras() + </span>
+<span class="fc" id="L858">                    &quot;, frescas=&quot; + repGuardada.getFrescas() + &quot;, muertas=&quot; + repGuardada.getMuertas());</span>
+            }
+<span class="fc" id="L860">        } else {</span>
 <span class="nc" id="L861">            System.out.println(&quot;  ️ No se encontraron repeticiones para limpiar&quot;);</span>
         }
         
-<span class="nc" id="L864">        System.out.println(&quot; Campos del último conteo reiniciados completamente&quot;);</span>
-<span class="nc" id="L865">    }</span>
+<span class="fc" id="L864">        System.out.println(&quot; Campos del último conteo reiniciados completamente&quot;);</span>
+<span class="fc" id="L865">    }</span>
     
     /**
      * Validar fechas de conteos en edición
@@ -870,18 +870,18 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
     private void validarFechasConteosEnEdicion(TablaGermRequestDTO solicitud, TablaGerm tablaExistente) {
         // Aplicar las mismas validaciones que en creación
         // Los días de prefrío se cuentan entre fechaIngreso y fechaGerminacion
-<span class="nc bnc" id="L873" title="All 2 branches missed.">        java.time.LocalDate fechaGerminacion = solicitud.getFechaGerminacion() != null ? </span>
-<span class="nc" id="L874">            solicitud.getFechaGerminacion() : tablaExistente.getFechaGerminacion();</span>
+<span class="pc bpc" id="L873" title="1 of 2 branches missed.">        java.time.LocalDate fechaGerminacion = solicitud.getFechaGerminacion() != null ? </span>
+<span class="pc" id="L874">            solicitud.getFechaGerminacion() : tablaExistente.getFechaGerminacion();</span>
         
-<span class="nc bnc" id="L876" title="All 2 branches missed.">        for (int i = 0; i &lt; solicitud.getFechaConteos().size(); i++) {</span>
-<span class="nc" id="L877">            java.time.LocalDate fechaConteo = solicitud.getFechaConteos().get(i);</span>
+<span class="fc bfc" id="L876" title="All 2 branches covered.">        for (int i = 0; i &lt; solicitud.getFechaConteos().size(); i++) {</span>
+<span class="fc" id="L877">            java.time.LocalDate fechaConteo = solicitud.getFechaConteos().get(i);</span>
             
-<span class="nc bnc" id="L879" title="All 4 branches missed.">            if (i == 0 &amp;&amp; !fechaConteo.isAfter(fechaGerminacion)) {</span>
+<span class="pc bpc" id="L879" title="1 of 4 branches missed.">            if (i == 0 &amp;&amp; !fechaConteo.isAfter(fechaGerminacion)) {</span>
 <span class="nc" id="L880">                throw new RuntimeException(&quot;El primer conteo debe realizarse después de la fecha de germinación (fecha mínima: &quot; + </span>
 <span class="nc" id="L881">                    fechaGerminacion.plusDays(1) + &quot;)&quot;);</span>
             }
         }
-<span class="nc" id="L884">    }</span>
+<span class="fc" id="L884">    }</span>
 
     // Mapear de Entity a DTO
     private TablaGermDTO mapearEntidadADTO(TablaGerm tablaGerm) {
@@ -909,11 +909,11 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L909">        dto.setPorcentajeMuertasConRedondeo(tablaGerm.getPorcentajeMuertasConRedondeo());</span>
         
         // Mapear ValoresGerm
-<span class="pc bpc" id="L912" title="1 of 2 branches missed.">        if (tablaGerm.getValoresGerm() != null) {</span>
-<span class="nc" id="L913">            List&lt;ValoresGermDTO&gt; valoresDTO = tablaGerm.getValoresGerm().stream()</span>
-<span class="nc" id="L914">                .map(this::mapearValoresGermADTO)</span>
-<span class="nc" id="L915">                .collect(Collectors.toList());</span>
-<span class="nc" id="L916">            dto.setValoresGerm(valoresDTO);</span>
+<span class="fc bfc" id="L912" title="All 2 branches covered.">        if (tablaGerm.getValoresGerm() != null) {</span>
+<span class="fc" id="L913">            List&lt;ValoresGermDTO&gt; valoresDTO = tablaGerm.getValoresGerm().stream()</span>
+<span class="fc" id="L914">                .map(this::mapearValoresGermADTO)</span>
+<span class="fc" id="L915">                .collect(Collectors.toList());</span>
+<span class="fc" id="L916">            dto.setValoresGerm(valoresDTO);</span>
         }
         
 <span class="fc" id="L919">        dto.setFechaFinal(tablaGerm.getFechaFinal());</span>
@@ -964,17 +964,17 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
     // Mapear ValoresGerm a DTO
     private ValoresGermDTO mapearValoresGermADTO(ValoresGerm valores) {
-<span class="nc" id="L967">        ValoresGermDTO dto = new ValoresGermDTO();</span>
-<span class="nc" id="L968">        dto.setValoresGermID(valores.getValoresGermID());</span>
-<span class="nc" id="L969">        dto.setInstituto(valores.getInstituto());</span>
-<span class="nc" id="L970">        dto.setNormales(valores.getNormales());</span>
-<span class="nc" id="L971">        dto.setAnormales(valores.getAnormales());</span>
-<span class="nc" id="L972">        dto.setDuras(valores.getDuras());</span>
-<span class="nc" id="L973">        dto.setFrescas(valores.getFrescas());</span>
-<span class="nc" id="L974">        dto.setMuertas(valores.getMuertas());</span>
-<span class="nc" id="L975">        dto.setGerminacion(valores.getGerminacion());</span>
-<span class="nc" id="L976">        dto.setTablaGermId(valores.getTablaGerm().getTablaGermID());</span>
-<span class="nc" id="L977">        return dto;</span>
+<span class="fc" id="L967">        ValoresGermDTO dto = new ValoresGermDTO();</span>
+<span class="fc" id="L968">        dto.setValoresGermID(valores.getValoresGermID());</span>
+<span class="fc" id="L969">        dto.setInstituto(valores.getInstituto());</span>
+<span class="fc" id="L970">        dto.setNormales(valores.getNormales());</span>
+<span class="fc" id="L971">        dto.setAnormales(valores.getAnormales());</span>
+<span class="fc" id="L972">        dto.setDuras(valores.getDuras());</span>
+<span class="fc" id="L973">        dto.setFrescas(valores.getFrescas());</span>
+<span class="fc" id="L974">        dto.setMuertas(valores.getMuertas());</span>
+<span class="fc" id="L975">        dto.setGerminacion(valores.getGerminacion());</span>
+<span class="fc" id="L976">        dto.setTablaGermId(valores.getTablaGerm().getTablaGermID());</span>
+<span class="fc" id="L977">        return dto;</span>
     }
     
     // Calcular y actualizar totales automáticamente
@@ -990,7 +990,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         
         // El total es la suma de todos los totales de las repeticiones
 <span class="fc" id="L992">        int totalCalculado = repeticiones.stream()</span>
-<span class="pc bnc" id="L993" title="All 2 branches missed.">            .mapToInt(rep -&gt; rep.getTotal() != null ? rep.getTotal().intValue() : 0)</span>
+<span class="pc bpc" id="L993" title="1 of 2 branches missed.">            .mapToInt(rep -&gt; rep.getTotal() != null ? rep.getTotal().intValue() : 0)</span>
 <span class="fc" id="L994">            .sum();</span>
             
 <span class="fc" id="L996">        tablaGerm.setTotal(totalCalculado);</span>

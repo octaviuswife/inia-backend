@@ -24,60 +24,60 @@ import java.util.Optional;
 
     public Optional&lt;Usuario&gt; autenticarUsuario(String usuarioOrEmail, String password) {
         // Intentar buscar por nombre de usuario primero
-<span class="nc" id="L27">        Optional&lt;Usuario&gt; objUsuario = usuarioRepository.findByNombreIgnoreCase(usuarioOrEmail);</span>
+<span class="fc" id="L27">        Optional&lt;Usuario&gt; objUsuario = usuarioRepository.findByNombreIgnoreCase(usuarioOrEmail);</span>
         
         // Si no se encuentra por nombre, intentar por email
-<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (objUsuario.isEmpty()) {</span>
-<span class="nc" id="L31">            objUsuario = usuarioRepository.findByEmailIgnoreCase(usuarioOrEmail);</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        if (objUsuario.isEmpty()) {</span>
+<span class="fc" id="L31">            objUsuario = usuarioRepository.findByEmailIgnoreCase(usuarioOrEmail);</span>
         }
 
-<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (objUsuario.isEmpty()) {</span>
-<span class="nc" id="L35">            throw new RuntimeException(&quot;USUARIO_INCORRECTO&quot;);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (objUsuario.isEmpty()) {</span>
+<span class="fc" id="L35">            throw new RuntimeException(&quot;USUARIO_INCORRECTO&quot;);</span>
         }
 
-<span class="nc" id="L38">        Usuario usuarioEncontrado = objUsuario.get();</span>
+<span class="fc" id="L38">        Usuario usuarioEncontrado = objUsuario.get();</span>
 
         // Verificar que el usuario esté activo (campo legacy)
-<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (!usuarioEncontrado.getActivo()) {</span>
-<span class="nc" id="L42">            throw new RuntimeException(&quot;USUARIO_INACTIVO&quot;);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (!usuarioEncontrado.getActivo()) {</span>
+<span class="fc" id="L42">            throw new RuntimeException(&quot;USUARIO_INACTIVO&quot;);</span>
         }
 
         // Verificar el estado del usuario
-<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (usuarioEncontrado.getEstado() == EstadoUsuario.PENDIENTE) {</span>
-<span class="nc" id="L47">            throw new RuntimeException(&quot;USUARIO_PENDIENTE_APROBACION&quot;);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (usuarioEncontrado.getEstado() == EstadoUsuario.PENDIENTE) {</span>
+<span class="fc" id="L47">            throw new RuntimeException(&quot;USUARIO_PENDIENTE_APROBACION&quot;);</span>
         }
 
-<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (usuarioEncontrado.getEstado() == EstadoUsuario.INACTIVO) {</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (usuarioEncontrado.getEstado() == EstadoUsuario.INACTIVO) {</span>
 <span class="nc" id="L51">            throw new RuntimeException(&quot;USUARIO_INACTIVO&quot;);</span>
         }
 
         // Verificar que tenga un rol asignado
-<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (usuarioEncontrado.getRol() == null) {</span>
-<span class="nc" id="L56">            throw new RuntimeException(&quot;USUARIO_SIN_ROL&quot;);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (usuarioEncontrado.getRol() == null) {</span>
+<span class="fc" id="L56">            throw new RuntimeException(&quot;USUARIO_SIN_ROL&quot;);</span>
         }
 
-<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (!passwordService.matchPassword(password, usuarioEncontrado.getContrasenia())) {</span>
-<span class="nc" id="L60">            throw new RuntimeException(&quot;CONTRASENIA_INCORRECTA&quot;);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (!passwordService.matchPassword(password, usuarioEncontrado.getContrasenia())) {</span>
+<span class="fc" id="L60">            throw new RuntimeException(&quot;CONTRASENIA_INCORRECTA&quot;);</span>
         }
 
         // Actualizar fecha de última conexión
-<span class="nc" id="L64">        usuarioEncontrado.setFechaUltimaConexion(LocalDateTime.now());</span>
-<span class="nc" id="L65">        usuarioRepository.save(usuarioEncontrado);</span>
+<span class="fc" id="L64">        usuarioEncontrado.setFechaUltimaConexion(LocalDateTime.now());</span>
+<span class="fc" id="L65">        usuarioRepository.save(usuarioEncontrado);</span>
 
-<span class="nc" id="L67">        return objUsuario;</span>
+<span class="fc" id="L67">        return objUsuario;</span>
     }
 
     public String[] listarRolesPorUsuario(Usuario usuario) {
-<span class="nc" id="L71">        List&lt;String&gt; roles = usuario.getRoles();</span>
-<span class="nc" id="L72">        return roles.toArray(new String[0]);</span>
+<span class="fc" id="L71">        List&lt;String&gt; roles = usuario.getRoles();</span>
+<span class="fc" id="L72">        return roles.toArray(new String[0]);</span>
     }
 
     public boolean existeUsuario(String nombreUsuario) {
-<span class="nc" id="L76">        return usuarioRepository.findByNombreIgnoreCase(nombreUsuario).isPresent();</span>
+<span class="fc" id="L76">        return usuarioRepository.findByNombreIgnoreCase(nombreUsuario).isPresent();</span>
     }
 
     public boolean existeEmailActivo(String email) {
-<span class="nc" id="L80">        return usuarioRepository.findByEmailIgnoreCase(email).isPresent();</span>
+<span class="fc" id="L80">        return usuarioRepository.findByEmailIgnoreCase(email).isPresent();</span>
     }
 
     /**
@@ -85,28 +85,28 @@ import java.util.Optional;
      * Usado en endpoints protegidos con @PreAuthorize
      */
     public Integer obtenerUsuarioAutenticado() {
-<span class="nc" id="L88">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="fc" id="L88">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
         
-<span class="nc bnc" id="L90" title="All 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
-<span class="nc" id="L91">            throw new RuntimeException(&quot;No hay usuario autenticado&quot;);</span>
+<span class="fc bfc" id="L90" title="All 4 branches covered.">        if (auth == null || auth.getName() == null) {</span>
+<span class="fc" id="L91">            throw new RuntimeException(&quot;No hay usuario autenticado&quot;);</span>
         }
         
         // El nombre en el Authentication puede ser el username o email
-<span class="nc" id="L95">        String identifier = auth.getName();</span>
+<span class="fc" id="L95">        String identifier = auth.getName();</span>
         
         // Intentar buscar por nombre primero
-<span class="nc" id="L98">        Optional&lt;Usuario&gt; usuario = usuarioRepository.findByNombre(identifier);</span>
+<span class="fc" id="L98">        Optional&lt;Usuario&gt; usuario = usuarioRepository.findByNombre(identifier);</span>
         
         // Si no se encuentra, intentar por email
-<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (usuario.isEmpty()) {</span>
-<span class="nc" id="L102">            usuario = usuarioRepository.findByEmail(identifier);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (usuario.isEmpty()) {</span>
+<span class="fc" id="L102">            usuario = usuarioRepository.findByEmail(identifier);</span>
         }
         
-<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (usuario.isEmpty()) {</span>
-<span class="nc" id="L106">            throw new RuntimeException(&quot;Usuario autenticado no encontrado en base de datos&quot;);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (usuario.isEmpty()) {</span>
+<span class="fc" id="L106">            throw new RuntimeException(&quot;Usuario autenticado no encontrado en base de datos&quot;);</span>
         }
         
-<span class="nc" id="L109">        return usuario.get().getUsuarioID();</span>
+<span class="fc" id="L109">        return usuario.get().getUsuarioID();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -162,5 +162,272 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
 <span class="fc" id="L162">                .with(csrf()))</span>
 <span class="fc" id="L163">                .andExpect(status().isOk());</span>
 <span class="fc" id="L164">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/tipo/{tipo} - Con filtro activo=true&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerPorTipo_conFiltroActivo_debeRetornarSoloActivos() throws Exception {
+<span class="fc" id="L170">        List&lt;CatalogoDTO&gt; catalogos = Arrays.asList(catalogoResponse);</span>
+<span class="fc" id="L171">        when(catalogoService.obtenerPorTipo(&quot;DEPOSITO&quot;, true)).thenReturn(catalogos);</span>
+
+<span class="fc" id="L173">        mockMvc.perform(get(&quot;/api/catalogo/tipo/DEPOSITO&quot;)</span>
+<span class="fc" id="L174">                .param(&quot;activo&quot;, &quot;true&quot;)</span>
+<span class="fc" id="L175">                .with(csrf()))</span>
+<span class="fc" id="L176">                .andExpect(status().isOk())</span>
+<span class="fc" id="L177">                .andExpect(jsonPath(&quot;$[0].activo&quot;).value(true));</span>
+<span class="fc" id="L178">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/tipo/{tipo} - Debe retornar 400 con tipo inválido&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerPorTipo_conTipoInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L184">        when(catalogoService.obtenerPorTipo(&quot;TIPO_INVALIDO&quot;, null))</span>
+<span class="fc" id="L185">                .thenThrow(new IllegalArgumentException(&quot;Tipo inválido&quot;));</span>
+
+<span class="fc" id="L187">        mockMvc.perform(get(&quot;/api/catalogo/tipo/TIPO_INVALIDO&quot;)</span>
+<span class="fc" id="L188">                .with(csrf()))</span>
+<span class="fc" id="L189">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L190">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/{id} - Debe retornar 404 si no existe&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerPorId_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L196">        when(catalogoService.obtenerPorId(999L)).thenReturn(null);</span>
+
+<span class="fc" id="L198">        mockMvc.perform(get(&quot;/api/catalogo/999&quot;)</span>
+<span class="fc" id="L199">                .with(csrf()))</span>
+<span class="fc" id="L200">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L201">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/catalogo - Debe retornar 400 con tipo inválido&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void crearCatalogo_conTipoInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L207">        when(catalogoService.crear(any(CatalogoRequestDTO.class)))</span>
+<span class="fc" id="L208">                .thenThrow(new IllegalArgumentException(&quot;Tipo inválido&quot;));</span>
+
+<span class="fc" id="L210">        mockMvc.perform(post(&quot;/api/catalogo&quot;)</span>
+<span class="fc" id="L211">                .with(csrf())</span>
+<span class="fc" id="L212">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L213">                .content(objectMapper.writeValueAsString(catalogoRequest)))</span>
+<span class="fc" id="L214">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L215">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/catalogo - Debe retornar 400 con datos duplicados&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void crearCatalogo_conDatosDuplicados_debeRetornar400() throws Exception {
+<span class="fc" id="L221">        when(catalogoService.crear(any(CatalogoRequestDTO.class)))</span>
+<span class="fc" id="L222">                .thenThrow(new RuntimeException(&quot;El valor ya existe&quot;));</span>
+
+<span class="fc" id="L224">        mockMvc.perform(post(&quot;/api/catalogo&quot;)</span>
+<span class="fc" id="L225">                .with(csrf())</span>
+<span class="fc" id="L226">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L227">                .content(objectMapper.writeValueAsString(catalogoRequest)))</span>
+<span class="fc" id="L228">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L229">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/catalogo/{id} - Debe retornar 404 si no existe&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarCatalogo_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L235">        when(catalogoService.actualizar(eq(999L), any(CatalogoRequestDTO.class))).thenReturn(null);</span>
+
+<span class="fc" id="L237">        mockMvc.perform(put(&quot;/api/catalogo/999&quot;)</span>
+<span class="fc" id="L238">                .with(csrf())</span>
+<span class="fc" id="L239">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L240">                .content(objectMapper.writeValueAsString(catalogoRequest)))</span>
+<span class="fc" id="L241">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L242">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/catalogo/{id} - Debe retornar 400 con tipo inválido&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarCatalogo_conTipoInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L248">        when(catalogoService.actualizar(eq(1L), any(CatalogoRequestDTO.class)))</span>
+<span class="fc" id="L249">                .thenThrow(new IllegalArgumentException(&quot;Tipo inválido&quot;));</span>
+
+<span class="fc" id="L251">        mockMvc.perform(put(&quot;/api/catalogo/1&quot;)</span>
+<span class="fc" id="L252">                .with(csrf())</span>
+<span class="fc" id="L253">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L254">                .content(objectMapper.writeValueAsString(catalogoRequest)))</span>
+<span class="fc" id="L255">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L256">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/catalogo/{id} - Debe retornar 400 con error de validación&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarCatalogo_conErrorValidacion_debeRetornar400() throws Exception {
+<span class="fc" id="L262">        when(catalogoService.actualizar(eq(1L), any(CatalogoRequestDTO.class)))</span>
+<span class="fc" id="L263">                .thenThrow(new RuntimeException(&quot;El valor ya existe&quot;));</span>
+
+<span class="fc" id="L265">        mockMvc.perform(put(&quot;/api/catalogo/1&quot;)</span>
+<span class="fc" id="L266">                .with(csrf())</span>
+<span class="fc" id="L267">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L268">                .content(objectMapper.writeValueAsString(catalogoRequest)))</span>
+<span class="fc" id="L269">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L270">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/catalogo/{id}/reactivar - Debe retornar 404 si no existe&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void reactivarCatalogo_conIdInexistente_debeRetornar404() throws Exception {
+<span class="fc" id="L276">        when(catalogoService.reactivar(999L)).thenReturn(null);</span>
+
+<span class="fc" id="L278">        mockMvc.perform(put(&quot;/api/catalogo/999/reactivar&quot;)</span>
+<span class="fc" id="L279">                .with(csrf()))</span>
+<span class="fc" id="L280">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L281">    }</span>
+
+    @Test
+    @DisplayName(&quot;DELETE /api/catalogo/{id}/fisico - Debe eliminar físicamente&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void eliminarFisicamente_conIdValido_debeEliminar() throws Exception {
+<span class="fc" id="L287">        doNothing().when(catalogoService).eliminarFisicamente(1L);</span>
+
+<span class="fc" id="L289">        mockMvc.perform(delete(&quot;/api/catalogo/1/fisico&quot;)</span>
+<span class="fc" id="L290">                .with(csrf()))</span>
+<span class="fc" id="L291">                .andExpect(status().isOk());</span>
+<span class="fc" id="L292">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/humedad - Debe obtener tipos de humedad&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerTiposHumedad_debeRetornarCatalogos() throws Exception {
+<span class="fc" id="L298">        List&lt;CatalogoDTO&gt; catalogos = Arrays.asList(catalogoResponse);</span>
+<span class="fc" id="L299">        when(catalogoService.obtenerPorTipo(&quot;HUMEDAD&quot;, true)).thenReturn(catalogos);</span>
+
+<span class="fc" id="L301">        mockMvc.perform(get(&quot;/api/catalogo/humedad&quot;)</span>
+<span class="fc" id="L302">                .with(csrf()))</span>
+<span class="fc" id="L303">                .andExpect(status().isOk());</span>
+<span class="fc" id="L304">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/articulos - Debe obtener números de artículo&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerNumerosArticulo_debeRetornarCatalogos() throws Exception {
+<span class="fc" id="L310">        List&lt;CatalogoDTO&gt; catalogos = Arrays.asList(catalogoResponse);</span>
+<span class="fc" id="L311">        when(catalogoService.obtenerPorTipo(&quot;ARTICULO&quot;, true)).thenReturn(catalogos);</span>
+
+<span class="fc" id="L313">        mockMvc.perform(get(&quot;/api/catalogo/articulos&quot;)</span>
+<span class="fc" id="L314">                .with(csrf()))</span>
+<span class="fc" id="L315">                .andExpect(status().isOk());</span>
+<span class="fc" id="L316">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/origenes - Debe obtener orígenes&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerOrigenes_debeRetornarCatalogos() throws Exception {
+<span class="fc" id="L322">        List&lt;CatalogoDTO&gt; catalogos = Arrays.asList(catalogoResponse);</span>
+<span class="fc" id="L323">        when(catalogoService.obtenerPorTipo(&quot;ORIGEN&quot;, true)).thenReturn(catalogos);</span>
+
+<span class="fc" id="L325">        mockMvc.perform(get(&quot;/api/catalogo/origenes&quot;)</span>
+<span class="fc" id="L326">                .with(csrf()))</span>
+<span class="fc" id="L327">                .andExpect(status().isOk());</span>
+<span class="fc" id="L328">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/estados - Debe obtener estados&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerEstados_debeRetornarCatalogos() throws Exception {
+<span class="fc" id="L334">        List&lt;CatalogoDTO&gt; catalogos = Arrays.asList(catalogoResponse);</span>
+<span class="fc" id="L335">        when(catalogoService.obtenerPorTipo(&quot;ESTADO&quot;, true)).thenReturn(catalogos);</span>
+
+<span class="fc" id="L337">        mockMvc.perform(get(&quot;/api/catalogo/estados&quot;)</span>
+<span class="fc" id="L338">                .with(csrf()))</span>
+<span class="fc" id="L339">                .andExpect(status().isOk());</span>
+<span class="fc" id="L340">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/depositos - Debe obtener depósitos&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerDepositos_debeRetornarCatalogos() throws Exception {
+<span class="fc" id="L346">        List&lt;CatalogoDTO&gt; catalogos = Arrays.asList(catalogoResponse);</span>
+<span class="fc" id="L347">        when(catalogoService.obtenerPorTipo(&quot;DEPOSITO&quot;, true)).thenReturn(catalogos);</span>
+
+<span class="fc" id="L349">        mockMvc.perform(get(&quot;/api/catalogo/depositos&quot;)</span>
+<span class="fc" id="L350">                .with(csrf()))</span>
+<span class="fc" id="L351">                .andExpect(status().isOk());</span>
+<span class="fc" id="L352">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/unidades-embolsado - Debe obtener unidades de embolsado&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerUnidadesEmbolsado_debeRetornarCatalogos() throws Exception {
+<span class="fc" id="L358">        List&lt;CatalogoDTO&gt; catalogos = Arrays.asList(catalogoResponse);</span>
+<span class="fc" id="L359">        when(catalogoService.obtenerPorTipo(&quot;UNIDAD_EMBOLSADO&quot;, true)).thenReturn(catalogos);</span>
+
+<span class="fc" id="L361">        mockMvc.perform(get(&quot;/api/catalogo/unidades-embolsado&quot;)</span>
+<span class="fc" id="L362">                .with(csrf()))</span>
+<span class="fc" id="L363">                .andExpect(status().isOk());</span>
+<span class="fc" id="L364">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/listado - Debe obtener catálogos paginados sin filtros&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerCatalogosPaginados_sinFiltros_debeRetornarPagina() throws Exception {
+<span class="fc" id="L370">        org.springframework.data.domain.Page&lt;CatalogoDTO&gt; page = </span>
+<span class="fc" id="L371">            new org.springframework.data.domain.PageImpl&lt;&gt;(Arrays.asList(catalogoResponse));</span>
+        
+<span class="fc" id="L373">        when(catalogoService.obtenerCatalogosPaginadosConFiltros(</span>
+<span class="fc" id="L374">                any(org.springframework.data.domain.Pageable.class), </span>
+<span class="fc" id="L375">                eq(null), </span>
+<span class="fc" id="L376">                eq(null), </span>
+<span class="fc" id="L377">                eq(null)))</span>
+<span class="fc" id="L378">            .thenReturn(page);</span>
+
+<span class="fc" id="L380">        mockMvc.perform(get(&quot;/api/catalogo/listado&quot;)</span>
+<span class="fc" id="L381">                .with(csrf()))</span>
+<span class="fc" id="L382">                .andExpect(status().isOk())</span>
+<span class="fc" id="L383">                .andExpect(jsonPath(&quot;$.content&quot;).isArray());</span>
+<span class="fc" id="L384">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/listado - Con búsqueda y filtros&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerCatalogosPaginados_conFiltros_debeRetornarPaginaFiltrada() throws Exception {
+<span class="fc" id="L390">        org.springframework.data.domain.Page&lt;CatalogoDTO&gt; page = </span>
+<span class="fc" id="L391">            new org.springframework.data.domain.PageImpl&lt;&gt;(Arrays.asList(catalogoResponse));</span>
+        
+<span class="fc" id="L393">        when(catalogoService.obtenerCatalogosPaginadosConFiltros(</span>
+<span class="fc" id="L394">                any(org.springframework.data.domain.Pageable.class), </span>
+<span class="fc" id="L395">                eq(&quot;Depósito&quot;), </span>
+<span class="fc" id="L396">                eq(true), </span>
+<span class="fc" id="L397">                eq(&quot;DEPOSITO&quot;)))</span>
+<span class="fc" id="L398">            .thenReturn(page);</span>
+
+<span class="fc" id="L400">        mockMvc.perform(get(&quot;/api/catalogo/listado&quot;)</span>
+<span class="fc" id="L401">                .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L402">                .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L403">                .param(&quot;search&quot;, &quot;Depósito&quot;)</span>
+<span class="fc" id="L404">                .param(&quot;activo&quot;, &quot;true&quot;)</span>
+<span class="fc" id="L405">                .param(&quot;tipo&quot;, &quot;DEPOSITO&quot;)</span>
+<span class="fc" id="L406">                .with(csrf()))</span>
+<span class="fc" id="L407">                .andExpect(status().isOk())</span>
+<span class="fc" id="L408">                .andExpect(jsonPath(&quot;$.content[0].tipo&quot;).value(&quot;DEPOSITO&quot;));</span>
+<span class="fc" id="L409">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/catalogo/listado - Con parámetros personalizados&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerCatalogosPaginados_conParametrosPersonalizados_debeRetornarPagina() throws Exception {
+<span class="fc" id="L415">        org.springframework.data.domain.Page&lt;CatalogoDTO&gt; page = </span>
+<span class="fc" id="L416">            new org.springframework.data.domain.PageImpl&lt;&gt;(Arrays.asList(catalogoResponse));</span>
+        
+<span class="fc" id="L418">        when(catalogoService.obtenerCatalogosPaginadosConFiltros(</span>
+<span class="fc" id="L419">                any(org.springframework.data.domain.Pageable.class), </span>
+<span class="fc" id="L420">                eq(null), </span>
+<span class="fc" id="L421">                eq(false), </span>
+<span class="fc" id="L422">                eq(null)))</span>
+<span class="fc" id="L423">            .thenReturn(page);</span>
+
+<span class="fc" id="L425">        mockMvc.perform(get(&quot;/api/catalogo/listado&quot;)</span>
+<span class="fc" id="L426">                .param(&quot;page&quot;, &quot;1&quot;)</span>
+<span class="fc" id="L427">                .param(&quot;size&quot;, &quot;20&quot;)</span>
+<span class="fc" id="L428">                .param(&quot;activo&quot;, &quot;false&quot;)</span>
+<span class="fc" id="L429">                .with(csrf()))</span>
+<span class="fc" id="L430">                .andExpect(status().isOk());</span>
+<span class="fc" id="L431">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

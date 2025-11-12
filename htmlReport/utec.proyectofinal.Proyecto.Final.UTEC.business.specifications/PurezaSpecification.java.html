@@ -19,7 +19,7 @@ import java.util.List;
      * @return Specification para usar con el repositorio
      */
     public static Specification&lt;Pureza&gt; conFiltros(String searchTerm, Boolean activo, String estado, Long loteId) {
-<span class="nc" id="L22">        return (root, query, criteriaBuilder) -&gt; {</span>
+<span class="fc" id="L22">        return (root, query, criteriaBuilder) -&gt; {</span>
 <span class="nc" id="L23">            List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
 
             // Filtro de búsqueda: busca en ID de análisis y ficha del lote
@@ -53,7 +53,7 @@ import java.util.List;
 <span class="nc" id="L53">                    predicates.add(criteriaBuilder.equal(root.get(&quot;estado&quot;), estadoEnum));</span>
 <span class="nc" id="L54">                } catch (IllegalArgumentException e) {</span>
                     // Estado inválido, ignorar
-<span class="nc" id="L56">                }</span>
+                }
             }
 
             // Filtro por lote

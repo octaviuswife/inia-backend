@@ -249,7 +249,7 @@ import static org.mockito.Mockito.*;
 
         // ACT &amp; ASSERT
 <span class="fc" id="L251">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
-<span class="nc" id="L252">            () -&gt; trustedDeviceService.trustDevice(usuarioId, fingerprint, request));</span>
+<span class="pc" id="L252">            () -&gt; trustedDeviceService.trustDevice(usuarioId, fingerprint, request));</span>
 <span class="fc" id="L253">        assertTrue(exception.getMessage().contains(&quot;Límite de dispositivos&quot;));</span>
 <span class="fc" id="L254">        verify(trustedDeviceRepository, never()).save(any(TrustedDevice.class));</span>
 <span class="fc" id="L255">    }</span>
@@ -262,7 +262,7 @@ import static org.mockito.Mockito.*;
 
         // ACT &amp; ASSERT
 <span class="fc" id="L264">        assertThrows(IllegalArgumentException.class, </span>
-<span class="nc" id="L265">            () -&gt; trustedDeviceService.trustDevice(1, &quot;&quot;, request));</span>
+<span class="pc" id="L265">            () -&gt; trustedDeviceService.trustDevice(1, &quot;&quot;, request));</span>
 <span class="fc" id="L266">        verify(trustedDeviceRepository, never()).save(any(TrustedDevice.class));</span>
 <span class="fc" id="L267">    }</span>
 
@@ -343,7 +343,7 @@ import static org.mockito.Mockito.*;
 
         // ACT &amp; ASSERT
 <span class="fc" id="L345">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
-<span class="nc" id="L346">            () -&gt; trustedDeviceService.revokeDevice(deviceId, usuarioId));</span>
+<span class="pc" id="L346">            () -&gt; trustedDeviceService.revokeDevice(deviceId, usuarioId));</span>
 <span class="fc" id="L347">        assertTrue(exception.getMessage().contains(&quot;No autorizado&quot;));</span>
 <span class="fc" id="L348">        verify(trustedDeviceRepository, never()).save(any(TrustedDevice.class));</span>
 <span class="fc" id="L349">    }</span>
@@ -357,7 +357,7 @@ import static org.mockito.Mockito.*;
 
         // ACT &amp; ASSERT
 <span class="fc" id="L359">        assertThrows(RuntimeException.class, </span>
-<span class="nc" id="L360">            () -&gt; trustedDeviceService.revokeDevice(deviceId, 1));</span>
+<span class="pc" id="L360">            () -&gt; trustedDeviceService.revokeDevice(deviceId, 1));</span>
 <span class="fc" id="L361">    }</span>
 
     @Test

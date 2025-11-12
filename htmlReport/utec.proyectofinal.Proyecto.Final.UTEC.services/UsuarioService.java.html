@@ -82,10 +82,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
         // Crear notificación automática para el nuevo usuario registrado
         try {
 <span class="fc" id="L84">            notificacionService.notificarNuevoUsuario(usuarioGuardado.getUsuarioID().longValue());</span>
-<span class="nc" id="L85">        } catch (Exception e) {</span>
+<span class="pc" id="L85">        } catch (Exception e) {</span>
             // Log error but don't fail the registration
 <span class="nc" id="L87">            System.err.println(&quot;Error creating notification for new user: &quot; + e.getMessage());</span>
-<span class="fc" id="L88">        }</span>
+        }
         
         // Enviar emails
         try {
@@ -106,12 +106,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 <span class="fc" id="L106">                        usuarioGuardado.getEmail()</span>
                     );
                 }
-<span class="fc" id="L109">            }</span>
+            }
             
 <span class="fc" id="L111">            System.out.println(&quot;✉️ Emails enviados: confirmación a usuario y notificación a &quot; + analistas.size() + &quot; analista(s)&quot;);</span>
-<span class="nc" id="L112">        } catch (Exception e) {</span>
+<span class="pc" id="L112">        } catch (Exception e) {</span>
 <span class="nc" id="L113">            System.err.println(&quot;⚠️ Error enviando emails (registro continúa): &quot; + e.getMessage());</span>
-<span class="fc" id="L114">        }</span>
+        }
         
 <span class="fc" id="L116">        return mapearEntidadADTO(usuarioGuardado);</span>
     }
@@ -138,7 +138,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 <span class="pc bpc" id="L138" title="1 of 4 branches missed.">        if (search != null &amp;&amp; !search.trim().isEmpty()) {</span>
             // Búsqueda por nombre de usuario, nombres, apellidos o email
 <span class="fc" id="L140">            usuariosPage = usuarioRepository.findByEstadoAndSearchTerm(EstadoUsuario.PENDIENTE, search, pageable);</span>
-        } else {
+<span class="fc" id="L141">        } else {</span>
 <span class="fc" id="L142">            usuariosPage = usuarioRepository.findByEstado(EstadoUsuario.PENDIENTE, pageable);</span>
         }
         
@@ -165,10 +165,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
         // Crear notificación automática para aprobación de usuario
         try {
 <span class="fc" id="L167">            notificacionService.notificarUsuarioAprobado(usuarioActualizado.getUsuarioID().longValue());</span>
-<span class="nc" id="L168">        } catch (Exception e) {</span>
+<span class="pc" id="L168">        } catch (Exception e) {</span>
             // Log error but don't fail the approval
 <span class="nc" id="L170">            System.err.println(&quot;Error creating notification for user approval: &quot; + e.getMessage());</span>
-<span class="fc" id="L171">        }</span>
+        }
         
         // Enviar email de bienvenida al usuario aprobado
         try {
@@ -177,9 +177,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 <span class="fc" id="L177">                usuarioActualizado.getNombres() + &quot; &quot; + usuarioActualizado.getApellidos()</span>
             );
 <span class="fc" id="L179">            System.out.println(&quot;✉️ Email de bienvenida enviado a: &quot; + usuarioActualizado.getEmail());</span>
-<span class="nc" id="L180">        } catch (Exception e) {</span>
+<span class="pc" id="L180">        } catch (Exception e) {</span>
 <span class="nc" id="L181">            System.err.println(&quot;⚠️ Error enviando email de bienvenida (aprobación continúa): &quot; + e.getMessage());</span>
-<span class="fc" id="L182">        }</span>
+        }
         
 <span class="fc" id="L184">        return mapearEntidadADTO(usuarioActualizado);</span>
     }
@@ -198,10 +198,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
         // Crear notificación automática para rechazo de usuario
         try {
 <span class="fc" id="L200">            notificacionService.notificarUsuarioRechazado(usuario.getUsuarioID().longValue());</span>
-<span class="nc" id="L201">        } catch (Exception e) {</span>
+<span class="pc" id="L201">        } catch (Exception e) {</span>
             // Log error but continue with rejection
 <span class="nc" id="L203">            System.err.println(&quot;Error creating notification for user rejection: &quot; + e.getMessage());</span>
-<span class="fc" id="L204">        }</span>
+        }
 
 <span class="fc" id="L206">        usuarioRepository.delete(usuario);</span>
 <span class="fc" id="L207">    }</span>
@@ -240,7 +240,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 <span class="pc bpc" id="L240" title="1 of 4 branches missed.">        } else if (activo != null &amp;&amp; hasSearch) {</span>
             // Activo + Búsqueda
 <span class="nc" id="L242">            usuariosPage = usuarioRepository.findByActivoAndSearchTerm(activo, search, pageable);</span>
-<span class="fc bfc" id="L243" title="All 2 branches covered.">        } else if (rol != null) {</span>
+<span class="pc bfc" id="L243" title="All 2 branches covered.">        } else if (rol != null) {</span>
             // Solo Rol
 <span class="fc" id="L245">            usuariosPage = usuarioRepository.findByRol(rol, pageable);</span>
 <span class="fc bfc" id="L246" title="All 2 branches covered.">        } else if (activo != null) {</span>
@@ -249,7 +249,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
 <span class="fc bfc" id="L249" title="All 2 branches covered.">        } else if (hasSearch) {</span>
             // Solo Búsqueda
 <span class="fc" id="L251">            usuariosPage = usuarioRepository.findBySearchTerm(search, pageable);</span>
-        } else {
+<span class="fc" id="L252">        } else {</span>
             // Sin filtros
 <span class="fc" id="L254">            usuariosPage = usuarioRepository.findAll(pageable);</span>
         }
@@ -482,7 +482,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol;
         // Mapear rol a array de strings para el frontend
 <span class="fc bfc" id="L483" title="All 2 branches covered.">        if (usuario.getRol() != null) {</span>
 <span class="fc" id="L484">            dto.setRoles(List.of(usuario.getRol().name()));</span>
-        } else {
+<span class="fc" id="L485">        } else {</span>
 <span class="fc" id="L486">            dto.setRoles(List.of());</span>
         }
         

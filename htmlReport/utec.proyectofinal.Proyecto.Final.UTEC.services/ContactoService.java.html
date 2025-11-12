@@ -175,13 +175,13 @@ import java.util.stream.Collectors;
 
         // Validar unicidad del nombre para el tipo específico
 <span class="fc bfc" id="L177" title="All 2 branches covered.">        if (contactoIDExcluir != null) {</span>
-<span class="pc bpc" id="L178" title="1 of 2 branches missed.">            if (contactoRepository.existsByNombreIgnoreCaseAndTipoAndContactoIDNot(</span>
-<span class="fc" id="L179">                    contactoRequestDTO.getNombre(), contactoRequestDTO.getTipo(), contactoIDExcluir)) {</span>
+<span class="fc" id="L178">            if (contactoRepository.existsByNombreIgnoreCaseAndTipoAndContactoIDNot(</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">                    contactoRequestDTO.getNombre(), contactoRequestDTO.getTipo(), contactoIDExcluir)) {</span>
 <span class="nc" id="L180">                throw new RuntimeException(&quot;Ya existe un &quot; + contactoRequestDTO.getTipo().name().toLowerCase() + &quot; con ese nombre&quot;);</span>
             }
         } else {
-<span class="fc bfc" id="L183" title="All 2 branches covered.">            if (contactoRepository.existsByNombreIgnoreCaseAndTipo(</span>
-<span class="fc" id="L184">                    contactoRequestDTO.getNombre(), contactoRequestDTO.getTipo())) {</span>
+<span class="fc" id="L183">            if (contactoRepository.existsByNombreIgnoreCaseAndTipo(</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">                    contactoRequestDTO.getNombre(), contactoRequestDTO.getTipo())) {</span>
 <span class="fc" id="L185">                throw new RuntimeException(&quot;Ya existe un &quot; + contactoRequestDTO.getTipo().name().toLowerCase() + &quot; con ese nombre&quot;);</span>
             }
         }
@@ -238,7 +238,7 @@ import java.util.stream.Collectors;
 <span class="nc" id="L238">                    contactos = contactoRepository.findByTipo(tipo);</span>
 <span class="pc bpc" id="L239" title="1 of 2 branches missed.">                } else if (activo) {</span>
 <span class="fc" id="L240">                    contactos = contactoRepository.findByTipoAndActivoTrue(tipo);</span>
-                } else {
+<span class="fc" id="L241">                } else {</span>
 <span class="nc" id="L242">                    contactos = contactoRepository.findByTipoAndActivoFalse(tipo);</span>
                 }
                 
@@ -259,11 +259,11 @@ import java.util.stream.Collectors;
 <span class="nc" id="L259">                    contactoPage = contactoRepository.findByTipoOrderByNombreAsc(tipo, pageable);</span>
 <span class="pc bpc" id="L260" title="1 of 2 branches missed.">                } else if (activo) {</span>
 <span class="fc" id="L261">                    contactoPage = contactoRepository.findByTipoAndActivoTrueOrderByNombreAsc(tipo, pageable);</span>
-                } else {
+<span class="fc" id="L262">                } else {</span>
 <span class="nc" id="L263">                    contactoPage = contactoRepository.findByTipoAndActivoFalseOrderByNombreAsc(tipo, pageable);</span>
                 }
             }
-        } else {
+<span class="nc" id="L266">        } else {</span>
             // Sin tipo específico
 <span class="pc bpc" id="L268" title="1 of 4 branches missed.">            if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
                 List&lt;Contacto&gt; contactos;
@@ -271,7 +271,7 @@ import java.util.stream.Collectors;
 <span class="nc" id="L271">                    contactos = contactoRepository.findAll();</span>
 <span class="pc bpc" id="L272" title="1 of 2 branches missed.">                } else if (activo) {</span>
 <span class="fc" id="L273">                    contactos = contactoRepository.findByActivoTrue();</span>
-                } else {
+<span class="fc" id="L274">                } else {</span>
 <span class="nc" id="L275">                    contactos = contactoRepository.findAll().stream()</span>
 <span class="nc bnc" id="L276" title="All 2 branches missed.">                        .filter(c -&gt; !c.getActivo())</span>
 <span class="nc" id="L277">                        .collect(Collectors.toList());</span>
@@ -294,7 +294,7 @@ import java.util.stream.Collectors;
 <span class="fc" id="L294">                    contactoPage = contactoRepository.findAllByOrderByNombreAsc(pageable);</span>
 <span class="fc bfc" id="L295" title="All 2 branches covered.">                } else if (activo) {</span>
 <span class="fc" id="L296">                    contactoPage = contactoRepository.findByActivoTrueOrderByNombreAsc(pageable);</span>
-                } else {
+<span class="fc" id="L297">                } else {</span>
 <span class="fc" id="L298">                    contactoPage = contactoRepository.findByActivoFalseOrderByNombreAsc(pageable);</span>
                 }
             }

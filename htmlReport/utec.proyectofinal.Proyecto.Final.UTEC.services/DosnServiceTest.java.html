@@ -142,7 +142,7 @@ import static org.mockito.Mockito.*;
         // ACT &amp; ASSERT
 <span class="fc" id="L143">        assertThrows(RuntimeException.class, () -&gt; {</span>
 <span class="nc" id="L144">            dosnService.crearDosn(dosnRequestDTO);</span>
-<span class="nc" id="L145">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
+<span class="pc" id="L145">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
 <span class="fc" id="L146">    }</span>
 
     @Test
@@ -188,7 +188,7 @@ import static org.mockito.Mockito.*;
         // ACT &amp; ASSERT
 <span class="fc" id="L189">        assertThrows(RuntimeException.class, () -&gt; {</span>
 <span class="nc" id="L190">            dosnService.obtenerDosnPorId(999L);</span>
-<span class="nc" id="L191">        }, &quot;Debe lanzar excepción cuando el análisis no existe&quot;);</span>
+<span class="pc" id="L191">        }, &quot;Debe lanzar excepción cuando el análisis no existe&quot;);</span>
 <span class="fc" id="L192">    }</span>
 
     @Test

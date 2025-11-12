@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.*;
         // ASSERT
 <span class="fc bfc" id="L58" title="All 2 branches covered.">        for (char c : codeWithoutDash.toCharArray()) {</span>
 <span class="pc bpc" id="L59" title="1 of 2 branches missed.">            assertTrue(validChars.indexOf(c) &gt;= 0, </span>
-                &quot;El carácter '&quot; + c + &quot;' debe estar en el conjunto válido&quot;);
+<span class="fc" id="L60">                &quot;El carácter '&quot; + c + &quot;' debe estar en el conjunto válido&quot;);</span>
         }
 <span class="fc" id="L62">    }</span>
 
@@ -103,7 +103,7 @@ import static org.junit.jupiter.api.Assertions.*;
         // ASSERT
 <span class="fc" id="L104">        assertNotNull(hashedCode, &quot;El hash no debe ser nulo&quot;);</span>
 <span class="pc bpc" id="L105" title="3 of 4 branches missed.">        assertTrue(hashedCode.startsWith(&quot;$2a$&quot;) || hashedCode.startsWith(&quot;$2b$&quot;), </span>
-            &quot;Debe ser un hash BCrypt válido&quot;);
+<span class="fc" id="L106">            &quot;Debe ser un hash BCrypt válido&quot;);</span>
 <span class="fc" id="L107">        assertNotEquals(plainCode, hashedCode, &quot;El hash debe ser diferente al código original&quot;);</span>
 <span class="fc" id="L108">    }</span>
 
@@ -119,7 +119,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
         // ASSERT
 <span class="fc" id="L121">        assertNotEquals(hash1, hash2, </span>
-            &quot;BCrypt debe generar hashes diferentes por el salt aleatorio&quot;);
+<span class="fc" id="L122">            &quot;BCrypt debe generar hashes diferentes por el salt aleatorio&quot;);</span>
 <span class="fc" id="L123">    }</span>
 
     @Test
@@ -144,8 +144,8 @@ import static org.junit.jupiter.api.Assertions.*;
     void hashCode_codigoVacio_debeLanzarExcepcion() {
         // ACT &amp; ASSERT
 <span class="fc" id="L146">        assertThrows(IllegalArgumentException.class, </span>
-<span class="nc" id="L147">            () -&gt; recoveryCodeService.hashCode(&quot;&quot;),</span>
-            &quot;Debe lanzar excepción para código vacío&quot;);
+<span class="pc" id="L147">            () -&gt; recoveryCodeService.hashCode(&quot;&quot;),</span>
+<span class="fc" id="L148">            &quot;Debe lanzar excepción para código vacío&quot;);</span>
 <span class="fc" id="L149">    }</span>
 
     @Test
@@ -153,8 +153,8 @@ import static org.junit.jupiter.api.Assertions.*;
     void hashCode_codigoNulo_debeLanzarExcepcion() {
         // ACT &amp; ASSERT
 <span class="fc" id="L155">        assertThrows(IllegalArgumentException.class, </span>
-<span class="nc" id="L156">            () -&gt; recoveryCodeService.hashCode(null),</span>
-            &quot;Debe lanzar excepción para código nulo&quot;);
+<span class="pc" id="L156">            () -&gt; recoveryCodeService.hashCode(null),</span>
+<span class="fc" id="L157">            &quot;Debe lanzar excepción para código nulo&quot;);</span>
 <span class="fc" id="L158">    }</span>
 
     @Test
@@ -342,9 +342,9 @@ import static org.junit.jupiter.api.Assertions.*;
         // ASSERT
 <span class="fc" id="L343">        assertNotNull(expiryTime);</span>
 <span class="fc" id="L344">        assertTrue(expiryTime.isAfter(LocalDateTime.now()), </span>
-            &quot;El tiempo de expiración debe estar en el futuro&quot;);
+<span class="fc" id="L345">            &quot;El tiempo de expiración debe estar en el futuro&quot;);</span>
 <span class="fc" id="L346">        assertTrue(expiryTime.isBefore(LocalDateTime.now().plusMinutes(11)), </span>
-            &quot;El tiempo de expiración debe ser aproximadamente 10 minutos&quot;);
+<span class="fc" id="L347">            &quot;El tiempo de expiración debe ser aproximadamente 10 minutos&quot;);</span>
 <span class="fc" id="L348">    }</span>
 
     @Test
@@ -406,16 +406,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
         // 3. Verificar código correcto
 <span class="fc" id="L408">        assertTrue(recoveryCodeService.verifyCode(plainCode, hashedCode), </span>
-            &quot;Debe verificar el código correcto&quot;);
+<span class="fc" id="L409">            &quot;Debe verificar el código correcto&quot;);</span>
 
         // 4. Verificar código incorrecto
 <span class="fc" id="L412">        assertFalse(recoveryCodeService.verifyCode(&quot;WRONG-CODE&quot;, hashedCode), </span>
-            &quot;Debe rechazar código incorrecto&quot;);
+<span class="fc" id="L413">            &quot;Debe rechazar código incorrecto&quot;);</span>
 
         // 5. Verificar expiración
 <span class="fc" id="L416">        LocalDateTime expiryTime = recoveryCodeService.getExpiryTime();</span>
 <span class="fc" id="L417">        assertFalse(recoveryCodeService.isExpired(expiryTime), </span>
-            &quot;El código recién creado no debe estar expirado&quot;);
+<span class="fc" id="L418">            &quot;El código recién creado no debe estar expirado&quot;);</span>
 <span class="fc" id="L419">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -127,8 +127,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.RepPmsService;
         try {
 <span class="fc" id="L128">            repeticionService.eliminarRepeticion(repeticionId);</span>
 <span class="fc" id="L129">            return new ResponseEntity&lt;&gt;(HttpStatus.NO_CONTENT);</span>
-<span class="nc" id="L130">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L131">            return new ResponseEntity&lt;&gt;(HttpStatus.NOT_FOUND);</span>
+<span class="fc" id="L130">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L131">            return new ResponseEntity&lt;&gt;(HttpStatus.NOT_FOUND);</span>
 <span class="nc" id="L132">        } catch (Exception e) {</span>
 <span class="nc" id="L133">            return new ResponseEntity&lt;&gt;(HttpStatus.INTERNAL_SERVER_ERROR);</span>
         }

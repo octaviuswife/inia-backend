@@ -207,5 +207,58 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.DashboardService;
 <span class="fc" id="L207">                .with(csrf()))</span>
 <span class="fc" id="L208">                .andExpect(status().isInternalServerError());</span>
 <span class="fc" id="L209">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/dashboard/analisis-por-aprobar - Debe manejar error en servicio&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerAnalisisPorAprobar_conError_debeRetornar500() throws Exception {
+<span class="fc" id="L215">        when(dashboardService.listarAnalisisPorAprobarPaginados(any(Pageable.class)))</span>
+<span class="fc" id="L216">            .thenThrow(new RuntimeException(&quot;Error en servicio&quot;));</span>
+
+<span class="fc" id="L218">        mockMvc.perform(get(&quot;/api/dashboard/analisis-por-aprobar&quot;)</span>
+<span class="fc" id="L219">                .with(csrf()))</span>
+<span class="fc" id="L220">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L221">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/dashboard/analisis-pendientes/keyset - Debe manejar error genérico&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerAnalisisPendientesKeyset_conErrorGenerico_debeRetornar500() throws Exception {
+<span class="fc" id="L227">        when(dashboardService.listarAnalisisPendientesKeyset(null, 20))</span>
+<span class="fc" id="L228">            .thenThrow(new RuntimeException(&quot;Error inesperado&quot;));</span>
+
+<span class="fc" id="L230">        mockMvc.perform(get(&quot;/api/dashboard/analisis-pendientes/keyset&quot;)</span>
+<span class="fc" id="L231">                .param(&quot;size&quot;, &quot;20&quot;)</span>
+<span class="fc" id="L232">                .with(csrf()))</span>
+<span class="fc" id="L233">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L234">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/dashboard/analisis-por-aprobar/keyset - Debe manejar cursor inválido&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerAnalisisPorAprobarKeyset_conCursorInvalido_debeRetornar400() throws Exception {
+<span class="fc" id="L240">        when(dashboardService.listarAnalisisPorAprobarKeyset(&quot;invalidCursor&quot;, 20))</span>
+<span class="fc" id="L241">            .thenThrow(new InvalidCursorException(&quot;Cursor inválido o corrupto&quot;));</span>
+
+<span class="fc" id="L243">        mockMvc.perform(get(&quot;/api/dashboard/analisis-por-aprobar/keyset&quot;)</span>
+<span class="fc" id="L244">                .param(&quot;cursor&quot;, &quot;invalidCursor&quot;)</span>
+<span class="fc" id="L245">                .param(&quot;size&quot;, &quot;20&quot;)</span>
+<span class="fc" id="L246">                .with(csrf()))</span>
+<span class="fc" id="L247">                .andExpect(status().isBadRequest())</span>
+<span class="fc" id="L248">                .andExpect(jsonPath(&quot;$.error&quot;).exists());</span>
+<span class="fc" id="L249">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/dashboard/analisis-por-aprobar/keyset - Debe manejar error genérico&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerAnalisisPorAprobarKeyset_conErrorGenerico_debeRetornar500() throws Exception {
+<span class="fc" id="L255">        when(dashboardService.listarAnalisisPorAprobarKeyset(null, 20))</span>
+<span class="fc" id="L256">            .thenThrow(new RuntimeException(&quot;Error inesperado en servicio&quot;));</span>
+
+<span class="fc" id="L258">        mockMvc.perform(get(&quot;/api/dashboard/analisis-por-aprobar/keyset&quot;)</span>
+<span class="fc" id="L259">                .param(&quot;size&quot;, &quot;20&quot;)</span>
+<span class="fc" id="L260">                .with(csrf()))</span>
+<span class="fc" id="L261">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L262">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -20,14 +21,16 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RepPmsController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName(&quot;Tests de integración para RepPmsController&quot;)
-<span class="fc" id="L30">class RepPmsControllerIntegrationTest {</span>
+<span class="fc" id="L33">class RepPmsControllerIntegrationTest {</span>
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,223 +43,235 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     private RepPmsDTO repPmsDTO;
     private RepPmsRequestDTO repPmsRequestDTO;
-<span class="fc" id="L43">    private static final Long PMS_ID = 1L;</span>
-<span class="fc" id="L44">    private static final Long REP_ID = 10L;</span>
+<span class="fc" id="L46">    private static final Long PMS_ID = 1L;</span>
+<span class="fc" id="L47">    private static final Long REP_ID = 10L;</span>
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L48">        repPmsDTO = new RepPmsDTO();</span>
-<span class="fc" id="L49">        repPmsDTO.setRepPMSID(REP_ID);</span>
-<span class="fc" id="L50">        repPmsDTO.setNumRep(1);</span>
-<span class="fc" id="L51">        repPmsDTO.setNumTanda(1);</span>
-<span class="fc" id="L52">        repPmsDTO.setPeso(new BigDecimal(&quot;45.5&quot;));</span>
-<span class="fc" id="L53">        repPmsDTO.setValido(true);</span>
+<span class="fc" id="L51">        repPmsDTO = new RepPmsDTO();</span>
+<span class="fc" id="L52">        repPmsDTO.setRepPMSID(REP_ID);</span>
+<span class="fc" id="L53">        repPmsDTO.setNumRep(1);</span>
+<span class="fc" id="L54">        repPmsDTO.setNumTanda(1);</span>
+<span class="fc" id="L55">        repPmsDTO.setPeso(new BigDecimal(&quot;45.5&quot;));</span>
+<span class="fc" id="L56">        repPmsDTO.setValido(true);</span>
 
-<span class="fc" id="L55">        repPmsRequestDTO = new RepPmsRequestDTO();</span>
-<span class="fc" id="L56">        repPmsRequestDTO.setNumRep(1);</span>
-<span class="fc" id="L57">        repPmsRequestDTO.setPeso(new BigDecimal(&quot;45.5&quot;));</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L58">        repPmsRequestDTO = new RepPmsRequestDTO();</span>
+<span class="fc" id="L59">        repPmsRequestDTO.setNumRep(1);</span>
+<span class="fc" id="L60">        repPmsRequestDTO.setPeso(new BigDecimal(&quot;45.5&quot;));</span>
+<span class="fc" id="L61">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/pms/{pmsId}/repeticiones - Crear repetición PMS exitosamente&quot;)
     void crearRepeticion_debeRetornarRepeticionCreada() throws Exception {
-<span class="fc" id="L64">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
-<span class="fc" id="L65">            .thenReturn(repPmsDTO);</span>
+<span class="fc" id="L67">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
+<span class="fc" id="L68">            .thenReturn(repPmsDTO);</span>
 
-<span class="fc" id="L67">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
-<span class="fc" id="L68">                .with(csrf())</span>
-<span class="fc" id="L69">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L70">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
-<span class="fc" id="L71">                .andExpect(status().isCreated())</span>
-<span class="fc" id="L72">                .andExpect(jsonPath(&quot;$.repPMSID&quot;).value(REP_ID))</span>
-<span class="fc" id="L73">                .andExpect(jsonPath(&quot;$.numRep&quot;).value(1))</span>
-<span class="fc" id="L74">                .andExpect(jsonPath(&quot;$.numTanda&quot;).value(1))</span>
-<span class="fc" id="L75">                .andExpect(jsonPath(&quot;$.peso&quot;).value(45.5))</span>
-<span class="fc" id="L76">                .andExpect(jsonPath(&quot;$.valido&quot;).value(true));</span>
-<span class="fc" id="L77">    }</span>
+<span class="fc" id="L70">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
+<span class="fc" id="L71">                .with(csrf())</span>
+<span class="fc" id="L72">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L73">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
+<span class="fc" id="L74">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L75">                .andExpect(jsonPath(&quot;$.repPMSID&quot;).value(REP_ID))</span>
+<span class="fc" id="L76">                .andExpect(jsonPath(&quot;$.numRep&quot;).value(1))</span>
+<span class="fc" id="L77">                .andExpect(jsonPath(&quot;$.numTanda&quot;).value(1))</span>
+<span class="fc" id="L78">                .andExpect(jsonPath(&quot;$.peso&quot;).value(45.5))</span>
+<span class="fc" id="L79">                .andExpect(jsonPath(&quot;$.valido&quot;).value(true));</span>
+<span class="fc" id="L80">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/pms/{pmsId}/repeticiones - Error cuando se excede el máximo de repeticiones&quot;)
     void crearRepeticion_debeRetornar400CuandoExcedeMaximo() throws Exception {
-<span class="fc" id="L83">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
-<span class="fc" id="L84">            .thenThrow(new RuntimeException(&quot;Se ha alcanzado el número máximo de repeticiones&quot;));</span>
+<span class="fc" id="L86">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
+<span class="fc" id="L87">            .thenThrow(new RuntimeException(&quot;Se ha alcanzado el número máximo de repeticiones&quot;));</span>
 
-<span class="fc" id="L86">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
-<span class="fc" id="L87">                .with(csrf())</span>
-<span class="fc" id="L88">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L89">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
-<span class="fc" id="L90">                .andExpect(status().isBadRequest());</span>
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L89">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
+<span class="fc" id="L90">                .with(csrf())</span>
+<span class="fc" id="L91">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L92">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
+<span class="fc" id="L93">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L94">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     @DisplayName(&quot;GET /api/pms/{pmsId}/repeticiones - Obtener todas las repeticiones de un PMS&quot;)
     void obtenerRepeticionesPorPms_debeRetornarListaDeRepeticiones() throws Exception {
-<span class="fc" id="L97">        RepPmsDTO rep2 = new RepPmsDTO();</span>
-<span class="fc" id="L98">        rep2.setRepPMSID(11L);</span>
-<span class="fc" id="L99">        rep2.setNumRep(2);</span>
-<span class="fc" id="L100">        rep2.setNumTanda(1);</span>
-<span class="fc" id="L101">        rep2.setPeso(new BigDecimal(&quot;46.2&quot;));</span>
-<span class="fc" id="L102">        rep2.setValido(true);</span>
+<span class="fc" id="L100">        RepPmsDTO rep2 = new RepPmsDTO();</span>
+<span class="fc" id="L101">        rep2.setRepPMSID(11L);</span>
+<span class="fc" id="L102">        rep2.setNumRep(2);</span>
+<span class="fc" id="L103">        rep2.setNumTanda(1);</span>
+<span class="fc" id="L104">        rep2.setPeso(new BigDecimal(&quot;46.2&quot;));</span>
+<span class="fc" id="L105">        rep2.setValido(true);</span>
 
-<span class="fc" id="L104">        List&lt;RepPmsDTO&gt; repeticiones = Arrays.asList(repPmsDTO, rep2);</span>
-<span class="fc" id="L105">        when(repPmsService.obtenerPorPms(PMS_ID)).thenReturn(repeticiones);</span>
+<span class="fc" id="L107">        List&lt;RepPmsDTO&gt; repeticiones = Arrays.asList(repPmsDTO, rep2);</span>
+<span class="fc" id="L108">        when(repPmsService.obtenerPorPms(PMS_ID)).thenReturn(repeticiones);</span>
 
-<span class="fc" id="L107">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
-<span class="fc" id="L108">                .with(csrf()))</span>
-<span class="fc" id="L109">                .andExpect(status().isOk())</span>
-<span class="fc" id="L110">                .andExpect(jsonPath(&quot;$[0].repPMSID&quot;).value(REP_ID))</span>
-<span class="fc" id="L111">                .andExpect(jsonPath(&quot;$[1].repPMSID&quot;).value(11))</span>
-<span class="fc" id="L112">                .andExpect(jsonPath(&quot;$[0].peso&quot;).value(45.5))</span>
-<span class="fc" id="L113">                .andExpect(jsonPath(&quot;$[1].peso&quot;).value(46.2));</span>
-<span class="fc" id="L114">    }</span>
+<span class="fc" id="L110">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
+<span class="fc" id="L111">                .with(csrf()))</span>
+<span class="fc" id="L112">                .andExpect(status().isOk())</span>
+<span class="fc" id="L113">                .andExpect(jsonPath(&quot;$[0].repPMSID&quot;).value(REP_ID))</span>
+<span class="fc" id="L114">                .andExpect(jsonPath(&quot;$[1].repPMSID&quot;).value(11))</span>
+<span class="fc" id="L115">                .andExpect(jsonPath(&quot;$[0].peso&quot;).value(45.5))</span>
+<span class="fc" id="L116">                .andExpect(jsonPath(&quot;$[1].peso&quot;).value(46.2));</span>
+<span class="fc" id="L117">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     @DisplayName(&quot;GET /api/pms/{pmsId}/repeticiones/count - Contar repeticiones de un PMS&quot;)
     void contarRepeticiones_debeRetornarCantidad() throws Exception {
-<span class="fc" id="L120">        when(repPmsService.contarPorPms(PMS_ID)).thenReturn(8L);</span>
+<span class="fc" id="L123">        when(repPmsService.contarPorPms(PMS_ID)).thenReturn(8L);</span>
 
-<span class="fc" id="L122">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones/count&quot;, PMS_ID)</span>
-<span class="fc" id="L123">                .with(csrf()))</span>
-<span class="fc" id="L124">                .andExpect(status().isOk())</span>
-<span class="fc" id="L125">                .andExpect(content().string(&quot;8&quot;));</span>
-<span class="fc" id="L126">    }</span>
+<span class="fc" id="L125">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones/count&quot;, PMS_ID)</span>
+<span class="fc" id="L126">                .with(csrf()))</span>
+<span class="fc" id="L127">                .andExpect(status().isOk())</span>
+<span class="fc" id="L128">                .andExpect(content().string(&quot;8&quot;));</span>
+<span class="fc" id="L129">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;GET /api/pms/{pmsId}/repeticiones/{repeticionId} - Obtener repetición por ID&quot;)
     void obtenerRepeticionPorId_debeRetornarRepeticion() throws Exception {
-<span class="fc" id="L132">        when(repPmsService.obtenerPorId(REP_ID)).thenReturn(repPmsDTO);</span>
+<span class="fc" id="L135">        when(repPmsService.obtenerPorId(REP_ID)).thenReturn(repPmsDTO);</span>
 
-<span class="fc" id="L134">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, REP_ID)</span>
-<span class="fc" id="L135">                .with(csrf()))</span>
-<span class="fc" id="L136">                .andExpect(status().isOk())</span>
-<span class="fc" id="L137">                .andExpect(jsonPath(&quot;$.repPMSID&quot;).value(REP_ID))</span>
-<span class="fc" id="L138">                .andExpect(jsonPath(&quot;$.peso&quot;).value(45.5));</span>
-<span class="fc" id="L139">    }</span>
+<span class="fc" id="L137">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, REP_ID)</span>
+<span class="fc" id="L138">                .with(csrf()))</span>
+<span class="fc" id="L139">                .andExpect(status().isOk())</span>
+<span class="fc" id="L140">                .andExpect(jsonPath(&quot;$.repPMSID&quot;).value(REP_ID))</span>
+<span class="fc" id="L141">                .andExpect(jsonPath(&quot;$.peso&quot;).value(45.5));</span>
+<span class="fc" id="L142">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;GET /api/pms/{pmsId}/repeticiones/{repeticionId} - Error 404 cuando no existe&quot;)
     void obtenerRepeticionPorId_debeRetornar404CuandoNoExiste() throws Exception {
-<span class="fc" id="L145">        when(repPmsService.obtenerPorId(999L))</span>
-<span class="fc" id="L146">            .thenThrow(new RuntimeException(&quot;Repetición no encontrada&quot;));</span>
+<span class="fc" id="L148">        when(repPmsService.obtenerPorId(999L))</span>
+<span class="fc" id="L149">            .thenThrow(new RuntimeException(&quot;Repetición no encontrada&quot;));</span>
 
-<span class="fc" id="L148">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, 999L)</span>
-<span class="fc" id="L149">                .with(csrf()))</span>
-<span class="fc" id="L150">                .andExpect(status().isNotFound());</span>
-<span class="fc" id="L151">    }</span>
+<span class="fc" id="L151">        mockMvc.perform(get(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, 999L)</span>
+<span class="fc" id="L152">                .with(csrf()))</span>
+<span class="fc" id="L153">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L154">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;PUT /api/pms/{pmsId}/repeticiones/{repeticionId} - Actualizar repetición&quot;)
     void actualizarRepeticion_debeRetornarRepeticionActualizada() throws Exception {
-<span class="fc" id="L157">        repPmsDTO.setPeso(new BigDecimal(&quot;47.3&quot;));</span>
-<span class="fc" id="L158">        when(repPmsService.actualizarRepeticion(eq(REP_ID), any(RepPmsRequestDTO.class)))</span>
-<span class="fc" id="L159">            .thenReturn(repPmsDTO);</span>
+<span class="fc" id="L160">        repPmsDTO.setPeso(new BigDecimal(&quot;47.3&quot;));</span>
+<span class="fc" id="L161">        when(repPmsService.actualizarRepeticion(eq(REP_ID), any(RepPmsRequestDTO.class)))</span>
+<span class="fc" id="L162">            .thenReturn(repPmsDTO);</span>
 
-<span class="fc" id="L161">        mockMvc.perform(put(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, REP_ID)</span>
-<span class="fc" id="L162">                .with(csrf())</span>
-<span class="fc" id="L163">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L164">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
-<span class="fc" id="L165">                .andExpect(status().isOk())</span>
-<span class="fc" id="L166">                .andExpect(jsonPath(&quot;$.repPMSID&quot;).value(REP_ID))</span>
-<span class="fc" id="L167">                .andExpect(jsonPath(&quot;$.peso&quot;).value(47.3));</span>
-<span class="fc" id="L168">    }</span>
+<span class="fc" id="L164">        mockMvc.perform(put(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, REP_ID)</span>
+<span class="fc" id="L165">                .with(csrf())</span>
+<span class="fc" id="L166">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L167">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
+<span class="fc" id="L168">                .andExpect(status().isOk())</span>
+<span class="fc" id="L169">                .andExpect(jsonPath(&quot;$.repPMSID&quot;).value(REP_ID))</span>
+<span class="fc" id="L170">                .andExpect(jsonPath(&quot;$.peso&quot;).value(47.3));</span>
+<span class="fc" id="L171">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;PUT /api/pms/{pmsId}/repeticiones/{repeticionId} - Error con peso negativo&quot;)
     void actualizarRepeticion_debeRetornar400ConPesoNegativo() throws Exception {
-<span class="fc" id="L174">        repPmsRequestDTO.setPeso(new BigDecimal(&quot;-10&quot;));</span>
+<span class="fc" id="L177">        repPmsRequestDTO.setPeso(new BigDecimal(&quot;-10&quot;));</span>
         
         // El servicio no lanza excepción por peso negativo, pero la repetición no existe (ID 10)
-<span class="fc" id="L177">        when(repPmsService.actualizarRepeticion(eq(10L), any(RepPmsRequestDTO.class)))</span>
-<span class="fc" id="L178">            .thenThrow(new RuntimeException(&quot;Repetición no encontrada&quot;));</span>
+<span class="fc" id="L180">        when(repPmsService.actualizarRepeticion(eq(10L), any(RepPmsRequestDTO.class)))</span>
+<span class="fc" id="L181">            .thenThrow(new RuntimeException(&quot;Repetición no encontrada&quot;));</span>
 
-<span class="fc" id="L180">        mockMvc.perform(put(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, 10L)</span>
-<span class="fc" id="L181">                .with(csrf())</span>
-<span class="fc" id="L182">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L183">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
-<span class="fc" id="L184">                .andExpect(status().isNotFound());</span>
-<span class="fc" id="L185">    }</span>
+<span class="fc" id="L183">        mockMvc.perform(put(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, 10L)</span>
+<span class="fc" id="L184">                .with(csrf())</span>
+<span class="fc" id="L185">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L186">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
+<span class="fc" id="L187">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L188">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ADMIN&quot;)
     @DisplayName(&quot;DELETE /api/pms/{pmsId}/repeticiones/{repeticionId} - Eliminar repetición&quot;)
     void eliminarRepeticion_debeRetornarNoContent() throws Exception {
-<span class="fc" id="L191">        doNothing().when(repPmsService).eliminarRepeticion(REP_ID);</span>
+<span class="fc" id="L194">        doNothing().when(repPmsService).eliminarRepeticion(REP_ID);</span>
 
-<span class="fc" id="L193">        mockMvc.perform(delete(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, REP_ID)</span>
-<span class="fc" id="L194">                .with(csrf()))</span>
-<span class="fc" id="L195">                .andExpect(status().isNoContent());</span>
-<span class="fc" id="L196">    }</span>
+<span class="fc" id="L196">        mockMvc.perform(delete(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, REP_ID)</span>
+<span class="fc" id="L197">                .with(csrf()))</span>
+<span class="fc" id="L198">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L199">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ADMIN&quot;)
     @DisplayName(&quot;DELETE /api/pms/{pmsId}/repeticiones/{repeticionId} - Error 404 cuando no existe&quot;)
     void eliminarRepeticion_debeRetornar404CuandoNoExiste() throws Exception {
         // El servicio no lanza excepción al eliminar, simplemente no hace nada
-<span class="fc" id="L203">        doNothing().when(repPmsService).eliminarRepeticion(999L);</span>
+<span class="fc" id="L206">        doNothing().when(repPmsService).eliminarRepeticion(999L);</span>
 
         // El controller devuelve 204 en cualquier caso
-<span class="fc" id="L206">        mockMvc.perform(delete(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, 999L)</span>
-<span class="fc" id="L207">                .with(csrf()))</span>
-<span class="fc" id="L208">                .andExpect(status().isNoContent());</span>
-<span class="fc" id="L209">    }</span>
+<span class="fc" id="L209">        mockMvc.perform(delete(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, 999L)</span>
+<span class="fc" id="L210">                .with(csrf()))</span>
+<span class="fc" id="L211">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L212">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/pms/{pmsId}/repeticiones - Validar campos requeridos&quot;)
     void crearRepeticion_debeFallarSinCamposRequeridos() throws Exception {
-<span class="fc" id="L215">        RepPmsRequestDTO requestInvalido = new RepPmsRequestDTO();</span>
+<span class="fc" id="L218">        RepPmsRequestDTO requestInvalido = new RepPmsRequestDTO();</span>
         // Sin campos necesarios
         
-<span class="fc" id="L218">        RepPmsDTO repPmsCreado = new RepPmsDTO();</span>
-<span class="fc" id="L219">        repPmsCreado.setRepPMSID(1L);</span>
-<span class="fc" id="L220">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
-<span class="fc" id="L221">            .thenReturn(repPmsCreado);</span>
+<span class="fc" id="L221">        RepPmsDTO repPmsCreado = new RepPmsDTO();</span>
+<span class="fc" id="L222">        repPmsCreado.setRepPMSID(1L);</span>
+<span class="fc" id="L223">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
+<span class="fc" id="L224">            .thenReturn(repPmsCreado);</span>
 
         // El controller no valida campos requeridos, acepta el request y devuelve 201
-<span class="fc" id="L224">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
-<span class="fc" id="L225">                .with(csrf())</span>
-<span class="fc" id="L226">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L227">                .content(objectMapper.writeValueAsString(requestInvalido)))</span>
-<span class="fc" id="L228">                .andExpect(status().isCreated());</span>
-<span class="fc" id="L229">    }</span>
+<span class="fc" id="L227">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
+<span class="fc" id="L228">                .with(csrf())</span>
+<span class="fc" id="L229">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L230">                .content(objectMapper.writeValueAsString(requestInvalido)))</span>
+<span class="fc" id="L231">                .andExpect(status().isCreated());</span>
+<span class="fc" id="L232">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/pms/{pmsId}/repeticiones - Crear con peso cero debe fallar&quot;)
     void crearRepeticion_debeFallarConPesoCero() throws Exception {
-<span class="fc" id="L235">        repPmsRequestDTO.setPeso(BigDecimal.ZERO);</span>
-<span class="fc" id="L236">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
-<span class="fc" id="L237">            .thenThrow(new RuntimeException(&quot;El peso debe ser mayor a cero&quot;));</span>
+<span class="fc" id="L238">        repPmsRequestDTO.setPeso(BigDecimal.ZERO);</span>
+<span class="fc" id="L239">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
+<span class="fc" id="L240">            .thenThrow(new RuntimeException(&quot;El peso debe ser mayor a cero&quot;));</span>
 
-<span class="fc" id="L239">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
-<span class="fc" id="L240">                .with(csrf())</span>
-<span class="fc" id="L241">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L242">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
-<span class="fc" id="L243">                .andExpect(status().isBadRequest());</span>
-<span class="fc" id="L244">    }</span>
+<span class="fc" id="L242">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
+<span class="fc" id="L243">                .with(csrf())</span>
+<span class="fc" id="L244">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L245">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
+<span class="fc" id="L246">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L247">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/pms/{pmsId}/repeticiones - Crear repetición marcada como no válida&quot;)
     void crearRepeticion_debePermitirRepeticionNoValida() throws Exception {
-<span class="fc" id="L250">        repPmsDTO.setValido(false);</span>
-<span class="fc" id="L251">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
-<span class="fc" id="L252">            .thenReturn(repPmsDTO);</span>
+<span class="fc" id="L253">        repPmsDTO.setValido(false);</span>
+<span class="fc" id="L254">        when(repPmsService.crearRepeticion(eq(PMS_ID), any(RepPmsRequestDTO.class)))</span>
+<span class="fc" id="L255">            .thenReturn(repPmsDTO);</span>
 
-<span class="fc" id="L254">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
-<span class="fc" id="L255">                .with(csrf())</span>
-<span class="fc" id="L256">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L257">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
-<span class="fc" id="L258">                .andExpect(status().isCreated())</span>
-<span class="fc" id="L259">                .andExpect(jsonPath(&quot;$.valido&quot;).value(false));</span>
-<span class="fc" id="L260">    }</span>
+<span class="fc" id="L257">        mockMvc.perform(post(&quot;/api/pms/{pmsId}/repeticiones&quot;, PMS_ID)</span>
+<span class="fc" id="L258">                .with(csrf())</span>
+<span class="fc" id="L259">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L260">                .content(objectMapper.writeValueAsString(repPmsRequestDTO)))</span>
+<span class="fc" id="L261">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L262">                .andExpect(jsonPath(&quot;$.valido&quot;).value(false));</span>
+<span class="fc" id="L263">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/pms/{pmsId}/repeticiones/{repeticionId} - Error 404 con RuntimeException&quot;)
+    void eliminarRepeticion_debeRetornar404ConRuntimeException() throws Exception {
+<span class="fc" id="L269">        doThrow(new RuntimeException(&quot;Repetición no encontrada&quot;))</span>
+<span class="fc" id="L270">            .when(repPmsService).eliminarRepeticion(999L);</span>
+
+<span class="fc" id="L272">        mockMvc.perform(delete(&quot;/api/pms/{pmsId}/repeticiones/{repeticionId}&quot;, PMS_ID, 999L)</span>
+<span class="fc" id="L273">                .with(csrf()))</span>
+<span class="fc" id="L274">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L275">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

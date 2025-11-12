@@ -93,7 +93,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
 <span class="fc" id="L93">        when(valoresGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
 <span class="fc" id="L95">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
-<span class="nc" id="L96">            () -&gt; valoresGermService.obtenerValoresPorId(999L));</span>
+<span class="pc" id="L96">            () -&gt; valoresGermService.obtenerValoresPorId(999L));</span>
 
 <span class="fc" id="L98">        assertTrue(exception.getMessage().contains(&quot;no encontrados&quot;));</span>
 <span class="fc" id="L99">        verify(valoresGermRepository).findById(999L);</span>
@@ -126,7 +126,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
 <span class="fc" id="L126">        when(valoresGermRepository.findById(1L)).thenReturn(Optional.of(valoresGerm));</span>
 
 <span class="fc" id="L128">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
-<span class="nc" id="L129">            () -&gt; valoresGermService.actualizarValores(1L, requestDTO));</span>
+<span class="pc" id="L129">            () -&gt; valoresGermService.actualizarValores(1L, requestDTO));</span>
 
 <span class="fc" id="L131">        assertTrue(exception.getMessage().contains(&quot;no puede superar 100&quot;));</span>
 <span class="fc" id="L132">        verify(valoresGermRepository, never()).save(any(ValoresGerm.class));</span>
@@ -211,7 +211,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
 <span class="fc" id="L211">        when(valoresGermRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
 <span class="fc" id="L213">        RuntimeException exception = assertThrows(RuntimeException.class, </span>
-<span class="nc" id="L214">            () -&gt; valoresGermService.eliminarValores(999L));</span>
+<span class="pc" id="L214">            () -&gt; valoresGermService.eliminarValores(999L));</span>
 
 <span class="fc" id="L216">        assertTrue(exception.getMessage().contains(&quot;no encontrados&quot;));</span>
 <span class="fc" id="L217">        verify(valoresGermRepository).findById(999L);</span>

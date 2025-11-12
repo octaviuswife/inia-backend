@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.Especie;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.EspecieRepository;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName(&quot;Tests de EspecieService&quot;)
-<span class="fc" id="L26">class EspecieServiceTest {</span>
+<span class="fc" id="L27">class EspecieServiceTest {</span>
 
     @Mock
     private EspecieRepository especieRepository;
@@ -36,214 +37,396 @@ import static org.mockito.Mockito.*;
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L39">        especieRequestDTO = new EspecieRequestDTO();</span>
-<span class="fc" id="L40">        especieRequestDTO.setNombreComun(&quot;Trigo&quot;);</span>
-<span class="fc" id="L41">        especieRequestDTO.setNombreCientifico(&quot;Triticum aestivum&quot;);</span>
+<span class="fc" id="L40">        especieRequestDTO = new EspecieRequestDTO();</span>
+<span class="fc" id="L41">        especieRequestDTO.setNombreComun(&quot;Trigo&quot;);</span>
+<span class="fc" id="L42">        especieRequestDTO.setNombreCientifico(&quot;Triticum aestivum&quot;);</span>
 
-<span class="fc" id="L43">        especie = new Especie();</span>
-<span class="fc" id="L44">        especie.setEspecieID(1L);</span>
-<span class="fc" id="L45">        especie.setNombreComun(&quot;Trigo&quot;);</span>
-<span class="fc" id="L46">        especie.setNombreCientifico(&quot;Triticum aestivum&quot;);</span>
-<span class="fc" id="L47">        especie.setActivo(true);</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L44">        especie = new Especie();</span>
+<span class="fc" id="L45">        especie.setEspecieID(1L);</span>
+<span class="fc" id="L46">        especie.setNombreComun(&quot;Trigo&quot;);</span>
+<span class="fc" id="L47">        especie.setNombreCientifico(&quot;Triticum aestivum&quot;);</span>
+<span class="fc" id="L48">        especie.setActivo(true);</span>
+<span class="fc" id="L49">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener todas las especies activas - debe retornar lista&quot;)
     void obtenerTodas_debeRetornarListaActivas() {
-<span class="fc" id="L53">        when(especieRepository.findByActivoTrue()).thenReturn(Arrays.asList(especie));</span>
+<span class="fc" id="L54">        when(especieRepository.findByActivoTrue()).thenReturn(Arrays.asList(especie));</span>
 
-<span class="fc" id="L55">        List&lt;EspecieDTO&gt; resultado = especieService.obtenerTodas();</span>
+<span class="fc" id="L56">        List&lt;EspecieDTO&gt; resultado = especieService.obtenerTodas();</span>
 
-<span class="fc" id="L57">        assertNotNull(resultado);</span>
-<span class="fc" id="L58">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L59">        verify(especieRepository, times(1)).findByActivoTrue();</span>
-<span class="fc" id="L60">    }</span>
+<span class="fc" id="L58">        assertNotNull(resultado);</span>
+<span class="fc" id="L59">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L60">        verify(especieRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L61">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener especies inactivas - debe retornar solo inactivas&quot;)
     void obtenerInactivas_debeRetornarSoloInactivas() {
-<span class="fc" id="L65">        especie.setActivo(false);</span>
-<span class="fc" id="L66">        when(especieRepository.findByActivoFalse()).thenReturn(Arrays.asList(especie));</span>
+<span class="fc" id="L66">        especie.setActivo(false);</span>
+<span class="fc" id="L67">        when(especieRepository.findByActivoFalse()).thenReturn(Arrays.asList(especie));</span>
 
-<span class="fc" id="L68">        List&lt;EspecieDTO&gt; resultado = especieService.obtenerInactivas();</span>
+<span class="fc" id="L69">        List&lt;EspecieDTO&gt; resultado = especieService.obtenerInactivas();</span>
 
-<span class="fc" id="L70">        assertNotNull(resultado);</span>
-<span class="fc" id="L71">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L72">        verify(especieRepository, times(1)).findByActivoFalse();</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L71">        assertNotNull(resultado);</span>
+<span class="fc" id="L72">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L73">        verify(especieRepository, times(1)).findByActivoFalse();</span>
+<span class="fc" id="L74">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener todas con filtro null - debe retornar todas&quot;)
     void obtenerTodas_conFiltroNull_debeRetornarTodas() {
-<span class="fc" id="L78">        when(especieRepository.findAll()).thenReturn(Arrays.asList(especie));</span>
+<span class="fc" id="L79">        when(especieRepository.findAll()).thenReturn(Arrays.asList(especie));</span>
 
-<span class="fc" id="L80">        List&lt;EspecieDTO&gt; resultado = especieService.obtenerTodas(null);</span>
+<span class="fc" id="L81">        List&lt;EspecieDTO&gt; resultado = especieService.obtenerTodas(null);</span>
 
-<span class="fc" id="L82">        assertNotNull(resultado);</span>
-<span class="fc" id="L83">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L84">        verify(especieRepository, times(1)).findAll();</span>
-<span class="fc" id="L85">    }</span>
+<span class="fc" id="L83">        assertNotNull(resultado);</span>
+<span class="fc" id="L84">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L85">        verify(especieRepository, times(1)).findAll();</span>
+<span class="fc" id="L86">    }</span>
 
     @Test
     @DisplayName(&quot;Buscar por nombre común - debe retornar coincidencias&quot;)
     void buscarPorNombreComun_debeRetornarCoincidencias() {
-<span class="fc" id="L90">        when(especieRepository.findByNombreComunContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;))</span>
-<span class="fc" id="L91">            .thenReturn(Arrays.asList(especie));</span>
+<span class="fc" id="L91">        when(especieRepository.findByNombreComunContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;))</span>
+<span class="fc" id="L92">            .thenReturn(Arrays.asList(especie));</span>
 
-<span class="fc" id="L93">        List&lt;EspecieDTO&gt; resultado = especieService.buscarPorNombreComun(&quot;Trigo&quot;);</span>
+<span class="fc" id="L94">        List&lt;EspecieDTO&gt; resultado = especieService.buscarPorNombreComun(&quot;Trigo&quot;);</span>
 
-<span class="fc" id="L95">        assertNotNull(resultado);</span>
-<span class="fc" id="L96">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L97">        assertTrue(resultado.get(0).getNombreComun().contains(&quot;Trigo&quot;));</span>
-<span class="fc" id="L98">        verify(especieRepository, times(1)).findByNombreComunContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;);</span>
-<span class="fc" id="L99">    }</span>
+<span class="fc" id="L96">        assertNotNull(resultado);</span>
+<span class="fc" id="L97">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L98">        assertTrue(resultado.get(0).getNombreComun().contains(&quot;Trigo&quot;));</span>
+<span class="fc" id="L99">        verify(especieRepository, times(1)).findByNombreComunContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;);</span>
+<span class="fc" id="L100">    }</span>
 
     @Test
     @DisplayName(&quot;Buscar por nombre científico - debe retornar coincidencias&quot;)
     void buscarPorNombreCientifico_debeRetornarCoincidencias() {
-<span class="fc" id="L104">        when(especieRepository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(&quot;Triticum&quot;))</span>
-<span class="fc" id="L105">            .thenReturn(Arrays.asList(especie));</span>
+<span class="fc" id="L105">        when(especieRepository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(&quot;Triticum&quot;))</span>
+<span class="fc" id="L106">            .thenReturn(Arrays.asList(especie));</span>
 
-<span class="fc" id="L107">        List&lt;EspecieDTO&gt; resultado = especieService.buscarPorNombreCientifico(&quot;Triticum&quot;);</span>
+<span class="fc" id="L108">        List&lt;EspecieDTO&gt; resultado = especieService.buscarPorNombreCientifico(&quot;Triticum&quot;);</span>
 
-<span class="fc" id="L109">        assertNotNull(resultado);</span>
-<span class="fc" id="L110">        assertEquals(1, resultado.size());</span>
-<span class="fc" id="L111">        assertTrue(resultado.get(0).getNombreCientifico().contains(&quot;Triticum&quot;));</span>
-<span class="fc" id="L112">        verify(especieRepository, times(1)).findByNombreCientificoContainingIgnoreCaseAndActivoTrue(&quot;Triticum&quot;);</span>
-<span class="fc" id="L113">    }</span>
+<span class="fc" id="L110">        assertNotNull(resultado);</span>
+<span class="fc" id="L111">        assertEquals(1, resultado.size());</span>
+<span class="fc" id="L112">        assertTrue(resultado.get(0).getNombreCientifico().contains(&quot;Triticum&quot;));</span>
+<span class="fc" id="L113">        verify(especieRepository, times(1)).findByNombreCientificoContainingIgnoreCaseAndActivoTrue(&quot;Triticum&quot;);</span>
+<span class="fc" id="L114">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener por ID - debe retornar especie existente&quot;)
     void obtenerPorId_especieExistente_debeRetornarEspecie() {
-<span class="fc" id="L118">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L119">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
 
-<span class="fc" id="L120">        EspecieDTO resultado = especieService.obtenerPorId(1L);</span>
+<span class="fc" id="L121">        EspecieDTO resultado = especieService.obtenerPorId(1L);</span>
 
-<span class="fc" id="L122">        assertNotNull(resultado);</span>
-<span class="fc" id="L123">        assertEquals(1L, resultado.getEspecieID());</span>
-<span class="fc" id="L124">        assertEquals(&quot;Trigo&quot;, resultado.getNombreComun());</span>
-<span class="fc" id="L125">        verify(especieRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L126">    }</span>
+<span class="fc" id="L123">        assertNotNull(resultado);</span>
+<span class="fc" id="L124">        assertEquals(1L, resultado.getEspecieID());</span>
+<span class="fc" id="L125">        assertEquals(&quot;Trigo&quot;, resultado.getNombreComun());</span>
+<span class="fc" id="L126">        verify(especieRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L127">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener por ID inexistente - debe retornar null&quot;)
     void obtenerPorId_especieInexistente_debeRetornarNull() {
-<span class="fc" id="L131">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L132">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L133">        EspecieDTO resultado = especieService.obtenerPorId(999L);</span>
+<span class="fc" id="L134">        EspecieDTO resultado = especieService.obtenerPorId(999L);</span>
 
-<span class="fc" id="L135">        assertNull(resultado);</span>
-<span class="fc" id="L136">        verify(especieRepository, times(1)).findById(999L);</span>
-<span class="fc" id="L137">    }</span>
+<span class="fc" id="L136">        assertNull(resultado);</span>
+<span class="fc" id="L137">        verify(especieRepository, times(1)).findById(999L);</span>
+<span class="fc" id="L138">    }</span>
 
     @Test
     @DisplayName(&quot;Crear especie válida - debe guardar y retornar DTO&quot;)
     void crear_especieValida_debeGuardarYRetornarDTO() {
-<span class="fc" id="L142">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
+<span class="fc" id="L143">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
 
-<span class="fc" id="L144">        EspecieDTO resultado = especieService.crear(especieRequestDTO);</span>
+<span class="fc" id="L145">        EspecieDTO resultado = especieService.crear(especieRequestDTO);</span>
 
-<span class="fc" id="L146">        assertNotNull(resultado);</span>
-<span class="fc" id="L147">        assertEquals(&quot;Trigo&quot;, resultado.getNombreComun());</span>
-<span class="fc" id="L148">        assertEquals(&quot;Triticum aestivum&quot;, resultado.getNombreCientifico());</span>
-<span class="fc" id="L149">        assertTrue(resultado.getActivo());</span>
-<span class="fc" id="L150">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
-<span class="fc" id="L151">    }</span>
+<span class="fc" id="L147">        assertNotNull(resultado);</span>
+<span class="fc" id="L148">        assertEquals(&quot;Trigo&quot;, resultado.getNombreComun());</span>
+<span class="fc" id="L149">        assertEquals(&quot;Triticum aestivum&quot;, resultado.getNombreCientifico());</span>
+<span class="fc" id="L150">        assertTrue(resultado.getActivo());</span>
+<span class="fc" id="L151">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
+<span class="fc" id="L152">    }</span>
 
     @Test
     @DisplayName(&quot;Actualizar especie - debe actualizar y retornar DTO&quot;)
     void actualizar_debeActualizarYRetornarDTO() {
-<span class="fc" id="L156">        especieRequestDTO.setNombreComun(&quot;Trigo Actualizado&quot;);</span>
-<span class="fc" id="L157">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
-<span class="fc" id="L158">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
+<span class="fc" id="L157">        especieRequestDTO.setNombreComun(&quot;Trigo Actualizado&quot;);</span>
+<span class="fc" id="L158">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L159">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
 
-<span class="fc" id="L160">        EspecieDTO resultado = especieService.actualizar(1L, especieRequestDTO);</span>
+<span class="fc" id="L161">        EspecieDTO resultado = especieService.actualizar(1L, especieRequestDTO);</span>
 
-<span class="fc" id="L162">        assertNotNull(resultado);</span>
-<span class="fc" id="L163">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
-<span class="fc" id="L164">    }</span>
+<span class="fc" id="L163">        assertNotNull(resultado);</span>
+<span class="fc" id="L164">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
+<span class="fc" id="L165">    }</span>
 
     @Test
     @DisplayName(&quot;Actualizar especie inexistente - debe retornar null&quot;)
     void actualizar_especieInexistente_debeRetornarNull() {
-<span class="fc" id="L169">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L170">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L171">        EspecieDTO resultado = especieService.actualizar(999L, especieRequestDTO);</span>
+<span class="fc" id="L172">        EspecieDTO resultado = especieService.actualizar(999L, especieRequestDTO);</span>
 
-<span class="fc" id="L173">        assertNull(resultado);</span>
-<span class="fc" id="L174">        verify(especieRepository, never()).save(any(Especie.class));</span>
-<span class="fc" id="L175">    }</span>
+<span class="fc" id="L174">        assertNull(resultado);</span>
+<span class="fc" id="L175">        verify(especieRepository, never()).save(any(Especie.class));</span>
+<span class="fc" id="L176">    }</span>
 
     @Test
     @DisplayName(&quot;Eliminar especie - debe cambiar activo a false&quot;)
     void eliminar_debeCambiarActivoAFalse() {
-<span class="fc" id="L180">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
-<span class="fc" id="L181">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
+<span class="fc" id="L181">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L182">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
 
-<span class="fc" id="L183">        especieService.eliminar(1L);</span>
+<span class="fc" id="L184">        especieService.eliminar(1L);</span>
 
-<span class="fc" id="L185">        verify(especieRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L186">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
-<span class="fc" id="L187">    }</span>
+<span class="fc" id="L186">        verify(especieRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L187">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
+<span class="fc" id="L188">    }</span>
 
     @Test
     @DisplayName(&quot;Reactivar especie - debe cambiar activo a true&quot;)
     void reactivar_debeCambiarActivoATrue() {
-<span class="fc" id="L192">        especie.setActivo(false);</span>
-<span class="fc" id="L193">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
-<span class="fc" id="L194">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
+<span class="fc" id="L193">        especie.setActivo(false);</span>
+<span class="fc" id="L194">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L195">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
 
-<span class="fc" id="L196">        EspecieDTO resultado = especieService.reactivar(1L);</span>
+<span class="fc" id="L197">        EspecieDTO resultado = especieService.reactivar(1L);</span>
 
-<span class="fc" id="L198">        assertNotNull(resultado);</span>
-<span class="fc" id="L199">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
-<span class="fc" id="L200">    }</span>
+<span class="fc" id="L199">        assertNotNull(resultado);</span>
+<span class="fc" id="L200">        verify(especieRepository, times(1)).save(any(Especie.class));</span>
+<span class="fc" id="L201">    }</span>
 
     @Test
     @DisplayName(&quot;Reactivar especie ya activa - debe lanzar excepción&quot;)
     void reactivar_especieYaActiva_debeLanzarExcepcion() {
-<span class="fc" id="L205">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L206">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
 
-<span class="fc" id="L207">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
-<span class="nc" id="L208">            especieService.reactivar(1L);</span>
-<span class="nc" id="L209">        });</span>
+<span class="fc" id="L208">        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {</span>
+<span class="nc" id="L209">            especieService.reactivar(1L);</span>
+<span class="nc" id="L210">        });</span>
 
-<span class="fc" id="L211">        assertTrue(exception.getMessage().contains(&quot;ya está activa&quot;));</span>
-<span class="fc" id="L212">        verify(especieRepository, never()).save(any(Especie.class));</span>
-<span class="fc" id="L213">    }</span>
+<span class="fc" id="L212">        assertTrue(exception.getMessage().contains(&quot;ya está activa&quot;));</span>
+<span class="fc" id="L213">        verify(especieRepository, never()).save(any(Especie.class));</span>
+<span class="fc" id="L214">    }</span>
 
     @Test
     @DisplayName(&quot;Reactivar especie inexistente - debe retornar null&quot;)
     void reactivar_especieInexistente_debeRetornarNull() {
-<span class="fc" id="L218">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L219">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L220">        EspecieDTO resultado = especieService.reactivar(999L);</span>
+<span class="fc" id="L221">        EspecieDTO resultado = especieService.reactivar(999L);</span>
 
-<span class="fc" id="L222">        assertNull(resultado);</span>
-<span class="fc" id="L223">        verify(especieRepository, never()).save(any(Especie.class));</span>
-<span class="fc" id="L224">    }</span>
+<span class="fc" id="L223">        assertNull(resultado);</span>
+<span class="fc" id="L224">        verify(especieRepository, never()).save(any(Especie.class));</span>
+<span class="fc" id="L225">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener entidad por ID - debe retornar entidad&quot;)
     void obtenerEntidadPorId_debeRetornarEntidad() {
-<span class="fc" id="L229">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L230">        when(especieRepository.findById(1L)).thenReturn(Optional.of(especie));</span>
 
-<span class="fc" id="L231">        Especie resultado = especieService.obtenerEntidadPorId(1L);</span>
+<span class="fc" id="L232">        Especie resultado = especieService.obtenerEntidadPorId(1L);</span>
 
-<span class="fc" id="L233">        assertNotNull(resultado);</span>
-<span class="fc" id="L234">        assertEquals(1L, resultado.getEspecieID());</span>
-<span class="fc" id="L235">        verify(especieRepository, times(1)).findById(1L);</span>
-<span class="fc" id="L236">    }</span>
+<span class="fc" id="L234">        assertNotNull(resultado);</span>
+<span class="fc" id="L235">        assertEquals(1L, resultado.getEspecieID());</span>
+<span class="fc" id="L236">        verify(especieRepository, times(1)).findById(1L);</span>
+<span class="fc" id="L237">    }</span>
 
     @Test
     @DisplayName(&quot;Obtener entidad por ID inexistente - debe retornar null&quot;)
     void obtenerEntidadPorId_inexistente_debeRetornarNull() {
-<span class="fc" id="L241">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L242">        when(especieRepository.findById(999L)).thenReturn(Optional.empty());</span>
 
-<span class="fc" id="L243">        Especie resultado = especieService.obtenerEntidadPorId(999L);</span>
+<span class="fc" id="L244">        Especie resultado = especieService.obtenerEntidadPorId(999L);</span>
 
-<span class="fc" id="L245">        assertNull(resultado);</span>
-<span class="fc" id="L246">        verify(especieRepository, times(1)).findById(999L);</span>
-<span class="fc" id="L247">    }</span>
+<span class="fc" id="L246">        assertNull(resultado);</span>
+<span class="fc" id="L247">        verify(especieRepository, times(1)).findById(999L);</span>
+<span class="fc" id="L248">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas - debe retornar página&quot;)
+    void obtenerEspeciesPaginadas_debeRetornarPagina() {
+<span class="fc" id="L253">        when(especieRepository.findByActivoTrueOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L254">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L256">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L257">            especieService.obtenerEspeciesPaginadas(org.springframework.data.domain.Pageable.unpaged());</span>
+
+<span class="fc" id="L259">        assertNotNull(resultado);</span>
+<span class="fc" id="L260">        verify(especieRepository, times(1)).findByActivoTrueOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L261">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtro 'activos'&quot;)
+    void obtenerEspeciesPaginadasConFiltro_filtroActivos() {
+<span class="fc" id="L266">        when(especieRepository.findByActivoTrueOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L267">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L269">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L270">            especieService.obtenerEspeciesPaginadasConFiltro(</span>
+<span class="fc" id="L271">                org.springframework.data.domain.Pageable.unpaged(), </span>
+                &quot;activos&quot;
+            );
+
+<span class="fc" id="L275">        assertNotNull(resultado);</span>
+<span class="fc" id="L276">        verify(especieRepository, times(1)).findByActivoTrueOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L277">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtro 'inactivos'&quot;)
+    void obtenerEspeciesPaginadasConFiltro_filtroInactivos() {
+<span class="fc" id="L282">        when(especieRepository.findByActivoFalseOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L283">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L285">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L286">            especieService.obtenerEspeciesPaginadasConFiltro(</span>
+<span class="fc" id="L287">                org.springframework.data.domain.Pageable.unpaged(), </span>
+                &quot;inactivos&quot;
+            );
+
+<span class="fc" id="L291">        assertNotNull(resultado);</span>
+<span class="fc" id="L292">        verify(especieRepository, times(1)).findByActivoFalseOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L293">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtro 'todos'&quot;)
+    void obtenerEspeciesPaginadasConFiltro_filtroTodos() {
+<span class="fc" id="L298">        when(especieRepository.findAllByOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L299">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L301">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L302">            especieService.obtenerEspeciesPaginadasConFiltro(</span>
+<span class="fc" id="L303">                org.springframework.data.domain.Pageable.unpaged(), </span>
+                &quot;todos&quot;
+            );
+
+<span class="fc" id="L307">        assertNotNull(resultado);</span>
+<span class="fc" id="L308">        verify(especieRepository, times(1)).findAllByOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L309">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtros - sin término de búsqueda y activo null&quot;)
+    void obtenerEspeciesPaginadasConFiltros_sinBusquedaActivoNull() {
+<span class="fc" id="L314">        when(especieRepository.findAllByOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L315">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L317">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L318">            especieService.obtenerEspeciesPaginadasConFiltros(</span>
+<span class="fc" id="L319">                org.springframework.data.domain.Pageable.unpaged(),</span>
+                null,
+                null
+            );
+
+<span class="fc" id="L324">        assertNotNull(resultado);</span>
+<span class="fc" id="L325">        verify(especieRepository, times(1)).findAllByOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L326">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtros - sin término de búsqueda y activo true&quot;)
+    void obtenerEspeciesPaginadasConFiltros_sinBusquedaActivoTrue() {
+<span class="fc" id="L331">        when(especieRepository.findByActivoTrueOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L332">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L334">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L335">            especieService.obtenerEspeciesPaginadasConFiltros(</span>
+<span class="fc" id="L336">                org.springframework.data.domain.Pageable.unpaged(),</span>
+                null,
+<span class="fc" id="L338">                true</span>
+            );
+
+<span class="fc" id="L341">        assertNotNull(resultado);</span>
+<span class="fc" id="L342">        verify(especieRepository, times(1)).findByActivoTrueOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L343">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtros - sin término de búsqueda y activo false&quot;)
+    void obtenerEspeciesPaginadasConFiltros_sinBusquedaActivoFalse() {
+<span class="fc" id="L348">        when(especieRepository.findByActivoFalseOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L349">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L351">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L352">            especieService.obtenerEspeciesPaginadasConFiltros(</span>
+<span class="fc" id="L353">                org.springframework.data.domain.Pageable.unpaged(),</span>
+                null,
+<span class="fc" id="L355">                false</span>
+            );
+
+<span class="fc" id="L358">        assertNotNull(resultado);</span>
+<span class="fc" id="L359">        verify(especieRepository, times(1)).findByActivoFalseOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L360">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtros - con término de búsqueda y activo null&quot;)
+    void obtenerEspeciesPaginadasConFiltros_conBusquedaActivoNull() {
+<span class="fc" id="L365">        when(especieRepository.findAll()).thenReturn(Arrays.asList(especie));</span>
+
+<span class="fc" id="L367">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L368">            especieService.obtenerEspeciesPaginadasConFiltros(</span>
+<span class="fc" id="L369">                PageRequest.of(0, 10),</span>
+                &quot;Trigo&quot;,
+                null
+            );
+
+<span class="fc" id="L374">        assertNotNull(resultado);</span>
+<span class="fc" id="L375">        verify(especieRepository, times(1)).findAll();</span>
+<span class="fc" id="L376">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtros - con término de búsqueda y activo true&quot;)
+    void obtenerEspeciesPaginadasConFiltros_conBusquedaActivoTrue() {
+<span class="fc" id="L381">        when(especieRepository.findByNombreComunContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;))</span>
+<span class="fc" id="L382">            .thenReturn(Arrays.asList(especie));</span>
+<span class="fc" id="L383">        when(especieRepository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;))</span>
+<span class="fc" id="L384">            .thenReturn(Arrays.asList());</span>
+
+<span class="fc" id="L386">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L387">            especieService.obtenerEspeciesPaginadasConFiltros(</span>
+<span class="fc" id="L388">                PageRequest.of(0, 10),</span>
+                &quot;Trigo&quot;,
+<span class="fc" id="L390">                true</span>
+            );
+
+<span class="fc" id="L393">        assertNotNull(resultado);</span>
+<span class="fc" id="L394">        verify(especieRepository, times(1)).findByNombreComunContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;);</span>
+<span class="fc" id="L395">        verify(especieRepository, times(1)).findByNombreCientificoContainingIgnoreCaseAndActivoTrue(&quot;Trigo&quot;);</span>
+<span class="fc" id="L396">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtros - con término de búsqueda y activo false&quot;)
+    void obtenerEspeciesPaginadasConFiltros_conBusquedaActivoFalse() {
+<span class="fc" id="L401">        especie.setActivo(false);</span>
+<span class="fc" id="L402">        when(especieRepository.findAll()).thenReturn(Arrays.asList(especie));</span>
+
+<span class="fc" id="L404">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L405">            especieService.obtenerEspeciesPaginadasConFiltros(</span>
+<span class="fc" id="L406">                PageRequest.of(0, 10),</span>
+                &quot;Trigo&quot;,
+<span class="fc" id="L408">                false</span>
+            );
+
+<span class="fc" id="L411">        assertNotNull(resultado);</span>
+<span class="fc" id="L412">        verify(especieRepository, times(1)).findAll();</span>
+<span class="fc" id="L413">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener especies paginadas con filtros - término vacío debe ignorarse&quot;)
+    void obtenerEspeciesPaginadasConFiltros_terminoVacio() {
+<span class="fc" id="L418">        when(especieRepository.findByActivoTrueOrderByNombreComunAsc(any()))</span>
+<span class="fc" id="L419">            .thenReturn(org.springframework.data.domain.Page.empty());</span>
+
+<span class="fc" id="L421">        org.springframework.data.domain.Page&lt;EspecieDTO&gt; resultado = </span>
+<span class="fc" id="L422">            especieService.obtenerEspeciesPaginadasConFiltros(</span>
+<span class="fc" id="L423">                org.springframework.data.domain.Pageable.unpaged(),</span>
+                &quot;   &quot;,
+<span class="fc" id="L425">                true</span>
+            );
+
+<span class="fc" id="L428">        assertNotNull(resultado);</span>
+<span class="fc" id="L429">        verify(especieRepository, times(1)).findByActivoTrueOrderByNombreComunAsc(any());</span>
+<span class="fc" id="L430">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

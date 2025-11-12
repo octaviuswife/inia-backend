@@ -20,6 +20,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,7 +31,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CultivarService;
 
 @WebMvcTest(CultivarController.class)
 @DisplayName(&quot;Tests de integración para CultivarController&quot;)
-<span class="fc" id="L32">class CultivarControllerIntegrationTest {</span>
+<span class="fc" id="L34">class CultivarControllerIntegrationTest {</span>
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,139 +47,241 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CultivarService;
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L48">        cultivarRequest = new CultivarRequestDTO();</span>
-<span class="fc" id="L49">        cultivarRequest.setEspecieID(1L);</span>
-<span class="fc" id="L50">        cultivarRequest.setNombre(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L50">        cultivarRequest = new CultivarRequestDTO();</span>
+<span class="fc" id="L51">        cultivarRequest.setEspecieID(1L);</span>
+<span class="fc" id="L52">        cultivarRequest.setNombre(&quot;Cultivar Test&quot;);</span>
 
-<span class="fc" id="L52">        cultivarResponse = new CultivarDTO();</span>
-<span class="fc" id="L53">        cultivarResponse.setCultivarID(1L);</span>
-<span class="fc" id="L54">        cultivarResponse.setEspecieID(1L);</span>
-<span class="fc" id="L55">        cultivarResponse.setEspecieNombre(&quot;Triticum aestivum&quot;);</span>
-<span class="fc" id="L56">        cultivarResponse.setNombre(&quot;Cultivar Test&quot;);</span>
-<span class="fc" id="L57">        cultivarResponse.setActivo(true);</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L54">        cultivarResponse = new CultivarDTO();</span>
+<span class="fc" id="L55">        cultivarResponse.setCultivarID(1L);</span>
+<span class="fc" id="L56">        cultivarResponse.setEspecieID(1L);</span>
+<span class="fc" id="L57">        cultivarResponse.setEspecieNombre(&quot;Triticum aestivum&quot;);</span>
+<span class="fc" id="L58">        cultivarResponse.setNombre(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L59">        cultivarResponse.setActivo(true);</span>
+<span class="fc" id="L60">    }</span>
 
     @Test
     @DisplayName(&quot;POST /api/cultivar - Debe crear un cultivar exitosamente&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void crearCultivar_conDatosValidos_debeRetornarCreado() throws Exception {
-<span class="fc" id="L64">        when(cultivarService.crear(any(CultivarRequestDTO.class))).thenReturn(cultivarResponse);</span>
+<span class="fc" id="L66">        when(cultivarService.crear(any(CultivarRequestDTO.class))).thenReturn(cultivarResponse);</span>
 
-<span class="fc" id="L66">        mockMvc.perform(post(&quot;/api/cultivar&quot;)</span>
-<span class="fc" id="L67">                .with(csrf())</span>
-<span class="fc" id="L68">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L69">                .content(objectMapper.writeValueAsString(cultivarRequest)))</span>
-<span class="fc" id="L70">                .andExpect(status().isOk())</span>
-<span class="fc" id="L71">                .andExpect(jsonPath(&quot;$.cultivarID&quot;).value(1L))</span>
-<span class="fc" id="L72">                .andExpect(jsonPath(&quot;$.especieID&quot;).value(1L))</span>
-<span class="fc" id="L73">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Cultivar Test&quot;))</span>
-<span class="fc" id="L74">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
-<span class="fc" id="L75">    }</span>
+<span class="fc" id="L68">        mockMvc.perform(post(&quot;/api/cultivar&quot;)</span>
+<span class="fc" id="L69">                .with(csrf())</span>
+<span class="fc" id="L70">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L71">                .content(objectMapper.writeValueAsString(cultivarRequest)))</span>
+<span class="fc" id="L72">                .andExpect(status().isOk())</span>
+<span class="fc" id="L73">                .andExpect(jsonPath(&quot;$.cultivarID&quot;).value(1L))</span>
+<span class="fc" id="L74">                .andExpect(jsonPath(&quot;$.especieID&quot;).value(1L))</span>
+<span class="fc" id="L75">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Cultivar Test&quot;))</span>
+<span class="fc" id="L76">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
+<span class="fc" id="L77">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/cultivar - Debe listar todos los cultivares&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void obtenerTodos_debeRetornarListaDeCultivares() throws Exception {
-<span class="fc" id="L81">        CultivarDTO cultivar2 = new CultivarDTO();</span>
-<span class="fc" id="L82">        cultivar2.setCultivarID(2L);</span>
-<span class="fc" id="L83">        cultivar2.setEspecieID(1L);</span>
-<span class="fc" id="L84">        cultivar2.setEspecieNombre(&quot;Triticum aestivum&quot;);</span>
-<span class="fc" id="L85">        cultivar2.setNombre(&quot;Cultivar Test 2&quot;);</span>
-<span class="fc" id="L86">        cultivar2.setActivo(true);</span>
+<span class="fc" id="L83">        CultivarDTO cultivar2 = new CultivarDTO();</span>
+<span class="fc" id="L84">        cultivar2.setCultivarID(2L);</span>
+<span class="fc" id="L85">        cultivar2.setEspecieID(1L);</span>
+<span class="fc" id="L86">        cultivar2.setEspecieNombre(&quot;Triticum aestivum&quot;);</span>
+<span class="fc" id="L87">        cultivar2.setNombre(&quot;Cultivar Test 2&quot;);</span>
+<span class="fc" id="L88">        cultivar2.setActivo(true);</span>
 
-<span class="fc" id="L88">        List&lt;CultivarDTO&gt; cultivares = Arrays.asList(cultivarResponse, cultivar2);</span>
-<span class="fc" id="L89">        when(cultivarService.obtenerTodos(null)).thenReturn(cultivares);</span>
+<span class="fc" id="L90">        List&lt;CultivarDTO&gt; cultivares = Arrays.asList(cultivarResponse, cultivar2);</span>
+<span class="fc" id="L91">        when(cultivarService.obtenerTodos(null)).thenReturn(cultivares);</span>
 
-<span class="fc" id="L91">        mockMvc.perform(get(&quot;/api/cultivar&quot;)</span>
-<span class="fc" id="L92">                .with(csrf()))</span>
-<span class="fc" id="L93">                .andExpect(status().isOk())</span>
-<span class="fc" id="L94">                .andExpect(jsonPath(&quot;$.length()&quot;).value(2))</span>
-<span class="fc" id="L95">                .andExpect(jsonPath(&quot;$[0].cultivarID&quot;).value(1L))</span>
-<span class="fc" id="L96">                .andExpect(jsonPath(&quot;$[1].cultivarID&quot;).value(2L));</span>
-<span class="fc" id="L97">    }</span>
+<span class="fc" id="L93">        mockMvc.perform(get(&quot;/api/cultivar&quot;)</span>
+<span class="fc" id="L94">                .with(csrf()))</span>
+<span class="fc" id="L95">                .andExpect(status().isOk())</span>
+<span class="fc" id="L96">                .andExpect(jsonPath(&quot;$.length()&quot;).value(2))</span>
+<span class="fc" id="L97">                .andExpect(jsonPath(&quot;$[0].cultivarID&quot;).value(1L))</span>
+<span class="fc" id="L98">                .andExpect(jsonPath(&quot;$[1].cultivarID&quot;).value(2L));</span>
+<span class="fc" id="L99">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/cultivar/{id} - Debe obtener cultivar por ID&quot;)
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     void obtenerPorId_conIdExistente_debeRetornarCultivar() throws Exception {
-<span class="fc" id="L103">        when(cultivarService.obtenerPorId(1L)).thenReturn(cultivarResponse);</span>
+<span class="fc" id="L105">        when(cultivarService.obtenerPorId(1L)).thenReturn(cultivarResponse);</span>
 
-<span class="fc" id="L105">        mockMvc.perform(get(&quot;/api/cultivar/1&quot;)</span>
-<span class="fc" id="L106">                .with(csrf()))</span>
-<span class="fc" id="L107">                .andExpect(status().isOk())</span>
-<span class="fc" id="L108">                .andExpect(jsonPath(&quot;$.cultivarID&quot;).value(1L))</span>
-<span class="fc" id="L109">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Cultivar Test&quot;));</span>
-<span class="fc" id="L110">    }</span>
+<span class="fc" id="L107">        mockMvc.perform(get(&quot;/api/cultivar/1&quot;)</span>
+<span class="fc" id="L108">                .with(csrf()))</span>
+<span class="fc" id="L109">                .andExpect(status().isOk())</span>
+<span class="fc" id="L110">                .andExpect(jsonPath(&quot;$.cultivarID&quot;).value(1L))</span>
+<span class="fc" id="L111">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Cultivar Test&quot;));</span>
+<span class="fc" id="L112">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/cultivar/especie/{especieId} - Debe filtrar cultivares por especie&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void obtenerPorEspecie_conEspecieValida_debeRetornarCultivaresFiltrados() throws Exception {
-<span class="fc" id="L116">        List&lt;CultivarDTO&gt; cultivares = Arrays.asList(cultivarResponse);</span>
-<span class="fc" id="L117">        when(cultivarService.obtenerPorEspecie(1L)).thenReturn(cultivares);</span>
+<span class="fc" id="L118">        List&lt;CultivarDTO&gt; cultivares = Arrays.asList(cultivarResponse);</span>
+<span class="fc" id="L119">        when(cultivarService.obtenerPorEspecie(1L)).thenReturn(cultivares);</span>
 
-<span class="fc" id="L119">        mockMvc.perform(get(&quot;/api/cultivar/especie/1&quot;)</span>
-<span class="fc" id="L120">                .with(csrf()))</span>
-<span class="fc" id="L121">                .andExpect(status().isOk())</span>
-<span class="fc" id="L122">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
-<span class="fc" id="L123">                .andExpect(jsonPath(&quot;$[0].especieID&quot;).value(1L));</span>
-<span class="fc" id="L124">    }</span>
+<span class="fc" id="L121">        mockMvc.perform(get(&quot;/api/cultivar/especie/1&quot;)</span>
+<span class="fc" id="L122">                .with(csrf()))</span>
+<span class="fc" id="L123">                .andExpect(status().isOk())</span>
+<span class="fc" id="L124">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L125">                .andExpect(jsonPath(&quot;$[0].especieID&quot;).value(1L));</span>
+<span class="fc" id="L126">    }</span>
 
     @Test
     @DisplayName(&quot;GET /api/cultivar/buscar - Debe buscar cultivares por nombre&quot;)
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     void buscarPorNombre_conNombreValido_debeRetornarCultivares() throws Exception {
-<span class="fc" id="L130">        List&lt;CultivarDTO&gt; cultivares = Arrays.asList(cultivarResponse);</span>
-<span class="fc" id="L131">        when(cultivarService.buscarPorNombre(&quot;Test&quot;)).thenReturn(cultivares);</span>
+<span class="fc" id="L132">        List&lt;CultivarDTO&gt; cultivares = Arrays.asList(cultivarResponse);</span>
+<span class="fc" id="L133">        when(cultivarService.buscarPorNombre(&quot;Test&quot;)).thenReturn(cultivares);</span>
 
-<span class="fc" id="L133">        mockMvc.perform(get(&quot;/api/cultivar/buscar&quot;)</span>
-<span class="fc" id="L134">                .param(&quot;nombre&quot;, &quot;Test&quot;)</span>
-<span class="fc" id="L135">                .with(csrf()))</span>
-<span class="fc" id="L136">                .andExpect(status().isOk())</span>
-<span class="fc" id="L137">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
-<span class="fc" id="L138">                .andExpect(jsonPath(&quot;$[0].nombre&quot;).value(&quot;Cultivar Test&quot;));</span>
-<span class="fc" id="L139">    }</span>
+<span class="fc" id="L135">        mockMvc.perform(get(&quot;/api/cultivar/buscar&quot;)</span>
+<span class="fc" id="L136">                .param(&quot;nombre&quot;, &quot;Test&quot;)</span>
+<span class="fc" id="L137">                .with(csrf()))</span>
+<span class="fc" id="L138">                .andExpect(status().isOk())</span>
+<span class="fc" id="L139">                .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L140">                .andExpect(jsonPath(&quot;$[0].nombre&quot;).value(&quot;Cultivar Test&quot;));</span>
+<span class="fc" id="L141">    }</span>
 
     @Test
     @DisplayName(&quot;PUT /api/cultivar/{id} - Debe actualizar un cultivar existente&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void actualizarCultivar_conDatosValidos_debeRetornarActualizado() throws Exception {
-<span class="fc" id="L145">        cultivarResponse.setNombre(&quot;Cultivar Actualizado&quot;);</span>
-<span class="fc" id="L146">        when(cultivarService.actualizar(eq(1L), any(CultivarRequestDTO.class))).thenReturn(cultivarResponse);</span>
+<span class="fc" id="L147">        cultivarResponse.setNombre(&quot;Cultivar Actualizado&quot;);</span>
+<span class="fc" id="L148">        when(cultivarService.actualizar(eq(1L), any(CultivarRequestDTO.class))).thenReturn(cultivarResponse);</span>
 
-<span class="fc" id="L148">        cultivarRequest.setNombre(&quot;Cultivar Actualizado&quot;);</span>
+<span class="fc" id="L150">        cultivarRequest.setNombre(&quot;Cultivar Actualizado&quot;);</span>
 
-<span class="fc" id="L150">        mockMvc.perform(put(&quot;/api/cultivar/1&quot;)</span>
-<span class="fc" id="L151">                .with(csrf())</span>
-<span class="fc" id="L152">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L153">                .content(objectMapper.writeValueAsString(cultivarRequest)))</span>
-<span class="fc" id="L154">                .andExpect(status().isOk())</span>
-<span class="fc" id="L155">                .andExpect(jsonPath(&quot;$.cultivarID&quot;).value(1L))</span>
-<span class="fc" id="L156">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Cultivar Actualizado&quot;));</span>
-<span class="fc" id="L157">    }</span>
+<span class="fc" id="L152">        mockMvc.perform(put(&quot;/api/cultivar/1&quot;)</span>
+<span class="fc" id="L153">                .with(csrf())</span>
+<span class="fc" id="L154">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L155">                .content(objectMapper.writeValueAsString(cultivarRequest)))</span>
+<span class="fc" id="L156">                .andExpect(status().isOk())</span>
+<span class="fc" id="L157">                .andExpect(jsonPath(&quot;$.cultivarID&quot;).value(1L))</span>
+<span class="fc" id="L158">                .andExpect(jsonPath(&quot;$.nombre&quot;).value(&quot;Cultivar Actualizado&quot;));</span>
+<span class="fc" id="L159">    }</span>
 
     @Test
     @DisplayName(&quot;PUT /api/cultivar/{id}/reactivar - Debe reactivar un cultivar&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void reactivarCultivar_conIdValido_debeRetornarReactivado() throws Exception {
-<span class="fc" id="L163">        cultivarResponse.setActivo(true);</span>
-<span class="fc" id="L164">        when(cultivarService.reactivar(1L)).thenReturn(cultivarResponse);</span>
+<span class="fc" id="L165">        cultivarResponse.setActivo(true);</span>
+<span class="fc" id="L166">        when(cultivarService.reactivar(1L)).thenReturn(cultivarResponse);</span>
 
-<span class="fc" id="L166">        mockMvc.perform(put(&quot;/api/cultivar/1/reactivar&quot;)</span>
-<span class="fc" id="L167">                .with(csrf()))</span>
-<span class="fc" id="L168">                .andExpect(status().isOk())</span>
-<span class="fc" id="L169">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
-<span class="fc" id="L170">    }</span>
+<span class="fc" id="L168">        mockMvc.perform(put(&quot;/api/cultivar/1/reactivar&quot;)</span>
+<span class="fc" id="L169">                .with(csrf()))</span>
+<span class="fc" id="L170">                .andExpect(status().isOk())</span>
+<span class="fc" id="L171">                .andExpect(jsonPath(&quot;$.activo&quot;).value(true));</span>
+<span class="fc" id="L172">    }</span>
 
     @Test
     @DisplayName(&quot;DELETE /api/cultivar/{id} - Debe desactivar un cultivar&quot;)
     @WithMockUser(roles = &quot;ADMIN&quot;)
     void eliminarCultivar_conIdValido_debeDesactivar() throws Exception {
-<span class="fc" id="L176">        doNothing().when(cultivarService).eliminar(1L);</span>
+<span class="fc" id="L178">        doNothing().when(cultivarService).eliminar(1L);</span>
 
-<span class="fc" id="L178">        mockMvc.perform(delete(&quot;/api/cultivar/1&quot;)</span>
-<span class="fc" id="L179">                .with(csrf()))</span>
-<span class="fc" id="L180">                .andExpect(status().isOk());</span>
-<span class="fc" id="L181">    }</span>
+<span class="fc" id="L180">        mockMvc.perform(delete(&quot;/api/cultivar/1&quot;)</span>
+<span class="fc" id="L181">                .with(csrf()))</span>
+<span class="fc" id="L182">                .andExpect(status().isOk());</span>
+<span class="fc" id="L183">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/cultivar/inactivos - Debe listar cultivares inactivos&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void obtenerInactivos_debeRetornarListaInactivos() throws Exception {
+<span class="fc" id="L189">    CultivarDTO inactivo = new CultivarDTO();</span>
+<span class="fc" id="L190">    inactivo.setCultivarID(3L);</span>
+<span class="fc" id="L191">    inactivo.setNombre(&quot;Cultivar Inactivo&quot;);</span>
+<span class="fc" id="L192">    inactivo.setActivo(false);</span>
+
+<span class="fc" id="L194">    when(cultivarService.obtenerInactivos()).thenReturn(Arrays.asList(inactivo));</span>
+
+<span class="fc" id="L196">    mockMvc.perform(get(&quot;/api/cultivar/inactivos&quot;)</span>
+<span class="fc" id="L197">        .with(csrf()))</span>
+<span class="fc" id="L198">        .andExpect(status().isOk())</span>
+<span class="fc" id="L199">        .andExpect(jsonPath(&quot;$.length()&quot;).value(1))</span>
+<span class="fc" id="L200">        .andExpect(jsonPath(&quot;$[0].activo&quot;).value(false));</span>
+<span class="fc" id="L201">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/cultivar/{id} - Debe retornar 404 cuando no existe&quot;)
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    void obtenerPorId_conIdNoExistente_debeRetornarNotFound() throws Exception {
+<span class="fc" id="L207">    when(cultivarService.obtenerPorId(2L)).thenReturn(null);</span>
+
+<span class="fc" id="L209">    mockMvc.perform(get(&quot;/api/cultivar/2&quot;)</span>
+<span class="fc" id="L210">        .with(csrf()))</span>
+<span class="fc" id="L211">        .andExpect(status().isNotFound());</span>
+<span class="fc" id="L212">    }</span>
+
+    @Test
+    @DisplayName(&quot;POST /api/cultivar - Debe devolver BadRequest cuando el servicio falla&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void crearCultivar_servicioFalla_debeRetornarBadRequest() throws Exception {
+<span class="fc" id="L218">    when(cultivarService.crear(any(CultivarRequestDTO.class)))</span>
+<span class="fc" id="L219">        .thenThrow(new RuntimeException(&quot;Error al crear&quot;));</span>
+
+<span class="fc" id="L221">    mockMvc.perform(post(&quot;/api/cultivar&quot;)</span>
+<span class="fc" id="L222">        .with(csrf())</span>
+<span class="fc" id="L223">        .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L224">        .content(objectMapper.writeValueAsString(cultivarRequest)))</span>
+<span class="fc" id="L225">        .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L226">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/cultivar/{id} - Debe retornar 404 cuando actualizar no encuentra&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarCultivar_noExiste_debeRetornarNotFound() throws Exception {
+<span class="fc" id="L232">    when(cultivarService.actualizar(eq(2L), any(CultivarRequestDTO.class))).thenReturn(null);</span>
+
+<span class="fc" id="L234">    mockMvc.perform(put(&quot;/api/cultivar/2&quot;)</span>
+<span class="fc" id="L235">        .with(csrf())</span>
+<span class="fc" id="L236">        .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L237">        .content(objectMapper.writeValueAsString(cultivarRequest)))</span>
+<span class="fc" id="L238">        .andExpect(status().isNotFound());</span>
+<span class="fc" id="L239">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/cultivar/{id} - Debe retornar BadRequest cuando el servicio lanza RuntimeException&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void actualizarCultivar_servicioFalla_debeRetornarBadRequest() throws Exception {
+<span class="fc" id="L245">    when(cultivarService.actualizar(eq(1L), any(CultivarRequestDTO.class)))</span>
+<span class="fc" id="L246">        .thenThrow(new RuntimeException(&quot;Error actualizar&quot;));</span>
+
+<span class="fc" id="L248">    mockMvc.perform(put(&quot;/api/cultivar/1&quot;)</span>
+<span class="fc" id="L249">        .with(csrf())</span>
+<span class="fc" id="L250">        .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L251">        .content(objectMapper.writeValueAsString(cultivarRequest)))</span>
+<span class="fc" id="L252">        .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L253">    }</span>
+
+    @Test
+    @DisplayName(&quot;PUT /api/cultivar/{id}/reactivar - Debe devolver 404 cuando reactivar no existe&quot;)
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    void reactivarCultivar_noExiste_debeRetornarNotFound() throws Exception {
+<span class="fc" id="L259">    when(cultivarService.reactivar(2L)).thenReturn(null);</span>
+
+<span class="fc" id="L261">    mockMvc.perform(put(&quot;/api/cultivar/2/reactivar&quot;)</span>
+<span class="fc" id="L262">        .with(csrf()))</span>
+<span class="fc" id="L263">        .andExpect(status().isNotFound());</span>
+<span class="fc" id="L264">    }</span>
+
+    @Test
+    @DisplayName(&quot;GET /api/cultivar/listado - Debe retornar paginado&quot;)
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    void obtenerCultivaresPaginados_debeRetornarPagina() throws Exception {
+<span class="fc" id="L270">    List&lt;CultivarDTO&gt; lista = Arrays.asList(cultivarResponse);</span>
+<span class="fc" id="L271">    PageImpl&lt;CultivarDTO&gt; page = new PageImpl&lt;&gt;(lista, PageRequest.of(0, 10), lista.size());</span>
+
+<span class="fc" id="L273">    when(cultivarService.obtenerCultivaresPaginadosConFiltros(any(), eq(&quot;search&quot;), eq(true)))</span>
+<span class="fc" id="L274">        .thenReturn(page);</span>
+
+<span class="fc" id="L276">    mockMvc.perform(get(&quot;/api/cultivar/listado&quot;)</span>
+<span class="fc" id="L277">        .param(&quot;page&quot;, &quot;0&quot;)</span>
+<span class="fc" id="L278">        .param(&quot;size&quot;, &quot;10&quot;)</span>
+<span class="fc" id="L279">        .param(&quot;search&quot;, &quot;search&quot;)</span>
+<span class="fc" id="L280">        .param(&quot;activo&quot;, &quot;true&quot;)</span>
+<span class="fc" id="L281">        .with(csrf()))</span>
+<span class="fc" id="L282">        .andExpect(status().isOk())</span>
+<span class="fc" id="L283">                .andExpect(jsonPath(&quot;$.content.length()&quot;).value(1))</span>
+<span class="fc" id="L284">                .andExpect(jsonPath(&quot;$.page.totalElements&quot;).value(1));</span>
+<span class="fc" id="L285">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

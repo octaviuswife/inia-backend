@@ -128,7 +128,7 @@ import static org.mockito.Mockito.*;
         // ACT &amp; ASSERT
 <span class="fc" id="L129">        assertThrows(RuntimeException.class, () -&gt; {</span>
 <span class="nc" id="L130">            tetrazolioService.crearTetrazolio(tetrazolioRequestDTO);</span>
-<span class="nc" id="L131">        }, &quot;Debe lanzar excepción cuando no se especifican repeticiones esperadas&quot;);</span>
+<span class="pc" id="L131">        }, &quot;Debe lanzar excepción cuando no se especifican repeticiones esperadas&quot;);</span>
 <span class="fc" id="L132">    }</span>
 
     @Test
@@ -140,7 +140,7 @@ import static org.mockito.Mockito.*;
         // ACT &amp; ASSERT
 <span class="fc" id="L141">        assertThrows(RuntimeException.class, () -&gt; {</span>
 <span class="nc" id="L142">            tetrazolioService.crearTetrazolio(tetrazolioRequestDTO);</span>
-<span class="nc" id="L143">        }, &quot;Debe lanzar excepción cuando repeticiones = 0&quot;);</span>
+<span class="pc" id="L143">        }, &quot;Debe lanzar excepción cuando repeticiones = 0&quot;);</span>
 <span class="fc" id="L144">    }</span>
 
     @Test
@@ -153,7 +153,7 @@ import static org.mockito.Mockito.*;
         // ACT &amp; ASSERT
 <span class="fc" id="L154">        assertThrows(RuntimeException.class, () -&gt; {</span>
 <span class="nc" id="L155">            tetrazolioService.crearTetrazolio(tetrazolioRequestDTO);</span>
-<span class="nc" id="L156">        }, &quot;Debe lanzar excepción cuando el lote está inactivo&quot;);</span>
+<span class="pc" id="L156">        }, &quot;Debe lanzar excepción cuando el lote está inactivo&quot;);</span>
 <span class="fc" id="L157">    }</span>
 
     @Test

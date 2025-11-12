@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportacionLegadoServiceTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java in Proyecto-Final-UTEC Coverage Results</a> &gt; <a href="index.source.html" class="el_package">utec.proyectofinal.Proyecto.Final.UTEC.services</a> &gt; <span class="el_source">ImportacionLegadoServiceTest.java</span></div><h1>ImportacionLegadoServiceTest.java</h1><pre class="source lang-java linenums">package utec.proyectofinal.Proyecto.Final.UTEC.services;
 
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,16 +11,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
+import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.*;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.*;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoCatalogo;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoContacto;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName(&quot;Tests de ImportacionLegadoService&quot;)
-<span class="fc" id="L21">class ImportacionLegadoServiceTest {</span>
+<span class="fc" id="L30">class ImportacionLegadoServiceTest {</span>
 
     @Mock
     private LegadoRepository legadoRepository;
@@ -44,20 +53,1027 @@ import static org.mockito.Mockito.*;
     @InjectMocks
     private ImportacionLegadoService importacionLegadoService;
 
+    private Especie especie;
+    private Cultivar cultivar;
+    private Contacto empresa;
+    private Catalogo deposito;
+    private Catalogo origen;
+    private Lote lote;
+
     @BeforeEach
     void setUp() {
-<span class="fc" id="L49">    }</span>
+        // Preparar entidades de prueba
+<span class="fc" id="L66">        especie = new Especie();</span>
+<span class="fc" id="L67">        especie.setEspecieID(1L);</span>
+<span class="fc" id="L68">        especie.setNombreComun(&quot;Trigo&quot;);</span>
+<span class="fc" id="L69">        especie.setNombreCientifico(&quot;Triticum aestivum&quot;);</span>
+<span class="fc" id="L70">        especie.setActivo(true);</span>
+
+<span class="fc" id="L72">        cultivar = new Cultivar();</span>
+<span class="fc" id="L73">        cultivar.setCultivarID(1L);</span>
+<span class="fc" id="L74">        cultivar.setNombre(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L75">        cultivar.setEspecie(especie);</span>
+<span class="fc" id="L76">        cultivar.setActivo(true);</span>
+
+<span class="fc" id="L78">        empresa = new Contacto();</span>
+<span class="fc" id="L79">        empresa.setContactoID(1L);</span>
+<span class="fc" id="L80">        empresa.setNombre(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L81">        empresa.setContacto(&quot;test@test.com&quot;);</span>
+<span class="fc" id="L82">        empresa.setTipo(TipoContacto.EMPRESA);</span>
+<span class="fc" id="L83">        empresa.setActivo(true);</span>
+
+<span class="fc" id="L85">        deposito = new Catalogo();</span>
+<span class="fc" id="L86">        deposito.setId(1L);</span>
+<span class="fc" id="L87">        deposito.setTipo(TipoCatalogo.DEPOSITO);</span>
+<span class="fc" id="L88">        deposito.setValor(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L89">        deposito.setActivo(true);</span>
+
+<span class="fc" id="L91">        origen = new Catalogo();</span>
+<span class="fc" id="L92">        origen.setId(2L);</span>
+<span class="fc" id="L93">        origen.setTipo(TipoCatalogo.ORIGEN);</span>
+<span class="fc" id="L94">        origen.setValor(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L95">        origen.setActivo(true);</span>
+
+<span class="fc" id="L97">        lote = new Lote();</span>
+<span class="fc" id="L98">        lote.setLoteID(1L);</span>
+<span class="fc" id="L99">        lote.setFicha(&quot;FICHA-001&quot;);</span>
+<span class="fc" id="L100">        lote.setCultivar(cultivar);</span>
+<span class="fc" id="L101">        lote.setEmpresa(empresa);</span>
+<span class="fc" id="L102">        lote.setDeposito(deposito);</span>
+<span class="fc" id="L103">        lote.setOrigen(origen);</span>
+<span class="fc" id="L104">        lote.setActivo(true);</span>
+<span class="fc" id="L105">    }</span>
 
     @Test
     @DisplayName(&quot;Importar archivo con error IO - debe manejar correctamente&quot;)
     void importarDesdeExcel_errorIO_debeManejarCorrectamente() throws IOException {
-<span class="fc" id="L54">        when(archivo.getInputStream()).thenThrow(new IOException(&quot;Error al leer archivo&quot;));</span>
+<span class="fc" id="L110">        when(archivo.getInputStream()).thenThrow(new IOException(&quot;Error al leer archivo&quot;));</span>
 
-<span class="fc" id="L56">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+<span class="fc" id="L112">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
 
-<span class="fc" id="L58">        assertNotNull(resultado);</span>
-<span class="fc" id="L59">        assertFalse(resultado.getExitoso());</span>
-<span class="fc" id="L60">        assertTrue(resultado.getMensaje().contains(&quot;Error al leer&quot;));</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L114">        assertNotNull(resultado);</span>
+<span class="fc" id="L115">        assertFalse(resultado.getExitoso());</span>
+<span class="fc" id="L116">        assertTrue(resultado.getMensaje().contains(&quot;Error al leer&quot;));</span>
+<span class="fc" id="L117">    }</span>
+
+    @Test
+    @DisplayName(&quot;Importar archivo vacío - debe procesar sin errores&quot;)
+    void importarDesdeExcel_archivoVacio_debeProcesarSinErrores() throws IOException {
+        // Crear workbook vacío
+<span class="fc" id="L123">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L124">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L125">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc" id="L126">        headerRow.createCell(0).setCellValue(&quot;Empresa&quot;);</span>
+        
+<span class="fc" id="L128">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L129">        workbook.write(bos);</span>
+<span class="fc" id="L130">        workbook.close();</span>
+        
+<span class="fc" id="L132">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+
+<span class="fc" id="L134">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L136">        assertNotNull(resultado);</span>
+<span class="fc" id="L137">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L138">        assertEquals(0, resultado.getTotalFilas());</span>
+<span class="fc" id="L139">    }</span>
+
+    @Test
+    @DisplayName(&quot;Importar archivo con una fila válida - debe importar correctamente&quot;)
+    void importarDesdeExcel_conFilaValida_debeImportarCorrectamente() throws IOException {
+        // Crear workbook con datos válidos
+<span class="fc" id="L145">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L146">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+        
+        // Encabezados
+<span class="fc" id="L149">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L151">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+        // Fila de datos
+<span class="fc" id="L155">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L156">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);         // COL_EMPRESA</span>
+<span class="fc" id="L157">        dataRow.createCell(1).setCellValue(&quot;COD001&quot;);               // COL_COD_DOC</span>
+<span class="fc" id="L158">        dataRow.createCell(2).setCellValue(&quot;Documento Test&quot;);       // COL_NOM_DOC</span>
+<span class="fc" id="L159">        dataRow.createCell(3).setCellValue(&quot;123&quot;);                  // COL_NRO_DOC</span>
+<span class="fc" id="L160">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);        // COL_DEPOSITO</span>
+<span class="fc" id="L161">        dataRow.createCell(5).setCellValue(&quot;Familia Test&quot;);         // COL_FAMILIA</span>
+<span class="fc" id="L162">        dataRow.createCell(6).setCellValue(&quot;Trigo&quot;);                // COL_ESPECIE</span>
+<span class="fc" id="L163">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);        // COL_VARIEDAD</span>
+<span class="fc" id="L164">        dataRow.createCell(8).setCellValue(&quot;LOTE-001&quot;);             // COL_LOTE</span>
+<span class="fc" id="L165">        dataRow.createCell(9).setCellValue(&quot;Certificada&quot;);          // COL_TIPO_SEMILLA</span>
+<span class="fc" id="L166">        dataRow.createCell(10).setCellValue(1000.0);               // COL_CANTIDAD</span>
+<span class="fc" id="L167">        dataRow.createCell(14).setCellValue(&quot;FICHA-001&quot;);          // COL_NRO_FICHA</span>
+<span class="fc" id="L168">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);        // COL_ORIGEN</span>
+        
+<span class="fc" id="L170">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L171">        workbook.write(bos);</span>
+<span class="fc" id="L172">        workbook.close();</span>
+        
+<span class="fc" id="L174">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L175">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+        // Configurar mocks
+<span class="fc" id="L178">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(&quot;Empresa Test&quot;, TipoContacto.EMPRESA))</span>
+<span class="fc" id="L179">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L180">        when(contactoRepository.save(any(Contacto.class))).thenReturn(empresa);</span>
+        
+<span class="fc" id="L182">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(TipoCatalogo.DEPOSITO, &quot;Depósito Test&quot;))</span>
+<span class="fc" id="L183">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L184">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(TipoCatalogo.ORIGEN, &quot;Origen Test&quot;))</span>
+<span class="fc" id="L185">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L186">        when(catalogoRepository.save(any(Catalogo.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+        
+<span class="fc" id="L188">        when(especieRepository.findByNombreComunIgnoreCase(&quot;Trigo&quot;)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L189">        when(especieRepository.buscarPorNombreComunInicio(&quot;Trigo&quot;)).thenReturn(java.util.Collections.emptyList());</span>
+<span class="fc" id="L190">        when(especieRepository.findByActivoTrue()).thenReturn(java.util.Collections.emptyList());</span>
+<span class="fc" id="L191">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
+        
+<span class="fc" id="L193">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(&quot;Cultivar Test&quot;, 1L))</span>
+<span class="fc" id="L194">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L195">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
+        
+<span class="fc" id="L197">        when(loteRepository.findByFicha(&quot;FICHA-001&quot;)).thenReturn(Optional.empty());</span>
+<span class="fc" id="L198">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+        
+<span class="fc" id="L200">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L202">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L204">        assertNotNull(resultado);</span>
+<span class="fc" id="L205">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L206">        assertEquals(1, resultado.getFilasImportadas());</span>
+<span class="fc" id="L207">        assertEquals(0, resultado.getFilasConErrores());</span>
+<span class="fc" id="L208">    }</span>
+
+    @Test
+    @DisplayName(&quot;Importar solo validación - no debe guardar datos&quot;)
+    void importarDesdeExcel_soloValidacion_noDebeGuardarDatos() throws IOException {
+<span class="fc" id="L213">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L214">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L215">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc" id="L216">        headerRow.createCell(0).setCellValue(&quot;Empresa&quot;);</span>
+        
+<span class="fc" id="L218">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L219">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+        
+<span class="fc" id="L221">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L222">        workbook.write(bos);</span>
+<span class="fc" id="L223">        workbook.close();</span>
+        
+<span class="fc" id="L225">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+
+<span class="fc" id="L227">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, true);</span>
+
+<span class="fc" id="L229">        assertNotNull(resultado);</span>
+<span class="fc" id="L230">        assertTrue(resultado.getMensaje().contains(&quot;Validación completada&quot;));</span>
+<span class="fc" id="L231">        verify(loteRepository, never()).save(any());</span>
+<span class="fc" id="L232">        verify(legadoRepository, never()).save(any());</span>
+<span class="fc" id="L233">    }</span>
+
+    @Test
+    @DisplayName(&quot;Importar archivo con fila con error - debe registrar error&quot;)
+    void importarDesdeExcel_conFilaConError_debeRegistrarError() throws IOException {
+<span class="fc" id="L238">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L239">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L240">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc" id="L241">        headerRow.createCell(0).setCellValue(&quot;Empresa&quot;);</span>
+        
+        // Fila con datos incompletos que causará error
+<span class="fc" id="L244">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L245">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+        // Faltan otros campos necesarios
+        
+<span class="fc" id="L248">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L249">        workbook.write(bos);</span>
+<span class="fc" id="L250">        workbook.close();</span>
+        
+<span class="fc" id="L252">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L253">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L255">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L256">            .thenThrow(new RuntimeException(&quot;Error de prueba&quot;));</span>
+
+<span class="fc" id="L258">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L260">        assertNotNull(resultado);</span>
+<span class="fc" id="L261">        assertFalse(resultado.getExitoso());</span>
+<span class="fc" id="L262">        assertEquals(1, resultado.getFilasConErrores());</span>
+<span class="fc" id="L263">        assertFalse(resultado.getErrores().isEmpty());</span>
+<span class="fc" id="L264">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener o crear empresa existente - debe retornar la existente&quot;)
+    void obtenerOCrearEmpresa_empresaExistente_debeRetornarExistente() throws IOException {
+<span class="fc" id="L269">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L270">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L271">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L273">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L276">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L277">        dataRow.createCell(0).setCellValue(&quot;Empresa Existente&quot;);</span>
+<span class="fc" id="L278">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L279">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L280">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L281">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L282">        dataRow.createCell(14).setCellValue(&quot;FICHA-002&quot;);</span>
+        
+<span class="fc" id="L284">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L285">        workbook.write(bos);</span>
+<span class="fc" id="L286">        workbook.close();</span>
+        
+<span class="fc" id="L288">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L289">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L291">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(&quot;Empresa Existente&quot;, TipoContacto.EMPRESA))</span>
+<span class="fc" id="L292">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L293">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L294">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L295">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L296">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L297">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L298">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L299">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L300">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L301">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L303">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L305">        assertNotNull(resultado);</span>
+<span class="fc" id="L306">        verify(contactoRepository, never()).save(any(Contacto.class));</span>
+<span class="fc" id="L307">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener o crear catálogo existente - debe retornar el existente&quot;)
+    void obtenerOCrearCatalogo_catalogoExistente_debeRetornarExistente() throws IOException {
+<span class="fc" id="L312">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L313">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L314">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L316">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L319">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L320">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L321">        dataRow.createCell(4).setCellValue(&quot;207 - Depósito Existente&quot;);</span>
+<span class="fc" id="L322">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L323">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L324">        dataRow.createCell(12).setCellValue(&quot;Origen Existente&quot;);</span>
+<span class="fc" id="L325">        dataRow.createCell(14).setCellValue(&quot;FICHA-003&quot;);</span>
+        
+<span class="fc" id="L327">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L328">        workbook.write(bos);</span>
+<span class="fc" id="L329">        workbook.close();</span>
+        
+<span class="fc" id="L331">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L332">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L334">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L335">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L336">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L337">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L338">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L339">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L340">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L341">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L342">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L343">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L344">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L346">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L348">        assertNotNull(resultado);</span>
+<span class="fc" id="L349">        verify(catalogoRepository, never()).save(any(Catalogo.class));</span>
+<span class="fc" id="L350">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener o crear especie con búsqueda flexible - debe encontrar por nombre común&quot;)
+    void obtenerOCrearEspecie_busquedaFlexible_debeEncontrarPorNombreComun() throws IOException {
+<span class="fc" id="L355">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L356">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L357">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L359">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L362">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L363">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L364">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L365">        dataRow.createCell(6).setCellValue(&quot;1517 - RAIGRAS&quot;);</span>
+<span class="fc" id="L366">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L367">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L368">        dataRow.createCell(14).setCellValue(&quot;FICHA-004&quot;);</span>
+        
+<span class="fc" id="L370">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L371">        workbook.write(bos);</span>
+<span class="fc" id="L372">        workbook.close();</span>
+        
+<span class="fc" id="L374">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L375">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L377">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L378">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L379">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L380">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L381">        when(especieRepository.findByNombreComunIgnoreCase(&quot;RAIGRAS&quot;))</span>
+<span class="fc" id="L382">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L383">        when(especieRepository.buscarPorNombreComunInicio(&quot;RAIGRAS&quot;))</span>
+<span class="fc" id="L384">            .thenReturn(java.util.Collections.singletonList(especie));</span>
+<span class="fc" id="L385">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L386">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L387">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L388">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L389">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L391">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L393">        assertNotNull(resultado);</span>
+<span class="fc" id="L394">        verify(especieRepository, never()).save(any(Especie.class));</span>
+<span class="fc" id="L395">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear lote con ficha existente - debe retornar el existente sin guardar de nuevo&quot;)
+    void crearLote_conFichaExistente_debeRetornarExistente() throws IOException {
+<span class="fc" id="L400">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L401">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L402">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L403" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L404">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L407">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L408">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L409">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L410">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L411">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L412">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L413">        dataRow.createCell(14).setCellValue(&quot;FICHA-EXISTENTE&quot;);</span>
+        
+<span class="fc" id="L415">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L416">        workbook.write(bos);</span>
+<span class="fc" id="L417">        workbook.close();</span>
+        
+<span class="fc" id="L419">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L420">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L422">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L423">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L424">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L425">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L426">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L427">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L428">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L429">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L430">        when(loteRepository.findByFicha(&quot;FICHA-EXISTENTE&quot;)).thenReturn(Optional.of(lote));</span>
+<span class="fc" id="L431">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L433">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L435">        assertNotNull(resultado);</span>
+        // El lote existente se reutiliza, no se guarda de nuevo
+<span class="fc" id="L437">        verify(loteRepository, times(1)).findByFicha(&quot;FICHA-EXISTENTE&quot;);</span>
+<span class="fc" id="L438">        verify(legadoRepository, times(1)).save(any(Legado.class));</span>
+<span class="fc" id="L439">    }</span>
+
+    @Test
+    @DisplayName(&quot;Importar con filas vacías - debe ignorar filas vacías&quot;)
+    void importarDesdeExcel_conFilasVacias_debeIgnorarFilasVacias() throws IOException {
+<span class="fc" id="L444">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L445">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L446">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc" id="L447">        headerRow.createCell(0).setCellValue(&quot;Empresa&quot;);</span>
+        
+        // Fila 1: vacía
+<span class="fc" id="L450">        sheet.createRow(1);</span>
+        
+        // Fila 2: con datos
+<span class="fc" id="L453">        Row dataRow = sheet.createRow(2);</span>
+<span class="fc" id="L454">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+        
+        // Fila 3: vacía
+<span class="fc" id="L457">        sheet.createRow(3);</span>
+        
+<span class="fc" id="L459">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L460">        workbook.write(bos);</span>
+<span class="fc" id="L461">        workbook.close();</span>
+        
+<span class="fc" id="L463">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L464">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L466">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L467">            .thenThrow(new RuntimeException(&quot;Error intencional&quot;));</span>
+
+<span class="fc" id="L469">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L471">        assertNotNull(resultado);</span>
+        // Solo debe procesar 1 fila (la que tiene datos)
+<span class="fc" id="L473">        assertEquals(1, resultado.getTotalFilas());</span>
+<span class="fc" id="L474">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear legado con todos los campos - debe mapear correctamente&quot;)
+    void crearLegado_conTodosLosCampos_debeMapearcorrectamente() throws IOException {
+<span class="fc" id="L479">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L480">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L481">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L482" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L483">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L486">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L487">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L488">        dataRow.createCell(1).setCellValue(&quot;COD001&quot;);</span>
+<span class="fc" id="L489">        dataRow.createCell(2).setCellValue(&quot;Documento Test&quot;);</span>
+<span class="fc" id="L490">        dataRow.createCell(3).setCellValue(&quot;123&quot;);</span>
+<span class="fc" id="L491">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L492">        dataRow.createCell(5).setCellValue(&quot;Familia Test&quot;);</span>
+<span class="fc" id="L493">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L494">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L495">        dataRow.createCell(8).setCellValue(&quot;LOTE-001&quot;);</span>
+<span class="fc" id="L496">        dataRow.createCell(9).setCellValue(&quot;Certificada&quot;);</span>
+<span class="fc" id="L497">        dataRow.createCell(10).setCellValue(1000.0);</span>
+<span class="fc" id="L498">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L499">        dataRow.createCell(14).setCellValue(&quot;FICHA-005&quot;);</span>
+<span class="fc" id="L500">        dataRow.createCell(16).setCellValue(85);  // GERM_C</span>
+<span class="fc" id="L501">        dataRow.createCell(17).setCellValue(80);  // GERM_SC</span>
+<span class="fc" id="L502">        dataRow.createCell(18).setCellValue(5.5); // PESO_1000</span>
+<span class="fc" id="L503">        dataRow.createCell(19).setCellValue(95.0); // PURA</span>
+<span class="fc" id="L504">        dataRow.createCell(48).setCellValue(&quot;Pretratamiento&quot;);</span>
+        
+<span class="fc" id="L506">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L507">        workbook.write(bos);</span>
+<span class="fc" id="L508">        workbook.close();</span>
+        
+<span class="fc" id="L510">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L511">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L513">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L514">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L515">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L516">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L517">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L518">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L519">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L520">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L521">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L522">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L523">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L525">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L527">        assertNotNull(resultado);</span>
+<span class="fc" id="L528">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L529">        verify(legadoRepository, times(1)).save(any(Legado.class));</span>
+<span class="fc" id="L530">    }</span>
+
+    @Test
+    @DisplayName(&quot;getCellValueAsDate con celda numérica formateada - debe convertir correctamente&quot;)
+    void getCellValueAsDate_celdaNumerica_debeConvertirCorrectamente() throws IOException {
+<span class="fc" id="L535">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L536">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L537">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L538" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L539">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L542">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L543">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L544">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L545">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L546">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L547">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L548">        dataRow.createCell(14).setCellValue(&quot;FICHA-006&quot;);</span>
+        
+        // Crear celda de fecha con formato numérico
+<span class="fc" id="L551">        Cell fechaCell = dataRow.createCell(15);</span>
+<span class="fc" id="L552">        CellStyle dateStyle = workbook.createCellStyle();</span>
+<span class="fc" id="L553">        dateStyle.setDataFormat(workbook.createDataFormat().getFormat(&quot;d/m/yyyy&quot;));</span>
+<span class="fc" id="L554">        fechaCell.setCellStyle(dateStyle);</span>
+<span class="fc" id="L555">        fechaCell.setCellValue(java.time.LocalDateTime.of(2023, 11, 15, 0, 0));</span>
+        
+<span class="fc" id="L557">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L558">        workbook.write(bos);</span>
+<span class="fc" id="L559">        workbook.close();</span>
+        
+<span class="fc" id="L561">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L562">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L564">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L565">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L566">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L567">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L568">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L569">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L570">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L571">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L572">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L573">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L574">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L576">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L578">        assertNotNull(resultado);</span>
+<span class="fc" id="L579">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L580">    }</span>
+
+    @Test
+    @DisplayName(&quot;getCellValueAsDate con celda string - debe parsear correctamente&quot;)
+    void getCellValueAsDate_celdaString_debeParsearCorrectamente() throws IOException {
+<span class="fc" id="L585">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L586">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L587">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L588" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L589">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L592">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L593">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L594">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L595">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L596">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L597">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L598">        dataRow.createCell(14).setCellValue(&quot;FICHA-007&quot;);</span>
+<span class="fc" id="L599">        dataRow.createCell(15).setCellValue(&quot;15/11/2023&quot;); // Fecha como string</span>
+        
+<span class="fc" id="L601">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L602">        workbook.write(bos);</span>
+<span class="fc" id="L603">        workbook.close();</span>
+        
+<span class="fc" id="L605">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L606">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L608">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L609">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L610">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L611">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L612">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L613">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L614">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L615">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L616">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L617">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L618">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L620">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L622">        assertNotNull(resultado);</span>
+<span class="fc" id="L623">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L624">    }</span>
+
+    @Test
+    @DisplayName(&quot;getCellValueAsDate con celda vacía - debe retornar null&quot;)
+    void getCellValueAsDate_celdaVacia_debeRetornarNull() throws IOException {
+<span class="fc" id="L629">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L630">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L631">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L632" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L633">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L636">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L637">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L638">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L639">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L640">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L641">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L642">        dataRow.createCell(14).setCellValue(&quot;FICHA-008&quot;);</span>
+        // No agregar celda de fecha
+        
+<span class="fc" id="L645">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L646">        workbook.write(bos);</span>
+<span class="fc" id="L647">        workbook.close();</span>
+        
+<span class="fc" id="L649">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L650">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L652">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L653">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L654">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L655">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L656">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L657">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L658">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L659">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L660">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L661">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L662">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L664">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L666">        assertNotNull(resultado);</span>
+<span class="fc" id="L667">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L668">    }</span>
+
+    @Test
+    @DisplayName(&quot;getCellValueAsBigDecimal con celda string - debe convertir correctamente&quot;)
+    void getCellValueAsBigDecimal_celdaString_debeConvertirCorrectamente() throws IOException {
+<span class="fc" id="L673">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L674">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L675">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L676" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L677">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L680">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L681">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L682">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L683">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L684">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L685">        dataRow.createCell(10).setCellValue(&quot;1234,56&quot;); // Número con coma como decimal</span>
+<span class="fc" id="L686">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L687">        dataRow.createCell(14).setCellValue(&quot;FICHA-009&quot;);</span>
+        
+<span class="fc" id="L689">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L690">        workbook.write(bos);</span>
+<span class="fc" id="L691">        workbook.close();</span>
+        
+<span class="fc" id="L693">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L694">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L696">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L697">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L698">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L699">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L700">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L701">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L702">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L703">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L704">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L705">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L706">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L708">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L710">        assertNotNull(resultado);</span>
+<span class="fc" id="L711">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L712">    }</span>
+
+    @Test
+    @DisplayName(&quot;getCellValueAsBigDecimal con celda string vacía - debe retornar null&quot;)
+    void getCellValueAsBigDecimal_celdaStringVacia_debeRetornarNull() throws IOException {
+<span class="fc" id="L717">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L718">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L719">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L720" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L721">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L724">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L725">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L726">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L727">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L728">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L729">        dataRow.createCell(10).setCellValue(&quot;   &quot;); // String con espacios</span>
+<span class="fc" id="L730">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L731">        dataRow.createCell(14).setCellValue(&quot;FICHA-010&quot;);</span>
+        
+<span class="fc" id="L733">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L734">        workbook.write(bos);</span>
+<span class="fc" id="L735">        workbook.close();</span>
+        
+<span class="fc" id="L737">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L738">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L740">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L741">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L742">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L743">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L744">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L745">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L746">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L747">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L748">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L749">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L750">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L752">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L754">        assertNotNull(resultado);</span>
+<span class="fc" id="L755">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L756">    }</span>
+
+    @Test
+    @DisplayName(&quot;getCellValueAsString con tipos de celda variados - debe convertir correctamente&quot;)
+    void getCellValueAsString_tiposVariados_debeConvertirCorrectamente() throws IOException {
+<span class="fc" id="L761">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L762">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L763">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L764" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L765">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L768">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L769">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L770">        dataRow.createCell(1).setCellValue(123.45); // Número como COD_DOC</span>
+<span class="fc" id="L771">        dataRow.createCell(2).setCellValue(true); // Boolean como NOM_DOC</span>
+<span class="fc" id="L772">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L773">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L774">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L775">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L776">        dataRow.createCell(14).setCellValue(&quot;FICHA-011&quot;);</span>
+        
+<span class="fc" id="L778">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L779">        workbook.write(bos);</span>
+<span class="fc" id="L780">        workbook.close();</span>
+        
+<span class="fc" id="L782">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L783">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L785">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L786">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L787">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L788">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L789">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L790">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L791">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L792">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L793">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L794">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L795">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L797">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L799">        assertNotNull(resultado);</span>
+<span class="fc" id="L800">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L801">    }</span>
+
+    @Test
+    @DisplayName(&quot;getCellValueAsString con celda de fórmula - debe retornar la fórmula&quot;)
+    void getCellValueAsString_celdaFormula_debeRetornarFormula() throws IOException {
+<span class="fc" id="L806">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L807">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L808">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L809" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L810">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L813">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L814">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L815">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L816">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L817">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L818">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L819">        dataRow.createCell(14).setCellValue(&quot;FICHA-012&quot;);</span>
+        
+        // Crear celda con fórmula
+<span class="fc" id="L822">        Cell formulaCell = dataRow.createCell(10);</span>
+<span class="fc" id="L823">        formulaCell.setCellFormula(&quot;SUM(A1:A10)&quot;);</span>
+        
+<span class="fc" id="L825">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L826">        workbook.write(bos);</span>
+<span class="fc" id="L827">        workbook.close();</span>
+        
+<span class="fc" id="L829">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L830">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L832">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L833">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L834">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L835">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L836">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L837">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L838">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L839">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L840">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L841">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L842">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L844">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L846">        assertNotNull(resultado);</span>
+<span class="fc" id="L847">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L848">    }</span>
+
+    @Test
+    @DisplayName(&quot;parsearCodigo con valor completo - debe extraer solo el código&quot;)
+    void parsearCodigo_conValorCompleto_debeExtraerCodigo() throws IOException {
+<span class="fc" id="L853">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L854">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L855">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L856" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L857">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L860">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L861">        dataRow.createCell(0).setCellValue(&quot;050 - Empresa INIA&quot;);</span>
+<span class="fc" id="L862">        dataRow.createCell(4).setCellValue(&quot;0522 - Depósito Central&quot;);</span>
+<span class="fc" id="L863">        dataRow.createCell(6).setCellValue(&quot;1517 - RAIGRAS&quot;);</span>
+<span class="fc" id="L864">        dataRow.createCell(7).setCellValue(&quot;123 - Cultivar Test&quot;);</span>
+<span class="fc" id="L865">        dataRow.createCell(12).setCellValue(&quot;999 - Origen Test&quot;);</span>
+<span class="fc" id="L866">        dataRow.createCell(14).setCellValue(&quot;FICHA-013&quot;);</span>
+        
+<span class="fc" id="L868">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L869">        workbook.write(bos);</span>
+<span class="fc" id="L870">        workbook.close();</span>
+        
+<span class="fc" id="L872">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L873">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L875">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L876">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L877">        when(contactoRepository.save(any(Contacto.class))).thenReturn(empresa);</span>
+<span class="fc" id="L878">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L879">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L880">        when(catalogoRepository.save(any(Catalogo.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+<span class="fc" id="L881">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L882">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L883">        when(especieRepository.buscarPorNombreComunInicio(any()))</span>
+<span class="fc" id="L884">            .thenReturn(java.util.Collections.emptyList());</span>
+<span class="fc" id="L885">        when(especieRepository.findByActivoTrue()).thenReturn(java.util.Collections.emptyList());</span>
+<span class="fc" id="L886">        when(especieRepository.save(any(Especie.class))).thenReturn(especie);</span>
+<span class="fc" id="L887">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L888">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L889">        when(cultivarRepository.save(any(Cultivar.class))).thenReturn(cultivar);</span>
+<span class="fc" id="L890">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L891">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L892">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L894">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L896">        assertNotNull(resultado);</span>
+<span class="fc" id="L897">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L898">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerOCrearEspecie con búsqueda por acentos - debe encontrar sin acentos&quot;)
+    void obtenerOCrearEspecie_busquedaPorAcentos_debeEncontrarSinAcentos() throws IOException {
+<span class="fc" id="L903">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L904">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L905">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L906" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L907">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L910">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L911">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L912">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L913">        dataRow.createCell(6).setCellValue(&quot;Raigras&quot;); // Buscar &quot;Raigras&quot; debería encontrar &quot;Raigrás&quot;</span>
+<span class="fc" id="L914">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L915">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L916">        dataRow.createCell(14).setCellValue(&quot;FICHA-014&quot;);</span>
+        
+<span class="fc" id="L918">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L919">        workbook.write(bos);</span>
+<span class="fc" id="L920">        workbook.close();</span>
+        
+<span class="fc" id="L922">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L923">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+        // Crear especie con acentos
+<span class="fc" id="L926">        Especie especieConAcentos = new Especie();</span>
+<span class="fc" id="L927">        especieConAcentos.setEspecieID(2L);</span>
+<span class="fc" id="L928">        especieConAcentos.setNombreComun(&quot;Raigrás&quot;);</span>
+<span class="fc" id="L929">        especieConAcentos.setActivo(true);</span>
+        
+<span class="fc" id="L931">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L932">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L933">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L934">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L935">        when(especieRepository.findByNombreComunIgnoreCase(&quot;Raigras&quot;))</span>
+<span class="fc" id="L936">            .thenReturn(Optional.empty());</span>
+<span class="fc" id="L937">        when(especieRepository.buscarPorNombreComunInicio(&quot;Raigras&quot;))</span>
+<span class="fc" id="L938">            .thenReturn(java.util.Collections.emptyList());</span>
+<span class="fc" id="L939">        when(especieRepository.findByActivoTrue())</span>
+<span class="fc" id="L940">            .thenReturn(java.util.Collections.singletonList(especieConAcentos));</span>
+<span class="fc" id="L941">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L942">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L943">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L944">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L945">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L947">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L949">        assertNotNull(resultado);</span>
+<span class="fc" id="L950">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L951">        verify(especieRepository, never()).save(any(Especie.class));</span>
+<span class="fc" id="L952">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerOCrearEmpresa con nombre null - debe retornar null&quot;)
+    void obtenerOCrearEmpresa_nombreNull_debeRetornarNull() throws IOException {
+<span class="fc" id="L957">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L958">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L959">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L960" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L961">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L964">        Row dataRow = sheet.createRow(1);</span>
+        // No establecer empresa (columna 0)
+<span class="fc" id="L966">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L967">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L968">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L969">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L970">        dataRow.createCell(14).setCellValue(&quot;FICHA-015&quot;);</span>
+        
+<span class="fc" id="L972">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L973">        workbook.write(bos);</span>
+<span class="fc" id="L974">        workbook.close();</span>
+        
+<span class="fc" id="L976">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L977">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L979">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L980">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L981">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L982">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L983">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L984">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L985">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L986">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L987">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L989">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L991">        assertNotNull(resultado);</span>
+<span class="fc" id="L992">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L993">        verify(contactoRepository, never()).save(any(Contacto.class));</span>
+<span class="fc" id="L994">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerOCrearCatalogo con valor null - debe retornar null&quot;)
+    void obtenerOCrearCatalogo_valorNull_debeRetornarNull() throws IOException {
+<span class="fc" id="L999">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L1000">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L1001">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L1002" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L1003">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L1006">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L1007">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+        // No establecer depósito (columna 4)
+<span class="fc" id="L1009">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L1010">        dataRow.createCell(7).setCellValue(&quot;Cultivar Test&quot;);</span>
+        // No establecer origen (columna 12)
+<span class="fc" id="L1012">        dataRow.createCell(14).setCellValue(&quot;FICHA-016&quot;);</span>
+        
+<span class="fc" id="L1014">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L1015">        workbook.write(bos);</span>
+<span class="fc" id="L1016">        workbook.close();</span>
+        
+<span class="fc" id="L1018">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L1019">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L1021">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L1022">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L1023">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L1024">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L1025">        when(cultivarRepository.findByNombreAndEspecie_EspecieID(any(), any()))</span>
+<span class="fc" id="L1026">            .thenReturn(Optional.of(cultivar));</span>
+<span class="fc" id="L1027">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L1028">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L1029">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L1031">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L1033">        assertNotNull(resultado);</span>
+<span class="fc" id="L1034">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L1035">    }</span>
+
+    @Test
+    @DisplayName(&quot;obtenerOCrearCultivar con nombre null - debe retornar null&quot;)
+    void obtenerOCrearCultivar_nombreNull_debeRetornarNull() throws IOException {
+<span class="fc" id="L1040">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="fc" id="L1041">        Sheet sheet = workbook.createSheet(&quot;Test&quot;);</span>
+<span class="fc" id="L1042">        Row headerRow = sheet.createRow(0);</span>
+<span class="fc bfc" id="L1043" title="All 2 branches covered.">        for (int i = 0; i &lt; 60; i++) {</span>
+<span class="fc" id="L1044">            headerRow.createCell(i).setCellValue(&quot;Col&quot; + i);</span>
+        }
+        
+<span class="fc" id="L1047">        Row dataRow = sheet.createRow(1);</span>
+<span class="fc" id="L1048">        dataRow.createCell(0).setCellValue(&quot;Empresa Test&quot;);</span>
+<span class="fc" id="L1049">        dataRow.createCell(4).setCellValue(&quot;Depósito Test&quot;);</span>
+<span class="fc" id="L1050">        dataRow.createCell(6).setCellValue(&quot;Especie Test&quot;);</span>
+        // No establecer cultivar (columna 7)
+<span class="fc" id="L1052">        dataRow.createCell(12).setCellValue(&quot;Origen Test&quot;);</span>
+<span class="fc" id="L1053">        dataRow.createCell(14).setCellValue(&quot;FICHA-017&quot;);</span>
+        
+<span class="fc" id="L1055">        ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L1056">        workbook.write(bos);</span>
+<span class="fc" id="L1057">        workbook.close();</span>
+        
+<span class="fc" id="L1059">        when(archivo.getInputStream()).thenReturn(new ByteArrayInputStream(bos.toByteArray()));</span>
+<span class="fc" id="L1060">        when(archivo.getOriginalFilename()).thenReturn(&quot;test.xlsx&quot;);</span>
+        
+<span class="fc" id="L1062">        when(contactoRepository.findByNombreAndTipoAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L1063">            .thenReturn(Optional.of(empresa));</span>
+<span class="fc" id="L1064">        when(catalogoRepository.findByTipoAndValorAndActivoTrue(any(), any()))</span>
+<span class="fc" id="L1065">            .thenReturn(Optional.of(deposito));</span>
+<span class="fc" id="L1066">        when(especieRepository.findByNombreComunIgnoreCase(any()))</span>
+<span class="fc" id="L1067">            .thenReturn(Optional.of(especie));</span>
+<span class="fc" id="L1068">        when(loteRepository.findByFicha(any())).thenReturn(Optional.empty());</span>
+<span class="fc" id="L1069">        when(loteRepository.save(any(Lote.class))).thenReturn(lote);</span>
+<span class="fc" id="L1070">        when(legadoRepository.save(any(Legado.class))).thenAnswer(i -&gt; i.getArgument(0));</span>
+
+<span class="fc" id="L1072">        var resultado = importacionLegadoService.importarDesdeExcel(archivo, false);</span>
+
+<span class="fc" id="L1074">        assertNotNull(resultado);</span>
+<span class="fc" id="L1075">        assertTrue(resultado.getExitoso());</span>
+<span class="fc" id="L1076">        verify(cultivarRepository, never()).save(any(Cultivar.class));</span>
+<span class="fc" id="L1077">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -90,7 +90,7 @@ public class LegadoService {
             LocalDate fechaReciboFin) {
         
 <span class="nc" id="L92">        Specification&lt;Legado&gt; spec = LegadoSpecification.conFiltros(</span>
-            searchTerm, especie, fechaReciboInicio, fechaReciboFin);
+<span class="nc" id="L93">            searchTerm, especie, fechaReciboInicio, fechaReciboFin);</span>
 <span class="nc" id="L94">        Page&lt;Legado&gt; legadoPage = legadoRepository.findAll(spec, pageable);</span>
 <span class="nc" id="L95">        return legadoPage.map(this::convertirAListadoDTO);</span>
     }

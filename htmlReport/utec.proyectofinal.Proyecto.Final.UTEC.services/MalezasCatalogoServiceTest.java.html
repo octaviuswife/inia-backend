@@ -190,7 +190,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L190">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
 <span class="fc" id="L191">        assertEquals(1, resultado.size(), &quot;Debe encontrar 1 maleza&quot;);</span>
 <span class="fc" id="L192">        assertEquals(&quot;Amaranthus quitensis&quot;, resultado.get(0).getNombreCientifico(), </span>
-                &quot;Debe encontrar Amaranthus quitensis&quot;);
+<span class="fc" id="L193">                &quot;Debe encontrar Amaranthus quitensis&quot;);</span>
         
 <span class="fc" id="L195">        verify(repository, times(1)).findByNombreCientificoContainingIgnoreCaseAndActivoTrue(&quot;Amaranthus&quot;);</span>
 <span class="fc" id="L196">    }</span>
@@ -210,7 +210,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L210">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
 <span class="fc" id="L211">        assertEquals(1, resultado.size(), &quot;Debe encontrar 1 maleza&quot;);</span>
 <span class="fc" id="L212">        assertEquals(&quot;Cynodon dactylon&quot;, resultado.get(0).getNombreCientifico(), </span>
-                &quot;Debe encontrar Cynodon dactylon&quot;);
+<span class="fc" id="L213">                &quot;Debe encontrar Cynodon dactylon&quot;);</span>
 <span class="fc" id="L214">    }</span>
 
     @Test
@@ -227,7 +227,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L227">        assertEquals(1L, resultado.getCatalogoID(), &quot;El ID debe ser 1&quot;);</span>
 <span class="fc" id="L228">        assertEquals(&quot;Gramilla&quot;, resultado.getNombreComun(), &quot;El nombre común debe ser Gramilla&quot;);</span>
 <span class="fc" id="L229">        assertEquals(&quot;Cynodon dactylon&quot;, resultado.getNombreCientifico(), </span>
-                &quot;El nombre científico debe ser Cynodon dactylon&quot;);
+<span class="fc" id="L230">                &quot;El nombre científico debe ser Cynodon dactylon&quot;);</span>
         
 <span class="fc" id="L232">        verify(repository, times(1)).findById(1L);</span>
 <span class="fc" id="L233">    }</span>
@@ -435,7 +435,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L435">        assertEquals(2, resultado.getTotalElements(), &quot;Debe haber 2 elementos en total&quot;);</span>
 <span class="fc" id="L436">        assertEquals(2, resultado.getContent().size(), &quot;Debe haber 2 elementos en la página&quot;);</span>
 <span class="fc" id="L437">        assertEquals(&quot;Gramilla&quot;, resultado.getContent().get(0).getNombreComun(), </span>
-                &quot;Primera maleza debe ser Gramilla&quot;);
+<span class="fc" id="L438">                &quot;Primera maleza debe ser Gramilla&quot;);</span>
         
 <span class="fc" id="L440">        verify(repository, times(1)).findByActivoTrueOrderByNombreComunAsc(pageable);</span>
 <span class="fc" id="L441">    }</span>
@@ -477,7 +477,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L477">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
 <span class="fc" id="L478">        assertEquals(2, resultado.getTotalElements(), &quot;Debe haber 2 elementos activos&quot;);</span>
 <span class="fc" id="L479">        assertTrue(resultado.getContent().stream().allMatch(MalezasCatalogoDTO::getActivo), </span>
-                &quot;Todas deben estar activas&quot;);
+<span class="fc" id="L480">                &quot;Todas deben estar activas&quot;);</span>
         
 <span class="fc" id="L482">        verify(repository, times(1)).findByActivoTrueOrderByNombreComunAsc(pageable);</span>
 <span class="fc" id="L483">    }</span>
@@ -522,7 +522,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L522">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
 <span class="fc" id="L523">        assertEquals(1, resultado.getTotalElements(), &quot;Debe encontrar 1 elemento&quot;);</span>
 <span class="fc" id="L524">        assertEquals(&quot;Gramilla&quot;, resultado.getContent().get(0).getNombreComun(), </span>
-                &quot;Debe encontrar Gramilla&quot;);
+<span class="fc" id="L525">                &quot;Debe encontrar Gramilla&quot;);</span>
         
 <span class="fc" id="L527">        verify(repository, times(1)).findByNombreComunContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
 <span class="fc" id="L528">        verify(repository, times(1)).findByNombreCientificoContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
@@ -545,7 +545,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L545">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
 <span class="fc" id="L546">        assertEquals(1, resultado.getTotalElements(), &quot;Debe encontrar 1 elemento inactivo&quot;);</span>
 <span class="fc" id="L547">        assertEquals(&quot;Capín&quot;, resultado.getContent().get(0).getNombreComun(), </span>
-                &quot;Debe encontrar Capín&quot;);
+<span class="fc" id="L548">                &quot;Debe encontrar Capín&quot;);</span>
 <span class="fc" id="L549">        assertFalse(resultado.getContent().get(0).getActivo(), &quot;Debe estar inactiva&quot;);</span>
         
 <span class="fc" id="L551">        verify(repository, times(1)).findAll();</span>
@@ -613,7 +613,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L613">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
 <span class="fc" id="L614">        assertEquals(1, resultado.getTotalElements(), &quot;Debe encontrar 1 elemento&quot;);</span>
 <span class="fc" id="L615">        assertEquals(&quot;Cynodon dactylon&quot;, resultado.getContent().get(0).getNombreCientifico(), </span>
-                &quot;Debe encontrar Cynodon dactylon&quot;);
+<span class="fc" id="L616">                &quot;Debe encontrar Cynodon dactylon&quot;);</span>
         
 <span class="fc" id="L618">        verify(repository, times(1)).findByNombreComunContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
 <span class="fc" id="L619">        verify(repository, times(1)).findByNombreCientificoContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
@@ -640,7 +640,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L640">        assertNotNull(resultado, &quot;El resultado no debe ser nulo&quot;);</span>
 <span class="fc" id="L641">        assertEquals(1, resultado.getTotalElements(), &quot;Debe encontrar 1 elemento&quot;);</span>
 <span class="fc" id="L642">        assertEquals(&quot;Yuyo Colorado&quot;, resultado.getContent().get(0).getNombreComun(), </span>
-                &quot;Debe encontrar Yuyo Colorado&quot;);
+<span class="fc" id="L643">                &quot;Debe encontrar Yuyo Colorado&quot;);</span>
 <span class="fc" id="L644">    }</span>
 
     @Test
@@ -657,7 +657,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L657">        assertEquals(maleza1.getCatalogoID(), resultado.getCatalogoID(), &quot;El ID debe coincidir&quot;);</span>
 <span class="fc" id="L658">        assertEquals(maleza1.getNombreComun(), resultado.getNombreComun(), &quot;El nombre común debe coincidir&quot;);</span>
 <span class="fc" id="L659">        assertEquals(maleza1.getNombreCientifico(), resultado.getNombreCientifico(), </span>
-                &quot;El nombre científico debe coincidir&quot;);
+<span class="fc" id="L660">                &quot;El nombre científico debe coincidir&quot;);</span>
 <span class="fc" id="L661">        assertEquals(maleza1.getActivo(), resultado.getActivo(), &quot;El estado activo debe coincidir&quot;);</span>
 <span class="fc" id="L662">    }</span>
 

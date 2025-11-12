@@ -139,7 +139,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc bpc" id="L139" title="1 of 2 branches missed.">            if (repeticionesTotales &gt;= pms.getNumRepeticionesEsperadas()) {</span>
 <span class="fc" id="L140">                System.out.println(&quot;Validando todas las repeticiones del PMS...&quot;);</span>
 <span class="fc" id="L141">                pmsService.validarTodasLasRepeticiones(pms.getAnalisisID());</span>
-            } else {
+<span class="fc" id="L142">            } else {</span>
 <span class="nc" id="L143">                System.out.println(&quot;Repeticiones insuficientes, solo actualizando estadísticas generales...&quot;);</span>
 <span class="nc" id="L144">                pmsService.actualizarEstadisticasPms(pms.getAnalisisID());</span>
             }
@@ -183,13 +183,13 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc bpc" id="L183" title="1 of 2 branches missed.">            if (repeticionesTotales &gt;= pms.getNumRepeticionesEsperadas()) {</span>
 <span class="nc" id="L184">                System.out.println(&quot;Validando todas las repeticiones del PMS...&quot;);</span>
 <span class="nc" id="L185">                pmsService.validarTodasLasRepeticiones(pms.getAnalisisID());</span>
-            } else {
+<span class="nc" id="L186">            } else {</span>
 <span class="fc" id="L187">                System.out.println(&quot;Repeticiones insuficientes, reseteando validaciones...&quot;);</span>
                 // Marcar todas las repeticiones restantes como indeterminadas
 <span class="fc" id="L189">                List&lt;RepPms&gt; repeticionesRestantes = repPmsRepository.findByPmsId(pms.getAnalisisID());</span>
 <span class="pc bpc" id="L190" title="1 of 2 branches missed.">                for (RepPms r : repeticionesRestantes) {</span>
 <span class="nc" id="L191">                    r.setValido(null);</span>
-<span class="nc" id="L192">                }</span>
+                }
 <span class="fc" id="L193">                repPmsRepository.saveAll(repeticionesRestantes);</span>
 <span class="fc" id="L194">                pmsService.actualizarEstadisticasPms(pms.getAnalisisID());</span>
             }
@@ -294,7 +294,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
             
 <span class="fc bfc" id="L295" title="All 2 branches covered.">            if (cv &lt;= umbralCV) {</span>
 <span class="fc" id="L296">                throw new RuntimeException(&quot;El CV global (&quot; + String.format(&quot;%.2f&quot;, cv) + </span>
-                    &quot;) ya es aceptable (≤ &quot; + umbralCV + &quot;). No se necesitan más repeticiones.&quot;);
+<span class="fc" id="L297">                    &quot;) ya es aceptable (≤ &quot; + umbralCV + &quot;). No se necesitan más repeticiones.&quot;);</span>
             }
         }
 

@@ -79,8 +79,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
         try {
 <span class="fc" id="L80">            List&lt;ValoresGermDTO&gt; valores = valoresGermService.obtenerValoresPorTabla(tablaId);</span>
 <span class="fc" id="L81">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
-<span class="nc" id="L82">        } catch (Exception e) {</span>
-<span class="nc" id="L83">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.BAD_REQUEST);</span>
+<span class="fc" id="L82">        } catch (Exception e) {</span>
+<span class="fc" id="L83">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.BAD_REQUEST);</span>
         }
     }
 
@@ -95,8 +95,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
         try {
 <span class="fc" id="L96">            ValoresGermDTO valores = valoresGermService.obtenerValoresIniaPorTabla(tablaId);</span>
 <span class="fc" id="L97">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
-<span class="nc" id="L98">        } catch (Exception e) {</span>
-<span class="nc" id="L99">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+<span class="fc" id="L98">        } catch (Exception e) {</span>
+<span class="fc" id="L99">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
         }
     }
 
@@ -111,8 +111,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
         try {
 <span class="fc" id="L112">            ValoresGermDTO valores = valoresGermService.obtenerValoresInasePorTabla(tablaId);</span>
 <span class="fc" id="L113">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
-<span class="nc" id="L114">        } catch (Exception e) {</span>
-<span class="nc" id="L115">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+<span class="fc" id="L114">        } catch (Exception e) {</span>
+<span class="fc" id="L115">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
         }
     }
 
@@ -126,10 +126,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
             @PathVariable Long tablaId,
             @RequestParam Instituto instituto) {
         try {
-<span class="nc" id="L129">            ValoresGermDTO valores = valoresGermService.obtenerValoresPorTablaEInstituto(tablaId, instituto);</span>
-<span class="nc" id="L130">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
-<span class="nc" id="L131">        } catch (Exception e) {</span>
-<span class="nc" id="L132">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+<span class="fc" id="L129">            ValoresGermDTO valores = valoresGermService.obtenerValoresPorTablaEInstituto(tablaId, instituto);</span>
+<span class="fc" id="L130">            return new ResponseEntity&lt;&gt;(valores, HttpStatus.OK);</span>
+<span class="fc" id="L131">        } catch (Exception e) {</span>
+<span class="fc" id="L132">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
         }
     }
 
@@ -145,8 +145,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.ValoresGermService;
         try {
 <span class="fc" id="L146">            valoresGermService.eliminarValores(valoresId);</span>
 <span class="fc" id="L147">            return new ResponseEntity&lt;&gt;(&quot;Valores de germinación eliminados exitosamente&quot;, HttpStatus.OK);</span>
-<span class="nc" id="L148">        } catch (Exception e) {</span>
-<span class="nc" id="L149">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
+<span class="fc" id="L148">        } catch (Exception e) {</span>
+<span class="fc" id="L149">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.NOT_FOUND);</span>
         }
     }
 }

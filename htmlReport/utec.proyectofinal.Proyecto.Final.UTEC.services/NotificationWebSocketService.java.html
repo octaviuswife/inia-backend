@@ -58,13 +58,13 @@ import java.util.List;
         try {
 <span class="fc" id="L59">            messagingTemplate.convertAndSendToUser(</span>
 <span class="fc" id="L60">                usuarioId.toString(),           // Destinatario (userId)</span>
-                &quot;/queue/notifications&quot;,         // Canal destino
-                notification                     // Payload (datos)
+<span class="fc" id="L61">                &quot;/queue/notifications&quot;,         // Canal destino</span>
+<span class="fc" id="L62">                notification                     // Payload (datos)</span>
             );
 <span class="fc" id="L64">            System.out.println(&quot;📤 Notificación enviada a usuario &quot; + usuarioId + &quot;: &quot; + notification.getNombre());</span>
 <span class="fc" id="L65">        } catch (Exception e) {</span>
 <span class="fc" id="L66">            System.err.println(&quot;❌ Error enviando notificación WebSocket a usuario &quot; + usuarioId + &quot;: &quot; + e.getMessage());</span>
-<span class="fc" id="L67">        }</span>
+        }
 <span class="fc" id="L68">    }</span>
 
     /**
@@ -109,7 +109,7 @@ import java.util.List;
 <span class="fc" id="L109">            System.out.println(&quot;📢 Broadcast a rol &quot; + rol.name() + &quot;: &quot; + notification.getNombre());</span>
 <span class="fc" id="L110">        } catch (Exception e) {</span>
 <span class="fc" id="L111">            System.err.println(&quot;❌ Error en broadcast a rol &quot; + rol.name() + &quot;: &quot; + e.getMessage());</span>
-<span class="fc" id="L112">        }</span>
+        }
 <span class="fc" id="L113">    }</span>
 
     /**
@@ -128,13 +128,13 @@ import java.util.List;
     public void broadcast(NotificacionDTO notification) {
         try {
 <span class="fc" id="L130">            messagingTemplate.convertAndSend(</span>
-                &quot;/topic/notifications/all&quot;,
-                notification
+<span class="fc" id="L131">                &quot;/topic/notifications/all&quot;,</span>
+<span class="fc" id="L132">                notification</span>
             );
 <span class="fc" id="L134">            System.out.println(&quot;📢 Broadcast global: &quot; + notification.getNombre());</span>
 <span class="fc" id="L135">        } catch (Exception e) {</span>
 <span class="fc" id="L136">            System.err.println(&quot;❌ Error en broadcast global: &quot; + e.getMessage());</span>
-<span class="fc" id="L137">        }</span>
+        }
 <span class="fc" id="L138">    }</span>
 
     /**
@@ -153,13 +153,13 @@ import java.util.List;
         try {
 <span class="fc" id="L154">            messagingTemplate.convertAndSendToUser(</span>
 <span class="fc" id="L155">                usuarioId.toString(),</span>
-                &quot;/queue/notifications/count&quot;,
-                count
+<span class="fc" id="L156">                &quot;/queue/notifications/count&quot;,</span>
+<span class="fc" id="L157">                count</span>
             );
 <span class="fc" id="L159">            System.out.println(&quot;🔢 Contador actualizado para usuario &quot; + usuarioId + &quot;: &quot; + count);</span>
 <span class="fc" id="L160">        } catch (Exception e) {</span>
 <span class="fc" id="L161">            System.err.println(&quot;❌ Error enviando contador a usuario &quot; + usuarioId + &quot;: &quot; + e.getMessage());</span>
-<span class="fc" id="L162">        }</span>
+        }
 <span class="fc" id="L163">    }</span>
 
     /**
@@ -174,13 +174,13 @@ import java.util.List;
         try {
 <span class="fc" id="L175">            messagingTemplate.convertAndSendToUser(</span>
 <span class="fc" id="L176">                usuarioId.toString(),</span>
-                &quot;/queue/notifications/mark-read&quot;,
-                notificacionId
+<span class="fc" id="L177">                &quot;/queue/notifications/mark-read&quot;,</span>
+<span class="fc" id="L178">                notificacionId</span>
             );
 <span class="fc" id="L180">            System.out.println(&quot;✓ Notificación &quot; + notificacionId + &quot; marcada como leída para usuario &quot; + usuarioId);</span>
 <span class="fc" id="L181">        } catch (Exception e) {</span>
 <span class="fc" id="L182">            System.err.println(&quot;❌ Error enviando mark-read: &quot; + e.getMessage());</span>
-<span class="fc" id="L183">        }</span>
+        }
 <span class="fc" id="L184">    }</span>
 
     /**
@@ -193,13 +193,13 @@ import java.util.List;
         try {
 <span class="fc" id="L194">            messagingTemplate.convertAndSendToUser(</span>
 <span class="fc" id="L195">                usuarioId.toString(),</span>
-                &quot;/queue/notifications/deleted&quot;,
-                notificacionId
+<span class="fc" id="L196">                &quot;/queue/notifications/deleted&quot;,</span>
+<span class="fc" id="L197">                notificacionId</span>
             );
 <span class="fc" id="L199">            System.out.println(&quot;🗑️ Notificación &quot; + notificacionId + &quot; eliminada para usuario &quot; + usuarioId);</span>
 <span class="fc" id="L200">        } catch (Exception e) {</span>
 <span class="fc" id="L201">            System.err.println(&quot;❌ Error enviando deleted: &quot; + e.getMessage());</span>
-<span class="fc" id="L202">        }</span>
+        }
 <span class="fc" id="L203">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

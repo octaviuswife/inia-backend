@@ -136,9 +136,9 @@ public class TotpService {
                     }
                     
 <span class="fc" id="L138">                    System.err.println(&quot;⚠️ [TOTP] ========================&quot;);</span>
-<span class="nc" id="L139">                } catch (Exception e) {</span>
+<span class="pc" id="L139">                } catch (Exception e) {</span>
 <span class="nc" id="L140">                    System.err.println(&quot;⚠️ [TOTP] No se pudo generar código de debug: &quot; + e.getMessage());</span>
-<span class="fc" id="L141">                }</span>
+                }
             }
             
 <span class="fc" id="L144">            return isValid;</span>
@@ -170,8 +170,8 @@ public class TotpService {
      * @return Segundos restantes (0-30)
      */
     public int getRemainingSeconds() {
-<span class="nc" id="L173">        long currentTime = timeProvider.getTime();</span>
-<span class="nc" id="L174">        return (int) (30 - (currentTime % 30));</span>
+<span class="fc" id="L173">        long currentTime = timeProvider.getTime();</span>
+<span class="fc" id="L174">        return (int) (30 - (currentTime % 30));</span>
     }
 
     /**
@@ -181,17 +181,17 @@ public class TotpService {
      * @return true si es válido
      */
     public boolean isValidSecret(String secret) {
-<span class="nc bnc" id="L184" title="All 4 branches missed.">        if (secret == null || secret.isEmpty()) {</span>
-<span class="nc" id="L185">            return false;</span>
+<span class="fc bfc" id="L184" title="All 4 branches covered.">        if (secret == null || secret.isEmpty()) {</span>
+<span class="fc" id="L185">            return false;</span>
         }
         
         // Debe tener entre 16-32 caracteres
-<span class="nc bnc" id="L189" title="All 4 branches missed.">        if (secret.length() &lt; 16 || secret.length() &gt; 32) {</span>
-<span class="nc" id="L190">            return false;</span>
+<span class="fc bfc" id="L189" title="All 4 branches covered.">        if (secret.length() &lt; 16 || secret.length() &gt; 32) {</span>
+<span class="fc" id="L190">            return false;</span>
         }
         
         // Solo debe contener caracteres Base32 válidos (A-Z, 2-7)
-<span class="nc" id="L194">        return secret.matches(&quot;^[A-Z2-7]+$&quot;);</span>
+<span class="fc" id="L194">        return secret.matches(&quot;^[A-Z2-7]+$&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

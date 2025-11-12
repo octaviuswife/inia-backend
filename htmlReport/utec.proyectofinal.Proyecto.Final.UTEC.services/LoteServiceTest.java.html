@@ -189,7 +189,7 @@ import static org.mockito.Mockito.*;
         // ACT &amp; ASSERT
 <span class="fc" id="L190">        assertThrows(RuntimeException.class, () -&gt; {</span>
 <span class="nc" id="L191">            loteService.obtenerLotePorId(999L);</span>
-<span class="nc" id="L192">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
+<span class="pc" id="L192">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
 
 <span class="fc" id="L194">        verify(loteRepository, times(1)).findByIdWithCultivarAndEspecie(999L);</span>
 <span class="fc" id="L195">    }</span>

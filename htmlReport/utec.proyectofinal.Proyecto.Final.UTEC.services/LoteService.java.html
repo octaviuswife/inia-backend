@@ -165,7 +165,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
                                              &quot; porque ya existen análisis creados de este tipo para el lote&quot;);
                 }
             }
-<span class="nc" id="L168">        }</span>
+        }
         
         // Los tipos que se están agregando siempre son permitidos
         // (no hay restricciones para agregar nuevos tipos de análisis)
@@ -302,12 +302,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="pc bpc" id="L302" title="1 of 2 branches missed.">                    if (empresaOpt.isPresent()) {</span>
 <span class="fc" id="L303">                        lote.setEmpresa(empresaOpt.get());</span>
 <span class="fc" id="L304">                        System.out.println(&quot;Empresa encontrada y asignada&quot;);</span>
-                    } else {
+<span class="fc" id="L305">                    } else {</span>
 <span class="nc" id="L306">                        System.out.println(&quot;Empresa no encontrada con ID: &quot; + solicitud.getEmpresaID());</span>
                     }
 <span class="nc" id="L308">                } catch (Exception e) {</span>
 <span class="nc" id="L309">                    System.err.println(&quot;Error al buscar empresa: &quot; + e.getMessage());</span>
-<span class="fc" id="L310">                }</span>
+                }
             }
             
 <span class="fc" id="L313">            lote.setCodigoCC(solicitud.getCodigoCC());</span>
@@ -353,12 +353,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="pc bpc" id="L353" title="1 of 2 branches missed.">                    if (origen != null) {</span>
 <span class="fc" id="L354">                        lote.setOrigen(origen);</span>
 <span class="fc" id="L355">                        System.out.println(&quot;Origen encontrado y asignado&quot;);</span>
-                    } else {
+<span class="fc" id="L356">                    } else {</span>
 <span class="nc" id="L357">                        System.out.println(&quot;Origen no encontrado con ID: &quot; + solicitud.getOrigenID());</span>
                     }
 <span class="nc" id="L359">                } catch (Exception e) {</span>
 <span class="nc" id="L360">                    System.err.println(&quot;Error al buscar origen: &quot; + e.getMessage());</span>
-<span class="fc" id="L361">                }</span>
+                }
             }
             
             // Mapear estado
@@ -369,12 +369,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="pc bpc" id="L369" title="1 of 2 branches missed.">                    if (estado != null) {</span>
 <span class="fc" id="L370">                        lote.setEstado(estado);</span>
 <span class="fc" id="L371">                        System.out.println(&quot;Estado encontrado y asignado&quot;);</span>
-                    } else {
+<span class="fc" id="L372">                    } else {</span>
 <span class="nc" id="L373">                        System.out.println(&quot;Estado no encontrado con ID: &quot; + solicitud.getEstadoID());</span>
                     }
 <span class="nc" id="L375">                } catch (Exception e) {</span>
 <span class="nc" id="L376">                    System.err.println(&quot;Error al buscar estado: &quot; + e.getMessage());</span>
-<span class="fc" id="L377">                }</span>
+                }
             }
             
 <span class="fc" id="L380">            lote.setFechaCosecha(solicitud.getFechaCosecha());</span>
@@ -388,12 +388,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="fc bfc" id="L388" title="All 2 branches covered.">                    if (cultivarOpt.isPresent()) {</span>
 <span class="fc" id="L389">                        lote.setCultivar(cultivarOpt.get());</span>
 <span class="fc" id="L390">                        System.out.println(&quot;Cultivar encontrado y asignado&quot;);</span>
-                    } else {
+<span class="fc" id="L391">                    } else {</span>
 <span class="fc" id="L392">                        System.out.println(&quot;Cultivar no encontrado con ID: &quot; + solicitud.getCultivarID());</span>
                     }
-<span class="nc" id="L394">                } catch (Exception e) {</span>
+<span class="pc" id="L394">                } catch (Exception e) {</span>
 <span class="nc" id="L395">                    System.err.println(&quot;Error al buscar cultivar: &quot; + e.getMessage());</span>
-<span class="fc" id="L396">                }</span>
+                }
             }
 
 <span class="fc bfc" id="L399" title="All 2 branches covered.">            if (solicitud.getClienteID() != null) {</span>
@@ -403,12 +403,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="pc bpc" id="L403" title="1 of 2 branches missed.">                    if (clienteOpt.isPresent()) {</span>
 <span class="fc" id="L404">                        lote.setCliente(clienteOpt.get());</span>
 <span class="fc" id="L405">                        System.out.println(&quot;Cliente encontrado y asignado&quot;);</span>
-                    } else {
+<span class="fc" id="L406">                    } else {</span>
 <span class="nc" id="L407">                        System.out.println(&quot;Cliente no encontrado con ID: &quot; + solicitud.getClienteID());</span>
                     }
 <span class="nc" id="L409">                } catch (Exception e) {</span>
 <span class="nc" id="L410">                    System.err.println(&quot;Error al buscar cliente: &quot; + e.getMessage());</span>
-<span class="fc" id="L411">                }</span>
+                }
             }
 
 <span class="fc bfc" id="L414" title="All 2 branches covered.">            if (solicitud.getDepositoID() != null) {</span>
@@ -418,12 +418,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="pc bpc" id="L418" title="1 of 2 branches missed.">                    if (deposito != null) {</span>
 <span class="fc" id="L419">                        lote.setDeposito(deposito);</span>
 <span class="fc" id="L420">                        System.out.println(&quot;Deposito encontrado y asignado&quot;);</span>
-                    } else {
+<span class="fc" id="L421">                    } else {</span>
 <span class="nc" id="L422">                        System.out.println(&quot;Deposito no encontrado con ID: &quot; + solicitud.getDepositoID());</span>
                     }
 <span class="nc" id="L424">                } catch (Exception e) {</span>
 <span class="nc" id="L425">                    System.err.println(&quot;Error al buscar deposito: &quot; + e.getMessage());</span>
-<span class="fc" id="L426">                }</span>
+                }
             }
 
             // Mapear tipos de análisis asignados
@@ -457,7 +457,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="fc" id="L457">            Optional&lt;Contacto&gt; empresaOpt = contactoRepository.findById(solicitud.getEmpresaID());</span>
 <span class="fc bfc" id="L458" title="All 2 branches covered.">            if (empresaOpt.isPresent()) {</span>
 <span class="fc" id="L459">                lote.setEmpresa(empresaOpt.get());</span>
-            } else {
+<span class="fc" id="L460">            } else {</span>
 <span class="fc" id="L461">                throw new RuntimeException(&quot;Empresa no encontrada con ID: &quot; + solicitud.getEmpresaID());</span>
             }
         }
@@ -532,10 +532,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="pc bpc" id="L532" title="1 of 2 branches missed.">                if (cultivarOpt.isPresent()) {</span>
 <span class="fc" id="L533">                    lote.setCultivar(cultivarOpt.get());</span>
                 }
-<span class="nc" id="L535">            } catch (Exception e) {</span>
+<span class="pc" id="L535">            } catch (Exception e) {</span>
                 // Si no se encuentra el cultivar, no lo actualizamos
-<span class="pc" id="L537">            }</span>
-        } else {
+            }
+<span class="nc" id="L538">        } else {</span>
 <span class="nc" id="L539">            lote.setCultivar(null);</span>
         }
 
@@ -547,8 +547,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
                 }
 <span class="nc" id="L548">            } catch (Exception e) {</span>
                 // Si no se encuentra el cliente, no lo actualizamos
-<span class="nc" id="L550">            }</span>
-        } else {
+            }
+<span class="nc" id="L551">        } else {</span>
 <span class="fc" id="L552">            lote.setCliente(null);</span>
         }
 
@@ -558,8 +558,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="nc" id="L558">                lote.setDeposito(deposito);</span>
 <span class="nc" id="L559">            } catch (Exception e) {</span>
                 // Si no se encuentra el deposito, no lo actualizamos
-<span class="nc" id="L561">            }</span>
-        } else {
+            }
+<span class="nc" id="L562">        } else {</span>
 <span class="fc" id="L563">            lote.setDeposito(null);</span>
         }
         
@@ -801,14 +801,14 @@ import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoLoteSimpl
 <span class="fc" id="L801">                            purezaRepository.findByLoteLoteID(lote.getLoteID());</span>
 <span class="pc bpc" id="L802" title="1 of 2 branches missed.">                        yield analisis.stream().allMatch(a -&gt; a.getEstado() == Estado.A_REPETIR);</span>
                     }
-<span class="pc" id="L804">                    default -&gt; false;</span>
+<span class="nc" id="L804">                    default -&gt; false;</span>
                 };
                 
 <span class="fc bfc" id="L807" title="All 2 branches covered.">                if (pendiente) {</span>
 <span class="fc" id="L808">                    totalPendientes++;</span>
                 }
-<span class="fc" id="L810">            }</span>
-<span class="fc" id="L811">        }</span>
+            }
+        }
         
 <span class="fc" id="L813">        return totalPendientes;</span>
     }

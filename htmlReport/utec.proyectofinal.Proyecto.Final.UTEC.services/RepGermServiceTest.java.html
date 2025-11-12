@@ -170,7 +170,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L170">        });</span>
 
 <span class="fc" id="L172">        assertTrue(exception.getMessage().contains(&quot;No se pueden agregar más repeticiones&quot;),</span>
-                &quot;Debe lanzar excepción por exceder número máximo de repeticiones&quot;);
+<span class="fc" id="L173">                &quot;Debe lanzar excepción por exceder número máximo de repeticiones&quot;);</span>
 <span class="fc" id="L174">        verify(repGermRepository, never()).save(any(RepGerm.class));</span>
 <span class="fc" id="L175">    }</span>
 
@@ -186,7 +186,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L186">        });</span>
 
 <span class="fc" id="L188">        assertTrue(exception.getMessage().contains(&quot;Tabla no encontrada&quot;),</span>
-                &quot;Debe lanzar excepción cuando la tabla no existe&quot;);
+<span class="fc" id="L189">                &quot;Debe lanzar excepción cuando la tabla no existe&quot;);</span>
 <span class="fc" id="L190">        verify(repGermRepository, never()).save(any(RepGerm.class));</span>
 <span class="fc" id="L191">    }</span>
 
@@ -211,7 +211,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L211">        });</span>
 
 <span class="fc" id="L213">        assertTrue(exception.getMessage().contains(&quot;excede el límite máximo permitido&quot;),</span>
-                &quot;Debe lanzar excepción cuando el total excede el límite máximo&quot;);
+<span class="fc" id="L214">                &quot;Debe lanzar excepción cuando el total excede el límite máximo&quot;);</span>
 <span class="fc" id="L215">    }</span>
 
     @Test
@@ -231,7 +231,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L231">        });</span>
 
 <span class="fc" id="L233">        assertTrue(exception.getMessage().contains(&quot;no puede ser negativo&quot;),</span>
-                &quot;Debe lanzar excepción cuando hay valores negativos en normales&quot;);
+<span class="fc" id="L234">                &quot;Debe lanzar excepción cuando hay valores negativos en normales&quot;);</span>
 <span class="fc" id="L235">    }</span>
 
     @Test
@@ -251,7 +251,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L251">        });</span>
 
 <span class="fc" id="L253">        assertTrue(exception.getMessage().contains(&quot;anormales no puede ser negativo&quot;),</span>
-                &quot;Debe lanzar excepción cuando anormales es negativo&quot;);
+<span class="fc" id="L254">                &quot;Debe lanzar excepción cuando anormales es negativo&quot;);</span>
 <span class="fc" id="L255">    }</span>
 
     @Test
@@ -271,7 +271,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L271">        });</span>
 
 <span class="fc" id="L273">        assertTrue(exception.getMessage().contains(&quot;no puede exceder&quot;),</span>
-                &quot;Debe lanzar excepción cuando un valor individual excede numSemillasPRep&quot;);
+<span class="fc" id="L274">                &quot;Debe lanzar excepción cuando un valor individual excede numSemillasPRep&quot;);</span>
 <span class="fc" id="L275">    }</span>
 
     @Test
@@ -294,7 +294,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L294">        });</span>
 
 <span class="fc" id="L296">        assertTrue(exception.getMessage().contains(&quot;Debe ingresar al menos un valor&quot;),</span>
-                &quot;Debe lanzar excepción cuando el total es cero&quot;);
+<span class="fc" id="L297">                &quot;Debe lanzar excepción cuando el total es cero&quot;);</span>
 <span class="fc" id="L298">    }</span>
 
     @Test
@@ -355,7 +355,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L355">        });</span>
 
 <span class="fc" id="L357">        assertTrue(exception.getMessage().contains(&quot;Repetición no encontrada&quot;),</span>
-                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);
+<span class="fc" id="L358">                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);</span>
 <span class="fc" id="L359">        verify(repGermRepository, never()).save(any(RepGerm.class));</span>
 <span class="fc" id="L360">    }</span>
 
@@ -385,7 +385,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L385">        });</span>
 
 <span class="fc" id="L387">        assertTrue(exception.getMessage().contains(&quot;Repetición no encontrada&quot;),</span>
-                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);
+<span class="fc" id="L388">                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);</span>
 <span class="fc" id="L389">        verify(repGermRepository, never()).deleteById(anyLong());</span>
 <span class="fc" id="L390">    }</span>
 
@@ -417,7 +417,7 @@ import static org.mockito.Mockito.*;
 <span class="nc" id="L417">        });</span>
 
 <span class="fc" id="L419">        assertTrue(exception.getMessage().contains(&quot;Repetición no encontrada&quot;),</span>
-                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);
+<span class="fc" id="L420">                &quot;Debe lanzar excepción cuando la repetición no existe&quot;);</span>
 <span class="fc" id="L421">    }</span>
 
     @Test
@@ -542,23 +542,23 @@ import static org.mockito.Mockito.*;
             
             // Promedio normales: (25+30+20+28+32+22+26+31+21+27+29+23)/4 = 314/4 = 78.50
 <span class="fc" id="L544">            assertEquals(new BigDecimal(&quot;78.50&quot;), tabla.getPromedioSinRedondeo().get(0), </span>
-                    &quot;Promedio de normales debe ser 78.50&quot;);
+<span class="fc" id="L545">                    &quot;Promedio de normales debe ser 78.50&quot;);</span>
             
             // Promedio anormales: (10+8+9+11)/4 = 38/4 = 9.50
 <span class="fc" id="L548">            assertEquals(new BigDecimal(&quot;9.50&quot;), tabla.getPromedioSinRedondeo().get(1), </span>
-                    &quot;Promedio de anormales debe ser 9.50&quot;);
+<span class="fc" id="L549">                    &quot;Promedio de anormales debe ser 9.50&quot;);</span>
             
             // Promedio duras: (5+4+5+3)/4 = 17/4 = 4.25
 <span class="fc" id="L552">            assertEquals(new BigDecimal(&quot;4.25&quot;), tabla.getPromedioSinRedondeo().get(2), </span>
-                    &quot;Promedio de duras debe ser 4.25&quot;);
+<span class="fc" id="L553">                    &quot;Promedio de duras debe ser 4.25&quot;);</span>
             
             // Promedio frescas: (3+2+2+4)/4 = 11/4 = 2.75
 <span class="fc" id="L556">            assertEquals(new BigDecimal(&quot;2.75&quot;), tabla.getPromedioSinRedondeo().get(3), </span>
-                    &quot;Promedio de frescas debe ser 2.75&quot;);
+<span class="fc" id="L557">                    &quot;Promedio de frescas debe ser 2.75&quot;);</span>
             
             // Promedio muertas: (7+4+6+3)/4 = 20/4 = 5.00
 <span class="fc" id="L560">            assertEquals(new BigDecimal(&quot;5.00&quot;), tabla.getPromedioSinRedondeo().get(4), </span>
-                    &quot;Promedio de muertas debe ser 5.00&quot;);
+<span class="fc" id="L561">                    &quot;Promedio de muertas debe ser 5.00&quot;);</span>
             
 <span class="fc" id="L563">            return tabla;</span>
         });
@@ -596,31 +596,31 @@ import static org.mockito.Mockito.*;
             
             // Promedio conteo 1: (25+28+26+27)/4 = 106/4 = 26.50
 <span class="fc" id="L598">            assertEquals(new BigDecimal(&quot;26.50&quot;), tabla.getPromediosSinRedPorConteo().get(0), </span>
-                    &quot;Promedio del conteo 1 debe ser 26.50&quot;);
+<span class="fc" id="L599">                    &quot;Promedio del conteo 1 debe ser 26.50&quot;);</span>
             
             // Promedio conteo 2: (30+32+31+29)/4 = 122/4 = 30.50
 <span class="fc" id="L602">            assertEquals(new BigDecimal(&quot;30.50&quot;), tabla.getPromediosSinRedPorConteo().get(1), </span>
-                    &quot;Promedio del conteo 2 debe ser 30.50&quot;);
+<span class="fc" id="L603">                    &quot;Promedio del conteo 2 debe ser 30.50&quot;);</span>
             
             // Promedio conteo 3: (20+22+21+23)/4 = 86/4 = 21.50
 <span class="fc" id="L606">            assertEquals(new BigDecimal(&quot;21.50&quot;), tabla.getPromediosSinRedPorConteo().get(2), </span>
-                    &quot;Promedio del conteo 3 debe ser 21.50&quot;);
+<span class="fc" id="L607">                    &quot;Promedio del conteo 3 debe ser 21.50&quot;);</span>
             
             // Promedio anormales: (10+8+9+11)/4 = 38/4 = 9.50
 <span class="fc" id="L610">            assertEquals(new BigDecimal(&quot;9.50&quot;), tabla.getPromediosSinRedPorConteo().get(3), </span>
-                    &quot;Promedio de anormales debe ser 9.50&quot;);
+<span class="fc" id="L611">                    &quot;Promedio de anormales debe ser 9.50&quot;);</span>
             
             // Promedio duras: (5+4+5+3)/4 = 17/4 = 4.25
 <span class="fc" id="L614">            assertEquals(new BigDecimal(&quot;4.25&quot;), tabla.getPromediosSinRedPorConteo().get(4), </span>
-                    &quot;Promedio de duras debe ser 4.25&quot;);
+<span class="fc" id="L615">                    &quot;Promedio de duras debe ser 4.25&quot;);</span>
             
             // Promedio frescas: (3+2+2+4)/4 = 11/4 = 2.75
 <span class="fc" id="L618">            assertEquals(new BigDecimal(&quot;2.75&quot;), tabla.getPromediosSinRedPorConteo().get(5), </span>
-                    &quot;Promedio de frescas debe ser 2.75&quot;);
+<span class="fc" id="L619">                    &quot;Promedio de frescas debe ser 2.75&quot;);</span>
             
             // Promedio muertas: (7+4+6+3)/4 = 20/4 = 5.00
 <span class="fc" id="L622">            assertEquals(new BigDecimal(&quot;5.00&quot;), tabla.getPromediosSinRedPorConteo().get(6), </span>
-                    &quot;Promedio de muertas debe ser 5.00&quot;);
+<span class="fc" id="L623">                    &quot;Promedio de muertas debe ser 5.00&quot;);</span>
             
 <span class="fc" id="L625">            return tabla;</span>
         });
@@ -679,7 +679,7 @@ import static org.mockito.Mockito.*;
             
             // Verificar que NO se calcularon promedios (faltan repeticiones)
 <span class="pc bpc" id="L681" title="3 of 4 branches missed.">            assertTrue(tabla.getPromedioSinRedondeo() == null || tabla.getPromedioSinRedondeo().isEmpty(),</span>
-                    &quot;No deben calcularse promedios cuando faltan repeticiones&quot;);
+<span class="fc" id="L682">                    &quot;No deben calcularse promedios cuando faltan repeticiones&quot;);</span>
             
 <span class="fc" id="L684">            return tabla;</span>
         });
@@ -711,7 +711,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L711">        assertEquals(repGerm.getMuertas(), resultado.getMuertas(), &quot;Las muertas deben coincidir&quot;);</span>
 <span class="fc" id="L712">        assertEquals(repGerm.getTotal(), resultado.getTotal(), &quot;El total debe coincidir&quot;);</span>
 <span class="fc" id="L713">        assertEquals(repGerm.getTablaGerm().getTablaGermID(), resultado.getTablaGermId(), </span>
-                &quot;El ID de tabla debe coincidir&quot;);
+<span class="fc" id="L714">                &quot;El ID de tabla debe coincidir&quot;);</span>
 <span class="fc" id="L715">    }</span>
 
     @Test
@@ -747,7 +747,7 @@ import static org.mockito.Mockito.*;
 
         // ASSERT
 <span class="fc" id="L749">        assertEquals(Arrays.asList(75, 0, 0), resultado.getNormales(), </span>
-                &quot;Debe completar con 0 los valores null en normales&quot;);
+<span class="fc" id="L750">                &quot;Debe completar con 0 los valores null en normales&quot;);</span>
 <span class="fc" id="L751">        assertEquals(0, resultado.getAnormales(), &quot;Debe asignar 0 cuando anormales es null&quot;);</span>
 <span class="fc" id="L752">        assertEquals(0, resultado.getDuras(), &quot;Debe asignar 0 cuando duras es null&quot;);</span>
 <span class="fc" id="L753">        assertEquals(0, resultado.getFrescas(), &quot;Debe asignar 0 cuando frescas es null&quot;);</span>
@@ -768,7 +768,7 @@ import static org.mockito.Mockito.*;
 <span class="fc" id="L768">        rep.setMuertas(muertas);</span>
         
 <span class="fc" id="L770">        int total = normales.stream().mapToInt(Integer::intValue).sum() + </span>
-                   anormales + duras + frescas + muertas;
+<span class="fc" id="L771">                   anormales + duras + frescas + muertas;</span>
 <span class="fc" id="L772">        rep.setTotal(total);</span>
 <span class="fc" id="L773">        rep.setTablaGerm(tablaGerm);</span>
         

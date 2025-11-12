@@ -11,9 +11,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.entities.*;
 import utec.proyectofinal.Proyecto.Final.UTEC.business.repositories.*;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.ExportacionRequestDTO;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.Instituto;
+import utec.proyectofinal.Proyecto.Final.UTEC.enums.TipoListado;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,10 +25,11 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyList;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName(&quot;Tests de ExportacionExcelService&quot;)
-<span class="fc" id="L27">class ExportacionExcelServiceTest {</span>
+<span class="fc" id="L32">class ExportacionExcelServiceTest {</span>
 
     @Mock
     private LoteRepository loteRepository;
@@ -44,6 +49,9 @@ import static org.mockito.Mockito.*;
     @Mock
     private DosnRepository dosnRepository;
 
+    @Mock
+    private TablaGermRepository tablaGermRepository;
+
     @InjectMocks
     private ExportacionExcelService exportacionExcelService;
 
@@ -53,91 +61,796 @@ import static org.mockito.Mockito.*;
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L56">        especie = new Especie();</span>
-<span class="fc" id="L57">        especie.setEspecieID(1L);</span>
-<span class="fc" id="L58">        especie.setNombreCientifico(&quot;Especie Test&quot;);</span>
-<span class="fc" id="L59">        especie.setNombreComun(&quot;Especie Común&quot;);</span>
-<span class="fc" id="L60">        especie.setActivo(true);</span>
+<span class="fc" id="L64">        especie = new Especie();</span>
+<span class="fc" id="L65">        especie.setEspecieID(1L);</span>
+<span class="fc" id="L66">        especie.setNombreCientifico(&quot;Especie Test&quot;);</span>
+<span class="fc" id="L67">        especie.setNombreComun(&quot;Especie Común&quot;);</span>
+<span class="fc" id="L68">        especie.setActivo(true);</span>
 
-<span class="fc" id="L62">        cultivar = new Cultivar();</span>
-<span class="fc" id="L63">        cultivar.setCultivarID(1L);</span>
-<span class="fc" id="L64">        cultivar.setNombre(&quot;Cultivar Test&quot;);</span>
-<span class="fc" id="L65">        cultivar.setEspecie(especie);</span>
-<span class="fc" id="L66">        cultivar.setActivo(true);</span>
+<span class="fc" id="L70">        cultivar = new Cultivar();</span>
+<span class="fc" id="L71">        cultivar.setCultivarID(1L);</span>
+<span class="fc" id="L72">        cultivar.setNombre(&quot;Cultivar Test&quot;);</span>
+<span class="fc" id="L73">        cultivar.setEspecie(especie);</span>
+<span class="fc" id="L74">        cultivar.setActivo(true);</span>
 
-<span class="fc" id="L68">        lote = new Lote();</span>
-<span class="fc" id="L69">        lote.setLoteID(1L);</span>
-<span class="fc" id="L70">        lote.setNomLote(&quot;LOTE-001&quot;);</span>
-<span class="fc" id="L71">        lote.setFicha(&quot;FICHA-001&quot;);</span>
-<span class="fc" id="L72">        lote.setFechaRecibo(LocalDate.now());</span>
-<span class="fc" id="L73">        lote.setCultivar(cultivar);</span>
-<span class="fc" id="L74">        lote.setActivo(true);</span>
-<span class="fc" id="L75">    }</span>
+<span class="fc" id="L76">        lote = new Lote();</span>
+<span class="fc" id="L77">        lote.setLoteID(1L);</span>
+<span class="fc" id="L78">        lote.setNomLote(&quot;LOTE-001&quot;);</span>
+<span class="fc" id="L79">        lote.setFicha(&quot;FICHA-001&quot;);</span>
+<span class="fc" id="L80">        lote.setFechaRecibo(LocalDate.now());</span>
+<span class="fc" id="L81">        lote.setCultivar(cultivar);</span>
+<span class="fc" id="L82">        lote.setActivo(true);</span>
+<span class="fc" id="L83">    }</span>
 
     @Test
     @DisplayName(&quot;Generar reporte Excel con lista vacía - debe generar archivo&quot;)
     void generarReporteExcel_listaVacia_debeGenerarArchivo() throws IOException {
-<span class="fc" id="L80">        List&lt;Long&gt; loteIds = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L88">        List&lt;Long&gt; loteIds = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L82">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+<span class="fc" id="L90">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
 
-<span class="fc" id="L84">        assertNotNull(resultado);</span>
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
-<span class="fc" id="L86">    }</span>
+<span class="fc" id="L92">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L94">    }</span>
 
     @Test
     @DisplayName(&quot;Generar reporte Excel avanzado vacío - debe generar archivo&quot;)
     void generarReporteExcelAvanzado_vacio_debeGenerarArchivo() throws IOException {
-<span class="fc" id="L91">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
-<span class="fc" id="L92">        solicitud.setIncluirEncabezados(true);</span>
+<span class="fc" id="L99">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L100">        solicitud.setIncluirEncabezados(true);</span>
 
-<span class="fc" id="L94">        byte[] resultado = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
+<span class="fc" id="L102">        byte[] resultado = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
 
-<span class="fc" id="L96">        assertNotNull(resultado);</span>
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
-<span class="fc" id="L98">    }</span>
+<span class="fc" id="L104">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L106">    }</span>
 
     @Test
     @DisplayName(&quot;Generar reporte Excel sin encabezados - debe generar archivo&quot;)
     void generarReporteExcelAvanzado_sinEncabezados_debeGenerarArchivo() throws IOException {
-<span class="fc" id="L103">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
-<span class="fc" id="L104">        solicitud.setIncluirEncabezados(false);</span>
+<span class="fc" id="L111">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L112">        solicitud.setIncluirEncabezados(false);</span>
 
-<span class="fc" id="L106">        byte[] resultado = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
+<span class="fc" id="L114">        byte[] resultado = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
 
-<span class="fc" id="L108">        assertNotNull(resultado);</span>
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
-<span class="fc" id="L110">    }</span>
+<span class="fc" id="L116">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L118">    }</span>
 
     @Test
     @DisplayName(&quot;Generar reporte Excel con lote inexistente - debe generar archivo&quot;)
     void generarReporteExcel_loteInexistente_debeGenerarArchivo() throws IOException {
-<span class="fc" id="L115">        List&lt;Long&gt; loteIds = Arrays.asList(999L);</span>
-<span class="fc" id="L116">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList());</span>
+<span class="fc" id="L123">        List&lt;Long&gt; loteIds = Arrays.asList(999L);</span>
+<span class="fc" id="L124">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList());</span>
 
-<span class="fc" id="L118">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+<span class="fc" id="L126">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
 
-<span class="fc" id="L120">        assertNotNull(resultado);</span>
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
-<span class="fc" id="L122">        verify(loteRepository, times(1)).findAllById(loteIds);</span>
-<span class="fc" id="L123">    }</span>
+<span class="fc" id="L128">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L130">        verify(loteRepository, times(1)).findAllById(loteIds);</span>
+<span class="fc" id="L131">    }</span>
 
     @Test
     @DisplayName(&quot;Generar reporte con múltiples lotes - debe generar archivo&quot;)
     void generarReporteExcel_multiples_debeGenerarArchivo() throws IOException {
-<span class="fc" id="L128">        Lote lote2 = new Lote();</span>
-<span class="fc" id="L129">        lote2.setLoteID(2L);</span>
-<span class="fc" id="L130">        lote2.setNomLote(&quot;LOTE-002&quot;);</span>
-<span class="fc" id="L131">        lote2.setActivo(true);</span>
+<span class="fc" id="L136">        Lote lote2 = new Lote();</span>
+<span class="fc" id="L137">        lote2.setLoteID(2L);</span>
+<span class="fc" id="L138">        lote2.setNomLote(&quot;LOTE-002&quot;);</span>
+<span class="fc" id="L139">        lote2.setActivo(true);</span>
 
-<span class="fc" id="L133">        List&lt;Long&gt; loteIds = Arrays.asList(1L, 2L);</span>
-<span class="fc" id="L134">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote, lote2));</span>
+<span class="fc" id="L141">        List&lt;Long&gt; loteIds = Arrays.asList(1L, 2L);</span>
+<span class="fc" id="L142">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote, lote2));</span>
 
-<span class="fc" id="L136">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+<span class="fc" id="L144">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
 
-<span class="fc" id="L138">        assertNotNull(resultado);</span>
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
-<span class="fc" id="L140">        verify(loteRepository, times(1)).findAllById(loteIds);</span>
-<span class="fc" id="L141">    }</span>
+<span class="fc" id="L146">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L148">        verify(loteRepository, times(1)).findAllById(loteIds);</span>
+<span class="fc" id="L149">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con lote con datos completos de Pureza&quot;)
+    void generarReporteExcel_conPureza_debeMapearCorrectamente() throws IOException {
+        // ARRANGE
+<span class="fc" id="L155">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L156">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L157">        pureza.setLote(lote);</span>
+<span class="fc" id="L158">        pureza.setRedonSemillaPura(java.math.BigDecimal.valueOf(95.0));</span>
+<span class="fc" id="L159">        pureza.setRedonMateriaInerte(java.math.BigDecimal.valueOf(3.0));</span>
+<span class="fc" id="L160">        pureza.setRedonOtrosCultivos(java.math.BigDecimal.valueOf(1.0));</span>
+<span class="fc" id="L161">        pureza.setRedonMalezas(java.math.BigDecimal.valueOf(1.0));</span>
+<span class="fc" id="L162">        pureza.setInasePura(java.math.BigDecimal.valueOf(94.5));</span>
+<span class="fc" id="L163">        pureza.setInaseMateriaInerte(java.math.BigDecimal.valueOf(3.5));</span>
+        
+<span class="fc" id="L165">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L166">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L167">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(pureza));</span>
+
+        // ACT
+<span class="fc" id="L170">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L173">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L175">        verify(purezaRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L176">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con lote con datos completos de Germinación&quot;)
+    void generarReporteExcel_conGerminacion_debeMapearCorrectamente() throws IOException {
+        // ARRANGE
+<span class="fc" id="L182">        Germinacion germinacion = new Germinacion();</span>
+<span class="fc" id="L183">        germinacion.setAnalisisID(1L);</span>
+<span class="fc" id="L184">        germinacion.setLote(lote);</span>
+        
+<span class="fc" id="L186">        TablaGerm tablaGerm = new TablaGerm();</span>
+<span class="fc" id="L187">        tablaGerm.setGerminacion(germinacion);</span>
+<span class="fc" id="L188">        tablaGerm.setPorcentajeNormalesConRedondeo(java.math.BigDecimal.valueOf(85.0));</span>
+        
+<span class="fc" id="L190">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L191">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L192">        when(germinacionRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(germinacion));</span>
+
+        // ACT
+<span class="fc" id="L195">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L198">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L200">        verify(germinacionRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L201">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con lote con datos completos de PMS&quot;)
+    void generarReporteExcel_conPms_debeMapearCorrectamente() throws IOException {
+        // ARRANGE
+<span class="fc" id="L207">        Pms pms = new Pms();</span>
+<span class="fc" id="L208">        pms.setAnalisisID(1L);</span>
+<span class="fc" id="L209">        pms.setLote(lote);</span>
+<span class="fc" id="L210">        pms.setPmsconRedon(java.math.BigDecimal.valueOf(250.5));</span>
+        
+<span class="fc" id="L212">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L213">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L214">        when(pmsRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(pms));</span>
+
+        // ACT
+<span class="fc" id="L217">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L220">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L222">        verify(pmsRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L223">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con lote con datos completos de Tetrazolio&quot;)
+    void generarReporteExcel_conTetrazolio_debeMapearCorrectamente() throws IOException {
+        // ARRANGE
+<span class="fc" id="L229">        Tetrazolio tetrazolio = new Tetrazolio();</span>
+<span class="fc" id="L230">        tetrazolio.setAnalisisID(1L);</span>
+<span class="fc" id="L231">        tetrazolio.setLote(lote);</span>
+<span class="fc" id="L232">        tetrazolio.setPorcViablesRedondeo(java.math.BigDecimal.valueOf(90.0));</span>
+<span class="fc" id="L233">        tetrazolio.setViabilidadInase(java.math.BigDecimal.valueOf(88.5));</span>
+        
+<span class="fc" id="L235">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L236">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L237">        when(tetrazolioRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(tetrazolio));</span>
+
+        // ACT
+<span class="fc" id="L240">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L243">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L245">        verify(tetrazolioRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L246">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con lote con datos completos de DOSN&quot;)
+    void generarReporteExcel_conDosn_debeMapearCorrectamente() throws IOException {
+        // ARRANGE
+<span class="fc" id="L252">        Dosn dosn = new Dosn();</span>
+<span class="fc" id="L253">        dosn.setAnalisisID(1L);</span>
+<span class="fc" id="L254">        dosn.setLote(lote);</span>
+<span class="fc" id="L255">        dosn.setGramosAnalizadosINIA(java.math.BigDecimal.valueOf(1000.0));</span>
+<span class="fc" id="L256">        dosn.setGramosAnalizadosINASE(java.math.BigDecimal.valueOf(1000.0));</span>
+        
+<span class="fc" id="L258">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L259">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L260">        when(dosnRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(dosn));</span>
+
+        // ACT
+<span class="fc" id="L263">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L266">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L268">        verify(dosnRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L269">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte Excel avanzado con filtros complejos&quot;)
+    void generarReporteExcelAvanzado_conFiltros_debeGenerarArchivo() throws IOException {
+        // ARRANGE
+<span class="fc" id="L275">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L276">        solicitud.setIncluirEncabezados(true);</span>
+<span class="fc" id="L277">        solicitud.setLoteIds(Arrays.asList(1L));</span>
+<span class="fc" id="L278">        solicitud.setFechaDesde(LocalDate.now().minusDays(30));</span>
+<span class="fc" id="L279">        solicitud.setFechaHasta(LocalDate.now());</span>
+        
+<span class="fc" id="L281">        when(loteRepository.findAllById(anyList())).thenReturn(Arrays.asList(lote));</span>
+
+        // ACT
+<span class="fc" id="L284">        byte[] resultado = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
+
+        // ASSERT
+<span class="fc" id="L287">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L289">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con null en loteIds - debe usar todos los lotes activos&quot;)
+    void generarReporteExcel_loteIdsNull_debeUsarLotesActivos() throws IOException {
+        // ARRANGE
+<span class="fc" id="L295">        when(loteRepository.findByActivoTrue()).thenReturn(Arrays.asList(lote));</span>
+
+        // ACT
+<span class="fc" id="L298">        byte[] resultado = exportacionExcelService.generarReporteExcel(null);</span>
+
+        // ASSERT
+<span class="fc" id="L301">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L303">        verify(loteRepository, times(1)).findByActivoTrue();</span>
+<span class="fc" id="L304">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con lote sin cultivar - debe manejar nulls&quot;)
+    void generarReporteExcel_loteSinCultivar_debeManejarNulls() throws IOException {
+        // ARRANGE
+<span class="fc" id="L310">        Lote loteSinCultivar = new Lote();</span>
+<span class="fc" id="L311">        loteSinCultivar.setLoteID(3L);</span>
+<span class="fc" id="L312">        loteSinCultivar.setNomLote(&quot;LOTE-SIN-CULTIVAR&quot;);</span>
+<span class="fc" id="L313">        loteSinCultivar.setActivo(true);</span>
+<span class="fc" id="L314">        loteSinCultivar.setCultivar(null);</span>
+        
+<span class="fc" id="L316">        List&lt;Long&gt; loteIds = Arrays.asList(3L);</span>
+<span class="fc" id="L317">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(loteSinCultivar));</span>
+
+        // ACT
+<span class="fc" id="L320">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L323">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L325">    }</span>
+
+    @Test
+    @DisplayName(&quot;Generar reporte con múltiples análisis del mismo tipo - debe usar el más reciente&quot;)
+    void generarReporteExcel_multiplesPurezas_debeUsarMasReciente() throws IOException {
+        // ARRANGE
+<span class="fc" id="L331">        Pureza pureza1 = new Pureza();</span>
+<span class="fc" id="L332">        pureza1.setAnalisisID(1L);</span>
+<span class="fc" id="L333">        pureza1.setLote(lote);</span>
+<span class="fc" id="L334">        pureza1.setFechaInicio(LocalDateTime.now().minusDays(10));</span>
+<span class="fc" id="L335">        pureza1.setRedonSemillaPura(java.math.BigDecimal.valueOf(90.0));</span>
+        
+<span class="fc" id="L337">        Pureza pureza2 = new Pureza();</span>
+<span class="fc" id="L338">        pureza2.setAnalisisID(2L);</span>
+<span class="fc" id="L339">        pureza2.setLote(lote);</span>
+<span class="fc" id="L340">        pureza2.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L341">        pureza2.setRedonSemillaPura(java.math.BigDecimal.valueOf(95.0));</span>
+        
+<span class="fc" id="L343">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L344">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L345">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(pureza1, pureza2));</span>
+
+        // ACT
+<span class="fc" id="L348">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L351">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L353">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear datos pureza - con todos los campos completos&quot;)
+    void mapearDatosPureza_conTodosLosCampos_debeLlenarDTO() throws IOException {
+        // ARRANGE
+<span class="fc" id="L359">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L360">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L361">        pureza.setLote(lote);</span>
+<span class="fc" id="L362">        pureza.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L363">        pureza.setRedonSemillaPura(java.math.BigDecimal.valueOf(95.5));</span>
+<span class="fc" id="L364">        pureza.setRedonMateriaInerte(java.math.BigDecimal.valueOf(2.5));</span>
+<span class="fc" id="L365">        pureza.setRedonOtrosCultivos(java.math.BigDecimal.valueOf(1.0));</span>
+<span class="fc" id="L366">        pureza.setRedonMalezas(java.math.BigDecimal.valueOf(1.0));</span>
+<span class="fc" id="L367">        pureza.setInasePura(java.math.BigDecimal.valueOf(96.0));</span>
+<span class="fc" id="L368">        pureza.setInaseMateriaInerte(java.math.BigDecimal.valueOf(2.0));</span>
+<span class="fc" id="L369">        pureza.setInaseFecha(LocalDate.now());</span>
+        
+<span class="fc" id="L371">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L372">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L373">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(pureza));</span>
+
+        // ACT
+<span class="fc" id="L376">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L379">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L380" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L381">        verify(purezaRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L382">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear datos germinacion - con tablas germ completas&quot;)
+    void mapearDatosGerminacion_conTablasGerm_debeLlenarDTO() throws IOException {
+        // ARRANGE
+<span class="fc" id="L388">        Germinacion germinacion = new Germinacion();</span>
+<span class="fc" id="L389">        germinacion.setAnalisisID(1L);</span>
+<span class="fc" id="L390">        germinacion.setLote(lote);</span>
+<span class="fc" id="L391">        germinacion.setFechaInicio(LocalDateTime.now());</span>
+        
+<span class="fc" id="L393">        TablaGerm tablaGerm = new TablaGerm();</span>
+<span class="fc" id="L394">        tablaGerm.setTablaGermID(1L);</span>
+<span class="fc" id="L395">        tablaGerm.setGerminacion(germinacion);</span>
+<span class="fc" id="L396">        tablaGerm.setPorcentajeNormalesConRedondeo(java.math.BigDecimal.valueOf(85.0));</span>
+<span class="fc" id="L397">        tablaGerm.setPorcentajeAnormalesConRedondeo(java.math.BigDecimal.valueOf(10.0));</span>
+<span class="fc" id="L398">        tablaGerm.setFechaIngreso(LocalDate.now());</span>
+<span class="fc" id="L399">        tablaGerm.setFechaGerminacion(LocalDate.now().plusDays(7));</span>
+        
+<span class="fc" id="L401">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L402">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L403">        when(germinacionRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(germinacion));</span>
+
+        // ACT
+<span class="fc" id="L406">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L409">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L410" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L411">        verify(germinacionRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L412">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear datos PMS - con repeticiones completas&quot;)
+    void mapearDatosPms_conRepeticiones_debeLlenarDTO() throws IOException {
+        // ARRANGE
+<span class="fc" id="L418">        Pms pms = new Pms();</span>
+<span class="fc" id="L419">        pms.setAnalisisID(1L);</span>
+<span class="fc" id="L420">        pms.setLote(lote);</span>
+<span class="fc" id="L421">        pms.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L422">        pms.setPmsconRedon(java.math.BigDecimal.valueOf(5.25));</span>
+<span class="fc" id="L423">        pms.setPmssinRedon(java.math.BigDecimal.valueOf(5.23));</span>
+<span class="fc" id="L424">        pms.setPromedio100g(java.math.BigDecimal.valueOf(1904.0));</span>
+        
+<span class="fc" id="L426">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L427">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L428">        when(pmsRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(pms));</span>
+
+        // ACT
+<span class="fc" id="L431">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L434">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L435" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L436">        verify(pmsRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L437">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear datos tetrazolio - con viabilidad completa&quot;)
+    void mapearDatosTetrazolio_conViabilidad_debeLlenarDTO() throws IOException {
+        // ARRANGE
+<span class="fc" id="L443">        Tetrazolio tetrazolio = new Tetrazolio();</span>
+<span class="fc" id="L444">        tetrazolio.setAnalisisID(1L);</span>
+<span class="fc" id="L445">        tetrazolio.setLote(lote);</span>
+<span class="fc" id="L446">        tetrazolio.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L447">        tetrazolio.setPorcViablesRedondeo(java.math.BigDecimal.valueOf(92.0));</span>
+<span class="fc" id="L448">        tetrazolio.setPorcNoViablesRedondeo(java.math.BigDecimal.valueOf(5.0));</span>
+<span class="fc" id="L449">        tetrazolio.setPorcDurasRedondeo(java.math.BigDecimal.valueOf(3.0));</span>
+<span class="fc" id="L450">        tetrazolio.setViabilidadInase(java.math.BigDecimal.valueOf(91.5));</span>
+        
+<span class="fc" id="L452">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L453">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L454">        when(tetrazolioRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(tetrazolio));</span>
+
+        // ACT
+<span class="fc" id="L457">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L460">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L461" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L462">        verify(tetrazolioRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L463">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear datos DOSN - con análisis INIA e INASE&quot;)
+    void mapearDatosDosn_conINIAeINASE_debeLlenarDTO() throws IOException {
+        // ARRANGE
+<span class="fc" id="L469">        Dosn dosn = new Dosn();</span>
+<span class="fc" id="L470">        dosn.setAnalisisID(1L);</span>
+<span class="fc" id="L471">        dosn.setLote(lote);</span>
+<span class="fc" id="L472">        dosn.setFechaInicio(LocalDateTime.now());</span>
+<span class="fc" id="L473">        dosn.setGramosAnalizadosINIA(java.math.BigDecimal.valueOf(500.0));</span>
+<span class="fc" id="L474">        dosn.setGramosAnalizadosINASE(java.math.BigDecimal.valueOf(450.0));</span>
+<span class="fc" id="L475">        dosn.setFechaINIA(LocalDate.now());</span>
+<span class="fc" id="L476">        dosn.setFechaINASE(LocalDate.now().minusDays(1));</span>
+        
+<span class="fc" id="L478">        List&lt;Long&gt; loteIds = Arrays.asList(1L);</span>
+<span class="fc" id="L479">        when(loteRepository.findAllById(loteIds)).thenReturn(Arrays.asList(lote));</span>
+<span class="fc" id="L480">        when(dosnRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(dosn));</span>
+
+        // ACT
+<span class="fc" id="L483">        byte[] resultado = exportacionExcelService.generarReporteExcel(loteIds);</span>
+
+        // ASSERT
+<span class="fc" id="L486">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L487" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L488">        verify(dosnRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L489">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener datos con filtros - con request completo&quot;)
+    void obtenerDatosConFiltros_conRequestCompleto_debeAplicarFiltros() throws IOException {
+        // ARRANGE
+<span class="fc" id="L495">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L496">        solicitud.setTiposAnalisis(Arrays.asList(&quot;PUREZA&quot;, &quot;GERMINACION&quot;, &quot;PMS&quot;, &quot;TETRAZOLIO&quot;, &quot;DOSN&quot;));</span>
+<span class="fc" id="L497">        solicitud.setIncluirEncabezados(true);</span>
+        
+<span class="fc" id="L499">        when(loteRepository.findByActivoTrue()).thenReturn(Arrays.asList(lote));</span>
+        
+<span class="fc" id="L501">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L502">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L503">        pureza.setLote(lote);</span>
+<span class="fc" id="L504">        pureza.setRedonSemillaPura(java.math.BigDecimal.valueOf(95.0));</span>
+<span class="fc" id="L505">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(pureza));</span>
+
+        // ACT
+<span class="fc" id="L508">        byte[] resultado = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
+
+        // ASSERT
+<span class="fc" id="L511">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L512" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L513">        verify(purezaRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L514">    }</span>
+
+    @Test
+    @DisplayName(&quot;Obtener datos con filtros - solo pureza&quot;)
+    void obtenerDatosConFiltros_soloPureza_debeGenerarSoloPureza() throws IOException {
+        // ARRANGE
+<span class="fc" id="L520">        ExportacionRequestDTO solicitud = new ExportacionRequestDTO();</span>
+<span class="fc" id="L521">        solicitud.setTiposAnalisis(Arrays.asList(&quot;PUREZA&quot;));</span>
+        
+<span class="fc" id="L523">        when(loteRepository.findByActivoTrue()).thenReturn(Arrays.asList(lote));</span>
+        
+<span class="fc" id="L525">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L526">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L527">        pureza.setLote(lote);</span>
+<span class="fc" id="L528">        pureza.setRedonSemillaPura(java.math.BigDecimal.valueOf(95.0));</span>
+<span class="fc" id="L529">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(Arrays.asList(pureza));</span>
+
+        // ACT
+<span class="fc" id="L532">        byte[] resultado = exportacionExcelService.generarReporteExcelAvanzado(solicitud);</span>
+
+        // ASSERT
+<span class="fc" id="L535">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L536" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L537">        verify(purezaRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L538">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear DOSN completo - con listados INIA e INASE&quot;)
+    void mapearDatosDosn_conListadosCompletos_debeMapeartodo() throws IOException {
+        // ARRANGE
+<span class="fc" id="L544">        Dosn dosn = new Dosn();</span>
+<span class="fc" id="L545">        dosn.setGramosAnalizadosINIA(BigDecimal.valueOf(100.0));</span>
+<span class="fc" id="L546">        dosn.setGramosAnalizadosINASE(BigDecimal.valueOf(95.0));</span>
+        
+        // Crear listados INIA
+<span class="fc" id="L549">        List&lt;Listado&gt; listados = new ArrayList&lt;&gt;();</span>
+        
+        // Maleza con tolerancia cero INIA
+<span class="fc" id="L552">        Listado malezaTolCeroInia = new Listado();</span>
+<span class="fc" id="L553">        malezaTolCeroInia.setListadoInsti(Instituto.INIA);</span>
+<span class="fc" id="L554">        malezaTolCeroInia.setListadoTipo(TipoListado.MAL_TOLERANCIA_CERO);</span>
+<span class="fc" id="L555">        MalezasCatalogo maleza1 = new MalezasCatalogo();</span>
+<span class="fc" id="L556">        maleza1.setNombreComun(&quot;Avena fatua&quot;);</span>
+<span class="fc" id="L557">        malezaTolCeroInia.setCatalogo(maleza1);</span>
+<span class="fc" id="L558">        listados.add(malezaTolCeroInia);</span>
+        
+        // Brassica INIA
+<span class="fc" id="L561">        Listado brassicaInia = new Listado();</span>
+<span class="fc" id="L562">        brassicaInia.setListadoInsti(Instituto.INIA);</span>
+<span class="fc" id="L563">        brassicaInia.setListadoTipo(TipoListado.BRASSICA);</span>
+<span class="fc" id="L564">        MalezasCatalogo brassica = new MalezasCatalogo();</span>
+<span class="fc" id="L565">        brassica.setNombreComun(&quot;Raphanus sativus&quot;);</span>
+<span class="fc" id="L566">        brassicaInia.setCatalogo(brassica);</span>
+<span class="fc" id="L567">        listados.add(brassicaInia);</span>
+        
+        // Maleza tolerada INIA
+<span class="fc" id="L570">        Listado malezaTolerInia = new Listado();</span>
+<span class="fc" id="L571">        malezaTolerInia.setListadoInsti(Instituto.INIA);</span>
+<span class="fc" id="L572">        malezaTolerInia.setListadoTipo(TipoListado.MAL_TOLERANCIA);</span>
+<span class="fc" id="L573">        MalezasCatalogo maleza2 = new MalezasCatalogo();</span>
+<span class="fc" id="L574">        maleza2.setNombreComun(&quot;Lolium spp&quot;);</span>
+<span class="fc" id="L575">        malezaTolerInia.setCatalogo(maleza2);</span>
+<span class="fc" id="L576">        listados.add(malezaTolerInia);</span>
+        
+        // Otro cultivo INIA
+<span class="fc" id="L579">        Listado cultivoInia = new Listado();</span>
+<span class="fc" id="L580">        cultivoInia.setListadoInsti(Instituto.INIA);</span>
+<span class="fc" id="L581">        cultivoInia.setListadoTipo(TipoListado.OTROS);</span>
+<span class="fc" id="L582">        Especie especieCultivo = new Especie();</span>
+<span class="fc" id="L583">        especieCultivo.setNombreComun(&quot;Trigo&quot;);</span>
+<span class="fc" id="L584">        cultivoInia.setEspecie(especieCultivo);</span>
+<span class="fc" id="L585">        listados.add(cultivoInia);</span>
+        
+        // Listados INASE
+<span class="fc" id="L588">        Listado malezaTolCeroInase = new Listado();</span>
+<span class="fc" id="L589">        malezaTolCeroInase.setListadoInsti(Instituto.INASE);</span>
+<span class="fc" id="L590">        malezaTolCeroInase.setListadoTipo(TipoListado.MAL_TOLERANCIA_CERO);</span>
+<span class="fc" id="L591">        MalezasCatalogo maleza3 = new MalezasCatalogo();</span>
+<span class="fc" id="L592">        maleza3.setNombreComun(&quot;Cyperus rotundus&quot;);</span>
+<span class="fc" id="L593">        malezaTolCeroInase.setCatalogo(maleza3);</span>
+<span class="fc" id="L594">        listados.add(malezaTolCeroInase);</span>
+        
+<span class="fc" id="L596">        dosn.setListados(listados);</span>
+        
+<span class="fc" id="L598">        when(dosnRepository.findByLoteLoteID(1L)).thenReturn(List.of(dosn));</span>
+<span class="fc" id="L599">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L602">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L605">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L606" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L607">        verify(dosnRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L608">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear Germinacion completa - con valores INIA e INASE y tratamiento&quot;)
+    void mapearDatosGerminacion_conValoresCompletos_debeMapeartodo() throws IOException {
+        // ARRANGE
+<span class="fc" id="L614">        Germinacion germinacion = new Germinacion();</span>
+        
+<span class="fc" id="L616">        TablaGerm tablaGerm = new TablaGerm();</span>
+<span class="fc" id="L617">        tablaGerm.setTratamiento(&quot;Inmersión en agua&quot;);</span>
+        
+<span class="fc" id="L619">        List&lt;ValoresGerm&gt; valores = new ArrayList&lt;&gt;();</span>
+        
+        // Valores INIA
+<span class="fc" id="L622">        ValoresGerm valoresInia = new ValoresGerm();</span>
+<span class="fc" id="L623">        valoresInia.setInstituto(Instituto.INIA);</span>
+<span class="fc" id="L624">        valoresInia.setNormales(BigDecimal.valueOf(85.0));</span>
+<span class="fc" id="L625">        valoresInia.setAnormales(BigDecimal.valueOf(5.0));</span>
+<span class="fc" id="L626">        valoresInia.setDuras(BigDecimal.valueOf(3.0));</span>
+<span class="fc" id="L627">        valoresInia.setFrescas(BigDecimal.valueOf(2.0));</span>
+<span class="fc" id="L628">        valoresInia.setMuertas(BigDecimal.valueOf(5.0));</span>
+<span class="fc" id="L629">        valoresInia.setGerminacion(BigDecimal.valueOf(85.0));</span>
+<span class="fc" id="L630">        valores.add(valoresInia);</span>
+        
+        // Valores INASE
+<span class="fc" id="L633">        ValoresGerm valoresInase = new ValoresGerm();</span>
+<span class="fc" id="L634">        valoresInase.setInstituto(Instituto.INASE);</span>
+<span class="fc" id="L635">        valoresInase.setNormales(BigDecimal.valueOf(83.0));</span>
+<span class="fc" id="L636">        valoresInase.setAnormales(BigDecimal.valueOf(6.0));</span>
+<span class="fc" id="L637">        valoresInase.setDuras(BigDecimal.valueOf(4.0));</span>
+<span class="fc" id="L638">        valoresInase.setFrescas(BigDecimal.valueOf(2.0));</span>
+<span class="fc" id="L639">        valoresInase.setMuertas(BigDecimal.valueOf(5.0));</span>
+<span class="fc" id="L640">        valoresInase.setGerminacion(BigDecimal.valueOf(83.0));</span>
+<span class="fc" id="L641">        valores.add(valoresInase);</span>
+        
+<span class="fc" id="L643">        tablaGerm.setValoresGerm(valores);</span>
+<span class="fc" id="L644">        germinacion.setTablaGerm(List.of(tablaGerm));</span>
+        
+<span class="fc" id="L646">        when(germinacionRepository.findByLoteLoteID(1L)).thenReturn(List.of(germinacion));</span>
+<span class="fc" id="L647">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L650">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L653">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L654" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L655">        verify(germinacionRepository, times(1)).findByLoteLoteID(1L);</span>
+<span class="fc" id="L656">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear Germinacion sin valores - no debe fallar&quot;)
+    void mapearDatosGerminacion_sinValores_noDebeFallar() throws IOException {
+        // ARRANGE
+<span class="fc" id="L662">        Germinacion germinacion = new Germinacion();</span>
+<span class="fc" id="L663">        TablaGerm tablaGerm = new TablaGerm();</span>
+<span class="fc" id="L664">        tablaGerm.setValoresGerm(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L665">        germinacion.setTablaGerm(List.of(tablaGerm));</span>
+        
+<span class="fc" id="L667">        when(germinacionRepository.findByLoteLoteID(1L)).thenReturn(List.of(germinacion));</span>
+<span class="fc" id="L668">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L671">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L674">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L675" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L676">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear DOSN sin listados - no debe fallar&quot;)
+    void mapearDatosDosn_sinListados_noDebeFallar() throws IOException {
+        // ARRANGE
+<span class="fc" id="L682">        Dosn dosn = new Dosn();</span>
+<span class="fc" id="L683">        dosn.setListados(new ArrayList&lt;&gt;());</span>
+        
+<span class="fc" id="L685">        when(dosnRepository.findByLoteLoteID(1L)).thenReturn(List.of(dosn));</span>
+<span class="fc" id="L686">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L689">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L692">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L693" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L694">    }</span>
+
+    @Test
+    @DisplayName(&quot;Mapear DOSN con listados sin catalogo ni especie - no debe fallar&quot;)
+    void mapearDatosDosn_conListadosSinNombre_noDebeFallar() throws IOException {
+        // ARRANGE
+<span class="fc" id="L700">        Dosn dosn = new Dosn();</span>
+        
+<span class="fc" id="L702">        List&lt;Listado&gt; listados = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L703">        Listado listadoVacio = new Listado();</span>
+<span class="fc" id="L704">        listadoVacio.setListadoInsti(Instituto.INIA);</span>
+<span class="fc" id="L705">        listadoVacio.setListadoTipo(TipoListado.OTROS);</span>
+<span class="fc" id="L706">        listados.add(listadoVacio);</span>
+        
+<span class="fc" id="L708">        dosn.setListados(listados);</span>
+        
+<span class="fc" id="L710">        when(dosnRepository.findByLoteLoteID(1L)).thenReturn(List.of(dosn));</span>
+<span class="fc" id="L711">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L714">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L717">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L718" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L719">    }</span>
+
+    @Test
+    @DisplayName(&quot;Crear celda con valores nulos - no debe fallar&quot;)
+    void crearCelda_conValoresNulos_noDebeFallar() throws IOException {
+        // ARRANGE
+<span class="fc" id="L725">        Pureza pureza = new Pureza();</span>
+        // No establecer valores, quedarán en null
+        
+<span class="fc" id="L728">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(List.of(pureza));</span>
+<span class="fc" id="L729">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L732">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L735">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L736" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L737">    }</span>
+
+    @Test
+    @DisplayName(&quot;Combinar descripciones - ambas tienen valor&quot;)
+    void combinarDescripciones_ambasConValor_debeCombinar() throws IOException {
+        // ARRANGE
+<span class="fc" id="L743">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L744">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L745">        pureza.setLote(lote);</span>
+        
+<span class="fc" id="L747">        MalezasCatalogo maleza1 = new MalezasCatalogo();</span>
+<span class="fc" id="L748">        maleza1.setNombreComun(&quot;Avena fatua&quot;);</span>
+        
+<span class="fc" id="L750">        MalezasCatalogo maleza2 = new MalezasCatalogo();</span>
+<span class="fc" id="L751">        maleza2.setNombreComun(&quot;Cyperus rotundus&quot;);</span>
+        
+<span class="fc" id="L753">        Listado listadoInia = new Listado();</span>
+<span class="fc" id="L754">        listadoInia.setListadoInsti(Instituto.INIA);</span>
+<span class="fc" id="L755">        listadoInia.setListadoTipo(TipoListado.MAL_TOLERANCIA_CERO);</span>
+<span class="fc" id="L756">        listadoInia.setCatalogo(maleza1);</span>
+        
+<span class="fc" id="L758">        Listado listadoInase = new Listado();</span>
+<span class="fc" id="L759">        listadoInase.setListadoInsti(Instituto.INASE);</span>
+<span class="fc" id="L760">        listadoInase.setListadoTipo(TipoListado.MAL_TOLERANCIA_CERO);</span>
+<span class="fc" id="L761">        listadoInase.setCatalogo(maleza2);</span>
+        
+<span class="fc" id="L763">        pureza.setListados(Arrays.asList(listadoInia, listadoInase));</span>
+        
+<span class="fc" id="L765">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(List.of(pureza));</span>
+<span class="fc" id="L766">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L769">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L772">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L773" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L774">    }</span>
+
+    @Test
+    @DisplayName(&quot;Combinar descripciones - solo INIA tiene valor&quot;)
+    void combinarDescripciones_soloIniaTieneValor_debeRetornarInia() throws IOException {
+        // ARRANGE
+<span class="fc" id="L780">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L781">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L782">        pureza.setLote(lote);</span>
+        
+<span class="fc" id="L784">        MalezasCatalogo maleza = new MalezasCatalogo();</span>
+<span class="fc" id="L785">        maleza.setNombreComun(&quot;Avena fatua&quot;);</span>
+        
+<span class="fc" id="L787">        Listado listadoInia = new Listado();</span>
+<span class="fc" id="L788">        listadoInia.setListadoInsti(Instituto.INIA);</span>
+<span class="fc" id="L789">        listadoInia.setListadoTipo(TipoListado.MAL_TOLERANCIA_CERO);</span>
+<span class="fc" id="L790">        listadoInia.setCatalogo(maleza);</span>
+        
+<span class="fc" id="L792">        pureza.setListados(Arrays.asList(listadoInia));</span>
+        
+<span class="fc" id="L794">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(List.of(pureza));</span>
+<span class="fc" id="L795">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L798">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L801">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L802" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L803">    }</span>
+
+    @Test
+    @DisplayName(&quot;Combinar descripciones - solo INASE tiene valor&quot;)
+    void combinarDescripciones_soloInaseTieneValor_debeRetornarInase() throws IOException {
+        // ARRANGE
+<span class="fc" id="L809">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L810">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L811">        pureza.setLote(lote);</span>
+        
+<span class="fc" id="L813">        MalezasCatalogo maleza = new MalezasCatalogo();</span>
+<span class="fc" id="L814">        maleza.setNombreComun(&quot;Cyperus rotundus&quot;);</span>
+        
+<span class="fc" id="L816">        Listado listadoInase = new Listado();</span>
+<span class="fc" id="L817">        listadoInase.setListadoInsti(Instituto.INASE);</span>
+<span class="fc" id="L818">        listadoInase.setListadoTipo(TipoListado.MAL_TOLERANCIA_CERO);</span>
+<span class="fc" id="L819">        listadoInase.setCatalogo(maleza);</span>
+        
+<span class="fc" id="L821">        pureza.setListados(Arrays.asList(listadoInase));</span>
+        
+<span class="fc" id="L823">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(List.of(pureza));</span>
+<span class="fc" id="L824">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L827">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L830">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L831" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L832">    }</span>
+
+    @Test
+    @DisplayName(&quot;Combinar descripciones - ninguna tiene valor&quot;)
+    void combinarDescripciones_ningunaConValor_debeRetornarVacio() throws IOException {
+        // ARRANGE
+<span class="fc" id="L838">        Pureza pureza = new Pureza();</span>
+<span class="fc" id="L839">        pureza.setAnalisisID(1L);</span>
+<span class="fc" id="L840">        pureza.setLote(lote);</span>
+<span class="fc" id="L841">        pureza.setListados(new ArrayList&lt;&gt;());</span>
+        
+<span class="fc" id="L843">        when(purezaRepository.findByLoteLoteID(1L)).thenReturn(List.of(pureza));</span>
+<span class="fc" id="L844">        when(loteRepository.findAllById(any())).thenReturn(List.of(lote));</span>
+
+        // ACT
+<span class="fc" id="L847">        byte[] resultado = exportacionExcelService.generarReporteExcel(List.of(1L));</span>
+
+        // ASSERT
+<span class="fc" id="L850">        assertNotNull(resultado);</span>
+<span class="pc bpc" id="L851" title="1 of 2 branches missed.">        assertTrue(resultado.length &gt; 0);</span>
+<span class="fc" id="L852">    }</span>
 }
+
+
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -51,7 +51,7 @@ import java.util.List;
     public Message&lt;?&gt; preSend(Message&lt;?&gt; message, MessageChannel channel) {
         // Obtener el accessor para manipular headers del mensaje STOMP
 <span class="nc" id="L53">        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(</span>
-            message, StompHeaderAccessor.class);
+<span class="nc" id="L54">            message, StompHeaderAccessor.class);</span>
 
         // Solo validar en el comando CONNECT (cuando el cliente se conecta)
 <span class="nc bnc" id="L57" title="All 4 branches missed.">        if (accessor != null &amp;&amp; StompCommand.CONNECT.equals(accessor.getCommand())) {</span>
@@ -73,9 +73,9 @@ import java.util.List;
                         // Crear una autenticación de Spring Security
                         // Esto permite que el sistema sepa quién es el usuario
 <span class="nc" id="L75">                        UsernamePasswordAuthenticationToken authentication = </span>
-                            new UsernamePasswordAuthenticationToken(
+<span class="nc" id="L76">                            new UsernamePasswordAuthenticationToken(</span>
 <span class="nc" id="L77">                                userId.toString(),  // Principal (identificador único)</span>
-                                null,               // Credentials (no necesarias después de autenticar)
+<span class="nc" id="L78">                                null,               // Credentials (no necesarias después de autenticar)</span>
 <span class="nc" id="L79">                                List.of(new SimpleGrantedAuthority(&quot;ROLE_USER&quot;))</span>
                             );
                         
@@ -91,8 +91,8 @@ import java.util.List;
 <span class="nc" id="L91">                } catch (Exception e) {</span>
 <span class="nc" id="L92">                    System.err.println(&quot;❌ Error validando token en WebSocket: &quot; + e.getMessage());</span>
 <span class="nc" id="L93">                    return null; // Rechazar conexión</span>
-<span class="nc" id="L94">                }</span>
-<span class="nc" id="L95">            } else {</span>
+                }
+            } else {
 <span class="nc" id="L96">                System.err.println(&quot;⚠️ WebSocket sin token de autenticación&quot;);</span>
 <span class="nc" id="L97">                return null; // Rechazar conexión sin token</span>
             }
@@ -108,7 +108,7 @@ import java.util.List;
     @Override
     public void postSend(Message&lt;?&gt; message, MessageChannel channel, boolean sent) {
 <span class="nc" id="L110">        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(</span>
-            message, StompHeaderAccessor.class);
+<span class="nc" id="L111">            message, StompHeaderAccessor.class);</span>
         
 <span class="nc bnc" id="L113" title="All 4 branches missed.">        if (accessor != null &amp;&amp; StompCommand.DISCONNECT.equals(accessor.getCommand())) {</span>
 <span class="nc bnc" id="L114" title="All 2 branches missed.">            if (accessor.getUser() != null) {</span>

@@ -120,7 +120,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 <span class="fc" id="L120">                    &quot;nombres&quot;, user.getNombres(),</span>
 <span class="fc" id="L121">                    &quot;apellidos&quot;, user.getApellidos(),</span>
 <span class="fc" id="L122">                    &quot;email&quot;, user.getEmail(),</span>
-                    &quot;roles&quot;, roles
+<span class="fc" id="L123">                    &quot;roles&quot;, roles</span>
                 ));
                 
 <span class="fc" id="L126">                return ResponseEntity.ok(responseBody);</span>
@@ -139,7 +139,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 <span class="nc" id="L139">                case &quot;USUARIO_PENDIENTE_APROBACION&quot; -&gt; &quot;Cuenta pendiente de aprobación. Contacte al administrador&quot;;</span>
 <span class="nc" id="L140">                case &quot;USUARIO_SIN_ROL&quot; -&gt; &quot;No se puede iniciar sesión. Contacte al administrador&quot;;</span>
 <span class="nc" id="L141">                case &quot;CONTRASENIA_INCORRECTA&quot; -&gt; &quot;Credenciales incorrectas&quot;;</span>
-<span class="pc" id="L142">                default -&gt; &quot;Error de autenticación&quot;;</span>
+<span class="nc" id="L142">                default -&gt; &quot;Error de autenticación&quot;;</span>
             };
             
 <span class="fc" id="L145">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
@@ -153,7 +153,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
     private void configurarCookieToken(HttpServletResponse response, String nombre, String valor, int maxAgeSegundos) {
         // Usar ResponseCookie (Spring Framework 5+) para mejor control de SameSite
 <span class="fc" id="L155">        String cookieValue = String.format(</span>
-            &quot;%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax&quot;,
+<span class="fc" id="L156">            &quot;%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax&quot;,</span>
 <span class="fc" id="L157">            nombre, valor, maxAgeSegundos</span>
         );
         
@@ -234,7 +234,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 <span class="nc" id="L234">                String username = jwtUtil.obtenerUsuarioDelToken(token);</span>
 <span class="nc" id="L235">                return ResponseEntity.ok(Map.of(</span>
 <span class="nc" id="L236">                    &quot;valido&quot;, true,</span>
-                    &quot;usuario&quot;, username
+<span class="nc" id="L237">                    &quot;usuario&quot;, username</span>
                 ));
             }
             
@@ -256,8 +256,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 <span class="fc" id="L256">            UsuarioDTO usuarioRegistrado = usuarioService.registrarSolicitud(solicitud);</span>
 <span class="fc" id="L257">            return ResponseEntity.status(HttpStatus.CREATED)</span>
 <span class="fc" id="L258">                    .body(Map.of(</span>
-                        &quot;mensaje&quot;, &quot;Solicitud de registro enviada. Pendiente de aprobación por el administrador.&quot;,
-                        &quot;usuario&quot;, usuarioRegistrado
+<span class="fc" id="L259">                        &quot;mensaje&quot;, &quot;Solicitud de registro enviada. Pendiente de aprobación por el administrador.&quot;,</span>
+<span class="fc" id="L260">                        &quot;usuario&quot;, usuarioRegistrado</span>
                     ));
 <span class="fc" id="L262">        } catch (RuntimeException e) {</span>
 <span class="fc" id="L263">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
@@ -294,8 +294,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
         try {
 <span class="fc" id="L295">            UsuarioDTO usuarioAprobado = usuarioService.aprobarUsuario(id, solicitud);</span>
 <span class="fc" id="L296">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;Usuario aprobado exitosamente&quot;,
-                &quot;usuario&quot;, usuarioAprobado
+<span class="fc" id="L297">                &quot;mensaje&quot;, &quot;Usuario aprobado exitosamente&quot;,</span>
+<span class="fc" id="L298">                &quot;usuario&quot;, usuarioAprobado</span>
             ));
 <span class="nc" id="L300">        } catch (RuntimeException e) {</span>
 <span class="nc" id="L301">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
@@ -344,7 +344,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 <span class="nc" id="L344">                rolEnum = utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.valueOf(rol.toUpperCase());</span>
 <span class="nc" id="L345">            } catch (IllegalArgumentException e) {</span>
 <span class="nc" id="L346">                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();</span>
-<span class="nc" id="L347">            }</span>
+            }
         }
         
         // Convertir String a Boolean si se proporciona
@@ -374,8 +374,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
         try {
 <span class="fc" id="L375">            UsuarioDTO usuarioActualizado = usuarioService.gestionarUsuario(id, solicitud);</span>
 <span class="fc" id="L376">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;Usuario actualizado exitosamente&quot;,
-                &quot;usuario&quot;, usuarioActualizado
+<span class="fc" id="L377">                &quot;mensaje&quot;, &quot;Usuario actualizado exitosamente&quot;,</span>
+<span class="fc" id="L378">                &quot;usuario&quot;, usuarioActualizado</span>
             ));
 <span class="fc" id="L380">        } catch (RuntimeException e) {</span>
 <span class="fc" id="L381">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
@@ -426,8 +426,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
             }
             
 <span class="fc" id="L428">            return ResponseEntity.ok(Map.of(</span>
-                &quot;mensaje&quot;, &quot;Perfil actualizado exitosamente&quot;,
-                &quot;usuario&quot;, perfilActualizado
+<span class="fc" id="L429">                &quot;mensaje&quot;, &quot;Perfil actualizado exitosamente&quot;,</span>
+<span class="fc" id="L430">                &quot;usuario&quot;, perfilActualizado</span>
             ));
 <span class="fc" id="L432">        } catch (RuntimeException e) {</span>
 <span class="fc" id="L433">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
@@ -444,8 +444,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.UsuarioService;
 <span class="fc" id="L444">            UsuarioDTO admin = usuarioService.crearAdminPredeterminado();</span>
 <span class="fc" id="L445">            return ResponseEntity.status(HttpStatus.CREATED)</span>
 <span class="fc" id="L446">                    .body(Map.of(</span>
-                        &quot;mensaje&quot;, &quot;Administrador predeterminado creado. Usuario: 'admin', Contraseña: 'admin123'&quot;,
-                        &quot;usuario&quot;, admin
+<span class="fc" id="L447">                        &quot;mensaje&quot;, &quot;Administrador predeterminado creado. Usuario: 'admin', Contraseña: 'admin123'&quot;,</span>
+<span class="fc" id="L448">                        &quot;usuario&quot;, admin</span>
                     ));
 <span class="fc" id="L450">        } catch (RuntimeException e) {</span>
 <span class="fc" id="L451">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>

@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 <span class="nc" id="L32">                Claims claims = validarToken(token);</span>
 <span class="nc bnc" id="L33" title="All 2 branches missed.">                if (claims.get(&quot;authorities&quot;) != null) {</span>
 <span class="nc" id="L34">                    crearAutenticacion(claims);</span>
-                } else {
+<span class="nc" id="L35">                } else {</span>
 <span class="nc" id="L36">                    SecurityContextHolder.clearContext();</span>
                 }
 <span class="nc" id="L38">            } else {</span>
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
             // Continuar con el filtro para que Spring Security maneje la autenticación fallida
 <span class="nc" id="L47">            filterChain.doFilter(request, response);</span>
 <span class="nc" id="L48">            return;</span>
-<span class="nc" id="L49">        }</span>
+        }
 <span class="nc" id="L50">    }</span>
 
     private void crearAutenticacion(Claims claims) {
@@ -77,7 +77,7 @@ import java.util.stream.Collectors;
 <span class="nc" id="L77">                    return cookie.getValue();</span>
                 }
             }
-        } else {
+<span class="nc" id="L80">        } else {</span>
 <span class="nc" id="L81">            System.out.println(&quot;No se encontraron cookies en la solicitud.&quot;);</span>
         }
         

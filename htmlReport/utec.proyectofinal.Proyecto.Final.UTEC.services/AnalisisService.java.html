@@ -58,7 +58,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc bfc" id="L58" title="All 2 branches covered.">        if (esAnalista()) {</span>
             // Analista: enviar a pendiente de aprobación
 <span class="fc" id="L60">            analisis.setEstado(Estado.PENDIENTE_APROBACION);</span>
-        } else {
+<span class="fc" id="L61">        } else {</span>
             // Admin: aprobar directamente
 <span class="fc" id="L63">            analisis.setEstado(Estado.APROBADO);</span>
         }
@@ -75,7 +75,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L75">        } catch (Exception e) {</span>
             // Log error but don't fail the analysis finalization
 <span class="fc" id="L77">            System.err.println(&quot;Error creating notification for analysis finalization: &quot; + e.getMessage());</span>
-<span class="fc" id="L78">        }</span>
+        }
         
 <span class="fc" id="L80">        return analisis;</span>
     }
@@ -111,10 +111,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         // Crear notificación automática para aprobación de análisis
         try {
 <span class="fc" id="L113">            notificacionService.notificarAnalisisAprobado(analisis.getAnalisisID());</span>
-<span class="nc" id="L114">        } catch (Exception e) {</span>
+<span class="pc" id="L114">        } catch (Exception e) {</span>
             // Log error but don't fail the analysis approval
 <span class="nc" id="L116">            System.err.println(&quot;Error creating notification for analysis approval: &quot; + e.getMessage());</span>
-<span class="fc" id="L117">        }</span>
+        }
         
 <span class="fc" id="L119">        return analisis;</span>
     }
@@ -145,10 +145,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         // Crear notificación automática para rechazo de análisis (marcado para repetir)
         try {
 <span class="fc" id="L147">            notificacionService.notificarAnalisisRepetir(analisis.getAnalisisID());</span>
-<span class="nc" id="L148">        } catch (Exception e) {</span>
+<span class="pc" id="L148">        } catch (Exception e) {</span>
             // Log error but don't fail the analysis rejection
 <span class="nc" id="L150">            System.err.println(&quot;Error creating notification for analysis rejection: &quot; + e.getMessage());</span>
-<span class="fc" id="L151">        }</span>
+        }
         
 <span class="fc" id="L153">        return analisis;</span>
     }
@@ -186,9 +186,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
                 // Crear notificación para informar que necesita nueva aprobación
                 try {
 <span class="fc" id="L188">                    notificacionService.notificarAnalisisPendienteAprobacion(analisis.getAnalisisID());</span>
-<span class="nc" id="L189">                } catch (Exception e) {</span>
+<span class="pc" id="L189">                } catch (Exception e) {</span>
 <span class="nc" id="L190">                    System.err.println(&quot;Error creating notification for analysis pending approval: &quot; + e.getMessage());</span>
-<span class="fc" id="L191">                }</span>
+                }
             }
             // Si es admin: no hacer nada, mantener estado actual
         }

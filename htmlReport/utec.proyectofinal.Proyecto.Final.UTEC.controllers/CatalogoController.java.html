@@ -55,8 +55,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
         try {
 <span class="fc" id="L56">            List&lt;CatalogoDTO&gt; catalogos = catalogoService.obtenerPorTipo(tipo, activo);</span>
 <span class="fc" id="L57">            return ResponseEntity.ok(catalogos);</span>
-<span class="nc" id="L58">        } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L59">            return ResponseEntity.badRequest().build();</span>
+<span class="fc" id="L58">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L59">            return ResponseEntity.badRequest().build();</span>
         }
     }
 
@@ -66,10 +66,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     public ResponseEntity&lt;CatalogoDTO&gt; obtenerPorId(@PathVariable Long id) {
 <span class="fc" id="L68">        CatalogoDTO catalogo = catalogoService.obtenerPorId(id);</span>
-<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (catalogo != null) {</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (catalogo != null) {</span>
 <span class="fc" id="L70">            return ResponseEntity.ok(catalogo);</span>
         }
-<span class="nc" id="L72">        return ResponseEntity.notFound().build();</span>
+<span class="fc" id="L72">        return ResponseEntity.notFound().build();</span>
     }
 
     // Crear nuevo catálogo
@@ -80,10 +80,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
         try {
 <span class="fc" id="L81">            CatalogoDTO creado = catalogoService.crear(solicitud);</span>
 <span class="fc" id="L82">            return ResponseEntity.ok(creado);</span>
-<span class="nc" id="L83">        } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L84">            return ResponseEntity.badRequest().body(&quot;Tipo de catálogo inválido: &quot; + e.getMessage());</span>
-<span class="nc" id="L85">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L86">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+<span class="fc" id="L83">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L84">            return ResponseEntity.badRequest().body(&quot;Tipo de catálogo inválido: &quot; + e.getMessage());</span>
+<span class="fc" id="L85">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L86">            return ResponseEntity.badRequest().body(e.getMessage());</span>
         }
     }
 
@@ -94,14 +94,14 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
     public ResponseEntity&lt;?&gt; actualizar(@PathVariable Long id, @RequestBody CatalogoRequestDTO solicitud) {
         try {
 <span class="fc" id="L96">            CatalogoDTO actualizado = catalogoService.actualizar(id, solicitud);</span>
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">            if (actualizado != null) {</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (actualizado != null) {</span>
 <span class="fc" id="L98">                return ResponseEntity.ok(actualizado);</span>
             }
-<span class="nc" id="L100">            return ResponseEntity.notFound().build();</span>
-<span class="nc" id="L101">        } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L102">            return ResponseEntity.badRequest().body(&quot;Tipo de catálogo inválido: &quot; + e.getMessage());</span>
-<span class="nc" id="L103">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L104">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+<span class="fc" id="L100">            return ResponseEntity.notFound().build();</span>
+<span class="fc" id="L101">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L102">            return ResponseEntity.badRequest().body(&quot;Tipo de catálogo inválido: &quot; + e.getMessage());</span>
+<span class="fc" id="L103">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L104">            return ResponseEntity.badRequest().body(e.getMessage());</span>
         }
     }
 
@@ -120,10 +120,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
     @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
     public ResponseEntity&lt;CatalogoDTO&gt; reactivar(@PathVariable Long id) {
 <span class="fc" id="L122">        CatalogoDTO reactivado = catalogoService.reactivar(id);</span>
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (reactivado != null) {</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (reactivado != null) {</span>
 <span class="fc" id="L124">            return ResponseEntity.ok(reactivado);</span>
         }
-<span class="nc" id="L126">        return ResponseEntity.notFound().build();</span>
+<span class="fc" id="L126">        return ResponseEntity.notFound().build();</span>
     }
 
     // Eliminar físicamente (solo para casos especiales)
@@ -131,8 +131,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
     @DeleteMapping(&quot;/{id}/fisico&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
     public ResponseEntity&lt;Void&gt; eliminarFisicamente(@PathVariable Long id) {
-<span class="nc" id="L134">        catalogoService.eliminarFisicamente(id);</span>
-<span class="nc" id="L135">        return ResponseEntity.ok().build();</span>
+<span class="fc" id="L134">        catalogoService.eliminarFisicamente(id);</span>
+<span class="fc" id="L135">        return ResponseEntity.ok().build();</span>
     }
 
     // Endpoints específicos para obtener tipos de datos (solo activos por defecto)
@@ -140,42 +140,42 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
     @GetMapping(&quot;/humedad&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     public ResponseEntity&lt;List&lt;CatalogoDTO&gt;&gt; obtenerTiposHumedad() {
-<span class="nc" id="L143">        return obtenerPorTipo(&quot;HUMEDAD&quot;, true);</span>
+<span class="fc" id="L143">        return obtenerPorTipo(&quot;HUMEDAD&quot;, true);</span>
     }
 
     @Operation(summary = &quot;Obtener Catalogo Numero de Articulos&quot;)
     @GetMapping(&quot;/articulos&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     public ResponseEntity&lt;List&lt;CatalogoDTO&gt;&gt; obtenerNumerosArticulo() {
-<span class="nc" id="L150">        return obtenerPorTipo(&quot;ARTICULO&quot;, true);</span>
+<span class="fc" id="L150">        return obtenerPorTipo(&quot;ARTICULO&quot;, true);</span>
     }
 
     @Operation(summary = &quot;Obtener Catalogo Origen&quot;)
     @GetMapping(&quot;/origenes&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     public ResponseEntity&lt;List&lt;CatalogoDTO&gt;&gt; obtenerOrigenes() {
-<span class="nc" id="L157">        return obtenerPorTipo(&quot;ORIGEN&quot;, true);</span>
+<span class="fc" id="L157">        return obtenerPorTipo(&quot;ORIGEN&quot;, true);</span>
     }
 
     @Operation(summary = &quot;Obtener Catalogo Estados&quot;)
     @GetMapping(&quot;/estados&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     public ResponseEntity&lt;List&lt;CatalogoDTO&gt;&gt; obtenerEstados() {
-<span class="nc" id="L164">        return obtenerPorTipo(&quot;ESTADO&quot;, true);</span>
+<span class="fc" id="L164">        return obtenerPorTipo(&quot;ESTADO&quot;, true);</span>
     }
 
     @Operation(summary = &quot;Obtener Catalogo Deposito&quot;)
     @GetMapping(&quot;/depositos&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     public ResponseEntity&lt;List&lt;CatalogoDTO&gt;&gt; obtenerDepositos() {
-<span class="nc" id="L171">        return obtenerPorTipo(&quot;DEPOSITO&quot;, true);</span>
+<span class="fc" id="L171">        return obtenerPorTipo(&quot;DEPOSITO&quot;, true);</span>
     }
 
     @Operation(summary = &quot;Obtener Catalogo Unidades de Embolsado&quot;)
     @GetMapping(&quot;/unidades-embolsado&quot;)
     @PreAuthorize(&quot;hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')&quot;)
     public ResponseEntity&lt;List&lt;CatalogoDTO&gt;&gt; obtenerUnidadesEmbolsado() {
-<span class="nc" id="L178">        return obtenerPorTipo(&quot;UNIDAD_EMBOLSADO&quot;, true);</span>
+<span class="fc" id="L178">        return obtenerPorTipo(&quot;UNIDAD_EMBOLSADO&quot;, true);</span>
     }
 
     // Obtener Catálogos con paginado para listado
@@ -189,9 +189,9 @@ import utec.proyectofinal.Proyecto.Final.UTEC.services.CatalogoService;
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean activo,
             @RequestParam(required = false) String tipo) {
-<span class="nc" id="L192">        Pageable pageable = PageRequest.of(page, size);</span>
-<span class="nc" id="L193">        Page&lt;CatalogoDTO&gt; response = catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, search, activo, tipo);</span>
-<span class="nc" id="L194">        return ResponseEntity.ok(response);</span>
+<span class="fc" id="L192">        Pageable pageable = PageRequest.of(page, size);</span>
+<span class="fc" id="L193">        Page&lt;CatalogoDTO&gt; response = catalogoService.obtenerCatalogosPaginadosConFiltros(pageable, search, activo, tipo);</span>
+<span class="fc" id="L194">        return ResponseEntity.ok(response);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -150,24 +150,24 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
 
     // Listar Especies con paginado (para listado)
     public Page&lt;EspecieDTO&gt; obtenerEspeciesPaginadas(Pageable pageable) {
-<span class="nc" id="L153">        Page&lt;Especie&gt; especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);</span>
-<span class="nc" id="L154">        return especiePage.map(this::mapearEntidadADTO);</span>
+<span class="fc" id="L153">        Page&lt;Especie&gt; especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);</span>
+<span class="fc" id="L154">        return especiePage.map(this::mapearEntidadADTO);</span>
     }
 
     // Listar Especies con paginado y filtro por activo
     public Page&lt;EspecieDTO&gt; obtenerEspeciesPaginadasConFiltro(Pageable pageable, String filtroActivo) {
         Page&lt;Especie&gt; especiePage;
         
-<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (&quot;activos&quot;.equalsIgnoreCase(filtroActivo)) {</span>
-<span class="nc" id="L162">            especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);</span>
-<span class="nc bnc" id="L163" title="All 2 branches missed.">        } else if (&quot;inactivos&quot;.equalsIgnoreCase(filtroActivo)) {</span>
-<span class="nc" id="L164">            especiePage = especieRepository.findByActivoFalseOrderByNombreComunAsc(pageable);</span>
-        } else {
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (&quot;activos&quot;.equalsIgnoreCase(filtroActivo)) {</span>
+<span class="fc" id="L162">            especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        } else if (&quot;inactivos&quot;.equalsIgnoreCase(filtroActivo)) {</span>
+<span class="fc" id="L164">            especiePage = especieRepository.findByActivoFalseOrderByNombreComunAsc(pageable);</span>
+<span class="fc" id="L165">        } else {</span>
             // &quot;todos&quot; o cualquier otro valor
-<span class="nc" id="L167">            especiePage = especieRepository.findAllByOrderByNombreComunAsc(pageable);</span>
+<span class="fc" id="L167">            especiePage = especieRepository.findAllByOrderByNombreComunAsc(pageable);</span>
         }
         
-<span class="nc" id="L170">        return especiePage.map(this::mapearEntidadADTO);</span>
+<span class="fc" id="L170">        return especiePage.map(this::mapearEntidadADTO);</span>
     }
 
     /**
@@ -185,51 +185,51 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.EspecieDTO;
         Page&lt;Especie&gt; especiePage;
         
         // Si hay término de búsqueda, buscar en nombre común y científico
-<span class="nc bnc" id="L188" title="All 4 branches missed.">        if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
+<span class="fc bfc" id="L188" title="All 4 branches covered.">        if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
             List&lt;Especie&gt; especies;
-<span class="nc bnc" id="L190" title="All 2 branches missed.">            if (activo == null) {</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">            if (activo == null) {</span>
                 // Buscar en todas (activas e inactivas)
-<span class="nc" id="L192">                especies = especieRepository.findAll().stream()</span>
-<span class="nc" id="L193">                    .filter(e -&gt; </span>
-<span class="nc bnc" id="L194" title="All 4 branches missed.">                        (e.getNombreComun() != null &amp;&amp; e.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||</span>
-<span class="nc bnc" id="L195" title="All 4 branches missed.">                        (e.getNombreCientifico() != null &amp;&amp; e.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase()))</span>
+<span class="fc" id="L192">                especies = especieRepository.findAll().stream()</span>
+<span class="fc" id="L193">                    .filter(e -&gt; </span>
+<span class="pc bpc" id="L194" title="2 of 4 branches missed.">                        (e.getNombreComun() != null &amp;&amp; e.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||</span>
+<span class="pc bnc" id="L195" title="All 4 branches missed.">                        (e.getNombreCientifico() != null &amp;&amp; e.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase()))</span>
                     )
-<span class="nc" id="L197">                    .collect(Collectors.toList());</span>
-<span class="nc bnc" id="L198" title="All 2 branches missed.">            } else if (activo) {</span>
+<span class="fc" id="L197">                    .collect(Collectors.toList());</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">            } else if (activo) {</span>
                 // Buscar solo en activas
-<span class="nc" id="L200">                List&lt;Especie&gt; porComun = especieRepository.findByNombreComunContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
-<span class="nc" id="L201">                List&lt;Especie&gt; porCientifico = especieRepository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
-<span class="nc" id="L202">                especies = new java.util.ArrayList&lt;&gt;(porComun);</span>
-<span class="nc" id="L203">                porCientifico.forEach(e -&gt; {</span>
+<span class="fc" id="L200">                List&lt;Especie&gt; porComun = especieRepository.findByNombreComunContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
+<span class="fc" id="L201">                List&lt;Especie&gt; porCientifico = especieRepository.findByNombreCientificoContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
+<span class="fc" id="L202">                especies = new java.util.ArrayList&lt;&gt;(porComun);</span>
+<span class="fc" id="L203">                porCientifico.forEach(e -&gt; {</span>
 <span class="nc bnc" id="L204" title="All 2 branches missed.">                    if (!especies.contains(e)) especies.add(e);</span>
 <span class="nc" id="L205">                });</span>
-<span class="nc" id="L206">            } else {</span>
+<span class="fc" id="L206">            } else {</span>
                 // Buscar solo en inactivas
-<span class="nc" id="L208">                especies = especieRepository.findAll().stream()</span>
-<span class="nc bnc" id="L209" title="All 2 branches missed.">                    .filter(e -&gt; !e.getActivo() &amp;&amp;</span>
-<span class="nc bnc" id="L210" title="All 4 branches missed.">                        ((e.getNombreComun() != null &amp;&amp; e.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||</span>
-<span class="nc bnc" id="L211" title="All 4 branches missed.">                         (e.getNombreCientifico() != null &amp;&amp; e.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase())))</span>
+<span class="fc" id="L208">                especies = especieRepository.findAll().stream()</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">                    .filter(e -&gt; !e.getActivo() &amp;&amp;</span>
+<span class="pc bpc" id="L210" title="2 of 4 branches missed.">                        ((e.getNombreComun() != null &amp;&amp; e.getNombreComun().toLowerCase().contains(searchTerm.toLowerCase())) ||</span>
+<span class="pc bnc" id="L211" title="All 4 branches missed.">                         (e.getNombreCientifico() != null &amp;&amp; e.getNombreCientifico().toLowerCase().contains(searchTerm.toLowerCase())))</span>
                     )
-<span class="nc" id="L213">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L213">                    .collect(Collectors.toList());</span>
             }
             
             // Convertir lista a página
-<span class="nc" id="L217">            int start = (int) pageable.getOffset();</span>
-<span class="nc" id="L218">            int end = Math.min(start + pageable.getPageSize(), especies.size());</span>
-<span class="nc" id="L219">            List&lt;Especie&gt; pageContent = especies.subList(start, end);</span>
-<span class="nc" id="L220">            especiePage = new org.springframework.data.domain.PageImpl&lt;&gt;(pageContent, pageable, especies.size());</span>
-<span class="nc" id="L221">        } else {</span>
+<span class="fc" id="L217">            int start = (int) pageable.getOffset();</span>
+<span class="fc" id="L218">            int end = Math.min(start + pageable.getPageSize(), especies.size());</span>
+<span class="fc" id="L219">            List&lt;Especie&gt; pageContent = especies.subList(start, end);</span>
+<span class="fc" id="L220">            especiePage = new org.springframework.data.domain.PageImpl&lt;&gt;(pageContent, pageable, especies.size());</span>
+<span class="fc" id="L221">        } else {</span>
             // Sin término de búsqueda, aplicar solo filtro de activo
-<span class="nc bnc" id="L223" title="All 2 branches missed.">            if (activo == null) {</span>
-<span class="nc" id="L224">                especiePage = especieRepository.findAllByOrderByNombreComunAsc(pageable);</span>
-<span class="nc bnc" id="L225" title="All 2 branches missed.">            } else if (activo) {</span>
-<span class="nc" id="L226">                especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);</span>
-            } else {
-<span class="nc" id="L228">                especiePage = especieRepository.findByActivoFalseOrderByNombreComunAsc(pageable);</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (activo == null) {</span>
+<span class="fc" id="L224">                especiePage = especieRepository.findAllByOrderByNombreComunAsc(pageable);</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">            } else if (activo) {</span>
+<span class="fc" id="L226">                especiePage = especieRepository.findByActivoTrueOrderByNombreComunAsc(pageable);</span>
+<span class="fc" id="L227">            } else {</span>
+<span class="fc" id="L228">                especiePage = especieRepository.findByActivoFalseOrderByNombreComunAsc(pageable);</span>
             }
         }
         
-<span class="nc" id="L232">        return especiePage.map(this::mapearEntidadADTO);</span>
+<span class="fc" id="L232">        return especiePage.map(this::mapearEntidadADTO);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

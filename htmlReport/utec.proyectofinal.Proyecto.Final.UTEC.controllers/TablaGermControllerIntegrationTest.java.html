@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -29,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(TablaGermController.class)
 @DisplayName(&quot;Tests de integración para TablaGermController&quot;)
-<span class="fc" id="L32">class TablaGermControllerIntegrationTest {</span>
+<span class="fc" id="L33">class TablaGermControllerIntegrationTest {</span>
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,270 +43,335 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     private TablaGermDTO tablaGermDTO;
     private TablaGermRequestDTO tablaGermRequestDTO;
-<span class="fc" id="L45">    private static final Long GERMINACION_ID = 1L;</span>
-<span class="fc" id="L46">    private static final Long TABLA_ID = 15L;</span>
+<span class="fc" id="L46">    private static final Long GERMINACION_ID = 1L;</span>
+<span class="fc" id="L47">    private static final Long TABLA_ID = 15L;</span>
 
     @BeforeEach
     void setUp() {
-<span class="fc" id="L50">        tablaGermDTO = new TablaGermDTO();</span>
-<span class="fc" id="L51">        tablaGermDTO.setTablaGermID(TABLA_ID);</span>
-<span class="fc" id="L52">        tablaGermDTO.setFinalizada(false);</span>
-<span class="fc" id="L53">        tablaGermDTO.setTratamiento(&quot;Agar&quot;);</span>
-<span class="fc" id="L54">        tablaGermDTO.setProductoYDosis(&quot;Sin producto&quot;);</span>
-<span class="fc" id="L55">        tablaGermDTO.setNumSemillasPRep(100);</span>
-<span class="fc" id="L56">        tablaGermDTO.setMetodo(&quot;Entre papel&quot;);</span>
-<span class="fc" id="L57">        tablaGermDTO.setTemperatura(&quot;25&quot;);</span>
-<span class="fc" id="L58">        tablaGermDTO.setTienePrefrio(false);</span>
-<span class="fc" id="L59">        tablaGermDTO.setTienePretratamiento(false);</span>
-<span class="fc" id="L60">        tablaGermDTO.setDiasPrefrio(0);</span>
-<span class="fc" id="L61">        tablaGermDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));</span>
-<span class="fc" id="L62">        tablaGermDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15));</span>
-<span class="fc" id="L63">        tablaGermDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));</span>
-<span class="fc" id="L64">        tablaGermDTO.setNumDias(&quot;10&quot;);</span>
-<span class="fc" id="L65">        tablaGermDTO.setNumeroRepeticiones(8);</span>
-<span class="fc" id="L66">        tablaGermDTO.setNumeroConteos(3);</span>
+<span class="fc" id="L51">        tablaGermDTO = new TablaGermDTO();</span>
+<span class="fc" id="L52">        tablaGermDTO.setTablaGermID(TABLA_ID);</span>
+<span class="fc" id="L53">        tablaGermDTO.setFinalizada(false);</span>
+<span class="fc" id="L54">        tablaGermDTO.setTratamiento(&quot;Agar&quot;);</span>
+<span class="fc" id="L55">        tablaGermDTO.setProductoYDosis(&quot;Sin producto&quot;);</span>
+<span class="fc" id="L56">        tablaGermDTO.setNumSemillasPRep(100);</span>
+<span class="fc" id="L57">        tablaGermDTO.setMetodo(&quot;Entre papel&quot;);</span>
+<span class="fc" id="L58">        tablaGermDTO.setTemperatura(&quot;25&quot;);</span>
+<span class="fc" id="L59">        tablaGermDTO.setTienePrefrio(false);</span>
+<span class="fc" id="L60">        tablaGermDTO.setTienePretratamiento(false);</span>
+<span class="fc" id="L61">        tablaGermDTO.setDiasPrefrio(0);</span>
+<span class="fc" id="L62">        tablaGermDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));</span>
+<span class="fc" id="L63">        tablaGermDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15));</span>
+<span class="fc" id="L64">        tablaGermDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L65">        tablaGermDTO.setNumDias(&quot;10&quot;);</span>
+<span class="fc" id="L66">        tablaGermDTO.setNumeroRepeticiones(8);</span>
+<span class="fc" id="L67">        tablaGermDTO.setNumeroConteos(3);</span>
 
-<span class="fc" id="L68">        tablaGermRequestDTO = new TablaGermRequestDTO();</span>
-<span class="fc" id="L69">        tablaGermRequestDTO.setFechaFinal(LocalDate.of(2024, 1, 25));</span>
-<span class="fc" id="L70">        tablaGermRequestDTO.setTratamiento(&quot;Agar&quot;);</span>
-<span class="fc" id="L71">        tablaGermRequestDTO.setProductoYDosis(&quot;Sin producto&quot;);</span>
-<span class="fc" id="L72">        tablaGermRequestDTO.setNumSemillasPRep(100);</span>
-<span class="fc" id="L73">        tablaGermRequestDTO.setMetodo(&quot;Entre papel&quot;);</span>
-<span class="fc" id="L74">        tablaGermRequestDTO.setTemperatura(&quot;25&quot;);</span>
-<span class="fc" id="L75">        tablaGermRequestDTO.setTienePrefrio(false);</span>
-<span class="fc" id="L76">        tablaGermRequestDTO.setTienePretratamiento(false);</span>
-<span class="fc" id="L77">        tablaGermRequestDTO.setDiasPrefrio(0);</span>
-<span class="fc" id="L78">        tablaGermRequestDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));</span>
-<span class="fc" id="L79">        tablaGermRequestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15));</span>
-<span class="fc" id="L80">        tablaGermRequestDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));</span>
-<span class="fc" id="L81">        tablaGermRequestDTO.setNumDias(&quot;10&quot;);</span>
-<span class="fc" id="L82">        tablaGermRequestDTO.setNumeroRepeticiones(8);</span>
-<span class="fc" id="L83">        tablaGermRequestDTO.setNumeroConteos(3);</span>
-<span class="fc" id="L84">    }</span>
+<span class="fc" id="L69">        tablaGermRequestDTO = new TablaGermRequestDTO();</span>
+<span class="fc" id="L70">        tablaGermRequestDTO.setFechaFinal(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L71">        tablaGermRequestDTO.setTratamiento(&quot;Agar&quot;);</span>
+<span class="fc" id="L72">        tablaGermRequestDTO.setProductoYDosis(&quot;Sin producto&quot;);</span>
+<span class="fc" id="L73">        tablaGermRequestDTO.setNumSemillasPRep(100);</span>
+<span class="fc" id="L74">        tablaGermRequestDTO.setMetodo(&quot;Entre papel&quot;);</span>
+<span class="fc" id="L75">        tablaGermRequestDTO.setTemperatura(&quot;25&quot;);</span>
+<span class="fc" id="L76">        tablaGermRequestDTO.setTienePrefrio(false);</span>
+<span class="fc" id="L77">        tablaGermRequestDTO.setTienePretratamiento(false);</span>
+<span class="fc" id="L78">        tablaGermRequestDTO.setDiasPrefrio(0);</span>
+<span class="fc" id="L79">        tablaGermRequestDTO.setFechaIngreso(LocalDate.of(2024, 1, 10));</span>
+<span class="fc" id="L80">        tablaGermRequestDTO.setFechaGerminacion(LocalDate.of(2024, 1, 15));</span>
+<span class="fc" id="L81">        tablaGermRequestDTO.setFechaUltConteo(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L82">        tablaGermRequestDTO.setNumDias(&quot;10&quot;);</span>
+<span class="fc" id="L83">        tablaGermRequestDTO.setNumeroRepeticiones(8);</span>
+<span class="fc" id="L84">        tablaGermRequestDTO.setNumeroConteos(3);</span>
+<span class="fc" id="L85">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/germinacion/{germinacionId}/tabla - Crear tabla exitosamente&quot;)
     void crearTabla_debeRetornarTablaCreada() throws Exception {
-<span class="fc" id="L90">        when(tablaGermService.crearTablaGerm(eq(GERMINACION_ID), any(TablaGermRequestDTO.class)))</span>
-<span class="fc" id="L91">            .thenReturn(tablaGermDTO);</span>
+<span class="fc" id="L91">        when(tablaGermService.crearTablaGerm(eq(GERMINACION_ID), any(TablaGermRequestDTO.class)))</span>
+<span class="fc" id="L92">            .thenReturn(tablaGermDTO);</span>
 
-<span class="fc" id="L93">        mockMvc.perform(post(&quot;/api/germinacion/{germinacionId}/tabla&quot;, GERMINACION_ID)</span>
-<span class="fc" id="L94">                .with(csrf())</span>
-<span class="fc" id="L95">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L96">                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))</span>
-<span class="fc" id="L97">                .andExpect(status().isCreated())</span>
-<span class="fc" id="L98">                .andExpect(jsonPath(&quot;$.tablaGermID&quot;).value(TABLA_ID))</span>
-<span class="fc" id="L99">                .andExpect(jsonPath(&quot;$.tratamiento&quot;).value(&quot;Agar&quot;))</span>
-<span class="fc" id="L100">                .andExpect(jsonPath(&quot;$.temperatura&quot;).value(&quot;25&quot;))</span>
-<span class="fc" id="L101">                .andExpect(jsonPath(&quot;$.finalizada&quot;).value(false));</span>
-<span class="fc" id="L102">    }</span>
+<span class="fc" id="L94">        mockMvc.perform(post(&quot;/api/germinacion/{germinacionId}/tabla&quot;, GERMINACION_ID)</span>
+<span class="fc" id="L95">                .with(csrf())</span>
+<span class="fc" id="L96">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L97">                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))</span>
+<span class="fc" id="L98">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L99">                .andExpect(jsonPath(&quot;$.tablaGermID&quot;).value(TABLA_ID))</span>
+<span class="fc" id="L100">                .andExpect(jsonPath(&quot;$.tratamiento&quot;).value(&quot;Agar&quot;))</span>
+<span class="fc" id="L101">                .andExpect(jsonPath(&quot;$.temperatura&quot;).value(&quot;25&quot;))</span>
+<span class="fc" id="L102">                .andExpect(jsonPath(&quot;$.finalizada&quot;).value(false));</span>
+<span class="fc" id="L103">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/germinacion/{germinacionId}/tabla - Error con fechas inválidas retorna 500&quot;)
     void crearTabla_debeRetornar400ConFechasInvalidas() throws Exception {
-<span class="fc" id="L108">        when(tablaGermService.crearTablaGerm(eq(GERMINACION_ID), any(TablaGermRequestDTO.class)))</span>
-<span class="fc" id="L109">            .thenThrow(new RuntimeException(&quot;La fecha de ingreso no puede ser posterior a la fecha de germinación&quot;));</span>
+<span class="fc" id="L109">        when(tablaGermService.crearTablaGerm(eq(GERMINACION_ID), any(TablaGermRequestDTO.class)))</span>
+<span class="fc" id="L110">            .thenThrow(new RuntimeException(&quot;La fecha de ingreso no puede ser posterior a la fecha de germinación&quot;));</span>
 
-<span class="fc" id="L111">        mockMvc.perform(post(&quot;/api/germinacion/{germinacionId}/tabla&quot;, GERMINACION_ID)</span>
-<span class="fc" id="L112">                .with(csrf())</span>
-<span class="fc" id="L113">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L114">                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))</span>
-<span class="fc" id="L115">                .andExpect(status().isInternalServerError());</span>
-<span class="fc" id="L116">    }</span>
+<span class="fc" id="L112">        mockMvc.perform(post(&quot;/api/germinacion/{germinacionId}/tabla&quot;, GERMINACION_ID)</span>
+<span class="fc" id="L113">                .with(csrf())</span>
+<span class="fc" id="L114">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L115">                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))</span>
+<span class="fc" id="L116">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L117">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla - Obtener todas las tablas&quot;)
     void obtenerTablasPorGerminacion_debeRetornarLista() throws Exception {
-<span class="fc" id="L122">        TablaGermDTO tabla2 = new TablaGermDTO();</span>
-<span class="fc" id="L123">        tabla2.setTablaGermID(16L);</span>
+<span class="fc" id="L123">        TablaGermDTO tabla2 = new TablaGermDTO();</span>
+<span class="fc" id="L124">        tabla2.setTablaGermID(16L);</span>
 
-<span class="fc" id="L125">        List&lt;TablaGermDTO&gt; tablas = Arrays.asList(tablaGermDTO, tabla2);</span>
-<span class="fc" id="L126">        when(tablaGermService.obtenerTablasPorGerminacion(GERMINACION_ID)).thenReturn(tablas);</span>
+<span class="fc" id="L126">        List&lt;TablaGermDTO&gt; tablas = Arrays.asList(tablaGermDTO, tabla2);</span>
+<span class="fc" id="L127">        when(tablaGermService.obtenerTablasPorGerminacion(GERMINACION_ID)).thenReturn(tablas);</span>
 
-<span class="fc" id="L128">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla&quot;, GERMINACION_ID)</span>
-<span class="fc" id="L129">                .with(csrf()))</span>
-<span class="fc" id="L130">                .andExpect(status().isOk())</span>
-<span class="fc" id="L131">                .andExpect(jsonPath(&quot;$[0].tablaGermID&quot;).value(TABLA_ID))</span>
-<span class="fc" id="L132">                .andExpect(jsonPath(&quot;$[1].tablaGermID&quot;).value(16));</span>
-<span class="fc" id="L133">    }</span>
+<span class="fc" id="L129">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla&quot;, GERMINACION_ID)</span>
+<span class="fc" id="L130">                .with(csrf()))</span>
+<span class="fc" id="L131">                .andExpect(status().isOk())</span>
+<span class="fc" id="L132">                .andExpect(jsonPath(&quot;$[0].tablaGermID&quot;).value(TABLA_ID))</span>
+<span class="fc" id="L133">                .andExpect(jsonPath(&quot;$[1].tablaGermID&quot;).value(16));</span>
+<span class="fc" id="L134">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;OBSERVADOR&quot;)
     @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/contar - Contar tablas&quot;)
     void contarTablas_debeRetornarCantidad() throws Exception {
-<span class="fc" id="L139">        when(tablaGermService.contarTablasPorGerminacion(GERMINACION_ID)).thenReturn(2L);</span>
+<span class="fc" id="L140">        when(tablaGermService.contarTablasPorGerminacion(GERMINACION_ID)).thenReturn(2L);</span>
 
-<span class="fc" id="L141">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/contar&quot;, GERMINACION_ID)</span>
-<span class="fc" id="L142">                .with(csrf()))</span>
-<span class="fc" id="L143">                .andExpect(status().isOk())</span>
-<span class="fc" id="L144">                .andExpect(content().string(&quot;2&quot;));</span>
-<span class="fc" id="L145">    }</span>
+<span class="fc" id="L142">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/contar&quot;, GERMINACION_ID)</span>
+<span class="fc" id="L143">                .with(csrf()))</span>
+<span class="fc" id="L144">                .andExpect(status().isOk())</span>
+<span class="fc" id="L145">                .andExpect(content().string(&quot;2&quot;));</span>
+<span class="fc" id="L146">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId} - Obtener tabla por ID&quot;)
     void obtenerTablaPorId_debeRetornarTabla() throws Exception {
-<span class="fc" id="L151">        when(tablaGermService.obtenerTablaGermPorId(TABLA_ID))</span>
-<span class="fc" id="L152">            .thenReturn(tablaGermDTO);</span>
+<span class="fc" id="L152">        when(tablaGermService.obtenerTablaGermPorId(TABLA_ID))</span>
+<span class="fc" id="L153">            .thenReturn(tablaGermDTO);</span>
 
-<span class="fc" id="L154">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
+<span class="fc" id="L155">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L156">                .with(csrf()))</span>
-<span class="fc" id="L157">                .andExpect(status().isOk())</span>
-<span class="fc" id="L158">                .andExpect(jsonPath(&quot;$.tablaGermID&quot;).value(TABLA_ID));</span>
-<span class="fc" id="L159">    }</span>
+<span class="fc" id="L157">                .with(csrf()))</span>
+<span class="fc" id="L158">                .andExpect(status().isOk())</span>
+<span class="fc" id="L159">                .andExpect(jsonPath(&quot;$.tablaGermID&quot;).value(TABLA_ID));</span>
+<span class="fc" id="L160">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId} - Error 404&quot;)
     void obtenerTablaPorId_debeRetornar404CuandoNoExiste() throws Exception {
-<span class="fc" id="L165">        when(tablaGermService.obtenerTablaGermPorId(999L))</span>
-<span class="fc" id="L166">            .thenThrow(new RuntimeException(&quot;Tabla no encontrada&quot;));</span>
+<span class="fc" id="L166">        when(tablaGermService.obtenerTablaGermPorId(999L))</span>
+<span class="fc" id="L167">            .thenThrow(new RuntimeException(&quot;Tabla no encontrada&quot;));</span>
 
-<span class="fc" id="L168">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
-<span class="fc" id="L169">                GERMINACION_ID, 999L)</span>
-<span class="fc" id="L170">                .with(csrf()))</span>
-<span class="fc" id="L171">                .andExpect(status().isNotFound());</span>
-<span class="fc" id="L172">    }</span>
+<span class="fc" id="L169">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
+<span class="fc" id="L170">                GERMINACION_ID, 999L)</span>
+<span class="fc" id="L171">                .with(csrf()))</span>
+<span class="fc" id="L172">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L173">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId} - Actualizar tabla&quot;)
     void actualizarTabla_debeRetornarTablaActualizada() throws Exception {
-<span class="fc" id="L178">        tablaGermDTO.setTemperatura(&quot;28&quot;);</span>
-<span class="fc" id="L179">        when(tablaGermService.actualizarTablaGerm(eq(TABLA_ID), </span>
-<span class="fc" id="L180">            any(TablaGermRequestDTO.class))).thenReturn(tablaGermDTO);</span>
+<span class="fc" id="L179">        tablaGermDTO.setTemperatura(&quot;28&quot;);</span>
+<span class="fc" id="L180">        when(tablaGermService.actualizarTablaGerm(eq(TABLA_ID), </span>
+<span class="fc" id="L181">            any(TablaGermRequestDTO.class))).thenReturn(tablaGermDTO);</span>
 
-<span class="fc" id="L182">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
+<span class="fc" id="L183">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L184">                .with(csrf())</span>
-<span class="fc" id="L185">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L186">                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))</span>
-<span class="fc" id="L187">                .andExpect(status().isOk())</span>
-<span class="fc" id="L188">                .andExpect(jsonPath(&quot;$.temperatura&quot;).value(&quot;28&quot;));</span>
-<span class="fc" id="L189">    }</span>
+<span class="fc" id="L185">                .with(csrf())</span>
+<span class="fc" id="L186">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L187">                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))</span>
+<span class="fc" id="L188">                .andExpect(status().isOk())</span>
+<span class="fc" id="L189">                .andExpect(jsonPath(&quot;$.temperatura&quot;).value(&quot;28&quot;));</span>
+<span class="fc" id="L190">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ADMIN&quot;)
     @DisplayName(&quot;DELETE /api/germinacion/{germinacionId}/tabla/{tablaId} - Eliminar tabla&quot;)
     void eliminarTabla_debeRetornarNoContent() throws Exception {
-<span class="fc" id="L195">        doNothing().when(tablaGermService).eliminarTablaGerm(TABLA_ID);</span>
+<span class="fc" id="L196">        doNothing().when(tablaGermService).eliminarTablaGerm(TABLA_ID);</span>
 
-<span class="fc" id="L197">        mockMvc.perform(delete(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
+<span class="fc" id="L198">        mockMvc.perform(delete(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L199">                .with(csrf()))</span>
-<span class="fc" id="L200">                .andExpect(status().isNoContent());</span>
-<span class="fc" id="L201">    }</span>
+<span class="fc" id="L200">                .with(csrf()))</span>
+<span class="fc" id="L201">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L202">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId}/finalizar - Finalizar tabla&quot;)
     void finalizarTabla_debeRetornarTablaFinalizada() throws Exception {
-<span class="fc" id="L207">        tablaGermDTO.setFinalizada(true);</span>
-<span class="fc" id="L208">        tablaGermDTO.setFechaFinal(LocalDate.of(2024, 1, 25));</span>
-<span class="fc" id="L209">        when(tablaGermService.finalizarTabla(TABLA_ID))</span>
-<span class="fc" id="L210">            .thenReturn(tablaGermDTO);</span>
+<span class="fc" id="L208">        tablaGermDTO.setFinalizada(true);</span>
+<span class="fc" id="L209">        tablaGermDTO.setFechaFinal(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L210">        when(tablaGermService.finalizarTabla(TABLA_ID))</span>
+<span class="fc" id="L211">            .thenReturn(tablaGermDTO);</span>
 
-<span class="fc" id="L212">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/finalizar&quot;, </span>
+<span class="fc" id="L213">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/finalizar&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L214">                .with(csrf()))</span>
-<span class="fc" id="L215">                .andExpect(status().isOk())</span>
-<span class="fc" id="L216">                .andExpect(jsonPath(&quot;$.finalizada&quot;).value(true))</span>
-<span class="fc" id="L217">                .andExpect(jsonPath(&quot;$.fechaFinal&quot;).exists());</span>
-<span class="fc" id="L218">    }</span>
+<span class="fc" id="L215">                .with(csrf()))</span>
+<span class="fc" id="L216">                .andExpect(status().isOk())</span>
+<span class="fc" id="L217">                .andExpect(jsonPath(&quot;$.finalizada&quot;).value(true))</span>
+<span class="fc" id="L218">                .andExpect(jsonPath(&quot;$.fechaFinal&quot;).exists());</span>
+<span class="fc" id="L219">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId}/finalizar - Error sin repeticiones&quot;)
     void finalizarTabla_debeRetornar400SinRepeticiones() throws Exception {
-<span class="fc" id="L224">        when(tablaGermService.finalizarTabla(TABLA_ID))</span>
-<span class="fc" id="L225">            .thenThrow(new RuntimeException(&quot;No se puede finalizar sin completar todas las repeticiones&quot;));</span>
+<span class="fc" id="L225">        when(tablaGermService.finalizarTabla(TABLA_ID))</span>
+<span class="fc" id="L226">            .thenThrow(new RuntimeException(&quot;No se puede finalizar sin completar todas las repeticiones&quot;));</span>
 
-<span class="fc" id="L227">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/finalizar&quot;, </span>
+<span class="fc" id="L228">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/finalizar&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L229">                .with(csrf()))</span>
-<span class="fc" id="L230">                .andExpect(status().isBadRequest());</span>
-<span class="fc" id="L231">    }</span>
+<span class="fc" id="L230">                .with(csrf()))</span>
+<span class="fc" id="L231">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L232">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId}/puede-ingresar-porcentajes - Verificar permisos&quot;)
     void puedeIngresarPorcentajes_debeRetornarBoolean() throws Exception {
-<span class="fc" id="L237">        when(tablaGermService.puedeIngresarPorcentajes(TABLA_ID))</span>
-<span class="fc" id="L238">            .thenReturn(true);</span>
+<span class="fc" id="L238">        when(tablaGermService.puedeIngresarPorcentajes(TABLA_ID))</span>
+<span class="fc" id="L239">            .thenReturn(true);</span>
 
-<span class="fc" id="L240">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/puede-ingresar-porcentajes&quot;, </span>
+<span class="fc" id="L241">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/puede-ingresar-porcentajes&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L242">                .with(csrf()))</span>
-<span class="fc" id="L243">                .andExpect(status().isOk())</span>
-<span class="fc" id="L244">                .andExpect(content().string(&quot;true&quot;));</span>
-<span class="fc" id="L245">    }</span>
+<span class="fc" id="L243">                .with(csrf()))</span>
+<span class="fc" id="L244">                .andExpect(status().isOk())</span>
+<span class="fc" id="L245">                .andExpect(content().string(&quot;true&quot;));</span>
+<span class="fc" id="L246">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId}/porcentajes - Actualizar porcentajes&quot;)
     void actualizarPorcentajes_debeRetornarTablaConPorcentajes() throws Exception {
-<span class="fc" id="L251">        PorcentajesRedondeoRequestDTO porcentajesDTO = new PorcentajesRedondeoRequestDTO();</span>
-<span class="fc" id="L252">        porcentajesDTO.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;85.5&quot;));</span>
-<span class="fc" id="L253">        porcentajesDTO.setPorcentajeAnormalesConRedondeo(new BigDecimal(&quot;8.2&quot;));</span>
-<span class="fc" id="L254">        porcentajesDTO.setPorcentajeDurasConRedondeo(new BigDecimal(&quot;3.1&quot;));</span>
-<span class="fc" id="L255">        porcentajesDTO.setPorcentajeFrescasConRedondeo(new BigDecimal(&quot;2.0&quot;));</span>
-<span class="fc" id="L256">        porcentajesDTO.setPorcentajeMuertasConRedondeo(new BigDecimal(&quot;1.2&quot;));</span>
+<span class="fc" id="L252">        PorcentajesRedondeoRequestDTO porcentajesDTO = new PorcentajesRedondeoRequestDTO();</span>
+<span class="fc" id="L253">        porcentajesDTO.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;85.5&quot;));</span>
+<span class="fc" id="L254">        porcentajesDTO.setPorcentajeAnormalesConRedondeo(new BigDecimal(&quot;8.2&quot;));</span>
+<span class="fc" id="L255">        porcentajesDTO.setPorcentajeDurasConRedondeo(new BigDecimal(&quot;3.1&quot;));</span>
+<span class="fc" id="L256">        porcentajesDTO.setPorcentajeFrescasConRedondeo(new BigDecimal(&quot;2.0&quot;));</span>
+<span class="fc" id="L257">        porcentajesDTO.setPorcentajeMuertasConRedondeo(new BigDecimal(&quot;1.2&quot;));</span>
 
-<span class="fc" id="L258">        tablaGermDTO.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;85.5&quot;));</span>
-<span class="fc" id="L259">        when(tablaGermService.actualizarPorcentajes(eq(TABLA_ID), </span>
-<span class="fc" id="L260">            any(PorcentajesRedondeoRequestDTO.class))).thenReturn(tablaGermDTO);</span>
+<span class="fc" id="L259">        tablaGermDTO.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;85.5&quot;));</span>
+<span class="fc" id="L260">        when(tablaGermService.actualizarPorcentajes(eq(TABLA_ID), </span>
+<span class="fc" id="L261">            any(PorcentajesRedondeoRequestDTO.class))).thenReturn(tablaGermDTO);</span>
 
-<span class="fc" id="L262">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/porcentajes&quot;, </span>
+<span class="fc" id="L263">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/porcentajes&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L264">                .with(csrf())</span>
-<span class="fc" id="L265">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L266">                .content(objectMapper.writeValueAsString(porcentajesDTO)))</span>
-<span class="fc" id="L267">                .andExpect(status().isOk())</span>
-<span class="fc" id="L268">                .andExpect(jsonPath(&quot;$.porcentajeNormalesConRedondeo&quot;).value(85.5));</span>
-<span class="fc" id="L269">    }</span>
+<span class="fc" id="L265">                .with(csrf())</span>
+<span class="fc" id="L266">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L267">                .content(objectMapper.writeValueAsString(porcentajesDTO)))</span>
+<span class="fc" id="L268">                .andExpect(status().isOk())</span>
+<span class="fc" id="L269">                .andExpect(jsonPath(&quot;$.porcentajeNormalesConRedondeo&quot;).value(85.5));</span>
+<span class="fc" id="L270">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId}/porcentajes - Error suma incorrecta&quot;)
     void actualizarPorcentajes_debeRetornar400ConSumaIncorrecta() throws Exception {
-<span class="fc" id="L275">        PorcentajesRedondeoRequestDTO porcentajesDTO = new PorcentajesRedondeoRequestDTO();</span>
-<span class="fc" id="L276">        porcentajesDTO.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;90.0&quot;));</span>
-<span class="fc" id="L277">        porcentajesDTO.setPorcentajeAnormalesConRedondeo(new BigDecimal(&quot;8.0&quot;));</span>
-<span class="fc" id="L278">        porcentajesDTO.setPorcentajeDurasConRedondeo(new BigDecimal(&quot;3.0&quot;));</span>
-<span class="fc" id="L279">        porcentajesDTO.setPorcentajeFrescasConRedondeo(new BigDecimal(&quot;2.0&quot;));</span>
-<span class="fc" id="L280">        porcentajesDTO.setPorcentajeMuertasConRedondeo(new BigDecimal(&quot;1.0&quot;));</span>
+<span class="fc" id="L276">        PorcentajesRedondeoRequestDTO porcentajesDTO = new PorcentajesRedondeoRequestDTO();</span>
+<span class="fc" id="L277">        porcentajesDTO.setPorcentajeNormalesConRedondeo(new BigDecimal(&quot;90.0&quot;));</span>
+<span class="fc" id="L278">        porcentajesDTO.setPorcentajeAnormalesConRedondeo(new BigDecimal(&quot;8.0&quot;));</span>
+<span class="fc" id="L279">        porcentajesDTO.setPorcentajeDurasConRedondeo(new BigDecimal(&quot;3.0&quot;));</span>
+<span class="fc" id="L280">        porcentajesDTO.setPorcentajeFrescasConRedondeo(new BigDecimal(&quot;2.0&quot;));</span>
+<span class="fc" id="L281">        porcentajesDTO.setPorcentajeMuertasConRedondeo(new BigDecimal(&quot;1.0&quot;));</span>
         // suma = 104, no 100
 
-<span class="fc" id="L283">        when(tablaGermService.actualizarPorcentajes(eq(TABLA_ID), </span>
-<span class="fc" id="L284">            any(PorcentajesRedondeoRequestDTO.class)))</span>
-<span class="fc" id="L285">            .thenThrow(new RuntimeException(&quot;La suma de porcentajes debe ser 100&quot;));</span>
+<span class="fc" id="L284">        when(tablaGermService.actualizarPorcentajes(eq(TABLA_ID), </span>
+<span class="fc" id="L285">            any(PorcentajesRedondeoRequestDTO.class)))</span>
+<span class="fc" id="L286">            .thenThrow(new RuntimeException(&quot;La suma de porcentajes debe ser 100&quot;));</span>
 
-<span class="fc" id="L287">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/porcentajes&quot;, </span>
+<span class="fc" id="L288">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/porcentajes&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L289">                .with(csrf())</span>
-<span class="fc" id="L290">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L291">                .content(objectMapper.writeValueAsString(porcentajesDTO)))</span>
-<span class="fc" id="L292">                .andExpect(status().isBadRequest());</span>
-<span class="fc" id="L293">    }</span>
+<span class="fc" id="L290">                .with(csrf())</span>
+<span class="fc" id="L291">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L292">                .content(objectMapper.writeValueAsString(porcentajesDTO)))</span>
+<span class="fc" id="L293">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L294">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ADMIN&quot;)
     @DisplayName(&quot;DELETE /api/germinacion/{germinacionId}/tabla/{tablaId} - Sin validación de tabla finalizada&quot;)
     void eliminarTabla_debeRetornar400SiEstaFinalizada() throws Exception {
         // El controller no valida si la tabla está finalizada antes de eliminar
-<span class="fc" id="L300">        tablaGermDTO.setFinalizada(true);</span>
-<span class="fc" id="L301">        when(tablaGermService.obtenerTablaGermPorId(TABLA_ID))</span>
-<span class="fc" id="L302">            .thenReturn(tablaGermDTO);</span>
-<span class="fc" id="L303">        doNothing().when(tablaGermService).eliminarTablaGerm(TABLA_ID);</span>
+<span class="fc" id="L301">        tablaGermDTO.setFinalizada(true);</span>
+<span class="fc" id="L302">        when(tablaGermService.obtenerTablaGermPorId(TABLA_ID))</span>
+<span class="fc" id="L303">            .thenReturn(tablaGermDTO);</span>
+<span class="fc" id="L304">        doNothing().when(tablaGermService).eliminarTablaGerm(TABLA_ID);</span>
 
-<span class="fc" id="L305">        mockMvc.perform(delete(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
+<span class="fc" id="L306">        mockMvc.perform(delete(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
                 GERMINACION_ID, TABLA_ID)
-<span class="fc" id="L307">                .with(csrf()))</span>
-<span class="fc" id="L308">                .andExpect(status().isNoContent());</span>
-<span class="fc" id="L309">    }</span>
+<span class="fc" id="L308">                .with(csrf()))</span>
+<span class="fc" id="L309">                .andExpect(status().isNoContent());</span>
+<span class="fc" id="L310">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/contar - Error al contar&quot;)
+    void contarTablas_debeRetornar500ConError() throws Exception {
+<span class="fc" id="L316">        when(tablaGermService.contarTablasPorGerminacion(GERMINACION_ID))</span>
+<span class="fc" id="L317">            .thenThrow(new RuntimeException(&quot;Error en servicio&quot;));</span>
+
+<span class="fc" id="L319">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/contar&quot;, GERMINACION_ID)</span>
+<span class="fc" id="L320">                .with(csrf()))</span>
+<span class="fc" id="L321">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L322">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla/{tablaId}/puede-ingresar-porcentajes - Error&quot;)
+    void puedeIngresarPorcentajes_debeRetornar500ConError() throws Exception {
+<span class="fc" id="L328">        when(tablaGermService.puedeIngresarPorcentajes(TABLA_ID))</span>
+<span class="fc" id="L329">            .thenThrow(new RuntimeException(&quot;Error verificando permisos&quot;));</span>
+
+<span class="fc" id="L331">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}/puede-ingresar-porcentajes&quot;, </span>
+                GERMINACION_ID, TABLA_ID)
+<span class="fc" id="L333">                .with(csrf()))</span>
+<span class="fc" id="L334">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L335">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/germinacion/{germinacionId}/tabla/{tablaId} - Error 404 al actualizar&quot;)
+    void actualizarTabla_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L341">        when(tablaGermService.actualizarTablaGerm(eq(999L), any(TablaGermRequestDTO.class)))</span>
+<span class="fc" id="L342">            .thenThrow(new RuntimeException(&quot;Tabla no encontrada&quot;));</span>
+
+<span class="fc" id="L344">        mockMvc.perform(put(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
+<span class="fc" id="L345">                GERMINACION_ID, 999L)</span>
+<span class="fc" id="L346">                .with(csrf())</span>
+<span class="fc" id="L347">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L348">                .content(objectMapper.writeValueAsString(tablaGermRequestDTO)))</span>
+<span class="fc" id="L349">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L350">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/germinacion/{germinacionId}/tabla/{tablaId} - Error 404 al eliminar&quot;)
+    void eliminarTabla_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L356">        doThrow(new RuntimeException(&quot;Tabla no encontrada&quot;))</span>
+<span class="fc" id="L357">            .when(tablaGermService).eliminarTablaGerm(999L);</span>
+
+<span class="fc" id="L359">        mockMvc.perform(delete(&quot;/api/germinacion/{germinacionId}/tabla/{tablaId}&quot;, </span>
+<span class="fc" id="L360">                GERMINACION_ID, 999L)</span>
+<span class="fc" id="L361">                .with(csrf()))</span>
+<span class="fc" id="L362">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L363">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/germinacion/{germinacionId}/tabla - Error al obtener lista&quot;)
+    void obtenerTablasPorGerminacion_debeRetornar500ConError() throws Exception {
+<span class="fc" id="L369">        when(tablaGermService.obtenerTablasPorGerminacion(GERMINACION_ID))</span>
+<span class="fc" id="L370">            .thenThrow(new RuntimeException(&quot;Error en servicio&quot;));</span>
+
+<span class="fc" id="L372">        mockMvc.perform(get(&quot;/api/germinacion/{germinacionId}/tabla&quot;, GERMINACION_ID)</span>
+<span class="fc" id="L373">                .with(csrf()))</span>
+<span class="fc" id="L374">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L375">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

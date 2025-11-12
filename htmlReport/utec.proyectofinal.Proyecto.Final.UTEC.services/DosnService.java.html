@@ -287,7 +287,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO;
 <span class="fc" id="L287">            Optional&lt;Lote&gt; loteOpt = loteRepository.findById(solicitud.getIdLote());</span>
 <span class="pc bpc" id="L288" title="1 of 2 branches missed.">            if (loteOpt.isPresent()) {</span>
 <span class="fc" id="L289">                dosn.setLote(loteOpt.get());</span>
-            } else {
+<span class="fc" id="L290">            } else {</span>
 <span class="nc" id="L291">                throw new RuntimeException(&quot;Lote no encontrado con ID: &quot; + solicitud.getIdLote());</span>
             }
         }
@@ -433,10 +433,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO;
      */
     public DosnDTO finalizarAnalisis(Long id) {
 <span class="fc" id="L435">        return analisisService.finalizarAnalisisGenerico(</span>
-                id,
-                dosnRepository,
-                this::mapearEntidadADTO,
-                this::validarAntesDeFinalizar // Validación específica para DOSN
+<span class="fc" id="L436">                id,</span>
+<span class="fc" id="L437">                dosnRepository,</span>
+<span class="fc" id="L438">                this::mapearEntidadADTO,</span>
+<span class="fc" id="L439">                this::validarAntesDeFinalizar // Validación específica para DOSN</span>
         );
     }
     
@@ -446,20 +446,20 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO;
      * datos de cuscuta o listados no vacíos. Si no hay evidencia lanza RuntimeException.
      */
     private void validarAntesDeFinalizar(Dosn dosn) {
-<span class="fc bfc" id="L449" title="All 2 branches covered.">        boolean tieneINIA = dosn.getFechaINIA() != null</span>
+<span class="fc bfc" id="L449" title="All 4 branches covered.">        boolean tieneINIA = dosn.getFechaINIA() != null</span>
 <span class="pc bpc" id="L450" title="1 of 2 branches missed.">                &amp;&amp; dosn.getGramosAnalizadosINIA() != null</span>
-<span class="fc bfc" id="L451" title="All 2 branches covered.">                &amp;&amp; dosn.getGramosAnalizadosINIA().compareTo(BigDecimal.ZERO) &gt; 0;</span>
+<span class="fc" id="L451">                &amp;&amp; dosn.getGramosAnalizadosINIA().compareTo(BigDecimal.ZERO) &gt; 0;</span>
 
-<span class="fc bfc" id="L453" title="All 2 branches covered.">        boolean tieneINASE = dosn.getFechaINASE() != null</span>
+<span class="fc bfc" id="L453" title="All 4 branches covered.">        boolean tieneINASE = dosn.getFechaINASE() != null</span>
 <span class="pc bpc" id="L454" title="1 of 2 branches missed.">                &amp;&amp; dosn.getGramosAnalizadosINASE() != null</span>
-<span class="fc bfc" id="L455" title="All 2 branches covered.">                &amp;&amp; dosn.getGramosAnalizadosINASE().compareTo(BigDecimal.ZERO) &gt; 0;</span>
+<span class="fc" id="L455">                &amp;&amp; dosn.getGramosAnalizadosINASE().compareTo(BigDecimal.ZERO) &gt; 0;</span>
 
 <span class="fc bfc" id="L457" title="All 2 branches covered.">        boolean tieneCuscuta = dosn.getCuscutaRegistros() != null </span>
 <span class="pc bpc" id="L458" title="1 of 2 branches missed.">                &amp;&amp; !dosn.getCuscutaRegistros().isEmpty()</span>
-<span class="fc bfc" id="L459" title="All 2 branches covered.">                &amp;&amp; dosn.getCuscutaRegistros().stream().anyMatch(reg -&gt;</span>
+<span class="fc" id="L459">                &amp;&amp; dosn.getCuscutaRegistros().stream().anyMatch(reg -&gt;</span>
 <span class="fc bfc" id="L460" title="All 4 branches covered.">                    (reg.getCuscuta_g() != null &amp;&amp; reg.getCuscuta_g().compareTo(BigDecimal.ZERO) &gt; 0)</span>
 <span class="pc bpc" id="L461" title="1 of 4 branches missed.">                    || (reg.getCuscutaNum() != null &amp;&amp; reg.getCuscutaNum() &gt; 0)</span>
-                );
+<span class="fc bfc" id="L462" title="All 2 branches covered.">                );</span>
 
 <span class="pc bpc" id="L464" title="1 of 4 branches missed.">        boolean tieneListados = dosn.getListados() != null &amp;&amp; !dosn.getListados().isEmpty();</span>
 
@@ -480,11 +480,11 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO;
      */
     public DosnDTO aprobarAnalisis(Long id) {
 <span class="fc" id="L482">        return analisisService.aprobarAnalisisGenerico(</span>
-                id,
-                dosnRepository,
-                this::mapearEntidadADTO,
-                this::validarAntesDeFinalizar, // Mismas validaciones que finalizar
-<span class="nc" id="L487">                (idLote) -&gt; dosnRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote</span>
+<span class="fc" id="L483">                id,</span>
+<span class="fc" id="L484">                dosnRepository,</span>
+<span class="fc" id="L485">                this::mapearEntidadADTO,</span>
+<span class="fc" id="L486">                this::validarAntesDeFinalizar, // Mismas validaciones que finalizar</span>
+<span class="pc" id="L487">                (idLote) -&gt; dosnRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote</span>
         );
     }
 
@@ -493,10 +493,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.DosnListadoDTO;
      */
     public DosnDTO marcarParaRepetir(Long id) {
 <span class="nc" id="L495">        return analisisService.marcarParaRepetirGenerico(</span>
-                id,
-                dosnRepository,
-                this::mapearEntidadADTO,
-                this::validarAntesDeFinalizar // Mismas validaciones que finalizar
+<span class="nc" id="L496">                id,</span>
+<span class="nc" id="L497">                dosnRepository,</span>
+<span class="nc" id="L498">                this::mapearEntidadADTO,</span>
+<span class="nc" id="L499">                this::validarAntesDeFinalizar // Mismas validaciones que finalizar</span>
         );
     }
 }

@@ -190,7 +190,7 @@ import static org.mockito.Mockito.*;
         // ACT &amp; ASSERT
 <span class="fc" id="L191">        assertThrows(RuntimeException.class, () -&gt; {</span>
 <span class="nc" id="L192">            pmsService.crearPms(pmsRequestDTO);</span>
-<span class="nc" id="L193">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
+<span class="pc" id="L193">        }, &quot;Debe lanzar excepción cuando el lote no existe&quot;);</span>
 <span class="fc" id="L194">    }</span>
 
     @Test
@@ -581,7 +581,7 @@ import static org.mockito.Mockito.*;
         // Crear repeticiones con mucha variación para CV alto
 <span class="fc" id="L582">        List&lt;RepPms&gt; repeticiones = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L583">        BigDecimal[] pesos = {new BigDecimal(&quot;8.0&quot;), new BigDecimal(&quot;10.0&quot;), </span>
-                             new BigDecimal(&quot;12.0&quot;), new BigDecimal(&quot;14.0&quot;)};
+<span class="fc" id="L584">                             new BigDecimal(&quot;12.0&quot;), new BigDecimal(&quot;14.0&quot;)};</span>
 <span class="fc bfc" id="L585" title="All 2 branches covered.">        for (int i = 0; i &lt; 4; i++) {</span>
 <span class="fc" id="L586">            RepPms rep = new RepPms();</span>
 <span class="fc" id="L587">            rep.setNumRep(i + 1);</span>
@@ -1022,7 +1022,7 @@ import static org.mockito.Mockito.*;
         // Crear repeticiones con mucha variación
 <span class="fc" id="L1023">        List&lt;RepPms&gt; repeticiones = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L1024">        BigDecimal[] pesos = {new BigDecimal(&quot;8.0&quot;), new BigDecimal(&quot;10.0&quot;), </span>
-                             new BigDecimal(&quot;12.0&quot;), new BigDecimal(&quot;14.0&quot;)};
+<span class="fc" id="L1025">                             new BigDecimal(&quot;12.0&quot;), new BigDecimal(&quot;14.0&quot;)};</span>
 <span class="fc bfc" id="L1026" title="All 2 branches covered.">        for (int i = 0; i &lt; 4; i++) {</span>
 <span class="fc" id="L1027">            RepPms rep = new RepPms();</span>
 <span class="fc" id="L1028">            rep.setNumRep(i + 1);</span>
@@ -1083,7 +1083,7 @@ import static org.mockito.Mockito.*;
         
 <span class="fc" id="L1084">        List&lt;RepPms&gt; repeticiones = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L1085">        BigDecimal[] pesos = {new BigDecimal(&quot;8.0&quot;), new BigDecimal(&quot;10.0&quot;), </span>
-                             new BigDecimal(&quot;12.0&quot;), new BigDecimal(&quot;14.0&quot;)};
+<span class="fc" id="L1086">                             new BigDecimal(&quot;12.0&quot;), new BigDecimal(&quot;14.0&quot;)};</span>
 <span class="fc bfc" id="L1087" title="All 2 branches covered.">        for (int i = 0; i &lt; 4; i++) {</span>
 <span class="fc" id="L1088">            RepPms rep = new RepPms();</span>
 <span class="fc" id="L1089">            rep.setNumRep(i + 1);</span>

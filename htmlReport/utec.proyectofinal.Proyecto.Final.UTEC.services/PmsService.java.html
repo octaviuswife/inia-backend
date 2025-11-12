@@ -302,13 +302,13 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         
         // PASO 4: Marcar repeticiones de esta tanda como válidas o inválidas según ±2σ GLOBAL
 <span class="fc bfc" id="L304" title="All 2 branches covered.">        for (RepPms rep : repeticionesTanda) {</span>
-<span class="pc bpc" id="L305" title="1 of 2 branches missed.">            boolean esValida = rep.getPeso().compareTo(umbralInferior) &gt;= 0 &amp;&amp; </span>
-<span class="pc bpc" id="L306" title="1 of 2 branches missed.">                              rep.getPeso().compareTo(umbralSuperior) &lt;= 0;</span>
+<span class="pc bpc" id="L305" title="2 of 4 branches missed.">            boolean esValida = rep.getPeso().compareTo(umbralInferior) &gt;= 0 &amp;&amp; </span>
+<span class="fc" id="L306">                              rep.getPeso().compareTo(umbralSuperior) &lt;= 0;</span>
 <span class="fc" id="L307">            rep.setValido(esValida);</span>
 <span class="fc" id="L308">            System.out.println(&quot;    Rep #&quot; + rep.getNumRep() + &quot; (Tanda &quot; + numTanda + &quot;): &quot; + rep.getPeso() + &quot;g -&gt; &quot; + </span>
 <span class="pc bpc" id="L309" title="1 of 2 branches missed.">                (esValida ? &quot; VÁLIDA&quot; : &quot; INVÁLIDA&quot;) +</span>
 <span class="fc" id="L310">                &quot; (comparación: &quot; + rep.getPeso() + &quot; vs [&quot; + umbralInferior + &quot;, &quot; + umbralSuperior + &quot;])&quot;);</span>
-<span class="fc" id="L311">        }</span>
+        }
 <span class="fc" id="L312">        repPmsRepository.saveAll(repeticionesTanda);</span>
 <span class="fc" id="L313">        System.out.println(&quot;   Validaciones guardadas en BD&quot;);</span>
         
@@ -342,10 +342,10 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc bfc" id="L342" title="All 2 branches covered.">            if (puedeIncrementarTandas(pms)) {</span>
 <span class="fc" id="L343">                pms.setNumTandas(pms.getNumTandas() + 1);</span>
 <span class="fc" id="L344">                System.out.println(&quot;  ️ CV no aceptable. Se incrementa el número de tandas a: &quot; + pms.getNumTandas());</span>
-            } else {
+<span class="fc" id="L345">            } else {</span>
 <span class="fc" id="L346">                System.out.println(&quot;  ️ CV no aceptable pero se alcanzó el límite máximo de 16 repeticiones.&quot;);</span>
             }
-        } else {
+<span class="fc" id="L348">        } else {</span>
 <span class="fc" id="L349">            System.out.println(&quot;   CV aceptable para la tanda &quot; + numTanda);</span>
         }
         
@@ -380,7 +380,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L380">            System.out.println(&quot;  Repeticiones insuficientes (&quot; + todasLasRepeticiones.size() + &quot; &lt; &quot; + pms.getNumRepeticionesEsperadas() + &quot;), marcando todas como indeterminadas&quot;);</span>
 <span class="fc bfc" id="L381" title="All 2 branches covered.">            for (RepPms rep : todasLasRepeticiones) {</span>
 <span class="fc" id="L382">                rep.setValido(null);</span>
-<span class="fc" id="L383">            }</span>
+            }
 <span class="fc" id="L384">            repPmsRepository.saveAll(todasLasRepeticiones);</span>
 <span class="fc" id="L385">            actualizarEstadisticasGenerales(pms);</span>
 <span class="fc" id="L386">            pmsRepository.save(pms);</span>
@@ -404,12 +404,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         
         // Validar TODAS las repeticiones
 <span class="fc bfc" id="L406" title="All 2 branches covered.">        for (RepPms rep : todasLasRepeticiones) {</span>
-<span class="pc bpc" id="L407" title="1 of 2 branches missed.">            boolean esValida = rep.getPeso().compareTo(umbralInferior) &gt;= 0 &amp;&amp; </span>
-<span class="pc bpc" id="L408" title="1 of 2 branches missed.">                              rep.getPeso().compareTo(umbralSuperior) &lt;= 0;</span>
+<span class="pc bpc" id="L407" title="2 of 4 branches missed.">            boolean esValida = rep.getPeso().compareTo(umbralInferior) &gt;= 0 &amp;&amp; </span>
+<span class="fc" id="L408">                              rep.getPeso().compareTo(umbralSuperior) &lt;= 0;</span>
 <span class="fc" id="L409">            rep.setValido(esValida);</span>
 <span class="fc" id="L410">            System.out.println(&quot;    Rep #&quot; + rep.getNumRep() + &quot; (Tanda &quot; + rep.getNumTanda() + &quot;): &quot; + </span>
 <span class="pc bpc" id="L411" title="1 of 2 branches missed.">                rep.getPeso() + &quot;g -&gt; &quot; + (esValida ? &quot; VÁLIDA&quot; : &quot; INVÁLIDA&quot;));</span>
-<span class="fc" id="L412">        }</span>
+        }
         
         // Guardar todas las validaciones
 <span class="fc" id="L415">        repPmsRepository.saveAll(todasLasRepeticiones);</span>
@@ -491,7 +491,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="fc" id="L491">            Optional&lt;Lote&gt; loteOpt = loteRepository.findById(solicitud.getIdLote());</span>
 <span class="pc bpc" id="L492" title="1 of 2 branches missed.">            if (loteOpt.isPresent()) {</span>
 <span class="fc" id="L493">                pms.setLote(loteOpt.get());</span>
-            } else {
+<span class="fc" id="L494">            } else {</span>
 <span class="nc" id="L495">                throw new RuntimeException(&quot;Lote no encontrado con ID: &quot; + solicitud.getIdLote());</span>
             }
         }
@@ -561,7 +561,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         
 <span class="fc" id="L562">        BigDecimal promedio = suma.divide(</span>
 <span class="fc" id="L563">            new BigDecimal(repeticiones.size()), </span>
-            4, RoundingMode.HALF_UP  // 4 decimales para promedio
+<span class="fc" id="L564">            4, RoundingMode.HALF_UP  // 4 decimales para promedio</span>
         );
 
         // Calcular desviación estándar (muestral: dividir por n-1)
@@ -574,8 +574,8 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc bpc" id="L574" title="1 of 2 branches missed.">        BigDecimal divisor = n &gt; 1 ? new BigDecimal(n - 1) : new BigDecimal(1);</span>
         
 <span class="fc" id="L576">        BigDecimal varianza = sumaCuadrados.divide(</span>
-            divisor, 
-            MathContext.DECIMAL128
+<span class="fc" id="L577">            divisor, </span>
+<span class="fc" id="L578">            MathContext.DECIMAL128</span>
         );
         
 <span class="fc" id="L581">        BigDecimal desviacion = new BigDecimal(Math.sqrt(varianza.doubleValue()))</span>
@@ -670,7 +670,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 <span class="pc" id="L670">                    new BigDecimal(&quot;6.0&quot;) : new BigDecimal(&quot;4.0&quot;);</span>
                 
 <span class="fc" id="L672">                System.out.println(&quot;CV de tanda &quot; + tanda + &quot;: &quot; + estadisticas.getCoeficienteVariacion() + </span>
-                                 &quot; (umbral: &quot; + umbralCV + &quot;)&quot;);
+<span class="fc" id="L673">                                 &quot; (umbral: &quot; + umbralCV + &quot;)&quot;);</span>
                 
                 // Si el CV es aceptable, las repeticiones están completas
 <span class="pc bpc" id="L676" title="1 of 2 branches missed.">                if (estadisticas.getCoeficienteVariacion().compareTo(umbralCV) &lt;= 0) {</span>
@@ -708,31 +708,31 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
     // Finalizar análisis PMS - cambia estado según rol del usuario
     public PmsDTO finalizarAnalisis(Long id) {
 <span class="fc" id="L710">        return analisisService.finalizarAnalisisGenerico(</span>
-            id, 
-            pmsRepository, 
-            this::mapearEntidadADTO,
-            this::validarPmsParaOperacionCritica
+<span class="fc" id="L711">            id, </span>
+<span class="fc" id="L712">            pmsRepository, </span>
+<span class="fc" id="L713">            this::mapearEntidadADTO,</span>
+<span class="fc" id="L714">            this::validarPmsParaOperacionCritica</span>
         );
     }
 
     // Aprobar análisis PMS (solo para administradores)
     public PmsDTO aprobarAnalisis(Long id) {
 <span class="fc" id="L720">        return analisisService.aprobarAnalisisGenerico(</span>
-            id,
-            pmsRepository,
-            this::mapearEntidadADTO,
-            this::validarPmsParaOperacionCritica, // Mismas validaciones que finalizar
-<span class="nc" id="L725">            (idLote) -&gt; pmsRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote</span>
+<span class="fc" id="L721">            id,</span>
+<span class="fc" id="L722">            pmsRepository,</span>
+<span class="fc" id="L723">            this::mapearEntidadADTO,</span>
+<span class="fc" id="L724">            this::validarPmsParaOperacionCritica, // Mismas validaciones que finalizar</span>
+<span class="pc" id="L725">            (idLote) -&gt; pmsRepository.findByIdLote(idLote.intValue()) // Función para buscar por lote</span>
         );
     }
 
     // Marcar análisis para repetir (solo administradores)
     public PmsDTO marcarParaRepetir(Long id) {
 <span class="fc" id="L731">        return analisisService.marcarParaRepetirGenerico(</span>
-            id,
-            pmsRepository,
-            this::mapearEntidadADTO,
-            this::validarPmsParaOperacionCritica // Mismas validaciones que finalizar
+<span class="fc" id="L732">            id,</span>
+<span class="fc" id="L733">            pmsRepository,</span>
+<span class="fc" id="L734">            this::mapearEntidadADTO,</span>
+<span class="fc" id="L735">            this::validarPmsParaOperacionCritica // Mismas validaciones que finalizar</span>
         );
     }
 }

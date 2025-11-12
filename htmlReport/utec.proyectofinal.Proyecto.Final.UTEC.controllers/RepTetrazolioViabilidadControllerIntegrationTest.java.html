@@ -211,54 +211,294 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 <span class="fc" id="L211">    }</span>
 
     @Test
-    @WithMockUser(roles = &quot;ADMIN&quot;)
-    @DisplayName(&quot;DELETE /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Sin validación de existencia&quot;)
-    void eliminarRepeticion_debeRetornar404CuandoNoExiste() throws Exception {
-        // El controller no valida existencia antes de eliminar
-<span class="fc" id="L218">        doNothing().when(repeticionService).eliminarRepeticion(999L);</span>
-
-<span class="fc" id="L220">        mockMvc.perform(delete(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
-<span class="fc" id="L221">                TETRAZOLIO_ID, 999L)</span>
-<span class="fc" id="L222">                .with(csrf()))</span>
-<span class="fc" id="L223">                .andExpect(status().isNoContent());</span>
-<span class="fc" id="L224">    }</span>
-
-    @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Sin validación de campos requeridos&quot;)
     void crearRepeticion_debeFallarSinCamposRequeridos() throws Exception {
-<span class="fc" id="L230">        RepTetrazolioViabilidadRequestDTO requestInvalido = new RepTetrazolioViabilidadRequestDTO();</span>
+<span class="fc" id="L217">        RepTetrazolioViabilidadRequestDTO requestInvalido = new RepTetrazolioViabilidadRequestDTO();</span>
         
         // Mock del DTO de respuesta ya que el controller no valida campos requeridos
-<span class="fc" id="L233">        RepTetrazolioViabilidadDTO mockResponse = new RepTetrazolioViabilidadDTO();</span>
-<span class="fc" id="L234">        mockResponse.setRepTetrazolioViabID(1L);</span>
-<span class="fc" id="L235">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
-<span class="fc" id="L236">            .thenReturn(mockResponse);</span>
+<span class="fc" id="L220">        RepTetrazolioViabilidadDTO mockResponse = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L221">        mockResponse.setRepTetrazolioViabID(1L);</span>
+<span class="fc" id="L222">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L223">            .thenReturn(mockResponse);</span>
 
-<span class="fc" id="L238">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
-<span class="fc" id="L239">                .with(csrf())</span>
-<span class="fc" id="L240">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L241">                .content(objectMapper.writeValueAsString(requestInvalido)))</span>
-<span class="fc" id="L242">                .andExpect(status().isCreated());</span>
-<span class="fc" id="L243">    }</span>
+<span class="fc" id="L225">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L226">                .with(csrf())</span>
+<span class="fc" id="L227">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L228">                .content(objectMapper.writeValueAsString(requestInvalido)))</span>
+<span class="fc" id="L229">                .andExpect(status().isCreated());</span>
+<span class="fc" id="L230">    }</span>
 
     @Test
     @WithMockUser(roles = &quot;ANALISTA&quot;)
     @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Validar total de semillas&quot;)
     void crearRepeticion_debeValidarTotalSemillas() throws Exception {
         // La suma debería ser 100 (por ejemplo)
-<span class="fc" id="L250">        repTetrazolioRequestDTO.setViablesNum(85);</span>
-<span class="fc" id="L251">        repTetrazolioRequestDTO.setNoViablesNum(10);</span>
-<span class="fc" id="L252">        repTetrazolioRequestDTO.setDuras(10); // suma = 105, incorrecto</span>
+<span class="fc" id="L237">        repTetrazolioRequestDTO.setViablesNum(85);</span>
+<span class="fc" id="L238">        repTetrazolioRequestDTO.setNoViablesNum(10);</span>
+<span class="fc" id="L239">        repTetrazolioRequestDTO.setDuras(10); // suma = 105, incorrecto</span>
         
-<span class="fc" id="L254">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
-<span class="fc" id="L255">            .thenThrow(new RuntimeException(&quot;La suma no coincide con el número de semillas esperado&quot;));</span>
+<span class="fc" id="L241">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L242">            .thenThrow(new RuntimeException(&quot;La suma no coincide con el número de semillas esperado&quot;));</span>
 
-<span class="fc" id="L257">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
-<span class="fc" id="L258">                .with(csrf())</span>
-<span class="fc" id="L259">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L260">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
-<span class="fc" id="L261">                .andExpect(status().isBadRequest());</span>
-<span class="fc" id="L262">    }</span>
+<span class="fc" id="L244">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L245">                .with(csrf())</span>
+<span class="fc" id="L246">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L247">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L248">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L249">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Error interno debe retornar 500&quot;)
+    void crearRepeticion_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L255">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L256">            .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L258">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L259">                .with(csrf())</span>
+<span class="fc" id="L260">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L261">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L262">                .andExpect(status().isBadRequest()); // RuntimeException se captura y retorna 400</span>
+<span class="fc" id="L263">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones - Error interno debe retornar 500&quot;)
+    void obtenerRepeticionesPorTetrazolio_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L269">        when(repeticionService.obtenerRepeticionesPorTetrazolio(TETRAZOLIO_ID))</span>
+<span class="fc" id="L270">            .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L272">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L273">                .with(csrf()))</span>
+<span class="fc" id="L274">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L275">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones/count - Error interno debe retornar 500&quot;)
+    void contarRepeticiones_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L281">        when(repeticionService.contarRepeticionesPorTetrazolio(TETRAZOLIO_ID))</span>
+<span class="fc" id="L282">            .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L284">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/count&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L285">                .with(csrf()))</span>
+<span class="fc" id="L286">                .andExpect(status().isInternalServerError());</span>
+<span class="fc" id="L287">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Error interno debe retornar 500&quot;)
+    void obtenerRepeticionPorId_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L293">        when(repeticionService.obtenerRepeticionPorId(REP_ID))</span>
+<span class="fc" id="L294">            .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L296">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L298">                .with(csrf()))</span>
+<span class="fc" id="L299">                .andExpect(status().isNotFound()); // RuntimeException se captura y retorna 404</span>
+<span class="fc" id="L300">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Error 404 cuando no existe&quot;)
+    void actualizarRepeticion_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L306">        when(repeticionService.actualizarRepeticion(eq(999L), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L307">            .thenThrow(new RuntimeException(&quot;Repetición no encontrada&quot;));</span>
+
+<span class="fc" id="L309">        mockMvc.perform(put(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+<span class="fc" id="L310">                TETRAZOLIO_ID, 999L)</span>
+<span class="fc" id="L311">                .with(csrf())</span>
+<span class="fc" id="L312">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L313">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L314">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L315">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Error interno debe retornar 500&quot;)
+    void actualizarRepeticion_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L321">        when(repeticionService.actualizarRepeticion(eq(REP_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L322">            .thenThrow(new IllegalStateException(&quot;Error de base de datos&quot;));</span>
+
+<span class="fc" id="L324">        mockMvc.perform(put(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L326">                .with(csrf())</span>
+<span class="fc" id="L327">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L328">                .content(objectMapper.writeValueAsString(repTetrazolioRequestDTO)))</span>
+<span class="fc" id="L329">                .andExpect(status().isNotFound()); // RuntimeException se captura y retorna 404</span>
+<span class="fc" id="L330">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Error 404 cuando no existe&quot;)
+    void eliminarRepeticion_debeRetornar404CuandoNoExiste() throws Exception {
+<span class="fc" id="L336">        org.mockito.Mockito.doThrow(new RuntimeException(&quot;Repetición no encontrada&quot;))</span>
+<span class="fc" id="L337">            .when(repeticionService).eliminarRepeticion(999L);</span>
+
+<span class="fc" id="L339">        mockMvc.perform(delete(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+<span class="fc" id="L340">                TETRAZOLIO_ID, 999L)</span>
+<span class="fc" id="L341">                .with(csrf()))</span>
+<span class="fc" id="L342">                .andExpect(status().isNotFound());</span>
+<span class="fc" id="L343">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ADMIN&quot;)
+    @DisplayName(&quot;DELETE /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Error interno debe retornar 500&quot;)
+    void eliminarRepeticion_conErrorInterno_debeRetornar500() throws Exception {
+<span class="fc" id="L349">        org.mockito.Mockito.doThrow(new IllegalStateException(&quot;Error de base de datos&quot;))</span>
+<span class="fc" id="L350">            .when(repeticionService).eliminarRepeticion(REP_ID);</span>
+
+<span class="fc" id="L352">        mockMvc.perform(delete(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L354">                .with(csrf()))</span>
+<span class="fc" id="L355">                .andExpect(status().isNotFound()); // RuntimeException se captura y retorna 404</span>
+<span class="fc" id="L356">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones - Retornar lista vacía si no hay repeticiones&quot;)
+    void obtenerRepeticionesPorTetrazolio_sinRepeticiones_debeRetornarListaVacia() throws Exception {
+<span class="fc" id="L362">        when(repeticionService.obtenerRepeticionesPorTetrazolio(TETRAZOLIO_ID))</span>
+<span class="fc" id="L363">            .thenReturn(Arrays.asList());</span>
+
+<span class="fc" id="L365">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L366">                .with(csrf()))</span>
+<span class="fc" id="L367">                .andExpect(status().isOk())</span>
+<span class="fc" id="L368">                .andExpect(jsonPath(&quot;$&quot;).isArray())</span>
+<span class="fc" id="L369">                .andExpect(jsonPath(&quot;$&quot;).isEmpty());</span>
+<span class="fc" id="L370">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones/count - Retornar 0 cuando no hay repeticiones&quot;)
+    void contarRepeticiones_sinRepeticiones_debeRetornarCero() throws Exception {
+<span class="fc" id="L376">        when(repeticionService.contarRepeticionesPorTetrazolio(TETRAZOLIO_ID)).thenReturn(0L);</span>
+
+<span class="fc" id="L378">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/count&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L379">                .with(csrf()))</span>
+<span class="fc" id="L380">                .andExpect(status().isOk())</span>
+<span class="fc" id="L381">                .andExpect(content().string(&quot;0&quot;));</span>
+<span class="fc" id="L382">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST /api/tetrazolios/{tetrazolioId}/repeticiones - Crear con todos los campos válidos&quot;)
+    void crearRepeticion_conTodosLosCamposValidos_debeRetornarCreated() throws Exception {
+<span class="fc" id="L388">        RepTetrazolioViabilidadRequestDTO requestCompleto = new RepTetrazolioViabilidadRequestDTO();</span>
+<span class="fc" id="L389">        requestCompleto.setFecha(LocalDate.of(2024, 1, 20));</span>
+<span class="fc" id="L390">        requestCompleto.setViablesNum(90);</span>
+<span class="fc" id="L391">        requestCompleto.setNoViablesNum(8);</span>
+<span class="fc" id="L392">        requestCompleto.setDuras(2);</span>
+
+<span class="fc" id="L394">        RepTetrazolioViabilidadDTO responseCompleto = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L395">        responseCompleto.setRepTetrazolioViabID(25L);</span>
+<span class="fc" id="L396">        responseCompleto.setFecha(LocalDate.of(2024, 1, 20));</span>
+<span class="fc" id="L397">        responseCompleto.setViablesNum(90);</span>
+<span class="fc" id="L398">        responseCompleto.setNoViablesNum(8);</span>
+<span class="fc" id="L399">        responseCompleto.setDuras(2);</span>
+
+<span class="fc" id="L401">        when(repeticionService.crearRepeticion(eq(TETRAZOLIO_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L402">            .thenReturn(responseCompleto);</span>
+
+<span class="fc" id="L404">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L405">                .with(csrf())</span>
+<span class="fc" id="L406">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L407">                .content(objectMapper.writeValueAsString(requestCompleto)))</span>
+<span class="fc" id="L408">                .andExpect(status().isCreated())</span>
+<span class="fc" id="L409">                .andExpect(jsonPath(&quot;$.repTetrazolioViabID&quot;).value(25))</span>
+<span class="fc" id="L410">                .andExpect(jsonPath(&quot;$.viablesNum&quot;).value(90))</span>
+<span class="fc" id="L411">                .andExpect(jsonPath(&quot;$.noViablesNum&quot;).value(8))</span>
+<span class="fc" id="L412">                .andExpect(jsonPath(&quot;$.duras&quot;).value(2));</span>
+<span class="fc" id="L413">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT /api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId} - Actualizar todos los campos&quot;)
+    void actualizarRepeticion_conTodosLosCampos_debeRetornarActualizado() throws Exception {
+<span class="fc" id="L419">        RepTetrazolioViabilidadRequestDTO requestActualizacion = new RepTetrazolioViabilidadRequestDTO();</span>
+<span class="fc" id="L420">        requestActualizacion.setFecha(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L421">        requestActualizacion.setViablesNum(92);</span>
+<span class="fc" id="L422">        requestActualizacion.setNoViablesNum(6);</span>
+<span class="fc" id="L423">        requestActualizacion.setDuras(2);</span>
+
+<span class="fc" id="L425">        RepTetrazolioViabilidadDTO responseActualizado = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L426">        responseActualizado.setRepTetrazolioViabID(REP_ID);</span>
+<span class="fc" id="L427">        responseActualizado.setFecha(LocalDate.of(2024, 1, 25));</span>
+<span class="fc" id="L428">        responseActualizado.setViablesNum(92);</span>
+<span class="fc" id="L429">        responseActualizado.setNoViablesNum(6);</span>
+<span class="fc" id="L430">        responseActualizado.setDuras(2);</span>
+
+<span class="fc" id="L432">        when(repeticionService.actualizarRepeticion(eq(REP_ID), any(RepTetrazolioViabilidadRequestDTO.class)))</span>
+<span class="fc" id="L433">            .thenReturn(responseActualizado);</span>
+
+<span class="fc" id="L435">        mockMvc.perform(put(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, </span>
+                TETRAZOLIO_ID, REP_ID)
+<span class="fc" id="L437">                .with(csrf())</span>
+<span class="fc" id="L438">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L439">                .content(objectMapper.writeValueAsString(requestActualizacion)))</span>
+<span class="fc" id="L440">                .andExpect(status().isOk())</span>
+<span class="fc" id="L441">                .andExpect(jsonPath(&quot;$.repTetrazolioViabID&quot;).value(REP_ID))</span>
+<span class="fc" id="L442">                .andExpect(jsonPath(&quot;$.viablesNum&quot;).value(92))</span>
+<span class="fc" id="L443">                .andExpect(jsonPath(&quot;$.noViablesNum&quot;).value(6))</span>
+<span class="fc" id="L444">                .andExpect(jsonPath(&quot;$.duras&quot;).value(2));</span>
+<span class="fc" id="L445">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;OBSERVADOR&quot;)
+    @DisplayName(&quot;GET /api/tetrazolios/{tetrazolioId}/repeticiones - Con múltiples repeticiones&quot;)
+    void obtenerRepeticionesPorTetrazolio_conVariasRepeticiones_debeRetornarTodasEnOrden() throws Exception {
+<span class="fc" id="L451">        RepTetrazolioViabilidadDTO rep1 = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L452">        rep1.setRepTetrazolioViabID(20L);</span>
+<span class="fc" id="L453">        rep1.setViablesNum(85);</span>
+        
+<span class="fc" id="L455">        RepTetrazolioViabilidadDTO rep2 = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L456">        rep2.setRepTetrazolioViabID(21L);</span>
+<span class="fc" id="L457">        rep2.setViablesNum(88);</span>
+        
+<span class="fc" id="L459">        RepTetrazolioViabilidadDTO rep3 = new RepTetrazolioViabilidadDTO();</span>
+<span class="fc" id="L460">        rep3.setRepTetrazolioViabID(22L);</span>
+<span class="fc" id="L461">        rep3.setViablesNum(90);</span>
+
+<span class="fc" id="L463">        when(repeticionService.obtenerRepeticionesPorTetrazolio(TETRAZOLIO_ID))</span>
+<span class="fc" id="L464">            .thenReturn(Arrays.asList(rep1, rep2, rep3));</span>
+
+<span class="fc" id="L466">        mockMvc.perform(get(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L467">                .with(csrf()))</span>
+<span class="fc" id="L468">                .andExpect(status().isOk())</span>
+<span class="fc" id="L469">                .andExpect(jsonPath(&quot;$.length()&quot;).value(3))</span>
+<span class="fc" id="L470">                .andExpect(jsonPath(&quot;$[0].repTetrazolioViabID&quot;).value(20))</span>
+<span class="fc" id="L471">                .andExpect(jsonPath(&quot;$[1].repTetrazolioViabID&quot;).value(21))</span>
+<span class="fc" id="L472">                .andExpect(jsonPath(&quot;$[2].repTetrazolioViabID&quot;).value(22));</span>
+<span class="fc" id="L473">    }</span>
+
+    // ==================== Tests para cubrir bloques catch(Exception e) ====================
+    
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;POST - JSON malformado debe capturar excepción genérica&quot;)
+    void crearRepeticion_conJsonMalformado() throws Exception {
+<span class="fc" id="L481">        String jsonMalformado = &quot;{\&quot;viablesNum\&quot;: \&quot;no_es_numero\&quot;, \&quot;noViablesNum\&quot;: \&quot;tampoco\&quot;}&quot;;</span>
+        
+<span class="fc" id="L483">        mockMvc.perform(post(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones&quot;, TETRAZOLIO_ID)</span>
+<span class="fc" id="L484">                .with(csrf())</span>
+<span class="fc" id="L485">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L486">                .content(jsonMalformado))</span>
+<span class="fc" id="L487">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L488">    }</span>
+
+    @Test
+    @WithMockUser(roles = &quot;ANALISTA&quot;)
+    @DisplayName(&quot;PUT - JSON malformado debe capturar excepción genérica&quot;)
+    void actualizarRepeticion_conJsonMalformado() throws Exception {
+<span class="fc" id="L494">        String jsonMalformado = &quot;{\&quot;viablesNum\&quot;: \&quot;texto_invalido\&quot;}&quot;;</span>
+        
+<span class="fc" id="L496">        mockMvc.perform(put(&quot;/api/tetrazolios/{tetrazolioId}/repeticiones/{repeticionId}&quot;, TETRAZOLIO_ID, REP_ID)</span>
+<span class="fc" id="L497">                .with(csrf())</span>
+<span class="fc" id="L498">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L499">                .content(jsonMalformado))</span>
+<span class="fc" id="L500">                .andExpect(status().isBadRequest());</span>
+<span class="fc" id="L501">    }</span>
 }
+
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

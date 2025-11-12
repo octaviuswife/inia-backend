@@ -76,7 +76,7 @@ import java.util.stream.Collectors;
 <span class="fc" id="L76">            p.getEspecieNombre(),</span>
 <span class="fc" id="L77">            p.getCultivarNombre(),</span>
 <span class="fc" id="L78">            TipoAnalisis.valueOf(p.getTipoAnalisis())</span>
-        ));
+<span class="fc" id="L79">        ));</span>
     }
     
     /**
@@ -127,7 +127,7 @@ import java.util.stream.Collectors;
             // Primera página
 <span class="fc" id="L128">            proyecciones = analisisPendienteRepository.findNextPageByCursor(</span>
 <span class="fc" id="L129">                0L, &quot;&quot;, size + 1);</span>
-        } else {
+<span class="fc" id="L130">        } else {</span>
             // Decodificar cursor (lanza InvalidCursorException si es inválido)
 <span class="fc" id="L132">            KeysetCursor cursor = KeysetCursor.decode(encodedCursor);</span>
             
@@ -136,7 +136,7 @@ import java.util.stream.Collectors;
 <span class="pc bpc" id="L136" title="1 of 2 branches missed.">            String lastTipo = cursor.getLastFecha() != null ? cursor.getLastFecha() : &quot;&quot;;</span>
             
 <span class="fc" id="L138">            proyecciones = analisisPendienteRepository.findNextPageByCursor(</span>
-                lastLoteId, lastTipo, size + 1);
+<span class="fc" id="L139">                lastLoteId, lastTipo, size + 1);</span>
         }
         
         // Convertir a DTOs
@@ -149,7 +149,7 @@ import java.util.stream.Collectors;
 <span class="fc" id="L149">                p.getEspecieNombre(),</span>
 <span class="fc" id="L150">                p.getCultivarNombre(),</span>
 <span class="fc" id="L151">                TipoAnalisis.valueOf(p.getTipoAnalisis())</span>
-            ))
+<span class="fc" id="L152">            ))</span>
 <span class="fc" id="L153">            .collect(Collectors.toList());</span>
         
         // Verificar si hay más resultados
@@ -183,7 +183,7 @@ import java.util.stream.Collectors;
             // Primera página
 <span class="fc" id="L184">            proyecciones = analisisPorAprobarRepository.findNextPageByCursor(</span>
 <span class="fc" id="L185">                &quot;9999-12-31 23:59:59&quot;, Long.MAX_VALUE, size + 1);</span>
-        } else {
+<span class="fc" id="L186">        } else {</span>
             // Decodificar cursor (lanza InvalidCursorException si es inválido)
 <span class="fc" id="L188">            KeysetCursor cursor = KeysetCursor.decode(encodedCursor);</span>
             
@@ -191,7 +191,7 @@ import java.util.stream.Collectors;
 <span class="fc" id="L191">            Long lastId = cursor.getLastId();</span>
             
 <span class="fc" id="L193">            proyecciones = analisisPorAprobarRepository.findNextPageByCursor(</span>
-                lastFecha, lastId, size + 1);
+<span class="fc" id="L194">                lastFecha, lastId, size + 1);</span>
         }
         
         // Convertir a DTOs
@@ -228,10 +228,10 @@ import java.util.stream.Collectors;
             // Formatear fecha para cursor (mismo formato que en la query)
 <span class="pc bpc" id="L229" title="1 of 2 branches missed.">            String fechaStr = lastItem.getFechaInicio() != null </span>
 <span class="fc" id="L230">                ? lastItem.getFechaInicio().format(java.time.format.DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;))</span>
-<span class="pc" id="L231">                : null;</span>
+<span class="nc" id="L231">                : null;</span>
             
 <span class="fc" id="L233">            KeysetCursor cursor = new KeysetCursor(</span>
-                fechaStr,
+<span class="fc" id="L234">                fechaStr,</span>
 <span class="fc" id="L235">                lastItem.getAnalisisID()</span>
             );
 <span class="fc" id="L237">            return CursorPageResponse.of(items, cursor, size);</span>

@@ -295,7 +295,7 @@ import org.springframework.data.domain.Pageable;
 <span class="fc" id="L295">            Optional&lt;Lote&gt; loteOpt = loteRepository.findById(solicitud.getIdLote());</span>
 <span class="pc bpc" id="L296" title="1 of 2 branches missed.">            if (loteOpt.isPresent()) {</span>
 <span class="fc" id="L297">                tetrazolio.setLote(loteOpt.get());</span>
-            } else {
+<span class="fc" id="L298">            } else {</span>
 <span class="nc" id="L299">                throw new RuntimeException(&quot;Lote no encontrado con ID: &quot; + solicitud.getIdLote());</span>
             }
         }
@@ -380,12 +380,12 @@ import org.springframework.data.domain.Pageable;
     private void validarEvidenciaAntesDeFinalizar(Tetrazolio tetrazolio) {
 <span class="pc bpc" id="L381" title="1 of 4 branches missed.">    boolean tieneRepeticiones = tetrazolio.getRepeticiones() != null &amp;&amp; !tetrazolio.getRepeticiones().isEmpty();</span>
 
-<span class="fc bfc" id="L383" title="All 2 branches covered.">    boolean tienePorcViables = tetrazolio.getPorcViablesRedondeo() != null</span>
-<span class="pc bpc" id="L384" title="1 of 2 branches missed.">        &amp;&amp; tetrazolio.getPorcViablesRedondeo().compareTo(BigDecimal.ZERO) &gt; 0;</span>
-<span class="pc bpc" id="L385" title="1 of 2 branches missed.">    boolean tienePorcNoViables = tetrazolio.getPorcNoViablesRedondeo() != null</span>
-<span class="pc bnc" id="L386" title="All 2 branches missed.">        &amp;&amp; tetrazolio.getPorcNoViablesRedondeo().compareTo(BigDecimal.ZERO) &gt; 0;</span>
-<span class="pc bpc" id="L387" title="1 of 2 branches missed.">    boolean tienePorcDuras = tetrazolio.getPorcDurasRedondeo() != null</span>
-<span class="pc bnc" id="L388" title="All 2 branches missed.">        &amp;&amp; tetrazolio.getPorcDurasRedondeo().compareTo(BigDecimal.ZERO) &gt; 0;</span>
+<span class="pc bpc" id="L383" title="1 of 4 branches missed.">    boolean tienePorcViables = tetrazolio.getPorcViablesRedondeo() != null</span>
+<span class="fc" id="L384">        &amp;&amp; tetrazolio.getPorcViablesRedondeo().compareTo(BigDecimal.ZERO) &gt; 0;</span>
+<span class="pc bpc" id="L385" title="3 of 4 branches missed.">    boolean tienePorcNoViables = tetrazolio.getPorcNoViablesRedondeo() != null</span>
+<span class="nc" id="L386">        &amp;&amp; tetrazolio.getPorcNoViablesRedondeo().compareTo(BigDecimal.ZERO) &gt; 0;</span>
+<span class="pc bpc" id="L387" title="3 of 4 branches missed.">    boolean tienePorcDuras = tetrazolio.getPorcDurasRedondeo() != null</span>
+<span class="nc" id="L388">        &amp;&amp; tetrazolio.getPorcDurasRedondeo().compareTo(BigDecimal.ZERO) &gt; 0;</span>
 
 <span class="pc bpc" id="L390" title="2 of 8 branches missed.">    if (!tieneRepeticiones &amp;&amp; !tienePorcViables &amp;&amp; !tienePorcNoViables &amp;&amp; !tienePorcDuras) {</span>
 <span class="fc" id="L391">        throw new RuntimeException(&quot;No se puede finalizar: el Tetrazolio carece de evidencia. Agregue repeticiones o porcentajes calculados antes de finalizar.&quot;);</span>
@@ -397,10 +397,10 @@ import org.springframework.data.domain.Pageable;
     public TetrazolioDTO finalizarAnalisis(Long id) {
         // Run both: completitud de repeticiones and evidence validator before finalizing
 <span class="fc" id="L399">        return analisisService.finalizarAnalisisGenerico(</span>
-            id,
-            tetrazolioRepository,
-            this::mapearEntidadADTO,
-            (tetrazolio) -&gt; {
+<span class="fc" id="L400">            id,</span>
+<span class="fc" id="L401">            tetrazolioRepository,</span>
+<span class="fc" id="L402">            this::mapearEntidadADTO,</span>
+<span class="fc" id="L403">            (tetrazolio) -&gt; {</span>
                 // Primero validar completitud de repeticiones
 <span class="fc" id="L405">                this.validarCompletitudRepeticiones(tetrazolio);</span>
                 // Luego validar que exista algún dato/evidencia relevante (adaptado desde DOSN)
@@ -412,10 +412,10 @@ import org.springframework.data.domain.Pageable;
     // Aprobar análisis (solo para administradores)
     public TetrazolioDTO aprobarAnalisis(Long id) {
 <span class="fc" id="L414">        return analisisService.aprobarAnalisisGenerico(</span>
-            id,
-            tetrazolioRepository,
-            this::mapearEntidadADTO,
-            (tetrazolio) -&gt; {
+<span class="fc" id="L415">            id,</span>
+<span class="fc" id="L416">            tetrazolioRepository,</span>
+<span class="fc" id="L417">            this::mapearEntidadADTO,</span>
+<span class="fc" id="L418">            (tetrazolio) -&gt; {</span>
 <span class="nc" id="L419">                this.validarCompletitudRepeticiones(tetrazolio);</span>
 <span class="nc" id="L420">                this.validarEvidenciaAntesDeFinalizar(tetrazolio);</span>
 <span class="nc" id="L421">            },</span>
@@ -426,10 +426,10 @@ import org.springframework.data.domain.Pageable;
     // Marcar análisis para repetir (solo administradores)
     public TetrazolioDTO marcarParaRepetir(Long id) {
 <span class="fc" id="L428">        return analisisService.marcarParaRepetirGenerico(</span>
-            id,
-            tetrazolioRepository,
-            this::mapearEntidadADTO,
-            (tetrazolio) -&gt; {
+<span class="fc" id="L429">            id,</span>
+<span class="fc" id="L430">            tetrazolioRepository,</span>
+<span class="fc" id="L431">            this::mapearEntidadADTO,</span>
+<span class="fc" id="L432">            (tetrazolio) -&gt; {</span>
                 // Mismas validaciones que finalizar: completitud y evidencia
 <span class="nc" id="L434">                this.validarCompletitudRepeticiones(tetrazolio);</span>
 <span class="nc" id="L435">                this.validarEvidenciaAntesDeFinalizar(tetrazolio);</span>

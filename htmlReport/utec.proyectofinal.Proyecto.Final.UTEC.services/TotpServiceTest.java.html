@@ -66,7 +66,7 @@ import static org.junit.jupiter.api.Assertions.*;
         // ASSERT
 <span class="fc" id="L67">        assertNotNull(qrCodeDataUrl, &quot;El QR code data URL no debe ser nulo&quot;);</span>
 <span class="fc" id="L68">        assertTrue(qrCodeDataUrl.startsWith(&quot;data:image/png;base64,&quot;), </span>
-            &quot;El QR code debe ser una data URL de imagen PNG&quot;);
+<span class="fc" id="L69">            &quot;El QR code debe ser una data URL de imagen PNG&quot;);</span>
 <span class="pc bpc" id="L70" title="1 of 2 branches missed.">        assertTrue(qrCodeDataUrl.length() &gt; 100, &quot;El QR code debe tener contenido&quot;);</span>
 <span class="fc" id="L71">    }</span>
 
@@ -137,9 +137,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
         // ACT &amp; ASSERT
 <span class="fc" id="L139">        assertFalse(totpService.verifyCode(secret, shortCode), </span>
-            &quot;Un código muy corto debe retornar false&quot;);
+<span class="fc" id="L140">            &quot;Un código muy corto debe retornar false&quot;);</span>
 <span class="fc" id="L141">        assertFalse(totpService.verifyCode(secret, longCode), </span>
-            &quot;Un código muy largo debe retornar false&quot;);
+<span class="fc" id="L142">            &quot;Un código muy largo debe retornar false&quot;);</span>
 <span class="fc" id="L143">    }</span>
 
     @Test
@@ -199,7 +199,7 @@ import static org.junit.jupiter.api.Assertions.*;
         // ASSERT
 <span class="fc" id="L200">        assertNotNull(qrCodeDataUrl, &quot;Debe generar QR code incluso con nombre largo&quot;);</span>
 <span class="fc" id="L201">        assertTrue(qrCodeDataUrl.startsWith(&quot;data:image/png;base64,&quot;), </span>
-            &quot;Debe ser una data URL válida&quot;);
+<span class="fc" id="L202">            &quot;Debe ser una data URL válida&quot;);</span>
 <span class="fc" id="L203">    }</span>
 
     @Test
@@ -218,7 +218,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
         // ASSERT
 <span class="fc" id="L220">        assertEquals(code1, code2, </span>
-            &quot;El mismo secret debe generar el mismo código en el mismo período de tiempo&quot;);
+<span class="fc" id="L221">            &quot;El mismo secret debe generar el mismo código en el mismo período de tiempo&quot;);</span>
 <span class="fc" id="L222">    }</span>
 
     @Test
@@ -234,7 +234,205 @@ import static org.junit.jupiter.api.Assertions.*;
         // ASSERT
 <span class="fc" id="L235">        assertNotNull(qrCodeDataUrl, &quot;Debe generar QR code con caracteres especiales&quot;);</span>
 <span class="fc" id="L236">        assertTrue(qrCodeDataUrl.startsWith(&quot;data:image/png;base64,&quot;), </span>
-            &quot;Debe ser una data URL válida&quot;);
+<span class="fc" id="L237">            &quot;Debe ser una data URL válida&quot;);</span>
 <span class="fc" id="L238">    }</span>
+
+    @Test
+    @DisplayName(&quot;getRemainingSeconds - debe retornar valor entre 0 y 30&quot;)
+    void getRemainingSeconds_debeRetornarValorValido() {
+        // ACT
+<span class="fc" id="L244">        int remainingSeconds = totpService.getRemainingSeconds();</span>
+
+        // ASSERT
+<span class="pc bpc" id="L247" title="2 of 4 branches missed.">        assertTrue(remainingSeconds &gt;= 0 &amp;&amp; remainingSeconds &lt;= 30, </span>
+<span class="fc" id="L248">            &quot;Los segundos restantes deben estar entre 0 y 30&quot;);</span>
+<span class="fc" id="L249">    }</span>
+
+    @Test
+    @DisplayName(&quot;getRemainingSeconds - debe cambiar con el tiempo&quot;)
+    void getRemainingSeconds_debeCambiarConElTiempo() throws InterruptedException {
+        // ACT
+<span class="fc" id="L255">        int seconds1 = totpService.getRemainingSeconds();</span>
+<span class="fc" id="L256">        Thread.sleep(1100); // Esperar 1.1 segundos</span>
+<span class="fc" id="L257">        int seconds2 = totpService.getRemainingSeconds();</span>
+
+        // ASSERT
+        // Los valores deben ser diferentes (a menos que justo se reinició el ciclo)
+        // O seconds2 debe ser menor que seconds1 (se consume el tiempo)
+<span class="pc bpc" id="L262" title="2 of 4 branches missed.">        assertTrue(seconds1 &gt;= 0 &amp;&amp; seconds1 &lt;= 30);</span>
+<span class="pc bpc" id="L263" title="2 of 4 branches missed.">        assertTrue(seconds2 &gt;= 0 &amp;&amp; seconds2 &lt;= 30);</span>
+        // En la mayoría de casos, seconds2 será menor que seconds1
+        // (a menos que cruzamos un boundary de 30s)
+<span class="fc" id="L266">    }</span>
+
+    @Test
+    @DisplayName(&quot;getRemainingSeconds - debe decrementar hasta 0 y reiniciar&quot;)
+    void getRemainingSeconds_debeDecrementarYReiniciar() {
+        // ACT
+<span class="fc" id="L272">        int seconds = totpService.getRemainingSeconds();</span>
+
+        // ASSERT
+        // Debe estar en el rango válido
+<span class="pc bpc" id="L276" title="2 of 4 branches missed.">        assertTrue(seconds &gt;= 0 &amp;&amp; seconds &lt;= 30, </span>
+<span class="fc" id="L277">            &quot;Segundos restantes fuera de rango: &quot; + seconds);</span>
+<span class="fc" id="L278">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar true para secret válido generado&quot;)
+    void isValidSecret_debeRetornarTrueParaSecretValido() {
+        // ARRANGE
+<span class="fc" id="L284">        String validSecret = totpService.generateSecret();</span>
+
+        // ACT
+<span class="fc" id="L287">        boolean isValid = totpService.isValidSecret(validSecret);</span>
+
+        // ASSERT
+<span class="fc" id="L290">        assertTrue(isValid, &quot;Un secret generado debe ser válido&quot;);</span>
+<span class="fc" id="L291">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar false para secret nulo&quot;)
+    void isValidSecret_debeRetornarFalseParaSecretNulo() {
+        // ACT
+<span class="fc" id="L297">        boolean isValid = totpService.isValidSecret(null);</span>
+
+        // ASSERT
+<span class="fc" id="L300">        assertFalse(isValid, &quot;Un secret nulo debe ser inválido&quot;);</span>
+<span class="fc" id="L301">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar false para secret vacío&quot;)
+    void isValidSecret_debeRetornarFalseParaSecretVacio() {
+        // ACT
+<span class="fc" id="L307">        boolean isValid = totpService.isValidSecret(&quot;&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L310">        assertFalse(isValid, &quot;Un secret vacío debe ser inválido&quot;);</span>
+<span class="fc" id="L311">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar false para secret muy corto&quot;)
+    void isValidSecret_debeRetornarFalseParaSecretCorto() {
+        // ARRANGE
+<span class="fc" id="L317">        String shortSecret = &quot;ABC123&quot;; // Menos de 16 caracteres</span>
+
+        // ACT
+<span class="fc" id="L320">        boolean isValid = totpService.isValidSecret(shortSecret);</span>
+
+        // ASSERT
+<span class="fc" id="L323">        assertFalse(isValid, &quot;Un secret muy corto (&lt; 16 chars) debe ser inválido&quot;);</span>
+<span class="fc" id="L324">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar false para secret muy largo&quot;)
+    void isValidSecret_debeRetornarFalseParaSecretLargo() {
+        // ARRANGE
+<span class="fc" id="L330">        String longSecret = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ234567890&quot;; // Más de 32 caracteres</span>
+
+        // ACT
+<span class="fc" id="L333">        boolean isValid = totpService.isValidSecret(longSecret);</span>
+
+        // ASSERT
+<span class="fc" id="L336">        assertFalse(isValid, &quot;Un secret muy largo (&gt; 32 chars) debe ser inválido&quot;);</span>
+<span class="fc" id="L337">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar false para secret con caracteres inválidos&quot;)
+    void isValidSecret_debeRetornarFalseParaCaracteresInvalidos() {
+        // ARRANGE - Base32 solo permite A-Z y 2-7
+<span class="fc" id="L343">        String secretConMinusculas = &quot;abcdefghijklmnop&quot;; // Minúsculas no permitidas</span>
+<span class="fc" id="L344">        String secretConNumeros = &quot;ABCD1890EFGH1890&quot;; // 0, 1, 8, 9 no son Base32</span>
+<span class="fc" id="L345">        String secretConSimbolos = &quot;ABCD-EFGH-IJKL16&quot;; // Símbolos no permitidos</span>
+
+        // ACT &amp; ASSERT
+<span class="fc" id="L348">        assertFalse(totpService.isValidSecret(secretConMinusculas), </span>
+<span class="fc" id="L349">            &quot;Secret con minúsculas debe ser inválido&quot;);</span>
+<span class="fc" id="L350">        assertFalse(totpService.isValidSecret(secretConNumeros), </span>
+<span class="fc" id="L351">            &quot;Secret con números 0, 1, 8, 9 debe ser inválido&quot;);</span>
+<span class="fc" id="L352">        assertFalse(totpService.isValidSecret(secretConSimbolos), </span>
+<span class="fc" id="L353">            &quot;Secret con símbolos debe ser inválido&quot;);</span>
+<span class="fc" id="L354">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar true para secret Base32 válido de 16 caracteres&quot;)
+    void isValidSecret_debeRetornarTrueParaBase32Valido16Chars() {
+        // ARRANGE
+<span class="fc" id="L360">        String validSecret = &quot;JBSWY3DPEHPK3PXP&quot;; // 16 caracteres Base32 válidos</span>
+
+        // ACT
+<span class="fc" id="L363">        boolean isValid = totpService.isValidSecret(validSecret);</span>
+
+        // ASSERT
+<span class="fc" id="L366">        assertTrue(isValid, &quot;Secret Base32 de 16 caracteres debe ser válido&quot;);</span>
+<span class="fc" id="L367">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe retornar true para secret Base32 válido de 32 caracteres&quot;)
+    void isValidSecret_debeRetornarTrueParaBase32Valido32Chars() {
+        // ARRANGE
+<span class="fc" id="L373">        String validSecret = &quot;JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&quot;; // 32 caracteres Base32 válidos</span>
+
+        // ACT
+<span class="fc" id="L376">        boolean isValid = totpService.isValidSecret(validSecret);</span>
+
+        // ASSERT
+<span class="fc" id="L379">        assertTrue(isValid, &quot;Secret Base32 de 32 caracteres debe ser válido&quot;);</span>
+<span class="fc" id="L380">    }</span>
+
+    @Test
+    @DisplayName(&quot;isValidSecret - debe validar caracteres Base32 permitidos (A-Z, 2-7)&quot;)
+    void isValidSecret_debeValidarCaracteresBase32() {
+        // ARRANGE
+<span class="fc" id="L386">        String validSecret = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ234567&quot;; // 32 chars con todos los caracteres permitidos</span>
+
+        // ACT
+<span class="fc" id="L389">        boolean isValid = totpService.isValidSecret(validSecret);</span>
+
+        // ASSERT
+<span class="fc" id="L392">        assertTrue(isValid, &quot;Secret con todos los caracteres Base32 válidos debe ser válido&quot;);</span>
+<span class="fc" id="L393">    }</span>
+
+    @Test
+    @DisplayName(&quot;verifyCode - debe capturar excepción y retornar false&quot;)
+    void verifyCode_debeCaptularExcepcionYRetornarFalse() {
+        // ARRANGE
+<span class="fc" id="L399">        String invalidSecret = &quot;NOT-A-VALID-BASE32-SECRET!!!&quot;; // Secret inválido que causará excepción</span>
+
+        // ACT
+<span class="fc" id="L402">        boolean isValid = totpService.verifyCode(invalidSecret, &quot;123456&quot;);</span>
+
+        // ASSERT
+<span class="fc" id="L405">        assertFalse(isValid, &quot;Debe retornar false cuando ocurre una excepción en la verificación&quot;);</span>
+<span class="fc" id="L406">    }</span>
+
+    @Test
+    @DisplayName(&quot;verifyCode - debe manejar secret corrupto sin lanzar excepción&quot;)
+    void verifyCode_debeManejarSecretCorruptoSinLanzarExcepcion() {
+        // ARRANGE
+<span class="fc" id="L412">        String corruptSecret = &quot;!!!INVALID!!!&quot;; // Secret totalmente corrupto</span>
+
+        // ACT &amp; ASSERT - No debe lanzar excepción
+<span class="fc" id="L415">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L416">            boolean result = totpService.verifyCode(corruptSecret, &quot;123456&quot;);</span>
+<span class="fc" id="L417">            assertFalse(result, &quot;Debe retornar false para secret corrupto&quot;);</span>
+<span class="fc" id="L418">        });</span>
+<span class="fc" id="L419">    }</span>
+
+    @Test
+    @DisplayName(&quot;verifyCode - debe manejar código con formato especial que cause excepción&quot;)
+    void verifyCode_debeManejarCodigoEspecialConExcepcion() {
+        // ARRANGE
+<span class="fc" id="L425">        String secret = totpService.generateSecret();</span>
+        // Código con caracteres extraños que podrían causar problemas
+<span class="fc" id="L427">        String weirdCode = &quot;\u0000\u0001\u0002123456&quot;; </span>
+
+        // ACT &amp; ASSERT - No debe lanzar excepción
+<span class="fc" id="L430">        assertDoesNotThrow(() -&gt; {</span>
+<span class="fc" id="L431">            boolean result = totpService.verifyCode(secret, weirdCode);</span>
+            // El resultado puede ser true o false, pero no debe lanzar excepción
+<span class="fc" id="L433">            assertNotNull(result);</span>
+<span class="fc" id="L434">        });</span>
+<span class="fc" id="L435">    }</span>
 }
+
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

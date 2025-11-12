@@ -46,12 +46,12 @@ public class ReporteService {
 <span class="fc" id="L46">        Map&lt;String, Long&gt; topAnalisisProblemas = calcularTopAnalisisProblemas(inicio, fin);</span>
 
 <span class="fc" id="L48">        return new ReporteGeneralDTO(</span>
-            totalAnalisis,
-            analisisPorPeriodo,
-            analisisPorEstado,
-            porcentajeCompletitud,
-            tiempoMedioFinalizacion,
-            topAnalisisProblemas
+<span class="fc" id="L49">            totalAnalisis,</span>
+<span class="fc" id="L50">            analisisPorPeriodo,</span>
+<span class="fc" id="L51">            analisisPorEstado,</span>
+<span class="fc" id="L52">            porcentajeCompletitud,</span>
+<span class="fc" id="L53">            tiempoMedioFinalizacion,</span>
+<span class="fc" id="L54">            topAnalisisProblemas</span>
         );
     }
 
@@ -66,9 +66,9 @@ public class ReporteService {
 <span class="fc" id="L66">        Map&lt;String, Double&gt; tiempoPromedioUltimoConteo = calcularTiempoPromedioUltimoConteo(germinaciones);</span>
 
 <span class="fc" id="L68">        return new ReporteGerminacionDTO(</span>
-            mediaGerminacionPorEspecie,
-            tiempoPromedioPrimerConteo,
-            tiempoPromedioUltimoConteo,
+<span class="fc" id="L69">            mediaGerminacionPorEspecie,</span>
+<span class="fc" id="L70">            tiempoPromedioPrimerConteo,</span>
+<span class="fc" id="L71">            tiempoPromedioUltimoConteo,</span>
 <span class="fc" id="L72">            (long) germinaciones.size()</span>
         );
     }
@@ -142,13 +142,13 @@ public class ReporteService {
 <span class="fc" id="L142">            porcentajeMalezas.put(especie, totalMalezas);</span>
 <span class="fc" id="L143">            porcentajeOtrasSemillas.put(especie, totalOtrasSemillas);</span>
 <span class="fc" id="L144">            porcentajeCumpleEstandar.put(especie, porcentajeCumple);</span>
-<span class="fc" id="L145">        }</span>
+        }
 
 <span class="fc" id="L147">        return new ReportePurezaDTO(</span>
-            contaminantesPorEspecie,
-            porcentajeMalezas,
-            porcentajeOtrasSemillas,
-            porcentajeCumpleEstandar,
+<span class="fc" id="L148">            contaminantesPorEspecie,</span>
+<span class="fc" id="L149">            porcentajeMalezas,</span>
+<span class="fc" id="L150">            porcentajeOtrasSemillas,</span>
+<span class="fc" id="L151">            porcentajeCumpleEstandar,</span>
 <span class="fc" id="L152">            (long) purezas.size()</span>
         );
     }
@@ -168,7 +168,7 @@ public class ReporteService {
             ));
 
 <span class="fc" id="L170">        return new ReporteTetrazolioDTO(</span>
-            viabilidadPorEspecie,
+<span class="fc" id="L171">            viabilidadPorEspecie,</span>
 <span class="fc" id="L172">            (long) tetrazolios.size()</span>
         );
     }
@@ -221,7 +221,7 @@ public class ReporteService {
 <span class="fc bfc" id="L221" title="All 2 branches covered.">        for (Map.Entry&lt;String, Long&gt; entry : analisisPorEstado.entrySet()) {</span>
 <span class="fc" id="L222">            double porcentaje = (entry.getValue() * 100.0) / total;</span>
 <span class="fc" id="L223">            resultado.put(entry.getKey(), Math.round(porcentaje * 100.0) / 100.0);</span>
-<span class="fc" id="L224">        }</span>
+        }
 
 <span class="fc" id="L226">        return resultado;</span>
     }
@@ -273,10 +273,10 @@ public class ReporteService {
 <span class="fc" id="L273">            .sorted(Map.Entry.&lt;String, Long&gt;comparingByValue().reversed())</span>
 <span class="fc" id="L274">            .limit(5)</span>
 <span class="fc" id="L275">            .collect(Collectors.toMap(</span>
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-<span class="nc" id="L278">                (e1, e2) -&gt; e1,</span>
-                LinkedHashMap::new
+<span class="fc" id="L276">                Map.Entry::getKey,</span>
+<span class="fc" id="L277">                Map.Entry::getValue,</span>
+<span class="pc" id="L278">                (e1, e2) -&gt; e1,</span>
+<span class="fc" id="L279">                LinkedHashMap::new</span>
             ));
     }
 
@@ -289,7 +289,7 @@ public class ReporteService {
 <span class="fc" id="L289">                .map(t -&gt; new Object() {</span>
 <span class="fc" id="L290">                    String especie = g.getLote().getCultivar().getEspecie().getNombreComun();</span>
 <span class="fc" id="L291">                    Double porcentaje = t.getPorcentajeNormalesConRedondeo().doubleValue();</span>
-                }))
+<span class="fc" id="L292">                }))</span>
 <span class="fc" id="L293">            .collect(Collectors.groupingBy(</span>
 <span class="fc" id="L294">                obj -&gt; obj.especie,</span>
 <span class="fc" id="L295">                Collectors.averagingDouble(obj -&gt; obj.porcentaje)</span>
@@ -305,7 +305,7 @@ public class ReporteService {
 <span class="fc" id="L305">                .map(t -&gt; new Object() {</span>
 <span class="fc" id="L306">                    String especie = g.getLote().getCultivar().getEspecie().getNombreComun();</span>
 <span class="fc" id="L307">                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaGerminacion(), t.getFechaConteos().get(0));</span>
-                }))
+<span class="fc" id="L308">                }))</span>
 <span class="fc" id="L309">            .collect(Collectors.groupingBy(</span>
 <span class="fc" id="L310">                obj -&gt; obj.especie,</span>
 <span class="fc" id="L311">                Collectors.averagingDouble(obj -&gt; obj.dias)</span>
@@ -321,7 +321,7 @@ public class ReporteService {
 <span class="fc" id="L321">                .map(t -&gt; new Object() {</span>
 <span class="fc" id="L322">                    String especie = g.getLote().getCultivar().getEspecie().getNombreComun();</span>
 <span class="fc" id="L323">                    Double dias = (double) java.time.temporal.ChronoUnit.DAYS.between(t.getFechaGerminacion(), t.getFechaUltConteo());</span>
-                }))
+<span class="fc" id="L324">                }))</span>
 <span class="fc" id="L325">            .collect(Collectors.groupingBy(</span>
 <span class="fc" id="L326">                obj -&gt; obj.especie,</span>
 <span class="fc" id="L327">                Collectors.averagingDouble(obj -&gt; obj.dias)</span>
@@ -360,13 +360,13 @@ public class ReporteService {
 <span class="fc" id="L360">            porcentajeMalezas.put(especie, 0.0); // DOSN no tiene campos directos de malezas</span>
 <span class="fc" id="L361">            porcentajeOtrasSemillas.put(especie, 0.0); // DOSN usa estructura diferente</span>
 <span class="fc" id="L362">            porcentajeCumpleEstandar.put(especie, porcentajeCumple);</span>
-<span class="fc" id="L363">        }</span>
+        }
 
 <span class="fc" id="L365">        return new ReportePurezaDTO(</span>
-            contaminantesPorEspecie,
-            porcentajeMalezas,
-            porcentajeOtrasSemillas,
-            porcentajeCumpleEstandar,
+<span class="fc" id="L366">            contaminantesPorEspecie,</span>
+<span class="fc" id="L367">            porcentajeMalezas,</span>
+<span class="fc" id="L368">            porcentajeOtrasSemillas,</span>
+<span class="fc" id="L369">            porcentajeCumpleEstandar,</span>
 <span class="fc" id="L370">            (long) dosns.size()</span>
         );
     }
@@ -388,7 +388,7 @@ public class ReporteService {
 <span class="pc" id="L388">            .flatMap(p -&gt; p.getListados().stream())</span>
 <span class="pc bnc" id="L389" title="All 4 branches missed.">            .filter(l -&gt; l.getCatalogo() != null &amp;&amp; l.getCatalogo().getNombreComun() != null)</span>
 <span class="fc" id="L390">            .collect(Collectors.groupingBy(</span>
-<span class="nc" id="L391">                l -&gt; l.getCatalogo().getNombreComun(),</span>
+<span class="pc" id="L391">                l -&gt; l.getCatalogo().getNombreComun(),</span>
 <span class="fc" id="L392">                Collectors.counting()</span>
             ));
         
@@ -398,7 +398,7 @@ public class ReporteService {
 <span class="pc" id="L398">            .flatMap(p -&gt; p.getListados().stream())</span>
 <span class="pc bnc" id="L399" title="All 4 branches missed.">            .filter(l -&gt; l.getEspecie() != null &amp;&amp; l.getEspecie().getNombreComun() != null)</span>
 <span class="fc" id="L400">            .collect(Collectors.groupingBy(</span>
-<span class="nc" id="L401">                l -&gt; l.getEspecie().getNombreComun(),</span>
+<span class="pc" id="L401">                l -&gt; l.getEspecie().getNombreComun(),</span>
 <span class="fc" id="L402">                Collectors.counting()</span>
             ));
 
@@ -444,7 +444,7 @@ public class ReporteService {
 <span class="pc" id="L444">            .flatMap(d -&gt; d.getListados().stream())</span>
 <span class="pc bnc" id="L445" title="All 4 branches missed.">            .filter(l -&gt; l.getCatalogo() != null &amp;&amp; l.getCatalogo().getNombreComun() != null)</span>
 <span class="fc" id="L446">            .collect(Collectors.groupingBy(</span>
-<span class="nc" id="L447">                l -&gt; l.getCatalogo().getNombreComun(),</span>
+<span class="pc" id="L447">                l -&gt; l.getCatalogo().getNombreComun(),</span>
 <span class="fc" id="L448">                Collectors.counting()</span>
             ));
         
@@ -454,7 +454,7 @@ public class ReporteService {
 <span class="pc" id="L454">            .flatMap(d -&gt; d.getListados().stream())</span>
 <span class="pc bnc" id="L455" title="All 4 branches missed.">            .filter(l -&gt; l.getEspecie() != null &amp;&amp; l.getEspecie().getNombreComun() != null)</span>
 <span class="fc" id="L456">            .collect(Collectors.groupingBy(</span>
-<span class="nc" id="L457">                l -&gt; l.getEspecie().getNombreComun(),</span>
+<span class="pc" id="L457">                l -&gt; l.getEspecie().getNombreComun(),</span>
 <span class="fc" id="L458">                Collectors.counting()</span>
             ));
 

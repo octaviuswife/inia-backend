@@ -110,7 +110,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
 <span class="fc" id="L110">            repGermRepository.deleteById(id);</span>
             
 <span class="fc" id="L112">            System.out.println(&quot;Repetición eliminada con ID: &quot; + id);</span>
-        } else {
+<span class="fc" id="L113">        } else {</span>
 <span class="fc" id="L114">            throw new RuntimeException(&quot;Repetición no encontrada con ID: &quot; + id);</span>
         }
 <span class="fc" id="L116">    }</span>
@@ -185,7 +185,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
             
 <span class="fc bfc" id="L186" title="All 2 branches covered.">            if (totalCalculado &gt; limiteMaximo) {</span>
 <span class="fc" id="L187">                throw new RuntimeException(&quot;El total de la repetición (&quot; + totalCalculado + </span>
-                    &quot;) excede el límite máximo permitido (&quot; + limiteMaximo + 
+<span class="fc" id="L188">                    &quot;) excede el límite máximo permitido (&quot; + limiteMaximo + </span>
 <span class="fc" id="L189">                    &quot; - con 5% de tolerancia sobre &quot; + tablaGerm.getNumSemillasPRep() + &quot; semillas)&quot;);</span>
             }
         }
@@ -262,7 +262,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
 <span class="pc bpc" id="L262" title="1 of 2 branches missed.">                if (normal != null) {</span>
 <span class="fc" id="L263">                    total += normal;</span>
                 }
-<span class="fc" id="L265">            }</span>
+            }
         }
         
         // Sumar los demás campos
@@ -320,7 +320,7 @@ import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.RepGermDTO;
             
 <span class="pc bpc" id="L321" title="1 of 2 branches missed.">            if (totalCalculado &gt; limiteMaximo) {</span>
 <span class="nc" id="L322">                throw new RuntimeException(&quot;El total de la repetición (&quot; + totalCalculado + </span>
-                    &quot;) excede el límite máximo permitido (&quot; + limiteMaximo + 
+<span class="nc" id="L323">                    &quot;) excede el límite máximo permitido (&quot; + limiteMaximo + </span>
 <span class="nc" id="L324">                    &quot; - con 5% de tolerancia sobre &quot; + repGerm.getTablaGerm().getNumSemillasPRep() + &quot; semillas)&quot;);</span>
             }
         }

@@ -45,8 +45,8 @@ import java.util.List;
     @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
     @GetMapping(&quot;/inactivos&quot;)
     public ResponseEntity&lt;List&lt;CultivarDTO&gt;&gt; obtenerInactivos() {
-<span class="nc" id="L48">        List&lt;CultivarDTO&gt; cultivares = cultivarService.obtenerInactivos();</span>
-<span class="nc" id="L49">        return ResponseEntity.ok(cultivares);</span>
+<span class="fc" id="L48">        List&lt;CultivarDTO&gt; cultivares = cultivarService.obtenerInactivos();</span>
+<span class="fc" id="L49">        return ResponseEntity.ok(cultivares);</span>
     }
 
     // Obtener por especie
@@ -76,10 +76,10 @@ import java.util.List;
     @GetMapping(&quot;/{id}&quot;)
     public ResponseEntity&lt;CultivarDTO&gt; obtenerPorId(@PathVariable Long id) {
 <span class="fc" id="L78">        CultivarDTO cultivar = cultivarService.obtenerPorId(id);</span>
-<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        if (cultivar != null) {</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (cultivar != null) {</span>
 <span class="fc" id="L80">            return ResponseEntity.ok(cultivar);</span>
         }
-<span class="nc" id="L82">        return ResponseEntity.notFound().build();</span>
+<span class="fc" id="L82">        return ResponseEntity.notFound().build();</span>
     }
 
     // Crear
@@ -91,8 +91,8 @@ import java.util.List;
         try {
 <span class="fc" id="L92">            CultivarDTO creado = cultivarService.crear(solicitud);</span>
 <span class="fc" id="L93">            return ResponseEntity.ok(creado);</span>
-<span class="nc" id="L94">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L95">            return ResponseEntity.badRequest().build();</span>
+<span class="fc" id="L94">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L95">            return ResponseEntity.badRequest().build();</span>
         }
     }
 
@@ -104,12 +104,12 @@ import java.util.List;
     public ResponseEntity&lt;CultivarDTO&gt; actualizar(@PathVariable Long id, @RequestBody CultivarRequestDTO solicitud) {
         try {
 <span class="fc" id="L106">            CultivarDTO actualizado = cultivarService.actualizar(id, solicitud);</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            if (actualizado != null) {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (actualizado != null) {</span>
 <span class="fc" id="L108">                return ResponseEntity.ok(actualizado);</span>
             }
-<span class="nc" id="L110">            return ResponseEntity.notFound().build();</span>
-<span class="nc" id="L111">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L112">            return ResponseEntity.badRequest().build();</span>
+<span class="fc" id="L110">            return ResponseEntity.notFound().build();</span>
+<span class="fc" id="L111">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L112">            return ResponseEntity.badRequest().build();</span>
         }
     }
 
@@ -130,10 +130,10 @@ import java.util.List;
     @PutMapping(&quot;/{id}/reactivar&quot;)
     public ResponseEntity&lt;CultivarDTO&gt; reactivar(@PathVariable Long id) {
 <span class="fc" id="L132">        CultivarDTO reactivado = cultivarService.reactivar(id);</span>
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (reactivado != null) {</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (reactivado != null) {</span>
 <span class="fc" id="L134">            return ResponseEntity.ok(reactivado);</span>
         }
-<span class="nc" id="L136">        return ResponseEntity.notFound().build();</span>
+<span class="fc" id="L136">        return ResponseEntity.notFound().build();</span>
     }
 
     // Obtener Cultivares con paginado para listado
@@ -146,9 +146,9 @@ import java.util.List;
             @RequestParam(defaultValue = &quot;10&quot;) int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean activo) {
-<span class="nc" id="L149">        Pageable pageable = PageRequest.of(page, size);</span>
-<span class="nc" id="L150">        Page&lt;CultivarDTO&gt; response = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, search, activo);</span>
-<span class="nc" id="L151">        return ResponseEntity.ok(response);</span>
+<span class="fc" id="L149">        Pageable pageable = PageRequest.of(page, size);</span>
+<span class="fc" id="L150">        Page&lt;CultivarDTO&gt; response = cultivarService.obtenerCultivaresPaginadosConFiltros(pageable, search, activo);</span>
+<span class="fc" id="L151">        return ResponseEntity.ok(response);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
