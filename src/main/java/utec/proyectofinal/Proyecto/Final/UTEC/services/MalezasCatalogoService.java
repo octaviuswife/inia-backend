@@ -117,23 +117,7 @@ public class MalezasCatalogoService {
         Page<MalezasCatalogo> malezasPage = repository.findByActivoTrueOrderByNombreComunAsc(pageable);
         return malezasPage.map(this::mapearEntidadADTO);
     }
-
-    // Listar Malezas con paginado y filtro por activo
-    public Page<MalezasCatalogoDTO> obtenerMalezasPaginadasConFiltro(Pageable pageable, String filtroActivo) {
-        Page<MalezasCatalogo> malezasPage;
-        
-        if ("activos".equalsIgnoreCase(filtroActivo)) {
-            malezasPage = repository.findByActivoTrueOrderByNombreComunAsc(pageable);
-        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
-            malezasPage = repository.findByActivoFalseOrderByNombreComunAsc(pageable);
-        } else {
-            // "todos" o cualquier otro valor
-            malezasPage = repository.findAllByOrderByNombreComunAsc(pageable);
-        }
-        
-        return malezasPage.map(this::mapearEntidadADTO);
-    }
-
+    
     /**
      * Listar Malezas con paginado y filtros dinámicos
      * @param pageable Información de paginación
