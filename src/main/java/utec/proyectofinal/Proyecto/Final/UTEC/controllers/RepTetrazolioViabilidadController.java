@@ -40,17 +40,8 @@ public class RepTetrazolioViabilidadController {
     public ResponseEntity<RepTetrazolioViabilidadDTO> crearRepeticion(
             @PathVariable Long tetrazolioId,
             @RequestBody RepTetrazolioViabilidadRequestDTO solicitud) {
-        try {
-            System.out.println("Creando repetición para tetrazolio ID: " + tetrazolioId + " con datos: " + solicitud);
-            RepTetrazolioViabilidadDTO repeticionCreada = repeticionService.crearRepeticion(tetrazolioId, solicitud);
-            return new ResponseEntity<>(repeticionCreada, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            System.err.println("Error al crear repetición: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            System.err.println("Error interno al crear repetición: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        RepTetrazolioViabilidadDTO repeticionCreada = repeticionService.crearRepeticion(tetrazolioId, solicitud);
+        return ResponseEntity.status(HttpStatus.CREATED).body(repeticionCreada);
     }
 
     // Obtener todas las repeticiones de un tetrazolio
@@ -59,13 +50,8 @@ public class RepTetrazolioViabilidadController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping
     public ResponseEntity<List<RepTetrazolioViabilidadDTO>> obtenerRepeticionesPorTetrazolio(@PathVariable Long tetrazolioId) {
-        try {
-            List<RepTetrazolioViabilidadDTO> repeticiones = repeticionService.obtenerRepeticionesPorTetrazolio(tetrazolioId);
-            return new ResponseEntity<>(repeticiones, HttpStatus.OK);
-        } catch (Exception e) {
-            System.err.println("Error al obtener repeticiones: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<RepTetrazolioViabilidadDTO> repeticiones = repeticionService.obtenerRepeticionesPorTetrazolio(tetrazolioId);
+        return ResponseEntity.ok(repeticiones);
     }
 
     // Contar repeticiones de un tetrazolio
@@ -74,12 +60,8 @@ public class RepTetrazolioViabilidadController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ANALISTA') or hasRole('OBSERVADOR')")
     @GetMapping("/count")
     public ResponseEntity<Long> contarRepeticionesPorTetrazolio(@PathVariable Long tetrazolioId) {
-        try {
-            Long count = repeticionService.contarRepeticionesPorTetrazolio(tetrazolioId);
-            return new ResponseEntity<>(count, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        Long count = repeticionService.contarRepeticionesPorTetrazolio(tetrazolioId);
+        return ResponseEntity.ok(count);
     }
 
     // Obtener repetición específica por ID (ruta alternativa fuera del contexto del tetrazolio)
@@ -90,14 +72,8 @@ public class RepTetrazolioViabilidadController {
     public ResponseEntity<RepTetrazolioViabilidadDTO> obtenerRepeticionPorId(
             @PathVariable Long tetrazolioId,
             @PathVariable Long repeticionId) {
-        try {
-            RepTetrazolioViabilidadDTO repeticion = repeticionService.obtenerRepeticionPorId(repeticionId);
-            return new ResponseEntity<>(repeticion, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        RepTetrazolioViabilidadDTO repeticion = repeticionService.obtenerRepeticionPorId(repeticionId);
+        return ResponseEntity.ok(repeticion);
     }
 
     // Actualizar repetición específica
@@ -109,14 +85,8 @@ public class RepTetrazolioViabilidadController {
             @PathVariable Long tetrazolioId,
             @PathVariable Long repeticionId,
             @RequestBody RepTetrazolioViabilidadRequestDTO solicitud) {
-        try {
-            RepTetrazolioViabilidadDTO repeticionActualizada = repeticionService.actualizarRepeticion(repeticionId, solicitud);
-            return new ResponseEntity<>(repeticionActualizada, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        RepTetrazolioViabilidadDTO repeticionActualizada = repeticionService.actualizarRepeticion(repeticionId, solicitud);
+        return ResponseEntity.ok(repeticionActualizada);
     }
 
     // Eliminar repetición específica (eliminación real)
@@ -124,16 +94,10 @@ public class RepTetrazolioViabilidadController {
               description = "Elimina una repetición específica de un análisis de tetrazolio viabilidad (eliminación física)")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{repeticionId}")
-    public ResponseEntity<HttpStatus> eliminarRepeticion(
+    public ResponseEntity<Void> eliminarRepeticion(
             @PathVariable Long tetrazolioId,
             @PathVariable Long repeticionId) {
-        try {
-            repeticionService.eliminarRepeticion(repeticionId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        repeticionService.eliminarRepeticion(repeticionId);
+        return ResponseEntity.noContent().build();
     }
 }
