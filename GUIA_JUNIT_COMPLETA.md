@@ -152,7 +152,7 @@ NullPointerException at line 45
 | `@SpringBootTest` | Levanta **toda** la app | 🐢 Lento | Tests de integración completos |
 | `@WebMvcTest(Controller.class)` | Solo el **controller** | 🐇 Rápido | Tests de API sin BD |
 | `@DataJpaTest` | Solo **JPA y BD** | 🐰 Medio | Tests de repositorios |
-| `@MockBean` | Crea un **mock** de un bean | - | Simular dependencias |
+| `@MockitoBean` | Crea un **mock** de un bean | - | Simular dependencias |
 | `@Autowired` | Inyecta bean **real** | - | Usar componente real |
 
 ---
