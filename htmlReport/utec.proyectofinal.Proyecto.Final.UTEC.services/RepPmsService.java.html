@@ -57,12 +57,12 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
 
         // Contar repeticiones VÁLIDAS de la tanda actual
 <span class="fc" id="L59">        long repeticionesValidasTandaActual = repPmsRepository.findByPmsId(pmsId).stream()</span>
-<span class="pc bnc" id="L60" title="All 4 branches missed.">            .filter(rep -&gt; rep.getNumTanda().equals(tandaActual) &amp;&amp; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="fc bfc" id="L60" title="All 4 branches covered.">            .filter(rep -&gt; rep.getNumTanda().equals(tandaActual) &amp;&amp; Boolean.TRUE.equals(rep.getValido()))</span>
 <span class="fc" id="L61">            .count();</span>
 
         // Contar repeticiones TOTALES de la tanda actual (para saber si procesar cálculos)
 <span class="fc" id="L64">        long repeticionesTotalesTandaActual = repPmsRepository.findByPmsId(pmsId).stream()</span>
-<span class="pc" id="L65">            .filter(rep -&gt; rep.getNumTanda().equals(tandaActual))</span>
+<span class="fc" id="L65">            .filter(rep -&gt; rep.getNumTanda().equals(tandaActual))</span>
 <span class="fc" id="L66">            .count();</span>
 
         // No lanzar excepción aquí - permitir agregar más repeticiones si hay inválidas
@@ -79,18 +79,18 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         }
 
         // Verificar si se completó la tanda (número esperado de repeticiones totales) y procesar cálculos
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (repeticionesTotalesTandaActual + 1 &gt;= pms.getNumRepeticionesEsperadas()) {</span>
-<span class="nc" id="L83">            System.out.println(&quot; Tanda completa! Validando todas las repeticiones del PMS ID: &quot; + pmsId);</span>
-<span class="nc" id="L84">            System.out.println(&quot;  Repeticiones totales: &quot; + (repeticionesTotalesTandaActual + 1) + &quot; &gt;= Esperadas: &quot; + pms.getNumRepeticionesEsperadas());</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (repeticionesTotalesTandaActual + 1 &gt;= pms.getNumRepeticionesEsperadas()) {</span>
+<span class="fc" id="L83">            System.out.println(&quot; Tanda completa! Validando todas las repeticiones del PMS ID: &quot; + pmsId);</span>
+<span class="fc" id="L84">            System.out.println(&quot;  Repeticiones totales: &quot; + (repeticionesTotalesTandaActual + 1) + &quot; &gt;= Esperadas: &quot; + pms.getNumRepeticionesEsperadas());</span>
             
             // Validar TODAS las repeticiones del PMS con estadísticas globales
-<span class="nc" id="L87">            pmsService.validarTodasLasRepeticiones(pmsId);</span>
+<span class="fc" id="L87">            pmsService.validarTodasLasRepeticiones(pmsId);</span>
             
             // Recargar la repetición desde la base de datos para obtener el valor actualizado de 'valido'
-<span class="nc" id="L90">            RepPms repeticionActualizada = repPmsRepository.findById(guardada.getRepPMSID())</span>
-<span class="nc" id="L91">                .orElseThrow(() -&gt; new RuntimeException(&quot;Error al recargar repetición creada&quot;));</span>
+<span class="fc" id="L90">            RepPms repeticionActualizada = repPmsRepository.findById(guardada.getRepPMSID())</span>
+<span class="pc" id="L91">                .orElseThrow(() -&gt; new RuntimeException(&quot;Error al recargar repetición creada&quot;));</span>
             
-<span class="nc" id="L93">            return mapearEntidadADTO(repeticionActualizada);</span>
+<span class="fc" id="L93">            return mapearEntidadADTO(repeticionActualizada);</span>
         }
 
         // Registrar modificación en el historial del análisis PMS
@@ -248,65 +248,65 @@ import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
         // Buscar tandas existentes
 <span class="fc" id="L249">        List&lt;RepPms&gt; todasLasRepeticiones = repPmsRepository.findByPmsId(pms.getAnalisisID());</span>
         
-<span class="pc bpc" id="L251" title="1 of 2 branches missed.">        if (todasLasRepeticiones.isEmpty()) {</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        if (todasLasRepeticiones.isEmpty()) {</span>
 <span class="fc" id="L252">            return 1; // Primera tanda</span>
         }
 
         // Encontrar la tanda con repeticiones VÁLIDAS incompletas
-<span class="nc bnc" id="L256" title="All 2 branches missed.">        for (int tandaNum = 1; tandaNum &lt;= pms.getNumTandas(); tandaNum++) {</span>
-<span class="nc" id="L257">            final int tanda = tandaNum;</span>
-<span class="nc" id="L258">            long repeticionesValidas = todasLasRepeticiones.stream()</span>
-<span class="nc bnc" id="L259" title="All 4 branches missed.">                .filter(rep -&gt; rep.getNumTanda().equals(tanda) &amp;&amp; Boolean.TRUE.equals(rep.getValido()))</span>
-<span class="nc" id="L260">                .count();</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        for (int tandaNum = 1; tandaNum &lt;= pms.getNumTandas(); tandaNum++) {</span>
+<span class="fc" id="L257">            final int tanda = tandaNum;</span>
+<span class="fc" id="L258">            long repeticionesValidas = todasLasRepeticiones.stream()</span>
+<span class="fc bfc" id="L259" title="All 4 branches covered.">                .filter(rep -&gt; rep.getNumTanda().equals(tanda) &amp;&amp; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="fc" id="L260">                .count();</span>
             
             // Una tanda está incompleta si no tiene suficientes repeticiones VÁLIDAS
-<span class="nc bnc" id="L263" title="All 2 branches missed.">            if (repeticionesValidas &lt; pms.getNumRepeticionesEsperadas()) {</span>
-<span class="nc" id="L264">                return tanda; // Tanda incompleta (necesita más repeticiones válidas)</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">            if (repeticionesValidas &lt; pms.getNumRepeticionesEsperadas()) {</span>
+<span class="fc" id="L264">                return tanda; // Tanda incompleta (necesita más repeticiones válidas)</span>
             }
         }
 
         // Si todas las tandas están completas, verificar si se puede agregar nueva tanda
-<span class="nc" id="L269">        long totalRepeticiones = todasLasRepeticiones.size();</span>
-<span class="nc bnc" id="L270" title="All 2 branches missed.">        if (totalRepeticiones &gt;= 16) {</span>
+<span class="fc" id="L269">        long totalRepeticiones = todasLasRepeticiones.size();</span>
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        if (totalRepeticiones &gt;= 16) {</span>
 <span class="nc" id="L271">            throw new RuntimeException(&quot;Se alcanzó el límite máximo de 16 repeticiones&quot;);</span>
         }
 
         // Verificar si el CV global de repeticiones válidas es aceptable
-<span class="nc" id="L275">        List&lt;RepPms&gt; repeticionesValidas = todasLasRepeticiones.stream()</span>
-<span class="nc" id="L276">            .filter(rep -&gt; Boolean.TRUE.equals(rep.getValido()))</span>
-<span class="nc" id="L277">            .collect(Collectors.toList());</span>
+<span class="fc" id="L275">        List&lt;RepPms&gt; repeticionesValidas = todasLasRepeticiones.stream()</span>
+<span class="fc" id="L276">            .filter(rep -&gt; Boolean.TRUE.equals(rep.getValido()))</span>
+<span class="fc" id="L277">            .collect(Collectors.toList());</span>
 
-<span class="nc bnc" id="L279" title="All 2 branches missed.">        if (!repeticionesValidas.isEmpty()) {</span>
+<span class="pc bpc" id="L279" title="1 of 2 branches missed.">        if (!repeticionesValidas.isEmpty()) {</span>
             // Calcular CV global
-<span class="nc" id="L281">            double promedio = repeticionesValidas.stream()</span>
-<span class="nc" id="L282">                .mapToDouble(rep -&gt; rep.getPeso().doubleValue())</span>
-<span class="nc" id="L283">                .average()</span>
-<span class="nc" id="L284">                .orElse(0.0);</span>
+<span class="fc" id="L281">            double promedio = repeticionesValidas.stream()</span>
+<span class="fc" id="L282">                .mapToDouble(rep -&gt; rep.getPeso().doubleValue())</span>
+<span class="fc" id="L283">                .average()</span>
+<span class="fc" id="L284">                .orElse(0.0);</span>
 
-<span class="nc" id="L286">            double suma = repeticionesValidas.stream()</span>
-<span class="nc" id="L287">                .mapToDouble(rep -&gt; Math.pow(rep.getPeso().doubleValue() - promedio, 2))</span>
-<span class="nc" id="L288">                .sum();</span>
+<span class="fc" id="L286">            double suma = repeticionesValidas.stream()</span>
+<span class="fc" id="L287">                .mapToDouble(rep -&gt; Math.pow(rep.getPeso().doubleValue() - promedio, 2))</span>
+<span class="fc" id="L288">                .sum();</span>
 
-<span class="nc" id="L290">            double desviacion = Math.sqrt(suma / repeticionesValidas.size());</span>
-<span class="nc bnc" id="L291" title="All 2 branches missed.">            double cv = promedio != 0 ? (desviacion / promedio) * 100 : 0;</span>
+<span class="fc" id="L290">            double desviacion = Math.sqrt(suma / repeticionesValidas.size());</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">            double cv = promedio != 0 ? (desviacion / promedio) * 100 : 0;</span>
 
-<span class="nc bnc" id="L293" title="All 2 branches missed.">            double umbralCV = pms.getEsSemillaBrozosa() ? 6.0 : 4.0;</span>
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">            double umbralCV = pms.getEsSemillaBrozosa() ? 6.0 : 4.0;</span>
             
-<span class="nc bnc" id="L295" title="All 2 branches missed.">            if (cv &lt;= umbralCV) {</span>
-<span class="nc" id="L296">                throw new RuntimeException(&quot;El CV global (&quot; + String.format(&quot;%.2f&quot;, cv) + </span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">            if (cv &lt;= umbralCV) {</span>
+<span class="fc" id="L296">                throw new RuntimeException(&quot;El CV global (&quot; + String.format(&quot;%.2f&quot;, cv) + </span>
                     &quot;) ya es aceptable (≤ &quot; + umbralCV + &quot;). No se necesitan más repeticiones.&quot;);
             }
         }
 
         // Si llegamos aquí, necesitamos incrementar a una nueva tanda
-<span class="nc" id="L302">        int nuevaTanda = pms.getNumTandas() + 1;</span>
-<span class="nc" id="L303">        pms.setNumTandas(nuevaTanda);</span>
-<span class="nc" id="L304">        pmsRepository.save(pms);</span>
+<span class="fc" id="L302">        int nuevaTanda = pms.getNumTandas() + 1;</span>
+<span class="fc" id="L303">        pms.setNumTandas(nuevaTanda);</span>
+<span class="fc" id="L304">        pmsRepository.save(pms);</span>
         
-<span class="nc" id="L306">        System.out.println(&quot;=== Incrementando tandas ===&quot;);</span>
-<span class="nc" id="L307">        System.out.println(&quot;CV no aceptable. Se incrementa el número de tandas a: &quot; + nuevaTanda);</span>
+<span class="fc" id="L306">        System.out.println(&quot;=== Incrementando tandas ===&quot;);</span>
+<span class="fc" id="L307">        System.out.println(&quot;CV no aceptable. Se incrementa el número de tandas a: &quot; + nuevaTanda);</span>
         
-<span class="nc" id="L309">        return nuevaTanda;</span>
+<span class="fc" id="L309">        return nuevaTanda;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

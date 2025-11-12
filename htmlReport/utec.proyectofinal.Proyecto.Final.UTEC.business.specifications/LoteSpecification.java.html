@@ -17,7 +17,7 @@ import java.util.List;
      * @return Specification para usar con el repositorio
      */
     public static Specification&lt;Lote&gt; conFiltros(String searchTerm, Boolean activo, String cultivarNombre) {
-<span class="nc" id="L20">        return (root, query, criteriaBuilder) -&gt; {</span>
+<span class="fc" id="L20">        return (root, query, criteriaBuilder) -&gt; {</span>
 <span class="nc" id="L21">            List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
 
             // Filtro de búsqueda: busca en ficha, nomLote, cultivar.nombre, especie.nombreCientifico, especie.nombreComun

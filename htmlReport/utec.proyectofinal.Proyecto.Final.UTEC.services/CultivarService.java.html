@@ -38,15 +38,15 @@ import java.util.stream.Collectors;
 
     // Obtener con filtro de estado opcional
     public List&lt;CultivarDTO&gt; obtenerTodos(Boolean activo) {
-<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (activo == null) {</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (activo == null) {</span>
             // Devolver todos (activos e inactivos)
 <span class="fc" id="L43">            return cultivarRepository.findAll().stream()</span>
 <span class="fc" id="L44">                    .map(this::mapearEntidadADTO)</span>
 <span class="fc" id="L45">                    .collect(Collectors.toList());</span>
-<span class="nc bnc" id="L46" title="All 2 branches missed.">        } else if (activo) {</span>
-<span class="nc" id="L47">            return obtenerTodos();</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        } else if (activo) {</span>
+<span class="fc" id="L47">            return obtenerTodos();</span>
         } else {
-<span class="nc" id="L49">            return obtenerInactivos();</span>
+<span class="fc" id="L49">            return obtenerInactivos();</span>
         }
     }
 
@@ -165,42 +165,42 @@ import java.util.stream.Collectors;
         Page&lt;Cultivar&gt; cultivarPage;
         
         // Si hay término de búsqueda, buscar en nombre
-<span class="nc bnc" id="L168" title="All 4 branches missed.">        if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
+<span class="fc bfc" id="L168" title="All 4 branches covered.">        if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
             List&lt;Cultivar&gt; cultivares;
-<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (activo == null) {</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            if (activo == null) {</span>
                 // Buscar en todas (activos e inactivos)
-<span class="nc" id="L172">                cultivares = cultivarRepository.findAll().stream()</span>
-<span class="nc bnc" id="L173" title="All 2 branches missed.">                    .filter(c -&gt; c.getNombre() != null &amp;&amp; </span>
-<span class="nc bnc" id="L174" title="All 2 branches missed.">                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))</span>
-<span class="nc" id="L175">                    .collect(Collectors.toList());</span>
-<span class="nc bnc" id="L176" title="All 2 branches missed.">            } else if (activo) {</span>
+<span class="fc" id="L172">                cultivares = cultivarRepository.findAll().stream()</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                    .filter(c -&gt; c.getNombre() != null &amp;&amp; </span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))</span>
+<span class="fc" id="L175">                    .collect(Collectors.toList());</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">            } else if (activo) {</span>
                 // Buscar solo en activos
-<span class="nc" id="L178">                cultivares = cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
+<span class="fc" id="L178">                cultivares = cultivarRepository.findByNombreContainingIgnoreCaseAndActivoTrue(searchTerm);</span>
             } else {
                 // Buscar solo en inactivos
-<span class="nc" id="L181">                cultivares = cultivarRepository.findByActivoFalse().stream()</span>
-<span class="nc bnc" id="L182" title="All 2 branches missed.">                    .filter(c -&gt; c.getNombre() != null &amp;&amp; </span>
-<span class="nc bnc" id="L183" title="All 2 branches missed.">                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))</span>
-<span class="nc" id="L184">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L181">                cultivares = cultivarRepository.findByActivoFalse().stream()</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">                    .filter(c -&gt; c.getNombre() != null &amp;&amp; </span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                                c.getNombre().toLowerCase().contains(searchTerm.toLowerCase()))</span>
+<span class="fc" id="L184">                    .collect(Collectors.toList());</span>
             }
             
             // Convertir lista a página
-<span class="nc" id="L188">            int start = (int) pageable.getOffset();</span>
-<span class="nc" id="L189">            int end = Math.min(start + pageable.getPageSize(), cultivares.size());</span>
-<span class="nc" id="L190">            List&lt;Cultivar&gt; pageContent = cultivares.subList(start, end);</span>
-<span class="nc" id="L191">            cultivarPage = new org.springframework.data.domain.PageImpl&lt;&gt;(pageContent, pageable, cultivares.size());</span>
-<span class="nc" id="L192">        } else {</span>
+<span class="fc" id="L188">            int start = (int) pageable.getOffset();</span>
+<span class="fc" id="L189">            int end = Math.min(start + pageable.getPageSize(), cultivares.size());</span>
+<span class="fc" id="L190">            List&lt;Cultivar&gt; pageContent = cultivares.subList(start, end);</span>
+<span class="fc" id="L191">            cultivarPage = new org.springframework.data.domain.PageImpl&lt;&gt;(pageContent, pageable, cultivares.size());</span>
+<span class="fc" id="L192">        } else {</span>
             // Sin término de búsqueda, aplicar solo filtro de activo
-<span class="nc bnc" id="L194" title="All 2 branches missed.">            if (activo == null) {</span>
-<span class="nc" id="L195">                cultivarPage = cultivarRepository.findAllByOrderByNombreAsc(pageable);</span>
-<span class="nc bnc" id="L196" title="All 2 branches missed.">            } else if (activo) {</span>
-<span class="nc" id="L197">                cultivarPage = cultivarRepository.findByActivoTrueOrderByNombreAsc(pageable);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">            if (activo == null) {</span>
+<span class="fc" id="L195">                cultivarPage = cultivarRepository.findAllByOrderByNombreAsc(pageable);</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            } else if (activo) {</span>
+<span class="fc" id="L197">                cultivarPage = cultivarRepository.findByActivoTrueOrderByNombreAsc(pageable);</span>
             } else {
-<span class="nc" id="L199">                cultivarPage = cultivarRepository.findByActivoFalseOrderByNombreAsc(pageable);</span>
+<span class="fc" id="L199">                cultivarPage = cultivarRepository.findByActivoFalseOrderByNombreAsc(pageable);</span>
             }
         }
         
-<span class="nc" id="L203">        return cultivarPage.map(this::mapearEntidadADTO);</span>
+<span class="fc" id="L203">        return cultivarPage.map(this::mapearEntidadADTO);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

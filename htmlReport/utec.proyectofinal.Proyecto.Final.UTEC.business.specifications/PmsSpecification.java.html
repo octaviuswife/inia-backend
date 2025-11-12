@@ -10,7 +10,7 @@ import java.util.List;
 <span class="nc" id="L10">public class PmsSpecification {</span>
 
     public static Specification&lt;Pms&gt; conFiltros(String searchTerm, Boolean activo, String estado, Long loteId) {
-<span class="nc" id="L13">        return (root, query, criteriaBuilder) -&gt; {</span>
+<span class="fc" id="L13">        return (root, query, criteriaBuilder) -&gt; {</span>
 <span class="nc" id="L14">            List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
 
 <span class="nc bnc" id="L16" title="All 4 branches missed.">            if (searchTerm != null &amp;&amp; !searchTerm.trim().isEmpty()) {</span>
