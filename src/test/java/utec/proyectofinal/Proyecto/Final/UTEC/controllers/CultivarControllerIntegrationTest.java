@@ -20,6 +20,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -178,5 +180,107 @@ class CultivarControllerIntegrationTest {
         mockMvc.perform(delete("/api/cultivar/1")
                 .with(csrf()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/cultivar/inactivos - Debe listar cultivares inactivos")
+    @WithMockUser(roles = "ADMIN")
+    void obtenerInactivos_debeRetornarListaInactivos() throws Exception {
+    CultivarDTO inactivo = new CultivarDTO();
+    inactivo.setCultivarID(3L);
+    inactivo.setNombre("Cultivar Inactivo");
+    inactivo.setActivo(false);
+
+    when(cultivarService.obtenerInactivos()).thenReturn(Arrays.asList(inactivo));
+
+    mockMvc.perform(get("/api/cultivar/inactivos")
+        .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].activo").value(false));
+    }
+
+    @Test
+    @DisplayName("GET /api/cultivar/{id} - Debe retornar 404 cuando no existe")
+    @WithMockUser(roles = "OBSERVADOR")
+    void obtenerPorId_conIdNoExistente_debeRetornarNotFound() throws Exception {
+    when(cultivarService.obtenerPorId(2L)).thenReturn(null);
+
+    mockMvc.perform(get("/api/cultivar/2")
+        .with(csrf()))
+        .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /api/cultivar - Debe devolver BadRequest cuando el servicio falla")
+    @WithMockUser(roles = "ADMIN")
+    void crearCultivar_servicioFalla_debeRetornarBadRequest() throws Exception {
+    when(cultivarService.crear(any(CultivarRequestDTO.class)))
+        .thenThrow(new RuntimeException("Error al crear"));
+
+    mockMvc.perform(post("/api/cultivar")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(cultivarRequest)))
+        .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /api/cultivar/{id} - Debe retornar 404 cuando actualizar no encuentra")
+    @WithMockUser(roles = "ADMIN")
+    void actualizarCultivar_noExiste_debeRetornarNotFound() throws Exception {
+    when(cultivarService.actualizar(eq(2L), any(CultivarRequestDTO.class))).thenReturn(null);
+
+    mockMvc.perform(put("/api/cultivar/2")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(cultivarRequest)))
+        .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /api/cultivar/{id} - Debe retornar BadRequest cuando el servicio lanza RuntimeException")
+    @WithMockUser(roles = "ADMIN")
+    void actualizarCultivar_servicioFalla_debeRetornarBadRequest() throws Exception {
+    when(cultivarService.actualizar(eq(1L), any(CultivarRequestDTO.class)))
+        .thenThrow(new RuntimeException("Error actualizar"));
+
+    mockMvc.perform(put("/api/cultivar/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(cultivarRequest)))
+        .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /api/cultivar/{id}/reactivar - Debe devolver 404 cuando reactivar no existe")
+    @WithMockUser(roles = "ADMIN")
+    void reactivarCultivar_noExiste_debeRetornarNotFound() throws Exception {
+    when(cultivarService.reactivar(2L)).thenReturn(null);
+
+    mockMvc.perform(put("/api/cultivar/2/reactivar")
+        .with(csrf()))
+        .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/cultivar/listado - Debe retornar paginado")
+    @WithMockUser(roles = "ANALISTA")
+    void obtenerCultivaresPaginados_debeRetornarPagina() throws Exception {
+    List<CultivarDTO> lista = Arrays.asList(cultivarResponse);
+    PageImpl<CultivarDTO> page = new PageImpl<>(lista, PageRequest.of(0, 10), lista.size());
+
+    when(cultivarService.obtenerCultivaresPaginadosConFiltros(any(), eq("search"), eq(true)))
+        .thenReturn(page);
+
+    mockMvc.perform(get("/api/cultivar/listado")
+        .param("page", "0")
+        .param("size", "10")
+        .param("search", "search")
+        .param("activo", "true")
+        .with(csrf()))
+        .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.page.totalElements").value(1));
     }
 }

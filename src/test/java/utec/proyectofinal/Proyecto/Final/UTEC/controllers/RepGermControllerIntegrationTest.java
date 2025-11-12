@@ -19,6 +19,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -284,4 +285,42 @@ class RepGermControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(0));
     }
+
+    @Test
+    @WithMockUser(roles = "OBSERVADOR")
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion - Error al obtener lista")
+    void obtenerRepeticionesPorTabla_debeRetornarBadRequestConError() throws Exception {
+        when(repGermService.obtenerRepeticionesPorTabla(tablaId))
+            .thenThrow(new RuntimeException("Error al obtener repeticiones"));
+
+        mockMvc.perform(get("/api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion", germinacionId, tablaId)
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ANALISTA")
+    @DisplayName("GET /api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion/contar - Error al contar")
+    void contarRepeticionesPorTabla_debeRetornarBadRequestConError() throws Exception {
+        when(repGermService.contarRepeticionesPorTabla(tablaId))
+            .thenThrow(new RuntimeException("Error al contar repeticiones"));
+
+        mockMvc.perform(get("/api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion/contar", germinacionId, tablaId)
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("DELETE /api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion/{repeticionId} - Error al eliminar con excepción")
+    void eliminarRepGerm_debeRetornarNotFoundConExcepcion() throws Exception {
+        doThrow(new RuntimeException("Repetición no encontrada"))
+            .when(repGermService).eliminarRepGerm(999L);
+
+        mockMvc.perform(delete("/api/germinacion/{germinacionId}/tabla/{tablaId}/repeticion/{repeticionId}", 
+                germinacionId, tablaId, 999L)
+                .with(csrf()))
+                .andExpect(status().isNotFound());
+    }
 }
+

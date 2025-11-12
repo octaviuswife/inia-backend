@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -20,12 +21,14 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RepPmsController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("Tests de integración para RepPmsController")
 class RepPmsControllerIntegrationTest {
 
@@ -257,5 +260,17 @@ class RepPmsControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(repPmsRequestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.valido").value(false));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("DELETE /api/pms/{pmsId}/repeticiones/{repeticionId} - Error 404 con RuntimeException")
+    void eliminarRepeticion_debeRetornar404ConRuntimeException() throws Exception {
+        doThrow(new RuntimeException("Repetición no encontrada"))
+            .when(repPmsService).eliminarRepeticion(999L);
+
+        mockMvc.perform(delete("/api/pms/{pmsId}/repeticiones/{repeticionId}", PMS_ID, 999L)
+                .with(csrf()))
+                .andExpect(status().isNotFound());
     }
 }
