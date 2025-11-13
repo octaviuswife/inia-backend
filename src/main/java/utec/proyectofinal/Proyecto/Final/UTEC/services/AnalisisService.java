@@ -55,7 +55,9 @@ public class AnalisisService {
             throw new RuntimeException("El análisis ya está finalizado o marcado para repetir");
         }
 
-        if (esAnalista()) {
+        boolean esAnalista = esAnalista();
+        
+        if (esAnalista) {
             // Analista: enviar a pendiente de aprobación
             analisis.setEstado(Estado.PENDIENTE_APROBACION);
         } else {
@@ -69,12 +71,15 @@ public class AnalisisService {
         // Registrar en el historial
         analisisHistorialService.registrarModificacion(analisis);
         
-        // Crear notificación automática para finalización de análisis
-        try {
-            notificacionService.notificarAnalisisFinalizado(analisis.getAnalisisID());
-        } catch (Exception e) {
-            // Log error but don't fail the analysis finalization
-            System.err.println("Error creating notification for analysis finalization: " + e.getMessage());
+        // Crear notificación automática SOLO si es analista
+        // Si es admin, ya aprobó directamente y no necesita notificación
+        if (esAnalista) {
+            try {
+                notificacionService.notificarAnalisisFinalizado(analisis.getAnalisisID());
+            } catch (Exception e) {
+                // Log error but don't fail the analysis finalization
+                System.err.println("Error creating notification for analysis finalization: " + e.getMessage());
+            }
         }
         
         return analisis;

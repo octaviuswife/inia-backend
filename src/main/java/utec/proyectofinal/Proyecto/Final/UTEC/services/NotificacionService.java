@@ -97,7 +97,7 @@ public class NotificacionService {
 
         Notificacion notificacion = new Notificacion();
         notificacion.setNombre("Cuenta aprobada");
-        notificacion.setMensaje("Su cuenta ha sido aprobada por el administrador. Ya puede iniciar sesión en el sistema.");
+        notificacion.setMensaje("¡Felicidades! Su cuenta ha sido aprobada por el administrador. ¡Bienvenido al sistema!");
         notificacion.setUsuario(usuario);
         notificacion.setTipo(USUARIO_APROBADO);
         
@@ -162,11 +162,15 @@ public class NotificacionService {
 
     // Notificación cuando se aprueba un análisis
     public void notificarAnalisisAprobado(Long analisisId) {
-        // Buscar usuarios que modificaron el análisis (excluyendo administradores)
+        // Obtener el usuario que está aprobando (administrador actual)
+        Usuario usuarioActual = obtenerUsuarioActual();
+        
+        // Buscar usuarios que modificaron el análisis (excluyendo administradores y el usuario actual)
         List<AnalisisHistorial> historial = analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(analisisId);
         List<Usuario> usuariosInvolucrados = historial.stream()
                 .map(AnalisisHistorial::getUsuario)
                 .filter(usuario -> usuario.getRol() != utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)
+                .filter(usuario -> !usuario.getUsuarioID().equals(usuarioActual.getUsuarioID()))
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -194,11 +198,15 @@ public class NotificacionService {
 
     // Notificación cuando se marca un análisis para repetir
     public void notificarAnalisisRepetir(Long analisisId) {
-        // Buscar usuarios que modificaron el análisis (excluyendo administradores)
+        // Obtener el usuario que está marcando para repetir (administrador actual)
+        Usuario usuarioActual = obtenerUsuarioActual();
+        
+        // Buscar usuarios que modificaron el análisis (excluyendo administradores y el usuario actual)
         List<AnalisisHistorial> historial = analisisHistorialRepository.findByAnalisisIdOrderByFechaHoraDesc(analisisId);
         List<Usuario> usuariosInvolucrados = historial.stream()
                 .map(AnalisisHistorial::getUsuario)
                 .filter(usuario -> usuario.getRol() != utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)
+                .filter(usuario -> !usuario.getUsuarioID().equals(usuarioActual.getUsuarioID()))
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -226,10 +234,14 @@ public class NotificacionService {
 
     // Notificación cuando un análisis editado vuelve a estado pendiente de aprobación
     public void notificarAnalisisPendienteAprobacion(Long analisisId) {
-        // Buscar todos los administradores
+        // Obtener el usuario que está editando el análisis
+        Usuario usuarioActual = obtenerUsuarioActual();
+        
+        // Buscar todos los administradores excluyendo al usuario actual (quien editó)
         List<Usuario> administradores = usuarioRepository.findByEstado(utec.proyectofinal.Proyecto.Final.UTEC.enums.EstadoUsuario.ACTIVO)
                 .stream()
                 .filter(u -> u.getRol() == utec.proyectofinal.Proyecto.Final.UTEC.enums.Rol.ADMIN)
+                .filter(u -> !u.getUsuarioID().equals(usuarioActual.getUsuarioID()))
                 .collect(Collectors.toList());
         
         Analisis analisis = analisisRepository.findById(analisisId)
@@ -244,7 +256,13 @@ public class NotificacionService {
             notificacion.setAnalisisId(analisisId);
             notificacion.setTipo(ANALISIS_FINALIZADO); // Reutilizamos el tipo existente
             
-            notificacionRepository.save(notificacion);
+            notificacion = notificacionRepository.save(notificacion);
+            
+            // EMITIR VÍA WEBSOCKET
+            NotificacionDTO dto = convertToDTO(notificacion);
+            wsService.sendToUser(admin.getUsuarioID(), dto);
+            wsService.sendUnreadCount(admin.getUsuarioID(), 
+                contarNotificacionesNoLeidas(admin.getUsuarioID().longValue()));
         }
     }
 
