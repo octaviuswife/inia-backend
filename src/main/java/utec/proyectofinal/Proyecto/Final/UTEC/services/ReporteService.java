@@ -90,11 +90,22 @@ public class ReporteService {
             .filter(pms -> pms.getNumRepeticionesEsperadas() != null && pms.getNumRepeticionesEsperadas() >= 16)
             .count();
 
+        // Calcular PMS promedio por especie
+        Map<String, Double> pmsPorEspecie = pmsList.stream()
+            .filter(pms -> pms.getLote() != null && pms.getLote().getCultivar() != null && 
+                          pms.getLote().getCultivar().getEspecie() != null)
+            .filter(pms -> pms.getPmsconRedon() != null)
+            .collect(Collectors.groupingBy(
+                pms -> pms.getLote().getCultivar().getEspecie().getNombreComun(),
+                Collectors.averagingDouble(pms -> pms.getPmsconRedon().doubleValue())
+            ));
+
         return new ReportePMSDTO(
             totalPms,
             muestrasConCVSuperado,
             porcentaje,
-            muestrasConRepeticionesMaximas
+            muestrasConRepeticionesMaximas,
+            pmsPorEspecie
         );
     }
 
@@ -159,7 +170,17 @@ public class ReporteService {
 
         List<Tetrazolio> tetrazolios = obtenerAnalisisPorFecha(tetrazolioRepository.findAll(), inicio, fin);
 
-        Map<String, Double> viabilidadPorEspecie = tetrazolios.stream()
+        // Viabilidad INIA (porcViablesRedondeo)
+        Map<String, Double> viabilidadIniaPorEspecie = tetrazolios.stream()
+            .filter(t -> t.getLote() != null && t.getLote().getCultivar() != null && t.getLote().getCultivar().getEspecie() != null)
+            .filter(t -> t.getPorcViablesRedondeo() != null)
+            .collect(Collectors.groupingBy(
+                t -> t.getLote().getCultivar().getEspecie().getNombreComun(),
+                Collectors.averagingDouble(t -> t.getPorcViablesRedondeo().doubleValue())
+            ));
+
+        // Viabilidad INASE (viabilidadInase)
+        Map<String, Double> viabilidadInasePorEspecie = tetrazolios.stream()
             .filter(t -> t.getLote() != null && t.getLote().getCultivar() != null && t.getLote().getCultivar().getEspecie() != null)
             .filter(t -> t.getViabilidadInase() != null)
             .collect(Collectors.groupingBy(
@@ -168,7 +189,8 @@ public class ReporteService {
             ));
 
         return new ReporteTetrazolioDTO(
-            viabilidadPorEspecie,
+            viabilidadIniaPorEspecie,
+            viabilidadInasePorEspecie,
             (long) tetrazolios.size()
         );
     }

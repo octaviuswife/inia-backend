@@ -220,9 +220,12 @@ class ReporteServiceTest {
         // ASSERT
         assertNotNull(reporte);
         assertEquals(2L, reporte.getTotalTetrazolios());
-        assertFalse(reporte.getViabilidadPorEspecie().isEmpty());
-        assertTrue(reporte.getViabilidadPorEspecie().containsKey("Soja"));
-        assertTrue(reporte.getViabilidadPorEspecie().get("Soja") > 90.0);
+        assertFalse(reporte.getViabilidadIniaPorEspecie().isEmpty());
+        assertTrue(reporte.getViabilidadIniaPorEspecie().containsKey("Soja"));
+        assertTrue(reporte.getViabilidadIniaPorEspecie().get("Soja") > 90.0);
+        assertFalse(reporte.getViabilidadInasePorEspecie().isEmpty());
+        assertTrue(reporte.getViabilidadInasePorEspecie().containsKey("Soja"));
+        assertTrue(reporte.getViabilidadInasePorEspecie().get("Soja") > 90.0);
     }
 
     @Test
@@ -421,6 +424,7 @@ class ReporteServiceTest {
         tetra.setFechaInicio(LocalDateTime.of(2024, 6, 15, 10, 0));
         tetra.setActivo(true);
         tetra.setLote(loteMock);
+        tetra.setPorcViablesRedondeo(viabilidad);
         tetra.setViabilidadInase(viabilidad);
         return tetra;
     }

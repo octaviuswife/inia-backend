@@ -9,6 +9,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReporteTetrazolioDTO {
-    private Map<String, Double> viabilidadPorEspecie;
+    private Map<String, Double> viabilidadIniaPorEspecie;
+    private Map<String, Double> viabilidadInasePorEspecie;
     private Long totalTetrazolios;
 }

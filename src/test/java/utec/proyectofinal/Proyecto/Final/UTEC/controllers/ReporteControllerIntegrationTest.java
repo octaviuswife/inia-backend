@@ -84,7 +84,8 @@ class ReporteControllerIntegrationTest {
             100L,
             10L,
             10.0,
-            5L
+            5L,
+            new HashMap<>()
         );
 
         Map<String, Long> contaminantesPorEspecie = new HashMap<>();
@@ -107,11 +108,15 @@ class ReporteControllerIntegrationTest {
             100L
         );
 
-        Map<String, Double> mediaViabilidadPorEspecie = new HashMap<>();
-        mediaViabilidadPorEspecie.put("Trigo", 88.0);
+        Map<String, Double> mediaViabilidadIniaPorEspecie = new HashMap<>();
+        mediaViabilidadIniaPorEspecie.put("Trigo", 88.0);
+
+        Map<String, Double> mediaViabilidadInasePorEspecie = new HashMap<>();
+        mediaViabilidadInasePorEspecie.put("Trigo", 90.0);
 
         reporteTetrazolioDTO = new ReporteTetrazolioDTO(
-            mediaViabilidadPorEspecie,
+            mediaViabilidadIniaPorEspecie,
+            mediaViabilidadInasePorEspecie,
             20L
         );
     }

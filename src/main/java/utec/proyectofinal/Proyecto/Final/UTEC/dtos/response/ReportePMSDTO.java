@@ -3,6 +3,7 @@ package utec.proyectofinal.Proyecto.Final.UTEC.dtos.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -12,4 +13,5 @@ public class ReportePMSDTO {
     private Long muestrasConCVSuperado;
     private Double porcentajeMuestrasConCVSuperado;
     private Long muestrasConRepeticionesMaximas;
+    private Map<String, Double> pmsPorEspecie;
 }
