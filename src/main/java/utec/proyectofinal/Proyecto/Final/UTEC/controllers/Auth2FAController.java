@@ -656,7 +656,7 @@ public class Auth2FAController {
 
     // ===== ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA =====
 
-    @PostMapping("/forgot-password")
+    @PostMapping("/recuperar-contrasena")
     @Operation(summary = "Olvidé mi contraseña", description = "Envía un código de recuperación al email del usuario")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(request.getEmail());
@@ -692,7 +692,7 @@ public class Auth2FAController {
         ));
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/restablecer-contrasena")
     @Operation(summary = "Resetear contraseña", description = "Resetea la contraseña usando código de recuperación + 2FA")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(request.getEmail());

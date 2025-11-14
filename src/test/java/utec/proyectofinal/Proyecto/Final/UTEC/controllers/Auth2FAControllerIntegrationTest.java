@@ -442,7 +442,7 @@ class Auth2FAControllerIntegrationTest {
     // ===== TESTS DE RECUPERACIÓN DE CONTRASEÑA =====
 
     @Test
-    @DisplayName("POST /api/v1/auth/forgot-password - Solicitar código de recuperación")
+    @DisplayName("POST /api/v1/auth/recuperar-contrasena - Solicitar código de recuperación")
     void forgotPassword_emailValido_debeEnviarCodigo() throws Exception {
         ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();
         request.setEmail("test@example.com");
@@ -453,7 +453,7 @@ class Auth2FAControllerIntegrationTest {
         when(recoveryCodeService.getExpiryTime()).thenReturn(LocalDateTime.now().plusMinutes(10));
         when(recoveryCodeService.getExpiryMinutes()).thenReturn(10);
 
-        mockMvc.perform(post("/api/v1/auth/forgot-password")
+        mockMvc.perform(post("/api/v1/auth/recuperar-contrasena")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
@@ -463,7 +463,7 @@ class Auth2FAControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/reset-password - Resetear contraseña con código válido")
+    @DisplayName("POST /api/v1/auth/restablecer-contrasena - Resetear contraseña con código válido")
     void resetPassword_codigosValidos_debeResetearContrasena() throws Exception {
         usuarioTest.setRecoveryCodeHash("hashedCode");
         usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));
@@ -479,7 +479,7 @@ class Auth2FAControllerIntegrationTest {
         when(recoveryCodeService.verifyCode(any(), any())).thenReturn(true);
         when(totpService.verifyCode(any(), any())).thenReturn(true);
 
-        mockMvc.perform(post("/api/v1/auth/reset-password")
+        mockMvc.perform(post("/api/v1/auth/restablecer-contrasena")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
@@ -488,7 +488,7 @@ class Auth2FAControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/reset-password - Código de recuperación expirado")
+    @DisplayName("POST /api/v1/auth/restablecer-contrasena - Código de recuperación expirado")
     void resetPassword_codigoExpirado_debeRetornar401() throws Exception {
         usuarioTest.setRecoveryCodeHash("hashedCode");
         usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().minusMinutes(1));
@@ -502,7 +502,7 @@ class Auth2FAControllerIntegrationTest {
         when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.of(usuarioTest));
         when(recoveryCodeService.isExpired(any())).thenReturn(true);
 
-        mockMvc.perform(post("/api/v1/auth/reset-password")
+        mockMvc.perform(post("/api/v1/auth/restablecer-contrasena")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
@@ -727,14 +727,14 @@ class Auth2FAControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/forgot-password - Email no registrado")
+    @DisplayName("POST /api/v1/auth/recuperar-contrasena - Email no registrado")
     void forgotPassword_emailInexistente_debeFallarSilenciosamente() throws Exception {
         ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();
         request.setEmail("noexiste@example.com");
 
         when(usuarioService.buscarPorEmail(any())).thenReturn(Optional.empty());
 
-        mockMvc.perform(post("/api/v1/auth/forgot-password")
+        mockMvc.perform(post("/api/v1/auth/recuperar-contrasena")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
@@ -743,13 +743,13 @@ class Auth2FAControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/forgot-password - Email con formato inválido")
+    @DisplayName("POST /api/v1/auth/recuperar-contrasena - Email con formato inválido")
     void forgotPassword_emailInvalido_debeRetornar400() throws Exception {
         ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();
         request.setEmail("email-invalido");
 
         // El controller siempre devuelve 200 por seguridad (no revela si el email existe o no)
-        mockMvc.perform(post("/api/v1/auth/forgot-password")
+        mockMvc.perform(post("/api/v1/auth/recuperar-contrasena")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
@@ -758,7 +758,7 @@ class Auth2FAControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/reset-password - Contraseña nueva igual a la anterior")
+    @DisplayName("POST /api/v1/auth/restablecer-contrasena - Contraseña nueva igual a la anterior")
     void resetPassword_passwordIgual_debeRetornar400() throws Exception {
         usuarioTest.setRecoveryCodeHash("hashedCode");
         usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));
@@ -775,7 +775,7 @@ class Auth2FAControllerIntegrationTest {
         when(totpService.verifyCode(any(), any())).thenReturn(true);
 
         // El controller no valida si la contraseña es igual, procede con el cambio
-        mockMvc.perform(post("/api/v1/auth/reset-password")
+        mockMvc.perform(post("/api/v1/auth/restablecer-contrasena")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
@@ -784,7 +784,7 @@ class Auth2FAControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/reset-password - Código TOTP inválido con código de recuperación válido")
+    @DisplayName("POST /api/v1/auth/restablecer-contrasena - Código TOTP inválido con código de recuperación válido")
     void resetPassword_totpInvalido_debeRetornar401() throws Exception {
         usuarioTest.setRecoveryCodeHash("hashedCode");
         usuarioTest.setRecoveryCodeExpiry(LocalDateTime.now().plusMinutes(10));
@@ -800,7 +800,7 @@ class Auth2FAControllerIntegrationTest {
         when(recoveryCodeService.verifyCode(any(), any())).thenReturn(true);
         when(totpService.verifyCode(any(), any())).thenReturn(false);
 
-        mockMvc.perform(post("/api/v1/auth/reset-password")
+        mockMvc.perform(post("/api/v1/auth/restablecer-contrasena")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
