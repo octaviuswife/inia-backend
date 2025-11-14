@@ -419,7 +419,7 @@ public class EmailService {
             "                            " +
             "                            <ul style='color: #333; font-size: 15px; line-height: 1.8; margin: 20px 0;'>" +
             "                                <li>Necesitarás tu código de Google Authenticator para iniciar sesión en nuevos dispositivos</li>" +
-            "                                <li>Los dispositivos de confianza no requerirán 2FA por 30 días</li>" +
+            "                                <li>Los dispositivos de confianza no requerirán 2FA por 60 días</li>" +
             "                                <li>Se requiere 2FA para recuperación de contraseña</li>" +
             "                            </ul>" +
             "                            " +
@@ -506,7 +506,7 @@ public class EmailService {
             "                            </div>" +
             "                            " +
             "                            <p style='margin: 20px 0; color: #333; font-size: 16px; line-height: 1.6;'>" +
-            "                                Este dispositivo no requerirá código 2FA durante los próximos 30 días." +
+            "                                Este dispositivo no requerirá código 2FA durante los próximos 60 días." +
             "                            </p>" +
             "                            " +
             "                            <div style='background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 25px 0; border-radius: 4px;'>" +
