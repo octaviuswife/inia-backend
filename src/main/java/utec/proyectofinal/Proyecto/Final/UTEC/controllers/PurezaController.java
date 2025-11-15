@@ -44,15 +44,6 @@ public class PurezaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(purezaCreada);
     }
 
-    // Obtener todas las Purezas activas
-    @Operation(summary = "Listar todas las purezas", 
-              description = "Obtiene todos los análisis de pureza activos")
-    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
-    @GetMapping
-    public ResponseEntity<ResponseListadoPureza> obtenerTodasPurezasActivas() {
-        ResponseListadoPureza respuesta = purezaService.obtenerTodasPurezasActivas();
-        return ResponseEntity.ok(respuesta);
-    }
 
     // Obtener Pureza por ID
     @Operation(summary = "Obtener pureza por ID", 
@@ -74,15 +65,6 @@ public class PurezaController {
         return ResponseEntity.ok(purezaActualizada);
     }
 
-    // Eliminar Pureza (cambiar estado a INACTIVO)
-    @Operation(summary = "Eliminar análisis de pureza", 
-              description = "Elimina un análisis de pureza cambiando su estado a INACTIVO")
-    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarPureza(@PathVariable Long id) {
-        purezaService.eliminarPureza(id);
-        return ResponseEntity.noContent().build();
-    }
 
     // Desactivar Pureza (soft delete)
     @Operation(summary = "Desactivar análisis de pureza", 
@@ -132,15 +114,6 @@ public class PurezaController {
         return ResponseEntity.ok(response);
     }
 
-    // Obtener todos los catálogos para el select de otras semillas
-    @Operation(summary = "Listar todos los catálogos", 
-              description = "Obtiene todos los catálogos necesarios para el análisis de pureza")
-    @PreAuthorize("hasRole('ANALISTA') or hasRole('ADMIN') or hasRole('OBSERVADOR')")
-    @GetMapping("/catalogos")
-    public ResponseEntity<List<MalezasCatalogoDTO>> obtenerTodosCatalogos() {
-        List<MalezasCatalogoDTO> catalogos = purezaService.obtenerTodosCatalogos();
-        return ResponseEntity.ok(catalogos);
-    }
 
     // Finalizar análisis de pureza
     @Operation(summary = "Finalizar análisis de pureza", 

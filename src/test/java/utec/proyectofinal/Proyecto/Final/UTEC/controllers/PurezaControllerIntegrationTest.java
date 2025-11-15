@@ -14,11 +14,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.request.PurezaRequestDTO;
-import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.MalezasCatalogoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.dtos.response.PurezaListadoDTO;
 import utec.proyectofinal.Proyecto.Final.UTEC.enums.Estado;
-import utec.proyectofinal.Proyecto.Final.UTEC.responses.ResponseListadoPureza;
 import utec.proyectofinal.Proyecto.Final.UTEC.services.PurezaService;
 
 import java.time.LocalDateTime;
@@ -79,20 +77,7 @@ class PurezaControllerIntegrationTest {
                 .andExpect(jsonPath("$.estado").value("EN_PROCESO"));
     }
 
-    @Test
-    @WithMockUser(roles = "OBSERVADOR")
-    @DisplayName("GET /api/purezas - Obtener todas las Purezas activas")
-    void obtenerTodasPurezasActivas_debeRetornarRespuesta() throws Exception {
-        ResponseListadoPureza response = new ResponseListadoPureza();
-        response.setPurezas(Arrays.asList(purezaDTO));
-        when(purezaService.obtenerTodasPurezasActivas()).thenReturn(response);
 
-        mockMvc.perform(get("/api/purezas")
-                .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.purezas[0].analisisID").value(1))
-                .andExpect(jsonPath("$.purezas[0].idLote").value(100));
-    }
 
     @Test
     @WithMockUser(roles = "ANALISTA")
@@ -124,16 +109,7 @@ class PurezaControllerIntegrationTest {
                 .andExpect(jsonPath("$.comentarios").value("Actualizado"));
     }
 
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    @DisplayName("DELETE /api/purezas/{id} - Eliminar Pureza")
-    void eliminarPureza_debeRetornarNoContent() throws Exception {
-        doNothing().when(purezaService).eliminarPureza(1L);
 
-        mockMvc.perform(delete("/api/purezas/1")
-                .with(csrf()))
-                .andExpect(status().isNoContent());
-    }
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -193,23 +169,7 @@ class PurezaControllerIntegrationTest {
                 .andExpect(jsonPath("$.page.totalElements").value(1));
     }
 
-    @Test
-    @WithMockUser(roles = "OBSERVADOR")
-    @DisplayName("GET /api/purezas/catalogos - Obtener catálogos")
-    void obtenerTodosCatalogos_debeRetornarLista() throws Exception {
-        MalezasCatalogoDTO catalogoDTO = new MalezasCatalogoDTO();
-        catalogoDTO.setCatalogoID(1L);
-        catalogoDTO.setNombreComun("Maleza 1");
 
-        List<MalezasCatalogoDTO> catalogos = Arrays.asList(catalogoDTO);
-        when(purezaService.obtenerTodosCatalogos()).thenReturn(catalogos);
-
-        mockMvc.perform(get("/api/purezas/catalogos")
-                .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].catalogoID").value(1))
-                .andExpect(jsonPath("$[0].nombreComun").value("Maleza 1"));
-    }
 
     @Test
     @WithMockUser(roles = "ANALISTA")

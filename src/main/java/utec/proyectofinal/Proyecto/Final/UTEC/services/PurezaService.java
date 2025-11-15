@@ -110,15 +110,6 @@ public class PurezaService {
         return mapearEntidadADTO(purezaActualizada);
     }
 
-    // Eliminar Pureza (desactivar - cambiar activo a false)
-    public void eliminarPureza(Long id) {
-        Pureza pureza = purezaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pureza no encontrada con id: " + id));
-
-        pureza.setActivo(false);
-        purezaRepository.save(pureza);
-    }
-
     // Desactivar Pureza (cambiar activo a false)
     public void desactivarPureza(Long id) {
         analisisService.desactivarAnalisis(id, purezaRepository);
@@ -127,18 +118,6 @@ public class PurezaService {
     // Reactivar Pureza (cambiar activo a true)
     public PurezaDTO reactivarPureza(Long id) {
         return analisisService.reactivarAnalisis(id, purezaRepository, this::mapearEntidadADTO);
-    }
-
-    // Listar todas las Purezas activas
-    public ResponseListadoPureza obtenerTodasPurezasActivas() {
-        List<PurezaDTO> purezaDTOs = purezaRepository.findByActivoTrue()
-                .stream()
-                .map(this::mapearEntidadADTO)
-                .collect(Collectors.toList());
-
-        ResponseListadoPureza respuesta = new ResponseListadoPureza();
-        respuesta.setPurezas(purezaDTOs);
-        return respuesta;
     }
 
     // Obtener Pureza por ID
@@ -156,27 +135,6 @@ public class PurezaService {
                 .collect(Collectors.toList());
     }
 
-    // Listar Pureza con paginado (para listado)
-    public Page<PurezaListadoDTO> obtenerPurezaPaginadas(Pageable pageable) {
-        Page<Pureza> purezaPage = purezaRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
-        return purezaPage.map(this::mapearEntidadAListadoDTO);
-    }
-
-    // Listar Pureza con paginado y filtro por activo
-    public Page<PurezaListadoDTO> obtenerPurezaPaginadasConFiltro(Pageable pageable, String filtroActivo) {
-        Page<Pureza> purezaPage;
-        
-        if ("activos".equalsIgnoreCase(filtroActivo)) {
-            purezaPage = purezaRepository.findByActivoTrueOrderByFechaInicioDesc(pageable);
-        } else if ("inactivos".equalsIgnoreCase(filtroActivo)) {
-            purezaPage = purezaRepository.findByActivoFalseOrderByFechaInicioDesc(pageable);
-        } else {
-            // "todos" o cualquier otro valor
-            purezaPage = purezaRepository.findAllByOrderByFechaInicioDesc(pageable);
-        }
-        
-        return purezaPage.map(this::mapearEntidadAListadoDTO);
-    }
 
     /**
      * Listar Pureza con paginado y filtros dinámicos
@@ -244,13 +202,6 @@ public class PurezaService {
         return dto;
     }
 
-    // Obtener todos los catálogos
-    public List<MalezasCatalogoDTO> obtenerTodosCatalogos() {
-        return malezasCatalogoRepository.findAll()
-                .stream()
-                .map(MappingUtils::toCatalogoDTO)
-                .collect(Collectors.toList());
-    }
 
     // === Mappers internos ===
 

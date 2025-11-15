@@ -209,31 +209,8 @@ class PurezaServiceTest {
         });
     }
 
-    @Test
-    @DisplayName("Eliminar pureza - debe cambiar activo a false")
-    void eliminarPureza_debeCambiarActivoAFalse() {
-        // ARRANGE
-        when(purezaRepository.findById(1L)).thenReturn(Optional.of(pureza));
-        when(purezaRepository.save(any(Pureza.class))).thenReturn(pureza);
 
-        // ACT
-        purezaService.eliminarPureza(1L);
 
-        // ASSERT
-        verify(purezaRepository, times(1)).save(any(Pureza.class));
-    }
-
-    @Test
-    @DisplayName("Eliminar pureza inexistente - debe lanzar excepción")
-    void eliminarPureza_conIdInexistente_debeLanzarExcepcion() {
-        // ARRANGE
-        when(purezaRepository.findById(999L)).thenReturn(Optional.empty());
-
-        // ACT & ASSERT
-        assertThrows(RuntimeException.class, () -> {
-            purezaService.eliminarPureza(999L);
-        });
-    }
 
     @Test
     @DisplayName("Reactivar pureza - debe llamar al servicio de análisis")
@@ -249,21 +226,7 @@ class PurezaServiceTest {
         verify(analisisService, times(1)).reactivarAnalisis(eq(1L), eq(purezaRepository), any());
     }
 
-    @Test
-    @DisplayName("Obtener todas las purezas activas - debe retornar lista")
-    void obtenerTodasPurezasActivas_debeRetornarLista() {
-        // ARRANGE
-        List<Pureza> purezas = List.of(pureza);
-        when(purezaRepository.findByActivoTrue()).thenReturn(purezas);
 
-        // ACT
-        ResponseListadoPureza resultado = purezaService.obtenerTodasPurezasActivas();
-
-        // ASSERT
-        assertNotNull(resultado);
-        assertNotNull(resultado.getPurezas());
-        assertEquals(1, resultado.getPurezas().size());
-    }
 
     @Test
     @DisplayName("Obtener purezas por lote - debe retornar lista filtrada")
@@ -362,19 +325,7 @@ class PurezaServiceTest {
         verify(analisisService, times(1)).marcarParaRepetirGenerico(eq(1L), eq(purezaRepository), any(), any());
     }
 
-    @Test
-    @DisplayName("Obtener todos los catálogos - debe retornar lista")
-    void obtenerTodosCatalogos_debeRetornarLista() {
-        // ARRANGE
-        when(malezasCatalogoRepository.findAll()).thenReturn(List.of());
 
-        // ACT
-        List<MalezasCatalogoDTO> resultado = purezaService.obtenerTodosCatalogos();
-
-        // ASSERT
-        assertNotNull(resultado);
-        verify(malezasCatalogoRepository, times(1)).findAll();
-    }
 
     @Test
     @DisplayName("Crear pureza con lote inactivo - debe lanzar excepción")
@@ -434,60 +385,6 @@ class PurezaServiceTest {
     }
 
     @Test
-    @DisplayName("Obtener purezas paginadas con filtro 'activos'")
-    void obtenerPurezaPaginadasConFiltro_filtroActivos_debeRetornarSoloActivos() {
-        // ARRANGE
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
-            .thenReturn(Page.empty());
-
-        // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltro(
-            Pageable.unpaged(), 
-            "activos"
-        );
-
-        // ASSERT
-        assertNotNull(resultado);
-        verify(purezaRepository, times(1)).findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class));
-    }
-
-    @Test
-    @DisplayName("Obtener purezas paginadas con filtro 'inactivos'")
-    void obtenerPurezaPaginadasConFiltro_filtroInactivos_debeRetornarSoloInactivos() {
-        // ARRANGE
-        when(purezaRepository.findByActivoFalseOrderByFechaInicioDesc(any(Pageable.class)))
-            .thenReturn(Page.empty());
-
-        // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltro(
-            Pageable.unpaged(), 
-            "inactivos"
-        );
-
-        // ASSERT
-        assertNotNull(resultado);
-        verify(purezaRepository, times(1)).findByActivoFalseOrderByFechaInicioDesc(any(Pageable.class));
-    }
-
-    @Test
-    @DisplayName("Obtener purezas paginadas con filtro 'todos'")
-    void obtenerPurezaPaginadasConFiltro_filtroTodos_debeRetornarTodos() {
-        // ARRANGE
-        when(purezaRepository.findAllByOrderByFechaInicioDesc(any(Pageable.class)))
-            .thenReturn(Page.empty());
-
-        // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltro(
-            Pageable.unpaged(), 
-            "todos"
-        );
-
-        // ASSERT
-        assertNotNull(resultado);
-        verify(purezaRepository, times(1)).findAllByOrderByFechaInicioDesc(any(Pageable.class));
-    }
-
-    @Test
     @DisplayName("Obtener purezas paginadas con filtros dinámicos")
     void obtenerPurezaPaginadasConFiltros_debeFiltrarCorrectamente() {
         // ARRANGE
@@ -508,20 +405,6 @@ class PurezaServiceTest {
         verify(purezaRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
-    @Test
-    @DisplayName("Obtener purezas paginadas - debe retornar página correcta")
-    void obtenerPurezaPaginadas_debeRetornarPagina() {
-        // ARRANGE
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
-            .thenReturn(Page.empty());
-
-        // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
-
-        // ASSERT
-        assertNotNull(resultado);
-        verify(purezaRepository, times(1)).findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class));
-    }
 
     @Test
     @DisplayName("Validar pesos - con pérdida mayor al 5% debe solo informar")
@@ -561,13 +444,13 @@ class PurezaServiceTest {
         
         List<Pureza> listaPureza = List.of(pureza);
         Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+        when(purezaRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(page);
         when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
             .thenReturn(new ArrayList<>());
 
         // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltros(Pageable.unpaged(), null, null, null, null);
 
         // ASSERT
         assertNotNull(resultado);
@@ -596,13 +479,13 @@ class PurezaServiceTest {
         
         List<Pureza> listaPureza = List.of(pureza);
         Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+        when(purezaRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(page);
         when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
             .thenReturn(new ArrayList<>());
 
         // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltros(Pageable.unpaged(), null, null, null, null);
 
         // ASSERT
         assertNotNull(resultado);
@@ -619,13 +502,13 @@ class PurezaServiceTest {
         
         List<Pureza> listaPureza = List.of(pureza);
         Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+        when(purezaRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(page);
         when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
             .thenReturn(new ArrayList<>());
 
         // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltros(Pageable.unpaged(), null, null, null, null);
 
         // ASSERT
         assertNotNull(resultado);
@@ -642,13 +525,13 @@ class PurezaServiceTest {
         
         List<Pureza> listaPureza = List.of(pureza);
         Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+        when(purezaRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(page);
         when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
             .thenReturn(new ArrayList<>());
 
         // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltros(Pageable.unpaged(), null, null, null, null);
 
         // ASSERT
         assertNotNull(resultado);
@@ -669,13 +552,13 @@ class PurezaServiceTest {
         
         List<Pureza> listaPureza = List.of(pureza);
         Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+        when(purezaRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(page);
         when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
             .thenReturn(historial);
 
         // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltros(Pageable.unpaged(), null, null, null, null);
 
         // ASSERT
         assertNotNull(resultado);
@@ -745,11 +628,11 @@ class PurezaServiceTest {
     @DisplayName("Obtener purezas paginadas - debe retornar página vacía cuando no hay datos")
     void obtenerPurezasPaginadas_sinDatos_debeRetornarPaginaVacia() {
         // ARRANGE
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+        when(purezaRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(Page.empty());
 
         // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltros(Pageable.unpaged(), null, null, null, null);
 
         // ASSERT
         assertNotNull(resultado);
@@ -1075,13 +958,13 @@ class PurezaServiceTest {
         
         List<Pureza> listaPureza = List.of(pureza);
         Page<Pureza> page = new org.springframework.data.domain.PageImpl<>(listaPureza);
-        when(purezaRepository.findByActivoTrueOrderByFechaInicioDesc(any(Pageable.class)))
+        when(purezaRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(page);
         when(analisisHistorialService.obtenerHistorialAnalisis(anyLong()))
             .thenReturn(new ArrayList<>());
 
         // ACT
-        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadas(Pageable.unpaged());
+        Page<PurezaListadoDTO> resultado = purezaService.obtenerPurezaPaginadasConFiltros(Pageable.unpaged(), null, null, null, null);
 
         // ASSERT
         assertNotNull(resultado);
